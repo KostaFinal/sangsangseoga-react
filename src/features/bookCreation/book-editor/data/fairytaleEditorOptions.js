@@ -1,0 +1,136 @@
+export const PAGE_WIDTH = 480;
+export const PAGE_HEIGHT = 620;
+
+export const COVER_WIDTH = 480;
+export const COVER_HEIGHT = 620;
+
+export const clone = (value) => JSON.parse(JSON.stringify(value));
+
+export const SAMPLE_PAGES = [
+  {
+    id: "cover",
+    type: "cover",
+    title: "표지",
+    cover: {
+      src: "https://picsum.photos/seed/fairy-cover/900/1200",
+      x: 0,
+      y: 0,
+      w: COVER_WIDTH,
+      h: COVER_HEIGHT,
+      visible: true,
+    },
+    text: {
+      html: "<p>달빛 단추를 찾아서</p>",
+      x: 58,
+      y: 420,
+      w: 365,
+      h: 90,
+      fontSize: 34,
+      lineHeight: 1.25,
+      color: "#ffffff",
+      align: "center",
+      visible: true,
+    },
+  },
+  {
+    id: "p1",
+    type: "spread",
+    title: "1 페이지",
+    image: {
+      src: "https://picsum.photos/seed/fairy1/600/800",
+      x: 0,
+      y: 0,
+      w: PAGE_WIDTH,
+      h: PAGE_HEIGHT,
+      visible: true,
+    },
+    text: {
+      html: "<p>달님이 유난히 노랗고 고운 얼굴로<br>밤하늘을 채워주던 어느 날 밤이었어요.</p>",
+      x: 40,
+      y: 220,
+      w: 400,
+      h: 150,
+      fontSize: 20,
+      lineHeight: 1.6,
+      color: "#2f2d59",
+      align: "left",
+      visible: true,
+    },
+  },
+  {
+    id: "p2",
+    type: "spread",
+    title: "2 페이지",
+    image: {
+      src: "https://picsum.photos/seed/fairy2/600/800",
+      x: 0,
+      y: 0,
+      w: PAGE_WIDTH,
+      h: PAGE_HEIGHT,
+      visible: true,
+    },
+    text: {
+      html: "<p>아롬이는 마을에서 제일 키가 커다란<br>느티나무 가지 끝으로 올라갔어요.</p>",
+      x: 40,
+      y: 220,
+      w: 400,
+      h: 150,
+      fontSize: 20,
+      lineHeight: 1.6,
+      color: "#2f2d59",
+      align: "left",
+      visible: true,
+    },
+  },
+  {
+    id: "p3",
+    type: "spread",
+    title: "3 페이지",
+    image: {
+      src: "https://picsum.photos/seed/fairy3/600/800",
+      x: 0,
+      y: 0,
+      w: PAGE_WIDTH,
+      h: PAGE_HEIGHT,
+      visible: true,
+    },
+    text: {
+      html: "<p>하늘강이 너무 넓어서<br>어떻게 헤엄쳐 건너야 할까요?</p>",
+      x: 40,
+      y: 220,
+      w: 400,
+      h: 150,
+      fontSize: 20,
+      lineHeight: 1.6,
+      color: "#2f2d59",
+      align: "left",
+      visible: true,
+    },
+  },
+  {
+    id: "p4",
+    type: "spread",
+    title: "4 페이지",
+    image: {
+      src: "https://picsum.photos/seed/fairy4/600/800",
+      x: 0,
+      y: 0,
+      w: PAGE_WIDTH,
+      h: PAGE_HEIGHT,
+      visible: true,
+    },
+    text: {
+      html: "<p>“달님! 잃어버리셨던 소중한 단추를<br>가져왔어요!” 아롬이가 외쳤어요.</p>",
+      x: 40,
+      y: 220,
+      w: 400,
+      h: 150,
+      fontSize: 20,
+      lineHeight: 1.6,
+      color: "#2f2d59",
+      align: "left",
+      visible: true,
+    },
+  },
+];
+

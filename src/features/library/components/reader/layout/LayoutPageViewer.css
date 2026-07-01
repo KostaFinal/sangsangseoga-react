@@ -1,0 +1,153 @@
+.layout-page-viewer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0 70px;
+}
+
+.layout-flip-stage {
+  position: relative;
+}
+
+.layout-flip-book {
+  box-shadow: 0 24px 70px rgba(18, 16, 40, 0.18);
+  border-radius: 6px;
+}
+
+.layout-flip-page {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.layout-page-image {
+  position: absolute;
+  overflow: hidden;
+}
+
+.layout-page-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  user-select: none;
+}
+
+.layout-page-text {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  white-space: pre-wrap;
+  padding: 8px 10px;
+  overflow: hidden;
+}
+
+.layout-page-text p {
+  margin: 0;
+  width: 100%;
+}
+
+.layout-page-arrow {
+  position: relative;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid #e6e2fc;
+  background: rgba(255, 255, 255, 0.95);
+  color: #29264f;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 26px rgba(47, 45, 89, 0.14);
+  z-index: 40;
+  transition: background 0.15s ease;
+  margin: 0 14px;
+}
+
+.layout-page-arrow:hover:not(:disabled) {
+  background: #f0edff;
+}
+
+.layout-page-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.layout-page-footer {
+  position: absolute;
+  bottom: -52px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.reader-page-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  overflow-x: auto;
+}
+
+.reader-page-dots button {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 999px;
+  background: #d4cdf2;
+  cursor: pointer;
+  transition: 0.18s ease;
+  padding: 0;
+}
+
+.reader-page-dots button.active {
+  width: 24px;
+  background: #6b54e7;
+}
+
+.reader-page-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c86b5;
+  font-family: ui-monospace, monospace;
+}
+
+.layout-page-complete-btn {
+  position: absolute;
+  right: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #6b54e7;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.layout-page-complete-btn:hover {
+  background: #6148e1;
+}
+
+@media (max-width: 900px) {
+  .layout-page-viewer {
+    padding: 0 44px;
+    transform: scale(0.62);
+    transform-origin: center top;
+  }
+
+  .layout-page-arrow {
+    width: 36px;
+    height: 36px;
+  }
+}

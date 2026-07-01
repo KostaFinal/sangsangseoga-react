@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Remix: Remix: Remix: 상상서가 - 합치기",
+  "description": "AI와 함께 나만의 책을 만드는 지적인 창작 공간, 상상서가",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

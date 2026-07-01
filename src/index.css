@@ -1,0 +1,290 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@400;500;700&family=Nanum+Pen+Script&family=Gowun+Batang:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Gowun Dodum";
+  src: url("./assets/fonts/GowunDodum-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-literata: "Literata", serif;
+  --font-vietnam: "Be Vietnam Pro", sans-serif;
+  --font-hanken: "Hanken Grotesk", sans-serif;
+  --font-sans: "Be Vietnam Pro", "Hanken Grotesk", system-ui, sans-serif;
+  --font-serif: "Literata", Georgia, ui-serif, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-gowun: "Gowun Dodum", ui-sans-serif, system-ui, sans-serif;
+
+  /* From index1.css */
+  --font-plus: "Plus Jakarta Sans", sans-serif;
+  --font-child: "Gowun Batang", Georgia, serif;
+  --font-pen: "Nanum Pen Script", cursive;
+
+  /* 상상서가 보라색 계열 컬러 팔레트 */
+  --color-brand-purple: #6B54E7;      /* 메인 포인트 보라 (버튼, 활성 탭, 로고 포인트) */
+  --color-brand-purple-dark: #6148E1; /* 진한 보라 (선택된 카테고리, 강조 버튼) */
+  --color-brand-purple-light: #835AF1;/* 밝은 보라 (버튼 그라데이션 밝은 쪽) */
+  --color-brand-purple-blue: #5179E6; /* 블루 보라 (메인 CTA 버튼 왼쪽 그라데이션) */
+  --color-brand-purple-bg: #E6E2FC;   /* 연보라 배경 (카드 배경, 아이콘 배경) */
+  --color-brand-lavender: #F3F0FF;    /* 옅은 라벤더 (흐릿한 배경빛) */
+  --color-brand-border: #D4CDF2;      /* 라벤더 테두리 (버튼 테두리, 탭 라인) */
+  --color-brand-muted: #B9B0DC;       /* 흐린 보라 회색 (보조 텍스트, 비활성 요소) */
+  --color-brand-indigo: #2F2D59;      /* 어두운 남보라 (아이콘, 진한 텍스트) */
+  --color-brand-text: #7C769D;        /* 회보라 텍스트 (보조 설명 텍스트) */
+
+  /* From index1.css brand colors */
+  --color-brand-dark: #6148E1;
+  --color-brand-light: #835AF1;
+  --color-brand-blue: #5179E6;
+  --color-lavender-card: #E6E2FC;
+  --color-lavender-bg: #F3F0FF;
+  --color-lavender-border: #D4CDF2;
+  --color-navy-purple: #2F2D59;
+  --color-purple-gray-dull: #B9B0DC;
+  --color-purple-gray-text: #7C769D;
+  --background-image-brand-gradient: linear-gradient(135deg, #5179E6 0%, #6B54E7 55%, #835AF1 100%);
+
+  /* 구 테마 호환성 매핑 */
+  --color-primary-coffee: #2F2D59;
+  --color-secondary-blue: #6B54E7;
+  --color-brand-bg: #F3F0FF;
+  --color-soft-blue: #7C769D;
+  --color-light-blue: #D4CDF2;
+
+  /* 시스템 전반의 흑백/중립 색상을 보라색 팔레트로 자동 치환 */
+  --color-black: #6B54E7;
+  --color-neutral-950: #1C1A3C;
+  --color-neutral-900: #2F2D59;
+  --color-neutral-800: #2F2D59;
+  --color-neutral-700: #2F2D59;
+  --color-neutral-600: #7C769D;
+  --color-neutral-500: #7C769D;
+  --color-neutral-400: #B9B0DC;
+  --color-neutral-300: #D4CDF2;
+  --color-neutral-200: #D4CDF2;
+  --color-neutral-100: #F3F0FF;
+  --color-neutral-50: #F3F0FF;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Custom Scrollbar */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #CCCCCC;
+  border-radius: 9999px;
+}
+
+/* Glass Card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.premium-shadow {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+}
+
+/* Grayscale/Silver Blob Blur */
+.watercolor-blob {
+  filter: blur(120px);
+  opacity: 0.15;
+  border-radius: 50%;
+  pointer-events: none;
+  transition: transform 1.2s cubic-bezier(0.1, 0.8, 0.2, 1);
+}
+
+/* Material Symbols Adjustments */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+/* Slide Panel Animation */
+.slide-panel {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body {
+  font-family: "Be Vietnam Pro", "Hanken Grotesk", sans-serif;
+  background-color: #F3F0FF;
+  overflow-x: hidden;
+}
+
+:root {
+  /* 상상서가 보라색 팔레트 */
+  --purple-main: #6b54e7;
+  --purple-dark: #6148e1;
+  --purple-light: #835af1;
+  --purple-blue: #5179e6;
+  --bg-lavender: #e6e2fc;
+  --bg-pale: #f3f0ff;
+  --bg-soft: #f8f7ff;
+  --border-lavender: #d4cdf2;
+  --border-light: #e6e2fc;
+  --text-muted-purple: #b9b0dc;
+  --navy-dark: #2f2d59;
+  --text-gray-purple: #7c769d;
+  --button-gradient: linear-gradient(135deg, #5179e6 0%, #6b54e7 55%, #835af1 100%);
+}
+
+@layer utilities {
+  .font-serif-literata {
+    font-family: var(--font-serif);
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
+
+/* Book cover hover effect */
+.book-container {
+  perspective: 1000px;
+  transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+/* Customized scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d4cdf2; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #b9b0dc; }
+
+/* Soft transition */
+.transition-all-custom {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Book cover overlay */
+.cover-overlay {
+  background: linear-gradient(to right, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0) 5%, rgba(255,255,255,0.05) 10%, rgba(255,255,255,0) 60%);
+}
+
+/* Tactile Pop-up Book Elements from index1.css */
+.wood-shelf {
+  background: linear-gradient(180deg, #F2DFD6 0%, #E9EFF5 100%);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05), 0 5px 15px rgba(106, 91, 85, 0.1);
+}
+
+.book-spine {
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+  box-shadow: -2px 5px 10px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+.book-spine:hover {
+  transform: translateY(-20px) rotateY(-5deg) scale(1.05);
+  box-shadow: -15px 20px 40px rgba(117, 89, 61, 0.2);
+  z-index: 50;
+}
+
+.book-spine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 10%, rgba(0, 0, 0, 0.03) 90%, rgba(0, 0, 0, 0.08) 100%);
+  pointer-events: none;
+}
+
+@keyframes voicePulse {
+  0% { box-shadow: 0 0 0 0 rgba(193, 240, 255, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(193, 240, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(193, 240, 255, 0); }
+}
+
+.voice-pulsing {
+  animation: voicePulse 2s infinite;
+}
+
+@keyframes floatLight {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(1deg); }
+}
+
+.floating-magic {
+  animation: floatLight 5s ease-in-out infinite;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1c4be;
+  border-radius: 10px;
+}
+
+.stat-glass {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: 0.05em;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+/* 동화책 감성 스크롤바 */
+.book-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.book-scrollbar::-webkit-scrollbar-track {
+  background: transparent; 
+}
+.book-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(140, 116, 86, 0.3);
+  border-radius: 10px;
+}
+.book-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 116, 86, 0.6);
+}
+

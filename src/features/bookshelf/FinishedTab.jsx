@@ -1,0 +1,108 @@
+import React, { useState } from 'react';
+import { ThumbsUp, Eye } from 'lucide-react';
+
+const GENRES = ["전체", "소설", "시", "에세이", "동화", "지식정보"];
+
+export default function FinishedTab({ filteredBooks, onOpenViewer, setActiveTab, onOpenDetail }) {
+  const [selectedGenre, setSelectedGenre] = useState('전체');
+
+  // Filter books by completed status and then by selected genre
+  const finishedBooks = filteredBooks.filter(b => b.progress === 100 && b.id !== 'stats_magic_book');
+  const genreFilteredBooks = selectedGenre === '전체'
+    ? finishedBooks
+    : finishedBooks.filter(b => b.category === selectedGenre);
+
+  return (
+    <div className="space-y-4 bg-transparent text-navy-purple">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 select-none">
+        <div>
+          <h3 className="font-plus text-xl font-black text-navy-purple">완독의 전당</h3>
+        </div>
+      </div>
+
+      {/* Genre Filter Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        {GENRES.map(genre => (
+          <button
+            key={genre}
+            onClick={() => setSelectedGenre(genre)}
+            className={`shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all duration-200 cursor-pointer ${
+              selectedGenre === genre
+                ? "bg-brand-purple text-white border-brand-purple shadow-sm shadow-brand-purple/20"
+                : "bg-white text-purple-gray-text border-lavender-border hover:border-brand-purple/40 hover:text-brand-purple"
+            }`}
+          >
+            {genre}
+          </button>
+        ))}
+        <span className="shrink-0 ml-auto text-xs text-purple-gray-text whitespace-nowrap">
+          총 {genreFilteredBooks.length}권
+        </span>
+      </div>
+
+      {genreFilteredBooks.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-lavender-border p-12 text-center text-purple-gray-text font-medium text-sm">
+          이 카테고리에서 읽기 완료한 책이 없습니다.
+        </div>
+      ) : (
+        /* Novel lists grids */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {genreFilteredBooks.map(book => (
+            <div 
+              key={book.id} 
+              id={`finishedbook-${book.id}`}
+              onClick={() => onOpenDetail(book)}
+              className="bg-white rounded-2xl border border-lavender-border shadow-sm p-4 flex flex-col justify-between h-[270px] group hover:shadow-md hover:border-brand-purple/50 transition-all cursor-pointer"
+            >
+              <div className="flex gap-4">
+                <div className="w-16 h-24 rounded-lg overflow-hidden shrink-0 border border-lavender-border shadow-sm">
+                  <img src={book.coverUrl} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" alt="Cover" referrerPolicy="no-referrer" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[9px] font-bold text-navy-purple bg-white border border-lavender-border px-2 py-0.5 rounded-full">{book.category}</span>
+                  <h4 className="font-plus font-bold text-sm text-navy-purple mt-1 truncate tracking-tight">{book.title}</h4>
+                  <p className="text-[10px] text-purple-gray-text mt-0.5">완독일: {book.finishedDate || '전일'}</p>
+                  
+                  {/* Stats */}
+                  <div className="flex gap-3 mt-1.5 text-[10px] text-purple-gray-text">
+                    <div className="flex items-center gap-1">
+                      <ThumbsUp className="w-3 h-3 text-brand-purple" />
+                      <span>{book.totalLikes || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Eye className="w-3 h-3 text-brand-purple" />
+                      <span>{book.totalViews || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-2.5">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenViewer(book.id);
+                  }}
+                  id={`read-again-${book.id}`}
+                  className="flex-grow text-center py-2 bg-white hover:bg-lavender-bg text-brand-purple font-bold text-xs rounded-full cursor-pointer transition-all border border-lavender-border"
+                >
+                  다시 읽기
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveTab('ai-chat');
+                  }}
+                  id={`write-journal-${book.id}`}
+                  className="flex-grow text-center py-2 bg-brand-purple hover:bg-brand-dark text-white font-bold text-xs rounded-full cursor-pointer transition-all shadow-sm"
+                >
+                  독후감 작성/평가
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

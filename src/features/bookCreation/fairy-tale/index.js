@@ -1,0 +1,10 @@
+export { default as FairyTaleBookEditorPage } from "./pages/FairyTaleBookEditorPage";
+export { default as FairyTaleChatWritingPage } from "./pages/FairyTaleChatWritingPage";
+export { default as FairyTaleChoiceBuilderPage } from "./pages/FairyTaleChoiceBuilderPage";
+export { default as FairyTaleCoCreationStudioPage } from "./pages/FairyTaleCoCreationStudioPage";
+export { default as FairyTaleCompletePage } from "./pages/FairyTaleCompletePage";
+export { default as FairyTaleConfirmPage } from "./pages/FairyTaleConfirmPage";
+export { default as FairyTaleFreeSettingPage } from "./pages/FairyTaleFreeSettingPage";
+export { default as FairyTaleImageDesignPage } from "./pages/FairyTaleImageDesignPage";
+export { default as FairyTaleSettingWizardPage } from "./pages/FairyTaleSettingWizardPage";
+export { default as FairyTaleSetupPage } from "./pages/FairyTaleSetupPage";

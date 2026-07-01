@@ -1,0 +1,6600 @@
+/*
+  NovelPagesMerged.css
+  Tailwind v4 compatible version.
+  - Reset/base rules were moved to src/index.css @layer base.
+  - This file keeps existing novel page CSS under @layer components.
+  - Keep importing this file after index.css.
+*/
+
+@layer components {
+
+/* =========================================================
+   NovelStudioPage.css
+   scoped root: .novel-studio-page
+========================================================= */
+
+.novel-studio-page {
+--novel-primary: #6c4ef6;
+  --novel-primary-hover: #5b3fe8;
+  --novel-primary-light: #7c5cff;
+  --novel-primary-soft: rgba(108, 78, 246, 0.12);
+  --novel-primary-soft-2: rgba(108, 78, 246, 0.2);
+
+  --novel-bg: #faf8ff;
+  --novel-glass: rgba(255, 255, 255, 0.68);
+  --novel-glass-strong: rgba(255, 255, 255, 0.82);
+  --novel-glass-soft: rgba(255, 255, 255, 0.46);
+
+  --novel-card: rgba(255, 255, 255, 0.72);
+  --novel-card-hover: rgba(255, 255, 255, 0.86);
+
+  --novel-text: #211a35;
+  --novel-text-sub: #6f6680;
+  --novel-text-light: #ffffff;
+
+  --novel-line: rgba(108, 78, 246, 0.18);
+  --novel-line-strong: rgba(108, 78, 246, 0.52);
+
+  --novel-shadow: 0 20px 54px rgba(72, 52, 130, 0.16);
+  --novel-shadow-soft: 0 12px 34px rgba(72, 52, 130, 0.11);
+}
+
+.novel-studio-page {
+min-height: 100vh;
+  color: var(--novel-text);
+
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.66) 0%,
+      rgba(255, 255, 255, 0.48) 42%,
+      rgba(250, 248, 255, 0.78) 100%
+    ),
+    var(--novel-studio-bg);
+
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  overflow-x: hidden;
+  position: relative;
+}
+
+.novel-studio-page::before {
+content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 26%, rgba(255, 255, 255, 0.5), transparent 28%),
+    radial-gradient(circle at 68% 56%, rgba(108, 78, 246, 0.1), transparent 36%),
+    radial-gradient(circle at 84% 20%, rgba(124, 92, 255, 0.08), transparent 28%);
+}
+
+.novel-studio-page .novel-header {
+height: 70px;
+  padding: 0 34px;
+  display: grid;
+  grid-template-columns: 230px 1fr 340px;
+  align-items: center;
+  gap: 24px;
+
+  position: relative;
+  z-index: 10;
+
+  background: rgba(255, 255, 255, 0.72);
+  border-bottom: 1px solid rgba(108, 78, 246, 0.14);
+  box-shadow: 0 10px 28px rgba(72, 52, 130, 0.1);
+  backdrop-filter: blur(18px);
+}
+
+.novel-studio-page .novel-brand {
+display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.novel-studio-page .brand-mark {
+width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  color: var(--novel-primary);
+  font-size: 24px;
+}
+
+.novel-studio-page .novel-brand strong {
+font-size: 22px;
+  color: var(--novel-primary);
+  letter-spacing: -0.03em;
+  font-weight: 900;
+}
+
+.novel-studio-page .novel-nav {
+display: flex;
+  justify-content: center;
+  gap: 56px;
+}
+
+.novel-studio-page .novel-nav button,
+.novel-studio-page .novel-header-actions button {
+border: 0;
+  background: transparent;
+  color: #403754;
+  font-size: 15px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.novel-studio-page .novel-nav button:hover,
+.novel-studio-page .novel-header-actions button:hover {
+color: var(--novel-primary);
+}
+
+.novel-studio-page .novel-header-actions {
+display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.novel-studio-page .premium-btn {
+padding: 10px 18px;
+  border: 1px solid rgba(108, 78, 246, 0.35) !important;
+  border-radius: 12px;
+  color: var(--novel-primary) !important;
+  font-weight: 900 !important;
+  background: rgba(108, 78, 246, 0.08) !important;
+}
+
+.novel-studio-page .premium-btn:hover {
+background: rgba(108, 78, 246, 0.14) !important;
+}
+
+.novel-studio-page .icon-btn {
+font-size: 19px !important;
+}
+
+.novel-studio-page .profile-btn {
+font-weight: 900 !important;
+}
+
+.novel-studio-page .novel-main {
+min-height: calc(100vh - 70px);
+  display: grid;
+  grid-template-columns: 48% 52%;
+  position: relative;
+  z-index: 2;
+}
+
+.novel-studio-page .novel-hero {
+position: relative;
+  padding: 66px 42px 34px 58px;
+  overflow: hidden;
+  border-right: 1px solid rgba(108, 78, 246, 0.08);
+}
+
+.novel-studio-page .novel-hero::before {
+content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.42), transparent 22%),
+    radial-gradient(circle at 48% 68%, rgba(108, 78, 246, 0.08), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(250, 248, 255, 0.24));
+}
+
+.novel-studio-page .stage-light {
+position: absolute;
+  left: 72px;
+  top: 110px;
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(108, 78, 246, 0.14), transparent 65%);
+  filter: blur(14px);
+  animation: glowPulse 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes glowPulse {
+  from {
+    opacity: 0.38;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 0.72;
+    transform: scale(1.08);
+  }
+}
+
+.novel-studio-page .hero-copy {
+position: relative;
+  z-index: 1;
+  margin-top: 36px;
+  text-align: center;
+}
+
+.novel-studio-page .hero-copy h1 {
+margin: 0;
+  font-size: clamp(48px, 4.8vw, 76px);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  color: #2b2540;
+  text-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.85),
+    0 14px 34px rgba(108, 78, 246, 0.2);
+  word-break: keep-all;
+  white-space: nowrap;
+}
+
+.novel-studio-page .hero-copy p {
+margin: 14px 0 0;
+  color: var(--novel-primary);
+  font-size: 24px;
+  font-weight: 850;
+  text-shadow: 0 4px 16px rgba(255, 255, 255, 0.52);
+}
+
+.novel-studio-page .start-card {
+width: min(430px, 80%);
+  height: 150px;
+  margin: 34px auto 0;
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(108, 78, 246, 0.46);
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(108, 78, 246, 0.95),
+      rgba(124, 92, 255, 0.94)
+    );
+
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.08),
+    0 18px 42px rgba(108, 78, 246, 0.22);
+
+  backdrop-filter: blur(14px);
+}
+
+.novel-studio-page .start-card span {
+color: #ffffff;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.novel-studio-page .start-card small {
+color: rgba(255, 255, 255, 0.78);
+  letter-spacing: 10px;
+  margin-top: -26px;
+}
+
+.novel-studio-page .stat-panel {
+position: relative;
+  z-index: 1;
+  margin-top: 110px;
+  padding: 24px 22px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+
+  border: 1px solid rgba(108, 78, 246, 0.14);
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--novel-shadow);
+}
+
+.novel-studio-page .stat-panel div {
+text-align: center;
+  border-right: 1px solid rgba(108, 78, 246, 0.12);
+}
+
+.novel-studio-page .stat-panel div:last-child {
+border-right: 0;
+}
+
+.novel-studio-page .stat-panel span,
+.novel-studio-page .stat-panel em {
+display: block;
+  color: var(--novel-text-sub);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.novel-studio-page .stat-panel strong {
+display: block;
+  margin: 7px 0 2px;
+  color: var(--novel-primary);
+  font-size: 23px;
+  font-weight: 900;
+}
+
+.novel-studio-page .novel-setup {
+padding: 24px 28px 32px;
+}
+
+.novel-studio-page .scene-tabs {
+display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.novel-studio-page .scene-tab {
+min-height: 72px;
+  padding: 14px 20px;
+
+  border: 1px solid rgba(108, 78, 246, 0.13);
+  border-radius: 15px;
+
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--novel-text-sub);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 24px rgba(72, 52, 130, 0.08);
+
+  transition: 0.22s ease;
+}
+
+.novel-studio-page .scene-tab.active {
+border-color: rgba(108, 78, 246, 0.62);
+  color: var(--novel-text);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.08),
+    0 16px 34px rgba(108, 78, 246, 0.14);
+}
+
+.novel-studio-page .scene-tab.ready:not(.active) {
+border-color: rgba(108, 78, 246, 0.12);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.novel-studio-page .scene-tab small {
+color: var(--novel-primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.novel-studio-page .scene-tab strong {
+display: block;
+  margin-top: 4px;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.novel-studio-page .setup-panel {
+margin-bottom: 18px;
+  padding: 26px;
+
+  border: 1px solid rgba(108, 78, 246, 0.12);
+  border-radius: 20px;
+
+  background: rgba(255, 255, 255, 0.54);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--novel-shadow-soft);
+}
+
+.novel-studio-page .section-title {
+display: flex;
+  justify-content: space-between;
+  align-items: end;
+  margin-bottom: 22px;
+}
+
+.novel-studio-page .section-title h2 {
+margin: 0;
+  color: var(--novel-primary);
+  font-size: 25px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.72);
+}
+
+.novel-studio-page .section-title p {
+margin: 7px 0 0;
+  color: var(--novel-text-sub);
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.novel-studio-page .writer-level-grid {
+display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.novel-studio-page .writer-level-card {
+overflow: hidden;
+  padding: 0;
+  min-height: 330px;
+
+  border: 1px solid rgba(108, 78, 246, 0.13);
+  border-radius: 17px;
+
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--novel-text);
+  cursor: pointer;
+  text-align: left;
+
+  transition: 0.25s ease;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 30px rgba(72, 52, 130, 0.09);
+}
+
+.novel-studio-page .writer-level-card:hover {
+transform: translateY(-6px);
+  border-color: rgba(108, 78, 246, 0.45);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.07),
+    0 20px 38px rgba(108, 78, 246, 0.13);
+}
+
+.novel-studio-page .writer-level-card.selected {
+border-color: rgba(108, 78, 246, 0.65);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.1),
+    0 22px 44px rgba(108, 78, 246, 0.16);
+}
+
+.novel-studio-page .writer-card-visual {
+height: 142px;
+  display: grid;
+  place-items: center;
+
+  font-size: 52px;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(108, 78, 246, 0.22), transparent 47%),
+    linear-gradient(135deg, rgba(243, 239, 255, 0.95), rgba(255, 255, 255, 0.86));
+  border-bottom: 1px solid rgba(108, 78, 246, 0.1);
+}
+
+.novel-studio-page .writer-level-card:nth-child(2) .writer-card-visual {
+background:
+    radial-gradient(circle at 50% 40%, rgba(108, 78, 246, 0.2), transparent 47%),
+    linear-gradient(135deg, rgba(245, 242, 255, 0.96), rgba(255, 255, 255, 0.86));
+}
+
+.novel-studio-page .writer-level-card:nth-child(3) .writer-card-visual {
+background:
+    radial-gradient(circle at 50% 40%, rgba(124, 92, 255, 0.2), transparent 48%),
+    linear-gradient(135deg, rgba(242, 238, 255, 0.96), rgba(255, 255, 255, 0.86));
+}
+
+.novel-studio-page .writer-card-body {
+padding: 20px 20px 18px;
+}
+
+.novel-studio-page .writer-card-body h3 {
+margin: 0;
+  color: var(--novel-text);
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.novel-studio-page .writer-card-body p {
+min-height: 44px;
+  margin: 10px 0 16px;
+  color: var(--novel-text-sub);
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.novel-studio-page .writer-card-body ul {
+margin: 0;
+  padding: 16px 0 0;
+  list-style: none;
+  border-top: 1px solid rgba(108, 78, 246, 0.12);
+}
+
+.novel-studio-page .writer-card-body li {
+margin-bottom: 9px;
+  color: #514766;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.novel-studio-page .work-mode-grid {
+display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.novel-studio-page .work-mode-card {
+position: relative;
+  min-height: 190px;
+  padding: 22px;
+
+  border: 1px solid rgba(108, 78, 246, 0.13);
+  border-radius: 17px;
+
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--novel-text);
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+
+  transition: 0.25s ease;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 30px rgba(72, 52, 130, 0.09);
+}
+
+.novel-studio-page .work-mode-card:hover {
+transform: translateY(-5px);
+  border-color: rgba(108, 78, 246, 0.45);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.07),
+    0 20px 38px rgba(108, 78, 246, 0.13);
+}
+
+.novel-studio-page .work-mode-card.selected {
+border-color: rgba(108, 78, 246, 0.65);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.1),
+    0 22px 44px rgba(108, 78, 246, 0.16);
+}
+
+.novel-studio-page .mode-icon {
+width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+  background:
+    linear-gradient(135deg, rgba(108, 78, 246, 0.16), rgba(124, 92, 255, 0.08));
+  color: var(--novel-primary);
+  font-size: 25px;
+}
+
+.novel-studio-page .work-mode-card h3 {
+margin: 18px 0 8px;
+  color: var(--novel-text);
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.novel-studio-page .work-mode-card p {
+min-height: 43px;
+  margin: 0;
+  color: var(--novel-text-sub);
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.novel-studio-page .work-mode-card span {
+display: inline-block;
+  margin-top: 14px;
+  max-width: calc(100% - 42px);
+  padding: 8px 12px;
+
+  border-radius: 999px;
+  background: rgba(108, 78, 246, 0.09);
+  color: var(--novel-primary);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 800;
+}
+
+.novel-studio-page .work-mode-card b {
+position: absolute;
+  right: 20px;
+  bottom: 20px;
+
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+  border: 1px solid rgba(108, 78, 246, 0.2);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--novel-primary);
+}
+
+.novel-studio-page .start-novel-btn {
+width: 100%;
+  height: 66px;
+
+  border: 1px solid rgba(108, 78, 246, 0.64);
+  border-radius: 18px;
+
+  background: linear-gradient(135deg, var(--novel-primary), var(--novel-primary-light));
+  color: #ffffff;
+
+  font-size: 20px;
+  font-weight: 900;
+  cursor: pointer;
+
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.08),
+    0 18px 42px rgba(108, 78, 246, 0.24);
+
+  transition: 0.25s ease;
+}
+
+.novel-studio-page .start-novel-btn:hover:not(:disabled) {
+transform: translateY(-3px);
+  background: linear-gradient(135deg, var(--novel-primary-hover), var(--novel-primary));
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.12),
+    0 22px 52px rgba(108, 78, 246, 0.32);
+}
+
+.novel-studio-page .start-novel-btn.disabled,
+.novel-studio-page .start-novel-btn:disabled {
+cursor: not-allowed;
+  opacity: 0.54;
+  filter: grayscale(0.25);
+}
+
+@media (max-width: 1280px) {
+  .novel-studio-page .novel-header {
+  grid-template-columns: 230px 1fr;
+  }
+
+  .novel-studio-page .novel-header-actions {
+  display: none;
+  }
+
+  .novel-studio-page .novel-main {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-studio-page .novel-hero {
+  min-height: 640px;
+      border-right: 0;
+      border-bottom: 1px solid rgba(108, 78, 246, 0.12);
+  }
+
+  .novel-studio-page .novel-setup {
+  padding: 30px;
+  }
+
+}
+
+@media (max-width: 980px) {
+  .novel-studio-page .novel-nav {
+  gap: 24px;
+  }
+
+  .novel-studio-page .writer-level-grid,
+  .novel-studio-page .work-mode-grid {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-studio-page .writer-level-card {
+  min-height: auto;
+  }
+
+  .novel-studio-page .writer-card-visual {
+  height: 110px;
+  }
+
+}
+
+@media (max-width: 768px) {
+  .novel-studio-page .novel-header {
+  grid-template-columns: 1fr;
+      height: auto;
+      padding: 18px;
+  }
+
+  .novel-studio-page .novel-nav,
+  .novel-studio-page .novel-header-actions {
+  display: none;
+  }
+
+  .novel-studio-page .scene-tabs,
+  .novel-studio-page .stat-panel {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-studio-page .novel-hero {
+  padding: 48px 22px;
+      min-height: auto;
+  }
+
+  .novel-studio-page .hero-copy {
+  margin-top: 24px;
+  }
+
+  .novel-studio-page .hero-copy h1 {
+  font-size: 48px;
+      white-space: normal;
+  }
+
+  .novel-studio-page .hero-copy p {
+  font-size: 18px;
+  }
+
+  .novel-studio-page .start-card {
+  width: 100%;
+  }
+
+  .novel-studio-page .stat-panel {
+  margin-top: 56px;
+  }
+
+  .novel-studio-page .stat-panel div {
+  padding: 14px 0;
+      border-right: 0;
+      border-bottom: 1px solid rgba(108, 78, 246, 0.12);
+  }
+
+  .novel-studio-page .stat-panel div:last-child {
+  border-bottom: 0;
+  }
+
+  .novel-studio-page .novel-setup {
+  padding: 24px 18px 32px;
+  }
+
+  .novel-studio-page .setup-panel {
+  padding: 20px;
+  }
+
+}
+
+
+/* =========================================================
+   NovelWritingEditorPage.css
+   scoped root: .novel-editor-page
+========================================================= */
+
+.novel-editor-page {
+--editor-primary: #6c4ef6;
+  --editor-primary-hover: #5b3fe8;
+  --editor-primary-light: #7c5cff;
+  --editor-primary-soft: rgba(108, 78, 246, 0.1);
+  --editor-primary-soft-2: rgba(108, 78, 246, 0.18);
+
+  --editor-bg: #faf8ff;
+  --editor-glass: rgba(255, 255, 255, 0.68);
+  --editor-glass-strong: rgba(255, 255, 255, 0.84);
+  --editor-glass-soft: rgba(255, 255, 255, 0.52);
+
+  --editor-text: #211a35;
+  --editor-text-strong: #191429;
+  --editor-muted: #6f6680;
+  --editor-muted-light: #8b82a0;
+
+  --editor-line: rgba(108, 78, 246, 0.18);
+  --editor-line-strong: rgba(108, 78, 246, 0.48);
+
+  --editor-panel: rgba(255, 255, 255, 0.7);
+  --editor-shadow: 0 20px 54px rgba(72, 52, 130, 0.16);
+  --editor-shadow-soft: 0 12px 34px rgba(72, 52, 130, 0.1);
+}
+
+.novel-editor-page {
+position: relative;
+  min-height: 100dvh;
+  color: var(--editor-text);
+  background: var(--editor-bg);
+  overflow-x: hidden;
+}
+
+.novel-editor-page .novel-editor-bg {
+position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.novel-editor-page .novel-editor-overlay {
+position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.62) 0%,
+      rgba(255, 255, 255, 0.42) 46%,
+      rgba(250, 248, 255, 0.76) 100%
+    ),
+    radial-gradient(
+      circle at 50% 20%,
+      rgba(108, 78, 246, 0.11),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 82% 62%,
+      rgba(124, 92, 255, 0.08),
+      transparent 34%
+    );
+}
+
+.novel-editor-page .novel-editor-header {
+position: relative;
+  z-index: 5;
+  min-height: 72px;
+  padding: 0 28px;
+
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 460px;
+  align-items: center;
+  gap: 24px;
+
+  background: rgba(255, 255, 255, 0.72);
+  border-bottom: 1px solid rgba(108, 78, 246, 0.14);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 10px 28px rgba(72, 52, 130, 0.1);
+}
+
+.novel-editor-page .novel-editor-brand {
+display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.novel-editor-page .novel-editor-brand span {
+color: var(--editor-primary);
+  font-size: 28px;
+}
+
+.novel-editor-page .novel-editor-brand strong {
+color: var(--editor-primary);
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-editor-page .novel-editor-title {
+display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.novel-editor-page .novel-editor-title strong {
+color: var(--editor-text-strong);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.novel-editor-page .novel-editor-title button {
+border: none;
+  background: transparent;
+  color: var(--editor-primary);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.novel-editor-page .novel-editor-title button:hover {
+color: var(--editor-primary-hover);
+}
+
+.novel-editor-page .novel-editor-title span,
+.novel-editor-page .novel-editor-title em {
+color: var(--editor-muted);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.novel-editor-page .novel-editor-actions {
+display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.novel-editor-page .novel-editor-actions button {
+height: 42px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.novel-editor-page .ghost-btn {
+border: 1px solid rgba(108, 78, 246, 0.22);
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--editor-primary);
+}
+
+.novel-editor-page .ghost-btn:hover {
+border-color: rgba(108, 78, 246, 0.46);
+  background: rgba(108, 78, 246, 0.08);
+}
+
+.novel-editor-page .complete-btn {
+border: none;
+  background: linear-gradient(135deg, var(--editor-primary), var(--editor-primary-light));
+  color: #ffffff;
+  box-shadow:
+    0 10px 24px rgba(108, 78, 246, 0.22),
+    0 0 0 4px rgba(108, 78, 246, 0.07);
+}
+
+.novel-editor-page .complete-btn:hover {
+background: linear-gradient(135deg, var(--editor-primary-hover), var(--editor-primary));
+  transform: translateY(-1px);
+}
+
+.novel-editor-page .novel-editor-layout {
+position: relative;
+  z-index: 3;
+
+  width: min(1760px, 100%);
+  margin: 0 auto;
+  padding: 22px;
+
+  display: grid;
+  grid-template-columns: 400px minmax(720px, 1fr) 390px;
+  gap: 22px;
+  align-items: stretch;
+}
+
+.novel-editor-page .scene-list-panel,
+.novel-editor-page .manuscript-panel,
+.novel-editor-page .ai-writing-panel {
+min-height: calc(100dvh - 118px);
+  border: 1px solid var(--editor-line);
+  border-radius: 22px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.78),
+      rgba(255, 255, 255, 0.6)
+    );
+  box-shadow: var(--editor-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.novel-editor-page .scene-list-panel {
+padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.novel-editor-page .panel-title-row {
+display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.novel-editor-page .panel-title-row h2 {
+margin: 0;
+  color: var(--editor-text-strong);
+  font-size: 21px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-editor-page .panel-title-row button {
+height: 40px;
+  padding: 0 16px;
+  border: 1px solid rgba(108, 78, 246, 0.24);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--editor-primary);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.novel-editor-page .panel-title-row button:hover {
+border-color: rgba(108, 78, 246, 0.48);
+  background: rgba(108, 78, 246, 0.08);
+}
+
+.novel-editor-page .scene-list {
+display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.novel-editor-page .scene-item {
+min-height: 92px;
+  padding: 15px;
+
+  border: 1px solid rgba(108, 78, 246, 0.12);
+  border-radius: 15px;
+
+  background: rgba(255, 255, 255, 0.58);
+  color: var(--editor-text);
+
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(72, 52, 130, 0.06);
+  transition: 0.18s ease;
+}
+
+.novel-editor-page .scene-item:hover {
+border-color: rgba(108, 78, 246, 0.36);
+  background: rgba(255, 255, 255, 0.78);
+  transform: translateY(-1px);
+}
+
+.novel-editor-page .scene-item.active {
+border-color: rgba(108, 78, 246, 0.52);
+  background: rgba(108, 78, 246, 0.1);
+  box-shadow:
+    0 0 0 3px rgba(108, 78, 246, 0.06),
+    0 12px 26px rgba(108, 78, 246, 0.12);
+}
+
+.novel-editor-page .scene-item-head {
+display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.novel-editor-page .scene-item-head strong {
+color: var(--editor-text-strong);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.novel-editor-page .scene-item-head span {
+flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(108, 78, 246, 0.12);
+  color: var(--editor-primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.novel-editor-page .scene-item p {
+margin: 10px 0 0;
+  color: var(--editor-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.novel-editor-page .scene-status-row {
+display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.novel-editor-page .scene-status-row em {
+font-style: normal;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.novel-editor-page .scene-status-row em.draft {
+color: var(--editor-primary);
+}
+
+.novel-editor-page .scene-status-row em.empty {
+color: rgba(111, 102, 128, 0.58);
+}
+
+.novel-editor-page .scene-help-card {
+margin-top: 16px;
+  padding: 18px;
+  border: 1px solid rgba(108, 78, 246, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 8px 22px rgba(72, 52, 130, 0.06);
+}
+
+.novel-editor-page .scene-help-card strong {
+display: block;
+  color: var(--editor-text-strong);
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 900;
+}
+
+.novel-editor-page .scene-help-card p {
+margin: 8px 0 0;
+  color: var(--editor-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.novel-editor-page .manuscript-panel {
+padding: 24px 26px;
+}
+
+.novel-editor-page .current-scene-info {
+display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 20px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(108, 78, 246, 0.12);
+}
+
+.novel-editor-page .current-scene-info span,
+.novel-editor-page .scene-mood-card span {
+display: block;
+  margin-bottom: 8px;
+  color: var(--editor-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.novel-editor-page .current-scene-info h1 {
+margin: 0;
+  color: var(--editor-text-strong);
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-editor-page .current-scene-info p {
+margin: 12px 0 0;
+  color: var(--editor-muted);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 700;
+}
+
+.novel-editor-page .scene-mood-card {
+align-self: start;
+  padding: 18px;
+  border: 1px solid rgba(108, 78, 246, 0.16);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.novel-editor-page .scene-mood-card strong {
+color: var(--editor-primary);
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 900;
+}
+
+.novel-editor-page .editor-field {
+position: relative;
+  margin-top: 20px;
+}
+
+.novel-editor-page .editor-field label {
+display: block;
+  margin-bottom: 9px;
+  color: var(--editor-text-strong);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.novel-editor-page .editor-field input {
+width: 100%;
+  height: 54px;
+  padding: 0 18px;
+
+  border: 1px solid rgba(108, 78, 246, 0.18);
+  border-radius: 12px;
+  outline: none;
+
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--editor-text-strong);
+
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 8px 20px rgba(72, 52, 130, 0.06);
+}
+
+.novel-editor-page .editor-field input:focus {
+border-color: rgba(108, 78, 246, 0.64);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.08),
+    0 12px 26px rgba(108, 78, 246, 0.1);
+}
+
+.novel-editor-page .editor-field small {
+position: absolute;
+  right: 12px;
+  top: 44px;
+  color: rgba(111, 102, 128, 0.58);
+  font-weight: 700;
+}
+
+.novel-editor-page .editor-label-row {
+display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.novel-editor-page .editor-label-row button {
+height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(108, 78, 246, 0.24);
+  border-radius: 10px;
+  background: rgba(108, 78, 246, 0.08);
+  color: var(--editor-primary);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.novel-editor-page .editor-label-row button:hover {
+border-color: rgba(108, 78, 246, 0.48);
+  background: rgba(108, 78, 246, 0.13);
+}
+
+.novel-editor-page .mini-toolbar {
+height: 46px;
+  padding: 0 14px;
+  margin-bottom: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  border: 1px solid rgba(108, 78, 246, 0.14);
+  border-bottom: none;
+  border-radius: 14px 14px 0 0;
+
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.novel-editor-page .mini-toolbar button {
+border: none;
+  background: transparent;
+  color: var(--editor-muted);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.novel-editor-page .mini-toolbar button:hover {
+color: var(--editor-primary);
+}
+
+.novel-editor-page .manuscript-editor-field textarea {
+width: 100%;
+  min-height: 410px;
+  resize: vertical;
+  padding: 26px;
+
+  border: 1px solid rgba(108, 78, 246, 0.14);
+  border-radius: 0 0 14px 14px;
+  outline: none;
+
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--editor-text-strong);
+
+  font-size: 17px;
+  line-height: 1.9;
+  font-weight: 600;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 10px 24px rgba(72, 52, 130, 0.06);
+}
+
+.novel-editor-page .manuscript-editor-field textarea:focus {
+border-color: rgba(108, 78, 246, 0.62);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.08),
+    0 14px 30px rgba(108, 78, 246, 0.1);
+}
+
+.novel-editor-page .manuscript-editor-field textarea::placeholder {
+color: rgba(111, 102, 128, 0.48);
+}
+
+.novel-editor-page .word-count {
+margin-top: 8px;
+  text-align: right;
+  color: var(--editor-muted-light);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.novel-editor-page .editor-bottom-actions {
+margin-top: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.25fr;
+  gap: 14px;
+}
+
+.novel-editor-page .editor-bottom-actions button {
+height: 54px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.novel-editor-page .prev-scene-btn,
+.novel-editor-page .save-btn {
+border: 1px solid rgba(108, 78, 246, 0.2);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--editor-primary);
+}
+
+.novel-editor-page .prev-scene-btn:hover:not(:disabled),
+.novel-editor-page .save-btn:hover:not(:disabled) {
+border-color: rgba(108, 78, 246, 0.46);
+  background: rgba(108, 78, 246, 0.08);
+}
+
+.novel-editor-page .next-scene-btn {
+border: none;
+  background: linear-gradient(135deg, var(--editor-primary), var(--editor-primary-light));
+  color: #ffffff;
+  box-shadow:
+    0 10px 24px rgba(108, 78, 246, 0.22),
+    0 0 0 4px rgba(108, 78, 246, 0.07);
+}
+
+.novel-editor-page .next-scene-btn:hover:not(:disabled) {
+background: linear-gradient(135deg, var(--editor-primary-hover), var(--editor-primary));
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 30px rgba(108, 78, 246, 0.28),
+    0 0 0 4px rgba(108, 78, 246, 0.1);
+}
+
+.novel-editor-page .editor-bottom-actions button:disabled {
+opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.novel-editor-page .ai-writing-panel {
+padding: 22px;
+  display: flex;
+  flex-direction: column;
+}
+
+.novel-editor-page .ai-writing-panel h2 {
+margin: 0 0 22px;
+  color: var(--editor-text-strong);
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-editor-page .setting-summary-card,
+.novel-editor-page .selected-text-card,
+.novel-editor-page .ai-request-card {
+padding: 18px;
+  border: 1px solid rgba(108, 78, 246, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 8px 22px rgba(72, 52, 130, 0.06);
+}
+
+.novel-editor-page .setting-summary-card h3,
+.novel-editor-page .selected-text-card h3,
+.novel-editor-page .ai-request-card h3 {
+margin: 0 0 14px;
+  color: var(--editor-primary);
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.novel-editor-page .setting-summary-row {
+display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(108, 78, 246, 0.08);
+}
+
+.novel-editor-page .setting-summary-row:last-of-type {
+border-bottom: 0;
+}
+
+.novel-editor-page .setting-summary-row span {
+color: var(--editor-text-strong);
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.novel-editor-page .setting-summary-row strong {
+color: var(--editor-muted);
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+.novel-editor-page .setting-summary-card button {
+width: 100%;
+  height: 42px;
+  margin-top: 14px;
+  border: 1px solid rgba(108, 78, 246, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--editor-primary);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.novel-editor-page .setting-summary-card button:hover {
+border-color: rgba(108, 78, 246, 0.46);
+  background: rgba(108, 78, 246, 0.08);
+}
+
+.novel-editor-page .selected-text-card {
+margin-top: 16px;
+}
+
+.novel-editor-page .selected-text-card p {
+margin: 0;
+  min-height: 74px;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--editor-muted);
+  font-size: 14px;
+  line-height: 1.65;
+  font-weight: 700;
+}
+
+.novel-editor-page .ai-request-card {
+margin-top: 16px;
+}
+
+.novel-editor-page .ai-request-grid {
+display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.novel-editor-page .ai-request-grid button,
+.novel-editor-page .wide-ai-btn {
+min-height: 48px;
+  border: 1px solid rgba(108, 78, 246, 0.22);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--editor-primary);
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(72, 52, 130, 0.06);
+  transition: 0.18s ease;
+}
+
+.novel-editor-page .ai-request-grid button:hover,
+.novel-editor-page .wide-ai-btn:hover {
+border-color: rgba(108, 78, 246, 0.5);
+  background: rgba(108, 78, 246, 0.1);
+  transform: translateY(-1px);
+}
+
+.novel-editor-page .wide-ai-btn {
+width: 100%;
+  margin-top: 10px;
+}
+
+.novel-editor-page .ai-helper-note {
+margin: auto 0 0;
+  padding-top: 16px;
+  color: var(--editor-muted);
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (max-width: 1500px) {
+  .novel-editor-page .novel-editor-layout {
+  grid-template-columns: 340px minmax(640px, 1fr);
+  }
+
+  .novel-editor-page .ai-writing-panel {
+  grid-column: 1 / -1;
+      min-height: auto;
+  }
+
+}
+
+@media (max-width: 980px) {
+  .novel-editor-page .novel-editor-header {
+  grid-template-columns: 1fr;
+      padding: 18px;
+  }
+
+  .novel-editor-page .novel-editor-title,
+  .novel-editor-page .novel-editor-actions {
+  justify-content: flex-start;
+      flex-wrap: wrap;
+  }
+
+  .novel-editor-page .novel-editor-layout {
+  grid-template-columns: 1fr;
+      padding: 18px;
+  }
+
+  .novel-editor-page .scene-list-panel,
+  .novel-editor-page .manuscript-panel,
+  .novel-editor-page .ai-writing-panel {
+  min-height: auto;
+  }
+
+  .novel-editor-page .current-scene-info {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-editor-page .editor-bottom-actions {
+  grid-template-columns: 1fr;
+  }
+
+}
+
+
+/* =========================================================
+   NovelAuthorMeetingPage.css
+   scoped root: .author-meeting-page
+========================================================= */
+
+.author-meeting-page {
+--author-main: #6c4ef6;
+  --author-main-light: #7c5cff;
+  --author-main-hover: #5b3fe8;
+  --author-main-soft: rgba(108, 78, 246, 0.12);
+  --author-main-soft-2: rgba(108, 78, 246, 0.2);
+
+  
+  --author-bg: #f8f5ff;
+  --author-glass: rgba(255, 255, 255, 0.62);
+  --author-glass-strong: rgba(255, 255, 255, 0.78);
+  --author-glass-soft: rgba(255, 255, 255, 0.42);
+
+  
+  --author-text: #2b2540;
+  --author-text-strong: #211a35;
+  --author-muted: #746b8f;
+  --author-muted-light: #8d84a3;
+
+  
+  --author-line: rgba(108, 78, 246, 0.2);
+  --author-line-strong: rgba(108, 78, 246, 0.5);
+  --author-shadow: 0 20px 50px rgba(71, 52, 130, 0.16);
+  --author-shadow-soft: 0 12px 34px rgba(71, 52, 130, 0.11);
+
+  
+  --author-cream: #fff5d8;
+}
+
+.author-meeting-page {
+position: relative;
+  width: 100vw;
+  min-height: 100dvh;
+  height: auto;
+  overflow-x: hidden;
+  overflow-y: visible;
+  color: var(--author-text);
+  background: var(--author-bg);
+}
+
+.author-meeting-page .author-meeting-bg {
+position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.author-meeting-page .author-meeting-overlay {
+position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.36) 42%,
+      rgba(248, 245, 255, 0.64) 100%
+    ),
+    radial-gradient(
+      circle at 50% 20%,
+      rgba(255, 255, 255, 0.46),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 48% 52%,
+      rgba(108, 78, 246, 0.1),
+      transparent 38%
+    );
+}
+
+.author-meeting-page .author-header {
+position: relative;
+  z-index: 5;
+  height: 72px;
+  padding: 0 36px;
+
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr) 360px;
+  align-items: center;
+  gap: 24px;
+
+  background: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(108, 78, 246, 0.14);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 10px 30px rgba(67, 47, 120, 0.1);
+}
+
+.author-meeting-page .author-brand {
+display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.author-meeting-page .author-brand-icon {
+font-size: 28px;
+}
+
+.author-meeting-page .author-brand strong {
+color: var(--author-main);
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.author-meeting-page .author-nav {
+display: flex;
+  justify-content: center;
+  gap: 52px;
+}
+
+.author-meeting-page .author-nav button,
+.author-meeting-page .author-user button {
+border: 0;
+  background: transparent;
+  color: #3b3354;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.author-meeting-page .author-nav button:hover,
+.author-meeting-page .author-user button:hover {
+color: var(--author-main);
+}
+
+.author-meeting-page .author-user {
+display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
+}
+
+.author-meeting-page .author-premium-btn {
+height: 42px;
+  padding: 0 18px;
+  border: 1px solid rgba(108, 78, 246, 0.34) !important;
+  border-radius: 12px;
+  color: var(--author-main) !important;
+  background: rgba(108, 78, 246, 0.08) !important;
+}
+
+.author-meeting-page .author-premium-btn:hover {
+background: rgba(108, 78, 246, 0.14) !important;
+}
+
+.author-meeting-page .author-bell-btn {
+font-size: 20px !important;
+}
+
+.author-meeting-page .author-profile-btn {
+font-weight: 900 !important;
+}
+
+.author-meeting-page .author-main {
+position: relative;
+  z-index: 4;
+  min-height: calc(100dvh - 72px);
+  height: auto;
+
+  padding: 34px 72px 72px;
+
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 22px;
+}
+
+.author-meeting-page .author-title-area {
+text-align: center;
+}
+
+.author-meeting-page .author-title-area h1 {
+margin: 0;
+  color: var(--author-text-strong);
+  font-size: clamp(36px, 3.4vw, 56px);
+  line-height: 1.08;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  text-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.9),
+    0 12px 34px rgba(108, 78, 246, 0.2);
+}
+
+.author-meeting-page .author-title-area p {
+margin: 8px 0 0;
+  color: var(--author-main);
+  font-size: 16px;
+  line-height: 1.45;
+  font-weight: 800;
+}
+
+.author-meeting-page .author-title-area span {
+display: inline-block;
+  margin-top: 6px;
+  color: var(--author-muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.author-meeting-page .author-step-bar {
+width: min(900px, 100%);
+  margin: 0 auto;
+  padding: 10px 20px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+
+  border: 1px solid rgba(108, 78, 246, 0.16);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--author-shadow-soft);
+}
+
+.author-meeting-page .author-step {
+display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--author-muted);
+}
+
+.author-meeting-page .author-step span {
+width: 36px;
+  height: 36px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+  border: 1px solid rgba(108, 78, 246, 0.24);
+  color: var(--author-main);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.author-meeting-page .author-step.active span {
+color: #fff;
+  background: linear-gradient(135deg, var(--author-main), var(--author-main-light));
+  border-color: rgba(108, 78, 246, 0.78);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.12),
+    0 10px 26px rgba(108, 78, 246, 0.28);
+}
+
+.author-meeting-page .author-step.done span {
+color: #fff;
+  background: linear-gradient(135deg, var(--author-main-hover), var(--author-main));
+  border-color: rgba(108, 78, 246, 0.7);
+  box-shadow: 0 10px 24px rgba(108, 78, 246, 0.2);
+}
+
+.author-meeting-page .author-step strong {
+font-size: 14px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.author-meeting-page .author-step-bar em {
+color: var(--author-main);
+  font-style: normal;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.author-meeting-page .author-board {
+width: min(1500px, 100%);
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: 300px minmax(560px, 1fr) 300px;
+  gap: 22px;
+
+  align-items: stretch;
+}
+
+.author-meeting-page .agenda-panel,
+.author-meeting-page .meeting-panel,
+.author-meeting-page .minutes-panel {
+height: 100%;
+  min-height: 560px;
+
+  border: 1px solid var(--author-line);
+  border-radius: 22px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.76),
+      rgba(255, 255, 255, 0.56)
+    );
+  box-shadow: var(--author-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.author-meeting-page .agenda-panel,
+.author-meeting-page .minutes-panel {
+padding: 20px;
+  overflow-y: visible;
+}
+
+.author-meeting-page .meeting-panel {
+padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.author-meeting-page .minutes-panel {
+display: flex;
+  flex-direction: column;
+}
+
+.author-meeting-page .agenda-panel h2,
+.author-meeting-page .meeting-panel h2,
+.author-meeting-page .minutes-panel h2 {
+margin: 0 0 18px;
+  text-align: center;
+  color: var(--author-text-strong);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.author-meeting-page .agenda-group {
+margin-top: 14px;
+  padding: 14px;
+
+  border: 1px solid rgba(108, 78, 246, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.author-meeting-page .agenda-group h3 {
+margin: 0 0 12px;
+  color: var(--author-main);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.author-meeting-page .agenda-group button {
+width: 100%;
+  height: 42px;
+  padding: 0 12px;
+
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 8px;
+
+  border: 0;
+  border-bottom: 1px solid rgba(108, 78, 246, 0.1);
+  background: transparent;
+  color: #4f4768;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.author-meeting-page .agenda-group button:last-child {
+border-bottom: 0;
+}
+
+.author-meeting-page .agenda-group button span {
+width: 17px;
+  height: 17px;
+  border: 1px solid rgba(79, 71, 104, 0.38);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.author-meeting-page .agenda-group button:hover {
+color: var(--author-main);
+  background: rgba(108, 78, 246, 0.08);
+}
+
+.author-meeting-page .agenda-group button.active {
+border: 1px solid rgba(108, 78, 246, 0.5);
+  border-radius: 11px;
+  color: var(--author-main);
+  background: rgba(108, 78, 246, 0.12);
+  box-shadow:
+    0 0 0 3px rgba(108, 78, 246, 0.08),
+    0 10px 24px rgba(108, 78, 246, 0.12);
+}
+
+.author-meeting-page .agenda-group button.active span {
+border-color: var(--author-main);
+  background:
+    radial-gradient(circle, var(--author-main) 0 35%, transparent 38%),
+    #fff;
+}
+
+.author-meeting-page .agenda-group button.completed {
+color: var(--author-text-strong);
+}
+
+.author-meeting-page .agenda-group button.completed span {
+border-color: var(--author-main);
+  background:
+    radial-gradient(circle, var(--author-main) 0 45%, transparent 48%),
+    #fff;
+}
+
+.author-meeting-page .agenda-group button em {
+color: var(--author-main);
+  font-style: normal;
+  font-weight: 900;
+}
+
+.author-meeting-page .meeting-card {
+flex: 1;
+  height: auto;
+  min-height: 460px;
+  padding: 34px 36px 30px;
+
+  border: 1px solid rgba(108, 78, 246, 0.16);
+  border-radius: 20px;
+  background:
+    radial-gradient(
+      circle at 18% 18%,
+      rgba(108, 78, 246, 0.1),
+      transparent 26%
+    ),
+    radial-gradient(
+      circle at 82% 34%,
+      rgba(124, 92, 255, 0.08),
+      transparent 30%
+    ),
+    rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.author-meeting-page .meeting-question {
+margin: 0;
+  text-align: center;
+  color: var(--author-text-strong);
+  font-size: 24px;
+  line-height: 1.55;
+  font-weight: 800;
+}
+
+.author-meeting-page .meeting-question strong {
+color: var(--author-main);
+  font-size: 32px;
+  line-height: 1.35;
+  font-weight: 900;
+  text-shadow: 0 8px 22px rgba(108, 78, 246, 0.16);
+}
+
+.author-meeting-page .meeting-guide {
+margin: 12px 0 22px;
+  text-align: center;
+  color: var(--author-muted);
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.author-meeting-page .meeting-card textarea {
+width: 100%;
+  min-height: 170px;
+  height: auto;
+  resize: vertical;
+  padding: 20px 22px;
+
+  border: 1px solid rgba(108, 78, 246, 0.18);
+  border-radius: 16px;
+  outline: none;
+
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--author-text-strong);
+  font-size: 16px;
+  line-height: 1.7;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 10px 24px rgba(71, 52, 130, 0.08);
+}
+
+.author-meeting-page .meeting-card textarea:focus {
+border-color: rgba(108, 78, 246, 0.72);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.1),
+    0 16px 34px rgba(108, 78, 246, 0.12);
+}
+
+.author-meeting-page .meeting-card textarea::placeholder {
+color: rgba(79, 71, 104, 0.48);
+}
+
+.author-meeting-page .meeting-actions {
+margin-top: 22px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+  gap: 14px;
+}
+
+.author-meeting-page .meeting-actions button {
+height: 52px;
+  border-radius: 13px;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.author-meeting-page .sub-btn {
+border: 1px solid rgba(108, 78, 246, 0.22);
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--author-main);
+  box-shadow: 0 8px 18px rgba(71, 52, 130, 0.08);
+}
+
+.author-meeting-page .sub-btn:hover {
+border-color: rgba(108, 78, 246, 0.52);
+  background: rgba(108, 78, 246, 0.08);
+  color: var(--author-main-hover);
+}
+
+.author-meeting-page .next-btn {
+border: 1px solid rgba(108, 78, 246, 0.64);
+  background: linear-gradient(135deg, var(--author-main), var(--author-main-light));
+  color: #fff;
+  box-shadow:
+    0 10px 22px rgba(108, 78, 246, 0.26),
+    0 0 0 4px rgba(108, 78, 246, 0.08);
+}
+
+.author-meeting-page .next-btn:hover {
+background: linear-gradient(135deg, var(--author-main-hover), var(--author-main));
+  box-shadow:
+    0 14px 28px rgba(108, 78, 246, 0.32),
+    0 0 0 4px rgba(108, 78, 246, 0.12);
+  transform: translateY(-1px);
+}
+
+.author-meeting-page .minutes-box {
+flex-shrink: 0;
+  margin-top: 14px;
+  padding: 14px;
+
+  border: 1px solid rgba(108, 78, 246, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.author-meeting-page .minutes-box h3 {
+margin: 0 0 12px;
+  color: var(--author-main);
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.author-meeting-page .minute-row {
+display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 10px;
+
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(108, 78, 246, 0.1);
+}
+
+.author-meeting-page .minute-row:last-child {
+border-bottom: 0;
+}
+
+.author-meeting-page .minute-row span {
+color: var(--author-text-strong);
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 800;
+}
+
+.author-meeting-page .minute-row strong {
+color: var(--author-muted);
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 700;
+  word-break: keep-all;
+}
+
+.author-meeting-page .minute-row.completed span {
+color: var(--author-main);
+}
+
+.author-meeting-page .minute-row.completed strong {
+color: var(--author-text-strong);
+}
+
+.author-meeting-page .start-writing-btn {
+width: 100%;
+  height: 56px;
+  margin-top: auto;
+
+  border: 1px solid rgba(108, 78, 246, 0.18);
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.55);
+  color: rgba(79, 71, 104, 0.52);
+
+  font-size: 17px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.author-meeting-page .start-writing-btn:hover:not(:disabled) {
+color: var(--author-main);
+  border-color: rgba(108, 78, 246, 0.42);
+  background: rgba(108, 78, 246, 0.08);
+}
+
+.author-meeting-page .start-writing-btn:disabled {
+cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.author-meeting-page .start-writing-btn.enabled {
+color: #fff;
+  border-color: rgba(108, 78, 246, 0.62);
+  background: linear-gradient(135deg, var(--author-main), var(--author-main-light));
+  box-shadow:
+    0 12px 26px rgba(108, 78, 246, 0.26),
+    0 0 0 4px rgba(108, 78, 246, 0.08);
+}
+
+@media (max-width: 1380px) {
+  .author-meeting-page .author-header {
+  grid-template-columns: 240px minmax(0, 1fr) 300px;
+  }
+
+  .author-meeting-page .author-nav {
+  gap: 32px;
+  }
+
+  .author-meeting-page .author-main {
+  padding: 28px 34px 48px;
+  }
+
+  .author-meeting-page .author-board {
+  grid-template-columns: 1fr;
+  }
+
+  .author-meeting-page .agenda-panel,
+  .author-meeting-page .meeting-panel,
+  .author-meeting-page .minutes-panel {
+  height: auto;
+      min-height: auto;
+  }
+
+  .author-meeting-page .agenda-panel,
+  .author-meeting-page .minutes-panel {
+  overflow-y: visible;
+  }
+
+  .author-meeting-page .meeting-card {
+  height: auto;
+  }
+
+}
+
+@media (max-width: 920px) {
+  .author-meeting-page .author-header {
+  height: auto;
+      grid-template-columns: 1fr;
+      padding: 18px;
+  }
+
+  .author-meeting-page .author-nav,
+  .author-meeting-page .author-user {
+  display: none;
+  }
+
+  .author-meeting-page .author-main {
+  padding: 24px 18px 42px;
+      gap: 18px;
+  }
+
+  .author-meeting-page .author-title-area h1 {
+  font-size: 38px;
+  }
+
+  .author-meeting-page .author-step-bar {
+  overflow-x: auto;
+      justify-content: flex-start;
+  }
+
+  .author-meeting-page .author-board {
+  gap: 18px;
+  }
+
+  .author-meeting-page .meeting-panel {
+  padding: 18px;
+  }
+
+  .author-meeting-page .meeting-card {
+  padding: 28px 22px;
+  }
+
+  .author-meeting-page .meeting-question {
+  font-size: 21px;
+  }
+
+  .author-meeting-page .meeting-question strong {
+  font-size: 28px;
+  }
+
+  .author-meeting-page .meeting-actions {
+  grid-template-columns: 1fr;
+  }
+
+}
+
+@media (max-width: 560px) {
+  .author-meeting-page .author-title-area h1 {
+  font-size: 32px;
+  }
+
+  .author-meeting-page .author-title-area p {
+  font-size: 14px;
+  }
+
+  .author-meeting-page .author-step {
+  min-width: max-content;
+  }
+
+  .author-meeting-page .agenda-panel,
+  .author-meeting-page .minutes-panel {
+  padding: 16px;
+  }
+
+  .author-meeting-page .meeting-card textarea {
+  min-height: 150px;
+  }
+
+}
+
+
+/* =========================================================
+   NovelChoiceBuilderPage.css
+   scoped root: .novel-choice-page
+========================================================= */
+
+.novel-choice-page {
+--choice-primary: #6c4ef6;
+  --choice-primary-hover: #5b3fe8;
+  --choice-primary-light: #7c5cff;
+
+  --choice-bg: #faf8ff;
+  --choice-glass: rgba(255, 255, 255, 0.72);
+  --choice-glass-strong: rgba(255, 255, 255, 0.86);
+  --choice-glass-soft: rgba(255, 255, 255, 0.54);
+
+  --choice-text: #211a35;
+  --choice-text-strong: #191429;
+  --choice-muted: #6f6680;
+
+  --choice-line: rgba(108, 78, 246, 0.18);
+  --choice-line-strong: rgba(108, 78, 246, 0.5);
+
+  --choice-shadow: 0 24px 70px rgba(72, 52, 130, 0.16);
+  --choice-shadow-soft: 0 12px 34px rgba(72, 52, 130, 0.1);
+}
+
+.novel-choice-page {
+min-height: 100vh;
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--choice-text);
+  padding: 32px;
+
+  overflow-x: hidden;
+  background: var(--choice-bg);
+}
+
+.novel-choice-page .novel-choice-bg {
+position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center center;
+
+  z-index: -2;
+  pointer-events: none;
+}
+
+.novel-choice-page .novel-choice-overlay {
+position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.66) 0%,
+      rgba(255, 255, 255, 0.46) 44%,
+      rgba(250, 248, 255, 0.78) 100%
+    ),
+    radial-gradient(
+      circle at 50% 20%,
+      rgba(108, 78, 246, 0.12),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 80% 70%,
+      rgba(124, 92, 255, 0.08),
+      transparent 36%
+    );
+}
+
+.novel-choice-page .novel-choice-shell {
+width: min(980px, 100%);
+
+  border: 1px solid var(--choice-line);
+  border-radius: 34px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.82),
+      rgba(255, 255, 255, 0.64)
+    );
+
+  backdrop-filter: blur(18px);
+  box-shadow: var(--choice-shadow);
+
+  padding: 36px;
+}
+
+.novel-choice-page .novel-choice-shell .eyebrow {
+margin: 0 0 10px;
+
+  color: var(--choice-primary);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.novel-choice-page .novel-choice-shell h1 {
+margin: 0 0 8px;
+
+  color: var(--choice-text-strong);
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+
+  text-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.9),
+    0 12px 30px rgba(108, 78, 246, 0.14);
+}
+
+.novel-choice-page .novel-choice-shell > p {
+margin: 0;
+
+  color: var(--choice-muted);
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 700;
+}
+
+.novel-choice-page .novel-choice-panel {
+margin: 26px 0;
+  padding: 24px;
+
+  border: 1px solid rgba(108, 78, 246, 0.14);
+  border-radius: 26px;
+
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: var(--choice-shadow-soft);
+}
+
+.novel-choice-page .novel-choice-options {
+display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.novel-choice-page .novel-choice-options button {
+min-height: 96px;
+  padding: 18px 16px;
+
+  border: 1px solid rgba(108, 78, 246, 0.16);
+  border-radius: 22px;
+
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--choice-text);
+
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.35;
+
+  cursor: pointer;
+
+  box-shadow: 0 10px 24px rgba(72, 52, 130, 0.08);
+  transition: 0.18s ease;
+}
+
+.novel-choice-page .novel-choice-options button:hover {
+transform: translateY(-3px);
+
+  border-color: rgba(108, 78, 246, 0.42);
+  background: rgba(255, 255, 255, 0.9);
+
+  color: var(--choice-primary);
+
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.07),
+    0 16px 34px rgba(108, 78, 246, 0.12);
+}
+
+.novel-choice-page .novel-choice-options button.selected {
+border-color: rgba(108, 78, 246, 0.66);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(108, 78, 246, 0.14),
+      rgba(255, 255, 255, 0.86)
+    );
+
+  color: var(--choice-primary);
+
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.1),
+    0 18px 38px rgba(108, 78, 246, 0.16);
+}
+
+.novel-choice-page .novel-choice-summary {
+display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+
+  margin-bottom: 18px;
+}
+
+.novel-choice-page .novel-choice-summary div {
+min-height: 82px;
+  padding: 14px;
+
+  border: 1px solid rgba(108, 78, 246, 0.12);
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: 0 8px 20px rgba(72, 52, 130, 0.06);
+}
+
+.novel-choice-page .novel-choice-summary span {
+display: block;
+  margin-bottom: 6px;
+
+  color: var(--choice-primary);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.novel-choice-page .novel-choice-summary strong,
+.novel-choice-page .novel-choice-summary p {
+margin: 0;
+
+  color: var(--choice-text-strong);
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 800;
+}
+
+.novel-choice-page .novel-choice-next {
+width: 100%;
+  min-height: 58px;
+
+  border: 0;
+  border-radius: 20px;
+
+  padding: 17px;
+
+  background: linear-gradient(
+    135deg,
+    var(--choice-primary),
+    var(--choice-primary-light)
+  );
+
+  color: #ffffff;
+
+  font-size: 17px;
+  font-weight: 900;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 12px 28px rgba(108, 78, 246, 0.26),
+    0 0 0 4px rgba(108, 78, 246, 0.08);
+
+  transition: 0.18s ease;
+}
+
+.novel-choice-page .novel-choice-next:hover {
+transform: translateY(-2px);
+
+  background: linear-gradient(
+    135deg,
+    var(--choice-primary-hover),
+    var(--choice-primary)
+  );
+
+  box-shadow:
+    0 16px 34px rgba(108, 78, 246, 0.32),
+    0 0 0 4px rgba(108, 78, 246, 0.12);
+}
+
+.novel-choice-page .novel-choice-next:disabled {
+opacity: 0.48;
+  cursor: not-allowed;
+  transform: none;
+  filter: grayscale(0.2);
+}
+
+@media (max-width: 900px) {
+  .novel-choice-page {
+  align-items: flex-start;
+      padding: 24px 18px;
+  }
+
+  .novel-choice-page .novel-choice-shell {
+  padding: 28px 22px;
+      border-radius: 28px;
+  }
+
+  .novel-choice-page .novel-choice-shell h1 {
+  font-size: 32px;
+  }
+
+  .novel-choice-page .novel-choice-options {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-choice-page .novel-choice-summary {
+  grid-template-columns: 1fr 1fr;
+  }
+
+}
+
+@media (max-width: 560px) {
+  .novel-choice-page {
+  padding: 18px 14px;
+  }
+
+  .novel-choice-page .novel-choice-shell {
+  padding: 24px 18px;
+      border-radius: 24px;
+  }
+
+  .novel-choice-page .novel-choice-shell h1 {
+  font-size: 28px;
+  }
+
+  .novel-choice-page .novel-choice-panel {
+  padding: 18px;
+      border-radius: 22px;
+  }
+
+  .novel-choice-page .novel-choice-summary {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-choice-page .novel-choice-options button {
+  min-height: 82px;
+  }
+
+}
+
+
+/* =========================================================
+   NovelCompletePage.css
+   scoped root: .novel-complete-page
+========================================================= */
+
+.novel-complete-page {
+--complete-primary: #6c4ef6;
+  --complete-primary-hover: #5b3fe8;
+  --complete-primary-light: #7c5cff;
+  --complete-primary-soft: rgba(108, 78, 246, 0.1);
+  --complete-primary-soft-2: rgba(108, 78, 246, 0.18);
+
+  --complete-bg: #faf8ff;
+  --complete-glass: rgba(255, 255, 255, 0.68);
+  --complete-glass-strong: rgba(255, 255, 255, 0.84);
+  --complete-glass-soft: rgba(255, 255, 255, 0.52);
+
+  --complete-text: #211a35;
+  --complete-text-strong: #191429;
+  --complete-muted: #6f6680;
+  --complete-muted-light: #8b82a0;
+
+  --complete-line: rgba(108, 78, 246, 0.18);
+  --complete-line-strong: rgba(108, 78, 246, 0.48);
+
+  --complete-shadow: 0 20px 54px rgba(72, 52, 130, 0.16);
+  --complete-shadow-soft: 0 12px 34px rgba(72, 52, 130, 0.1);
+
+  --complete-book-gold: #ffe8ad;
+}
+
+.novel-complete-page {
+position: relative;
+  min-height: 100dvh;
+  color: var(--complete-text);
+  background: var(--complete-bg);
+  overflow-x: hidden;
+}
+
+.novel-complete-page .novel-complete-bg {
+position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.novel-complete-page .novel-complete-overlay {
+position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.64) 0%,
+      rgba(255, 255, 255, 0.42) 48%,
+      rgba(250, 248, 255, 0.78) 100%
+    ),
+    radial-gradient(
+      circle at 50% 18%,
+      rgba(108, 78, 246, 0.12),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 50% 42%,
+      rgba(124, 92, 255, 0.1),
+      transparent 36%
+    );
+}
+
+.novel-complete-page .novel-complete-header {
+position: relative;
+  z-index: 5;
+  height: 70px;
+  padding: 0 36px;
+
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr) 360px;
+  align-items: center;
+  gap: 24px;
+
+  background: rgba(255, 255, 255, 0.72);
+  border-bottom: 1px solid rgba(108, 78, 246, 0.14);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 10px 28px rgba(72, 52, 130, 0.1);
+}
+
+.novel-complete-page .novel-complete-brand {
+display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.novel-complete-page .novel-complete-brand span {
+color: var(--complete-primary);
+  font-size: 28px;
+}
+
+.novel-complete-page .novel-complete-brand strong {
+color: var(--complete-primary);
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-complete-page .novel-complete-nav {
+display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 54px;
+}
+
+.novel-complete-page .novel-complete-nav button,
+.novel-complete-page .novel-complete-user button {
+border: none;
+  background: transparent;
+  color: #403754;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.novel-complete-page .novel-complete-nav button:hover,
+.novel-complete-page .novel-complete-user button:hover {
+color: var(--complete-primary);
+}
+
+.novel-complete-page .novel-complete-user {
+display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.novel-complete-page .novel-complete-user .premium-btn {
+height: 38px;
+  padding: 0 18px;
+  border: 1px solid rgba(108, 78, 246, 0.34);
+  border-radius: 999px;
+  color: var(--complete-primary);
+  background: rgba(108, 78, 246, 0.08);
+  font-weight: 900;
+}
+
+.novel-complete-page .novel-complete-user .premium-btn:hover {
+background: rgba(108, 78, 246, 0.14);
+}
+
+.novel-complete-page .novel-complete-main {
+position: relative;
+  z-index: 3;
+  width: min(1620px, 100%);
+  margin: 0 auto;
+  padding: 44px 34px 38px;
+}
+
+.novel-complete-page .complete-hero {
+position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 100vw;
+  max-width: none;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+  padding: 0 24px;
+}
+
+.novel-complete-page .complete-hero h1 {
+width: 100%;
+  margin: 0;
+
+  color: var(--complete-text-strong);
+  font-size: clamp(42px, 4.4vw, 68px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+
+  text-align: center;
+  text-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.9),
+    0 14px 34px rgba(108, 78, 246, 0.18);
+}
+
+.novel-complete-page .complete-hero p {
+width: 100%;
+  margin: 12px 0 0;
+
+  color: var(--complete-primary);
+  font-size: 20px;
+  font-weight: 800;
+
+  text-align: center;
+}
+
+.novel-complete-page .complete-content {
+margin-top: 34px;
+
+  display: grid;
+  grid-template-columns: 370px minmax(520px, 1fr) 370px;
+  gap: 28px;
+  align-items: center;
+}
+
+.novel-complete-page .complete-summary-panel,
+.novel-complete-page .complete-next-panel section {
+border: 1px solid var(--complete-line);
+  border-radius: 22px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.78),
+      rgba(255, 255, 255, 0.6)
+    );
+  box-shadow: var(--complete-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.novel-complete-page .complete-summary-panel {
+min-height: 560px;
+  padding: 30px;
+}
+
+.novel-complete-page .complete-summary-panel h2 {
+margin: 0 0 24px;
+  color: var(--complete-text-strong);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-complete-page .story-summary {
+margin: 0;
+  color: var(--complete-muted);
+  font-size: 16px;
+  line-height: 1.8;
+  font-weight: 700;
+}
+
+.novel-complete-page .summary-divider {
+height: 1px;
+  margin: 28px 0;
+  background: rgba(108, 78, 246, 0.12);
+}
+
+.novel-complete-page .complete-info-row {
+display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 18px;
+  padding: 10px 0;
+}
+
+.novel-complete-page .complete-info-row span {
+color: var(--complete-primary);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.novel-complete-page .complete-info-row strong {
+color: var(--complete-text-strong);
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 800;
+}
+
+.novel-complete-page .complete-book-panel {
+display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.novel-complete-page .book-display-wrap {
+position: relative;
+  padding: 20px 0 0;
+}
+
+.novel-complete-page .book-display-wrap::before {
+content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -22px;
+  width: 420px;
+  height: 80px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(108, 78, 246, 0.18), transparent 68%);
+  filter: blur(2px);
+}
+
+.novel-complete-page .complete-book {
+position: relative;
+  width: 370px;
+  height: 520px;
+  border-radius: 14px;
+  transform: perspective(1100px) rotateY(-7deg);
+  box-shadow:
+    0 34px 70px rgba(33, 26, 53, 0.34),
+    0 0 46px rgba(108, 78, 246, 0.22),
+    0 0 52px rgba(124, 92, 255, 0.18);
+}
+
+.novel-complete-page .complete-book-spine {
+position: absolute;
+  left: -20px;
+  top: 14px;
+  width: 38px;
+  height: 492px;
+  border-radius: 9px 0 0 9px;
+  background: linear-gradient(180deg, #0b0715, #2a1844, #0b0715);
+  box-shadow: inset -8px 0 12px rgba(255, 255, 255, 0.06);
+}
+
+.novel-complete-page .complete-book-front {
+position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 38px 30px;
+  border: 1px solid rgba(255, 232, 173, 0.54);
+  border-radius: 14px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 55% 28%, rgba(134, 89, 255, 0.52), transparent 25%),
+    radial-gradient(circle at 62% 60%, rgba(243, 201, 121, 0.22), transparent 22%),
+    linear-gradient(150deg, #080611 0%, #17112d 42%, #342052 100%);
+}
+
+.novel-complete-page .complete-book-front::before {
+content: "";
+  position: absolute;
+  inset: 16px;
+  border: 1px solid rgba(255, 232, 173, 0.34);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.novel-complete-page .book-ornament {
+position: absolute;
+  left: 0;
+  right: 0;
+  color: var(--complete-book-gold);
+  text-align: center;
+  z-index: 2;
+}
+
+.novel-complete-page .book-ornament.top {
+top: 26px;
+}
+
+.novel-complete-page .book-ornament.bottom {
+bottom: 20px;
+}
+
+.novel-complete-page .book-subtitle {
+position: relative;
+  z-index: 2;
+  margin: 72px 0 8px;
+  color: var(--complete-book-gold);
+  text-align: center;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.novel-complete-page .complete-book-front h2 {
+position: relative;
+  z-index: 2;
+  width: 260px;
+  margin: 0 auto;
+  color: var(--complete-book-gold);
+  text-align: center;
+  font-size: 48px;
+  line-height: 1.18;
+  font-weight: 900;
+  word-break: keep-all;
+  text-shadow: 0 0 18px rgba(0, 0, 0, 0.72);
+}
+
+.novel-complete-page .book-type {
+position: relative;
+  z-index: 2;
+  margin-top: 16px;
+  color: rgba(255, 244, 222, 0.74);
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.novel-complete-page .book-character {
+position: absolute;
+  left: 50%;
+  bottom: 76px;
+  width: 140px;
+  height: 180px;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.novel-complete-page .book-character span {
+position: absolute;
+  left: 36px;
+  bottom: 0;
+  width: 72px;
+  height: 126px;
+  border-radius: 36px 36px 15px 15px;
+  background:
+    radial-gradient(circle at 50% 16%, #1b1328 0 28px, transparent 30px),
+    linear-gradient(180deg, #1b1830, #080711);
+  box-shadow: 0 0 30px rgba(130, 87, 255, 0.68);
+}
+
+.novel-complete-page .book-character::before {
+content: "";
+  position: absolute;
+  left: 18px;
+  bottom: 36px;
+  width: 104px;
+  height: 116px;
+  border-radius: 50% 50% 18px 18px;
+  background: rgba(9, 7, 18, 0.78);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+.novel-complete-page .complete-title-block {
+margin-top: 30px;
+  text-align: center;
+}
+
+.novel-complete-page .complete-title-block h2 {
+margin: 0;
+  color: var(--complete-text-strong);
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-complete-page .complete-title-block p {
+margin: 10px 0 0;
+  color: var(--complete-muted);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.novel-complete-page .complete-next-panel {
+display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.novel-complete-page .congrats-card {
+padding: 30px;
+  text-align: center;
+}
+
+.novel-complete-page .congrats-card h2 {
+margin: 0;
+  color: var(--complete-text-strong);
+  font-size: 25px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-complete-page .congrats-icon {
+width: 160px;
+  height: 120px;
+  margin: 24px auto;
+  display: grid;
+  place-items: center;
+  border-radius: 24px;
+  background: radial-gradient(circle, rgba(108, 78, 246, 0.14), transparent 72%);
+}
+
+.novel-complete-page .congrats-icon span {
+font-size: 78px;
+  filter: drop-shadow(0 10px 18px rgba(108, 78, 246, 0.24));
+}
+
+.novel-complete-page .congrats-card p {
+margin: 0;
+  color: var(--complete-muted);
+  font-size: 17px;
+  line-height: 1.7;
+  font-weight: 700;
+}
+
+.novel-complete-page .next-suggestion-card {
+padding: 24px;
+}
+
+.novel-complete-page .next-suggestion-card h3 {
+margin: 0 0 18px;
+  color: var(--complete-primary);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.novel-complete-page .next-suggestion-card button {
+width: 100%;
+  padding: 14px 0;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--complete-text);
+  text-align: left;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.novel-complete-page .next-suggestion-card button:hover {
+background: rgba(108, 78, 246, 0.08);
+}
+
+.novel-complete-page .next-suggestion-card button span {
+width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+
+  border-radius: 12px;
+  background: rgba(108, 78, 246, 0.12);
+  font-size: 20px;
+}
+
+.novel-complete-page .next-suggestion-card strong {
+display: block;
+  color: var(--complete-text-strong);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.novel-complete-page .next-suggestion-card p {
+margin: 5px 0 0;
+  color: var(--complete-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.novel-complete-page .complete-actions {
+width: min(900px, 100%);
+  margin: 34px auto 0;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.novel-complete-page .complete-actions button {
+height: 74px;
+
+  border: 1px solid rgba(108, 78, 246, 0.2);
+  border-radius: 16px;
+
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--complete-primary);
+
+  font-size: 19px;
+  font-weight: 900;
+  cursor: pointer;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 12px 28px rgba(72, 52, 130, 0.09);
+  transition: 0.18s ease;
+}
+
+.novel-complete-page .complete-actions button.primary {
+border: none;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--complete-primary), var(--complete-primary-light));
+  box-shadow:
+    0 12px 28px rgba(108, 78, 246, 0.26),
+    0 0 0 4px rgba(108, 78, 246, 0.08);
+}
+
+.novel-complete-page .complete-actions button:hover {
+transform: translateY(-2px);
+}
+
+.novel-complete-page .complete-actions button:not(.primary):hover {
+border-color: rgba(108, 78, 246, 0.46);
+  background: rgba(108, 78, 246, 0.08);
+}
+
+.novel-complete-page .complete-actions button.primary:hover {
+background: linear-gradient(135deg, var(--complete-primary-hover), var(--complete-primary));
+  box-shadow:
+    0 16px 34px rgba(108, 78, 246, 0.32),
+    0 0 0 4px rgba(108, 78, 246, 0.12);
+}
+
+.novel-complete-page .complete-quote {
+margin: 24px 0 0;
+  color: var(--complete-primary);
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+@media (max-width: 1450px) {
+  .novel-complete-page .complete-content {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-complete-page .complete-summary-panel {
+  min-height: auto;
+  }
+
+  .novel-complete-page .complete-next-panel {
+  display: grid;
+      grid-template-columns: 1fr 1fr;
+  }
+
+  .novel-complete-page .complete-actions {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-complete-page .complete-actions button.primary {
+  grid-column: auto;
+  }
+
+}
+
+@media (max-width: 920px) {
+  .novel-complete-page .novel-complete-header {
+  height: auto;
+      padding: 18px;
+      grid-template-columns: 1fr;
+  }
+
+  .novel-complete-page .novel-complete-nav,
+  .novel-complete-page .novel-complete-user {
+  display: none;
+  }
+
+  .novel-complete-page .novel-complete-main {
+  padding: 34px 20px;
+  }
+
+  .novel-complete-page .complete-next-panel {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-complete-page .complete-actions {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-complete-page .complete-actions button.primary {
+  grid-column: auto;
+  }
+
+}
+
+@media (max-width: 560px) {
+  .novel-complete-page .complete-hero h1 {
+  font-size: 34px;
+  }
+
+  .novel-complete-page .complete-hero p {
+  font-size: 16px;
+  }
+
+  .novel-complete-page .complete-book {
+  width: 265px;
+      height: 385px;
+  }
+
+  .novel-complete-page .complete-book-spine {
+  left: -14px;
+      top: 10px;
+      width: 28px;
+      height: 365px;
+  }
+
+  .novel-complete-page .complete-book-front h2 {
+  width: 190px;
+      font-size: 34px;
+  }
+
+  .novel-complete-page .book-subtitle {
+  margin-top: 52px;
+  }
+
+  .novel-complete-page .book-character {
+  transform: translateX(-50%) scale(0.75);
+      bottom: 48px;
+  }
+
+  .novel-complete-page .complete-title-block h2 {
+  font-size: 30px;
+  }
+
+  .novel-complete-page .complete-info-row {
+  grid-template-columns: 1fr;
+      gap: 4px;
+  }
+
+}
+
+
+/* =========================================================
+   NovelCoverSelectPage.css
+   scoped root: .novel-cover-page
+========================================================= */
+
+.novel-cover-page {
+--cover-primary: #6c4ef6;
+  --cover-primary-hover: #5b3fe8;
+  --cover-primary-light: #7c5cff;
+  --cover-primary-soft: rgba(108, 78, 246, 0.1);
+  --cover-primary-soft-2: rgba(108, 78, 246, 0.18);
+
+  --cover-bg: #faf8ff;
+  --cover-glass: rgba(255, 255, 255, 0.68);
+  --cover-glass-strong: rgba(255, 255, 255, 0.84);
+  --cover-glass-soft: rgba(255, 255, 255, 0.52);
+
+  --cover-text: #211a35;
+  --cover-text-strong: #191429;
+  --cover-muted: #6f6680;
+  --cover-muted-light: #8b82a0;
+
+  --cover-line: rgba(108, 78, 246, 0.18);
+  --cover-line-strong: rgba(108, 78, 246, 0.48);
+
+  --cover-shadow: 0 20px 54px rgba(72, 52, 130, 0.16);
+  --cover-shadow-soft: 0 12px 34px rgba(72, 52, 130, 0.1);
+
+  --cover-book-gold: #ffe8ad;
+}
+
+.novel-cover-page {
+position: relative;
+  min-height: 100dvh;
+  color: var(--cover-text);
+  background: var(--cover-bg);
+  overflow-x: hidden;
+}
+
+.novel-cover-page .novel-cover-bg {
+position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.novel-cover-page .novel-cover-overlay {
+position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.64) 0%,
+      rgba(255, 255, 255, 0.42) 46%,
+      rgba(250, 248, 255, 0.78) 100%
+    ),
+    radial-gradient(
+      circle at 50% 18%,
+      rgba(108, 78, 246, 0.12),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 82% 62%,
+      rgba(124, 92, 255, 0.08),
+      transparent 34%
+    );
+}
+
+.novel-cover-page .novel-cover-header {
+position: relative;
+  z-index: 5;
+  height: 70px;
+  padding: 0 36px;
+
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr) 360px;
+  align-items: center;
+  gap: 24px;
+
+  background: rgba(255, 255, 255, 0.72);
+  border-bottom: 1px solid rgba(108, 78, 246, 0.14);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 10px 28px rgba(72, 52, 130, 0.1);
+}
+
+.novel-cover-page .novel-cover-brand {
+display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.novel-cover-page .novel-cover-brand span {
+color: var(--cover-primary);
+  font-size: 28px;
+}
+
+.novel-cover-page .novel-cover-brand strong {
+color: var(--cover-primary);
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-cover-page .novel-cover-nav {
+display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+}
+
+.novel-cover-page .novel-cover-nav button,
+.novel-cover-page .novel-cover-user button {
+border: none;
+  background: transparent;
+  color: #403754;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.novel-cover-page .novel-cover-nav button:hover,
+.novel-cover-page .novel-cover-user button:hover {
+color: var(--cover-primary);
+}
+
+.novel-cover-page .novel-cover-user {
+display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.novel-cover-page .novel-cover-user .premium-btn {
+height: 38px;
+  padding: 0 18px;
+  border: 1px solid rgba(108, 78, 246, 0.34);
+  border-radius: 12px;
+  color: var(--cover-primary);
+  background: rgba(108, 78, 246, 0.08);
+  font-weight: 900;
+}
+
+.novel-cover-page .novel-cover-user .premium-btn:hover {
+background: rgba(108, 78, 246, 0.14);
+}
+
+.novel-cover-page .novel-cover-main {
+position: relative;
+  z-index: 3;
+  width: min(1600px, 100%);
+  margin: 0 auto;
+  padding: 34px 34px 36px;
+}
+
+.novel-cover-page .cover-title-area {
+text-align: center;
+}
+
+.novel-cover-page .cover-title-area h1 {
+margin: 0;
+  color: var(--cover-text-strong);
+  font-size: clamp(40px, 4vw, 58px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  text-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.9),
+    0 14px 34px rgba(108, 78, 246, 0.18);
+}
+
+.novel-cover-page .cover-title-area p {
+margin: 10px 0 0;
+  color: var(--cover-primary);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.novel-cover-page .cover-step-bar {
+width: min(1080px, 100%);
+  margin: 24px auto 22px;
+  padding: 8px 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+
+  border: 1px solid rgba(108, 78, 246, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.66);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--cover-shadow-soft);
+}
+
+.novel-cover-page .cover-step {
+min-height: 48px;
+  padding: 0 18px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  color: var(--cover-muted);
+  border-radius: 999px;
+  white-space: nowrap;
+  font-weight: 800;
+}
+
+.novel-cover-page .cover-step span {
+width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(108, 78, 246, 0.24);
+  border-radius: 50%;
+  color: var(--cover-primary);
+  background: rgba(255, 255, 255, 0.78);
+  font-weight: 900;
+}
+
+.novel-cover-page .cover-step.done span {
+color: #fff;
+  border-color: rgba(108, 78, 246, 0.68);
+  background: linear-gradient(135deg, var(--cover-primary-hover), var(--cover-primary));
+  box-shadow: 0 10px 22px rgba(108, 78, 246, 0.2);
+}
+
+.novel-cover-page .cover-step.active {
+color: var(--cover-primary);
+  background: rgba(108, 78, 246, 0.1);
+  border: 1px solid rgba(108, 78, 246, 0.28);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.06),
+    0 12px 26px rgba(108, 78, 246, 0.12);
+}
+
+.novel-cover-page .cover-step.active span {
+color: #fff;
+  background: linear-gradient(135deg, var(--cover-primary), var(--cover-primary-light));
+  border-color: rgba(108, 78, 246, 0.72);
+}
+
+.novel-cover-page .cover-step-bar > em {
+width: 56px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(108, 78, 246, 0.34),
+    transparent
+  );
+}
+
+.novel-cover-page .cover-layout {
+display: grid;
+  grid-template-columns: 330px minmax(520px, 1fr) 540px;
+  gap: 22px;
+  align-items: stretch;
+}
+
+.novel-cover-page .cover-info-panel,
+.novel-cover-page .selected-cover-panel,
+.novel-cover-page .cover-options-panel {
+min-height: 600px;
+  border: 1px solid var(--cover-line);
+  border-radius: 22px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.78),
+      rgba(255, 255, 255, 0.6)
+    );
+  box-shadow: var(--cover-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.novel-cover-page .cover-info-panel,
+.novel-cover-page .cover-options-panel {
+padding: 24px;
+}
+
+.novel-cover-page .selected-cover-panel {
+padding: 24px 30px;
+}
+
+.novel-cover-page .cover-info-panel h2,
+.novel-cover-page .selected-cover-panel h2 {
+margin: 0 0 24px;
+  color: var(--cover-text-strong);
+  text-align: center;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-cover-page .cover-info-box {
+border-bottom: 1px solid rgba(108, 78, 246, 0.12);
+  padding-bottom: 18px;
+}
+
+.novel-cover-page .cover-info-row {
+padding: 13px 0;
+}
+
+.novel-cover-page .cover-info-row span {
+display: block;
+  margin-bottom: 7px;
+  color: var(--cover-muted);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.novel-cover-page .cover-info-row strong {
+color: var(--cover-text-strong);
+  font-size: 18px;
+  line-height: 1.45;
+  font-weight: 900;
+}
+
+.novel-cover-page .keyword-box,
+.novel-cover-page .intro-box {
+margin-top: 22px;
+}
+
+.novel-cover-page .keyword-box h3,
+.novel-cover-page .intro-box h3 {
+margin: 0 0 12px;
+  color: var(--cover-primary);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.novel-cover-page .keyword-list {
+display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.novel-cover-page .keyword-list span {
+padding: 8px 12px;
+  border: 1px solid rgba(108, 78, 246, 0.22);
+  border-radius: 999px;
+  background: rgba(108, 78, 246, 0.09);
+  color: var(--cover-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.novel-cover-page .intro-box p {
+margin: 0;
+  color: var(--cover-muted);
+  font-size: 15px;
+  line-height: 1.7;
+  font-weight: 700;
+}
+
+.novel-cover-page .cover-ai-note {
+margin-top: 30px;
+  padding: 18px;
+  border: 1px solid rgba(108, 78, 246, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 8px 22px rgba(72, 52, 130, 0.06);
+}
+
+.novel-cover-page .cover-ai-note span {
+display: block;
+  color: var(--cover-primary);
+  font-size: 22px;
+}
+
+.novel-cover-page .cover-ai-note p {
+margin: 10px 0 0;
+  color: var(--cover-muted);
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 700;
+}
+
+.novel-cover-page .book-preview-wrap {
+display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.novel-cover-page .book-preview {
+position: relative;
+  width: 330px;
+  height: 470px;
+  border-radius: 12px;
+  transform: perspective(1100px) rotateY(-8deg);
+  box-shadow:
+    0 28px 58px rgba(33, 26, 53, 0.32),
+    0 0 34px rgba(108, 78, 246, 0.28);
+}
+
+.novel-cover-page .book-spine {
+position: absolute;
+  left: -18px;
+  top: 12px;
+  width: 34px;
+  height: 446px;
+  border-radius: 8px 0 0 8px;
+  background: linear-gradient(180deg, #0b0715, #2a1844, #0b0715);
+  box-shadow: inset -8px 0 12px rgba(255, 255, 255, 0.06);
+}
+
+.novel-cover-page .book-front {
+position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 36px 28px;
+  border: 1px solid rgba(255, 232, 173, 0.54);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.novel-cover-page .book-front::before {
+content: "";
+  position: absolute;
+  inset: 16px;
+  border: 1px solid rgba(255, 232, 173, 0.34);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.novel-cover-page .book-front h3 {
+position: relative;
+  z-index: 2;
+  margin: 36px auto 8px;
+  width: 220px;
+  color: var(--cover-book-gold);
+  text-align: center;
+  font-size: 39px;
+  line-height: 1.2;
+  font-weight: 900;
+  word-break: keep-all;
+  text-shadow: 0 0 18px rgba(0, 0, 0, 0.7);
+}
+
+.novel-cover-page .book-front p {
+position: relative;
+  z-index: 2;
+  text-align: center;
+  color: rgba(255, 244, 222, 0.78);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.novel-cover-page .cover-character {
+position: absolute;
+  left: 50%;
+  bottom: 70px;
+  width: 130px;
+  height: 180px;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.novel-cover-page .cover-character span {
+position: absolute;
+  left: 36px;
+  bottom: 0;
+  width: 68px;
+  height: 122px;
+  border-radius: 34px 34px 14px 14px;
+  background:
+    radial-gradient(circle at 50% 16%, #1b1328 0 28px, transparent 30px),
+    linear-gradient(180deg, #1b1830, #080711);
+  box-shadow: 0 0 28px rgba(130, 87, 255, 0.6);
+}
+
+.novel-cover-page .cover-character::before {
+content: "";
+  position: absolute;
+  left: 18px;
+  bottom: 34px;
+  width: 96px;
+  height: 112px;
+  border-radius: 50% 50% 18px 18px;
+  background: rgba(9, 7, 18, 0.78);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+.novel-cover-page .book-front small {
+position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 34px;
+  z-index: 2;
+  color: rgba(255, 244, 222, 0.7);
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.novel-cover-page .cover-ornament {
+position: absolute;
+  left: 0;
+  right: 0;
+  color: var(--cover-book-gold);
+  text-align: center;
+  z-index: 2;
+}
+
+.novel-cover-page .cover-ornament.top {
+top: 24px;
+}
+
+.novel-cover-page .cover-ornament.bottom {
+bottom: 18px;
+}
+
+.novel-cover-page .selected-badge {
+margin-top: -20px;
+  position: relative;
+  z-index: 3;
+  height: 44px;
+  padding: 0 22px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+
+  border: 1px solid rgba(108, 78, 246, 0.58);
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--cover-primary);
+  font-weight: 900;
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.08),
+    0 12px 26px rgba(108, 78, 246, 0.16);
+}
+
+.novel-cover-page .selected-badge span {
+width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--cover-primary), var(--cover-primary-light));
+  color: white;
+}
+
+.novel-cover-page .cover-description {
+margin: 28px auto 0;
+  max-width: 420px;
+  text-align: center;
+}
+
+.novel-cover-page .cover-description strong {
+color: var(--cover-text-strong);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.novel-cover-page .cover-description p {
+color: var(--cover-muted);
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 700;
+}
+
+.novel-cover-page .cover-night-castle .book-front,
+.novel-cover-page .cover-thumbnail.cover-night-castle {
+background:
+    radial-gradient(circle at 55% 25%, rgba(134, 89, 255, 0.52), transparent 22%),
+    radial-gradient(circle at 65% 58%, rgba(243, 201, 121, 0.2), transparent 20%),
+    linear-gradient(150deg, #080611 0%, #17112d 42%, #342052 100%);
+}
+
+.novel-cover-page .cover-star-circle .book-front,
+.novel-cover-page .cover-thumbnail.cover-star-circle {
+background:
+    radial-gradient(circle at 50% 42%, rgba(162, 114, 255, 0.55), transparent 24%),
+    repeating-radial-gradient(circle at 50% 42%, rgba(243, 201, 121, 0.2) 0 1px, transparent 1px 16px),
+    linear-gradient(160deg, #070713, #14152e 46%, #2c1d49);
+}
+
+.novel-cover-page .cover-dark-forest .book-front,
+.novel-cover-page .cover-thumbnail.cover-dark-forest {
+background:
+    radial-gradient(circle at 45% 24%, rgba(242, 236, 206, 0.32), transparent 14%),
+    linear-gradient(140deg, #050807, #101b1e 46%, #30224c);
+}
+
+.novel-cover-page .cover-purple-fate .book-front,
+.novel-cover-page .cover-thumbnail.cover-purple-fate {
+background:
+    radial-gradient(circle at 50% 18%, rgba(243, 201, 121, 0.34), transparent 14%),
+    radial-gradient(circle at 20% 70%, rgba(133, 76, 255, 0.42), transparent 22%),
+    linear-gradient(145deg, #120819, #28123f 50%, #0b0715);
+}
+
+.novel-cover-page .cover-options-title {
+display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.novel-cover-page .cover-options-title h2 {
+margin: 0;
+  color: var(--cover-text-strong);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-cover-page .cover-options-title span {
+padding: 7px 12px;
+  border: 1px solid rgba(108, 78, 246, 0.22);
+  border-radius: 999px;
+  color: var(--cover-primary);
+  background: rgba(108, 78, 246, 0.08);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.novel-cover-page .cover-option-grid {
+display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.novel-cover-page .cover-option {
+padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--cover-text);
+}
+
+.novel-cover-page .cover-thumbnail {
+position: relative;
+  height: 230px;
+  border: 1px solid rgba(108, 78, 246, 0.18);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 14px 28px rgba(33, 26, 53, 0.18);
+  transition: 0.18s ease;
+}
+
+.novel-cover-page .cover-option:hover .cover-thumbnail {
+transform: translateY(-2px);
+  border-color: rgba(108, 78, 246, 0.46);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.08),
+    0 18px 34px rgba(108, 78, 246, 0.16);
+}
+
+.novel-cover-page .cover-option.active .cover-thumbnail {
+border-color: rgba(108, 78, 246, 0.72);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.16),
+    0 20px 38px rgba(108, 78, 246, 0.2);
+}
+
+.novel-cover-page .cover-thumbnail h3 {
+position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 78px;
+  margin: 0;
+  color: var(--cover-book-gold);
+  text-align: center;
+  font-size: 27px;
+  line-height: 1.2;
+  font-weight: 900;
+  word-break: keep-all;
+  text-shadow: 0 0 18px rgba(0, 0, 0, 0.72);
+}
+
+.novel-cover-page .cover-thumbnail span {
+position: absolute;
+  left: 50%;
+  bottom: 24px;
+  width: 56px;
+  height: 82px;
+  transform: translateX(-50%);
+  border-radius: 999px 999px 12px 12px;
+  background: linear-gradient(180deg, #181126, #05040b);
+  box-shadow: 0 0 18px rgba(165, 108, 255, 0.55);
+}
+
+.novel-cover-page .cover-thumbnail em {
+position: absolute;
+  top: 12px;
+  right: 12px;
+
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--cover-primary), var(--cover-primary-light));
+  color: white;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.novel-cover-page .cover-option > strong {
+display: block;
+  margin-top: 10px;
+  color: var(--cover-text-strong);
+  text-align: center;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.novel-cover-page .cover-bottom-bar {
+margin-top: 22px;
+  min-height: 78px;
+  padding: 0 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  border: 1px solid rgba(108, 78, 246, 0.16);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--cover-shadow-soft);
+}
+
+.novel-cover-page .back-btn,
+.novel-cover-page .regen-btn,
+.novel-cover-page .confirm-cover-btn {
+height: 52px;
+  padding: 0 34px;
+  border-radius: 13px;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.novel-cover-page .back-btn,
+.novel-cover-page .regen-btn {
+border: 1px solid rgba(108, 78, 246, 0.2);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--cover-primary);
+}
+
+.novel-cover-page .back-btn:hover,
+.novel-cover-page .regen-btn:hover {
+border-color: rgba(108, 78, 246, 0.46);
+  background: rgba(108, 78, 246, 0.08);
+}
+
+.novel-cover-page .cover-bottom-actions {
+display: flex;
+  gap: 16px;
+}
+
+.novel-cover-page .confirm-cover-btn {
+min-width: 260px;
+  border: none;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--cover-primary), var(--cover-primary-light));
+  box-shadow:
+    0 12px 28px rgba(108, 78, 246, 0.26),
+    0 0 0 4px rgba(108, 78, 246, 0.08);
+}
+
+.novel-cover-page .confirm-cover-btn:hover {
+background: linear-gradient(135deg, var(--cover-primary-hover), var(--cover-primary));
+  transform: translateY(-1px);
+  box-shadow:
+    0 16px 34px rgba(108, 78, 246, 0.32),
+    0 0 0 4px rgba(108, 78, 246, 0.12);
+}
+
+.novel-cover-page .cover-guide-text {
+margin: 12px 0 0;
+  color: var(--cover-muted);
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (max-width: 1450px) {
+  .novel-cover-page .cover-layout {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-cover-page .cover-info-panel,
+  .novel-cover-page .selected-cover-panel,
+  .novel-cover-page .cover-options-panel {
+  min-height: auto;
+  }
+
+  .novel-cover-page .cover-option-grid {
+  grid-template-columns: repeat(4, 1fr);
+  }
+
+}
+
+@media (max-width: 980px) {
+  .novel-cover-page .novel-cover-header {
+  height: auto;
+      padding: 18px;
+      grid-template-columns: 1fr;
+  }
+
+  .novel-cover-page .novel-cover-nav,
+  .novel-cover-page .novel-cover-user {
+  display: none;
+  }
+
+  .novel-cover-page .cover-step-bar {
+  justify-content: flex-start;
+      overflow-x: auto;
+      border-radius: 18px;
+  }
+
+  .novel-cover-page .cover-option-grid {
+  grid-template-columns: 1fr 1fr;
+  }
+
+  .novel-cover-page .cover-bottom-bar {
+  flex-direction: column;
+      align-items: stretch;
+      padding: 18px;
+  }
+
+  .novel-cover-page .cover-bottom-actions {
+  flex-direction: column;
+  }
+
+  .novel-cover-page .back-btn,
+  .novel-cover-page .regen-btn,
+  .novel-cover-page .confirm-cover-btn {
+  width: 100%;
+  }
+
+}
+
+@media (max-width: 560px) {
+  .novel-cover-page .novel-cover-main {
+  padding: 24px 18px 34px;
+  }
+
+  .novel-cover-page .cover-title-area h1 {
+  font-size: 34px;
+  }
+
+  .novel-cover-page .book-preview {
+  width: 250px;
+      height: 360px;
+  }
+
+  .novel-cover-page .book-spine {
+  left: -14px;
+      top: 10px;
+      width: 28px;
+      height: 340px;
+  }
+
+  .novel-cover-page .book-front h3 {
+  width: 170px;
+      font-size: 30px;
+  }
+
+  .novel-cover-page .cover-option-grid {
+  grid-template-columns: 1fr;
+  }
+
+}
+
+
+/* =========================================================
+   NovelScenarioBuilderPage.css
+   scoped root: .novel-builder-page
+========================================================= */
+
+.novel-builder-page {
+min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  color: #f8f2e8;
+}
+
+.novel-builder-page .novel-builder-bg {
+position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -3;
+}
+
+.novel-builder-page .novel-builder-overlay {
+position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(217, 176, 111, 0.18), transparent 28%),
+    radial-gradient(circle at 88% 16%, rgba(92, 72, 148, 0.18), transparent 30%),
+    rgba(10, 7, 18, 0.8);
+  z-index: -2;
+}
+
+.novel-builder-page .novel-builder-shell {
+width: min(1480px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 48px 0;
+}
+
+.novel-builder-page .novel-builder-header {
+display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 28px;
+  margin-bottom: 24px;
+}
+
+.novel-builder-page .novel-builder-eyebrow {
+margin: 0 0 10px;
+  color: #e8b96d;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.novel-builder-page .novel-builder-header h1 {
+margin: 0;
+  color: #fff8ec;
+  font-size: 42px;
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+}
+
+.novel-builder-page .novel-builder-header p {
+margin: 12px 0 0;
+  color: rgba(248, 242, 232, 0.72);
+  font-size: 16px;
+}
+
+.novel-builder-page .novel-builder-progress-card {
+width: 240px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(26, 22, 38, 0.82);
+  border-radius: 22px;
+  padding: 18px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
+}
+
+.novel-builder-page .novel-builder-progress-card span {
+display: block;
+  color: #b7adbf;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.novel-builder-page .novel-builder-progress-card strong {
+display: block;
+  color: #f2c57b;
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.novel-builder-page .novel-builder-progress-track {
+height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.13);
+  overflow: hidden;
+}
+
+.novel-builder-page .novel-builder-progress-fill {
+height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #d7a85b, #f7d58d);
+  transition: width 0.25s ease;
+}
+
+.novel-builder-page .novel-builder-progress-card small {
+display: block;
+  margin-top: 10px;
+  color: #aaa0b5;
+}
+
+.novel-builder-page .novel-builder-layout {
+display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 330px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.novel-builder-page .novel-agenda-panel,
+.novel-builder-page .novel-meeting-panel,
+.novel-builder-page .novel-summary-panel {
+border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(33, 29, 47, 0.92), rgba(18, 15, 28, 0.94));
+  border-radius: 24px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(12px);
+}
+
+.novel-builder-page .novel-agenda-panel {
+padding: 18px;
+}
+
+.novel-builder-page .novel-meeting-panel {
+padding: 22px;
+}
+
+.novel-builder-page .novel-summary-panel {
+padding: 20px;
+}
+
+.novel-builder-page .novel-panel-title-row {
+display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.novel-builder-page .novel-panel-title-row h2 {
+margin: 0;
+  color: #fff8ec;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.novel-builder-page .novel-panel-title-row p {
+margin: 6px 0 0;
+  color: #aaa0b5;
+  font-size: 13px;
+}
+
+.novel-builder-page .novel-panel-title-row > span {
+min-width: 34px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(231, 184, 111, 0.14);
+  color: #f2c57b;
+  font-size: 13px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.novel-builder-page .novel-agenda-list {
+display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.novel-builder-page .novel-agenda-button {
+width: 100%;
+  min-height: 58px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+  color: #cbc3d2;
+  border-radius: 14px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 8px;
+  align-items: center;
+  position: relative;
+  transition: 0.18s ease;
+}
+
+.novel-builder-page .novel-agenda-button span {
+color: #9f95ac;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.novel-builder-page .novel-agenda-button strong {
+font-size: 14px;
+  font-weight: 800;
+}
+
+.novel-builder-page .novel-agenda-button em {
+position: absolute;
+  right: 10px;
+  top: 8px;
+  color: #f2c57b;
+  font-size: 11px;
+  font-style: normal;
+}
+
+.novel-builder-page .novel-agenda-button:hover {
+border-color: rgba(242, 197, 123, 0.36);
+  background: rgba(242, 197, 123, 0.08);
+}
+
+.novel-builder-page .novel-agenda-button.active {
+border-color: rgba(242, 197, 123, 0.85);
+  background: linear-gradient(
+    135deg,
+    rgba(91, 62, 28, 0.82),
+    rgba(49, 38, 47, 0.9)
+  );
+  color: #fff8ec;
+}
+
+.novel-builder-page .novel-agenda-button.completed:not(.active) {
+border-color: rgba(242, 197, 123, 0.24);
+}
+
+.novel-builder-page .novel-question-box {
+border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 22px;
+}
+
+.novel-builder-page .novel-question-box span {
+color: #e8b96d;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.novel-builder-page .novel-question-box h3 {
+margin: 8px 0 0;
+  color: #fff8ec;
+  font-size: 24px;
+  letter-spacing: -0.03em;
+}
+
+.novel-builder-page .novel-section-label {
+margin: 0 0 12px;
+  color: #e8b96d;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.novel-builder-page .novel-recommendation-area {
+margin-bottom: 22px;
+}
+
+.novel-builder-page .novel-recommendation-grid {
+display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.novel-builder-page .novel-recommendation-card {
+min-height: 190px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025));
+  color: #f8f2e8;
+  border-radius: 18px;
+  padding: 18px;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.18s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.novel-builder-page .novel-recommendation-card strong {
+color: #fff8ec;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.novel-builder-page .novel-recommendation-card p {
+color: #cac1d0;
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 12px 0;
+}
+
+.novel-builder-page .novel-recommendation-card:hover {
+transform: translateY(-3px);
+  border-color: rgba(242, 197, 123, 0.5);
+  background: rgba(242, 197, 123, 0.07);
+}
+
+.novel-builder-page .novel-recommendation-card.selected {
+border-color: rgba(242, 197, 123, 0.95);
+  background:
+    linear-gradient(135deg, rgba(91, 62, 28, 0.76), rgba(38, 33, 47, 0.94));
+  box-shadow: 0 18px 40px rgba(215, 168, 91, 0.12);
+}
+
+.novel-builder-page .novel-tag-row {
+display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.novel-builder-page .novel-tag-row span {
+border-radius: 999px;
+  background: rgba(242, 197, 123, 0.1);
+  color: #f2c57b;
+  font-size: 11px;
+  padding: 5px 8px;
+}
+
+.novel-builder-page .novel-custom-input-area {
+border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 20px;
+}
+
+.novel-builder-page .novel-section-label-row {
+display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.novel-builder-page .novel-section-label-row span {
+color: #94899f;
+  font-size: 12px;
+}
+
+.novel-builder-page .novel-custom-input-area textarea {
+width: 100%;
+  min-height: 96px;
+  resize: none;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: rgba(8, 7, 16, 0.58);
+  color: #fff8ec;
+  border-radius: 16px;
+  padding: 16px;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.novel-builder-page .novel-custom-input-area textarea::placeholder {
+color: #71677d;
+}
+
+.novel-builder-page .novel-custom-input-area textarea:focus {
+border-color: rgba(242, 197, 123, 0.7);
+  box-shadow: 0 0 0 3px rgba(242, 197, 123, 0.08);
+}
+
+.novel-builder-page .novel-current-choice-box {
+margin-top: 12px;
+  border-radius: 16px;
+  background: rgba(242, 197, 123, 0.07);
+  border: 1px solid rgba(242, 197, 123, 0.16);
+  padding: 14px;
+}
+
+.novel-builder-page .novel-current-choice-box span {
+display: block;
+  color: #f2c57b;
+  font-size: 12px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.novel-builder-page .novel-current-choice-box p {
+margin: 0;
+  color: #f8f2e8;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.novel-builder-page .novel-meeting-action-row {
+display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.novel-builder-page .novel-ghost-button,
+.novel-builder-page .novel-gold-button,
+.novel-builder-page .novel-start-writing-button {
+border-radius: 14px;
+  min-height: 46px;
+  padding: 0 18px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.novel-builder-page .novel-ghost-button {
+border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: #d7cedf;
+}
+
+.novel-builder-page .novel-ghost-button:hover:not(:disabled) {
+border-color: rgba(242, 197, 123, 0.45);
+  color: #fff8ec;
+}
+
+.novel-builder-page .novel-gold-button,
+.novel-builder-page .novel-start-writing-button {
+border: 0;
+  background: linear-gradient(180deg, #f2c57b, #d8a453);
+  color: #171019;
+  box-shadow: 0 14px 32px rgba(216, 164, 83, 0.22);
+}
+
+.novel-builder-page .novel-gold-button:hover:not(:disabled),
+.novel-builder-page .novel-start-writing-button:hover {
+transform: translateY(-2px);
+}
+
+.novel-builder-page .novel-ghost-button:disabled,
+.novel-builder-page .novel-gold-button:disabled {
+opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.novel-builder-page .novel-summary-list {
+display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.novel-builder-page .novel-summary-item {
+border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+.novel-builder-page .novel-summary-item span {
+display: block;
+  color: #e8b96d;
+  font-size: 12px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.novel-builder-page .novel-summary-item p {
+margin: 0;
+  color: #f8f2e8;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.novel-builder-page .novel-start-writing-button {
+width: 100%;
+  margin-top: 22px;
+  opacity: 0.55;
+}
+
+.novel-builder-page .novel-start-writing-button.enabled {
+opacity: 1;
+}
+
+@media (max-width: 1200px) {
+  .novel-builder-page .novel-builder-layout {
+  grid-template-columns: 200px minmax(0, 1fr);
+  }
+
+  .novel-builder-page .novel-summary-panel {
+  grid-column: 1 / -1;
+  }
+
+  .novel-builder-page .novel-summary-list {
+  display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+@media (max-width: 900px) {
+  .novel-builder-page .novel-builder-shell {
+  width: min(100% - 32px, 760px);
+      padding: 32px 0;
+  }
+
+  .novel-builder-page .novel-builder-header {
+  flex-direction: column;
+      align-items: stretch;
+  }
+
+  .novel-builder-page .novel-builder-progress-card {
+  width: auto;
+  }
+
+  .novel-builder-page .novel-builder-layout {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-builder-page .novel-recommendation-grid {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-builder-page .novel-summary-list {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-builder-page .novel-meeting-action-row {
+  flex-direction: column;
+  }
+
+  .novel-builder-page .novel-ghost-button,
+  .novel-builder-page .novel-gold-button {
+  width: 100%;
+  }
+
+}
+
+
+/* =========================================================
+   NovelScenarioDetailPage.css
+   scoped root: .novel-detail-page
+========================================================= */
+
+.novel-detail-page {
+--detail-primary: #6c4ef6;
+  --detail-primary-hover: #5b3fe8;
+  --detail-primary-light: #7c5cff;
+
+  --detail-bg: #faf8ff;
+  --detail-glass: rgba(255, 255, 255, 0.72);
+  --detail-glass-strong: rgba(255, 255, 255, 0.86);
+  --detail-glass-soft: rgba(255, 255, 255, 0.54);
+
+  --detail-text: #211a35;
+  --detail-text-strong: #191429;
+  --detail-muted: #6f6680;
+
+  --detail-line: rgba(108, 78, 246, 0.18);
+  --detail-line-strong: rgba(108, 78, 246, 0.5);
+
+  --detail-shadow: 0 24px 70px rgba(72, 52, 130, 0.16);
+  --detail-shadow-soft: 0 12px 34px rgba(72, 52, 130, 0.1);
+}
+
+.novel-detail-page {
+min-height: 100vh;
+  position: relative;
+
+  color: var(--detail-text);
+  background: var(--detail-bg);
+
+  overflow-x: hidden;
+}
+
+.novel-detail-page .novel-detail-bg {
+position: fixed;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center center;
+
+  z-index: -2;
+  pointer-events: none;
+}
+
+.novel-detail-page .novel-detail-overlay {
+position: fixed;
+  inset: 0;
+
+  z-index: -1;
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.66) 0%,
+      rgba(255, 255, 255, 0.46) 44%,
+      rgba(250, 248, 255, 0.78) 100%
+    ),
+    radial-gradient(
+      circle at 50% 18%,
+      rgba(108, 78, 246, 0.12),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 82% 68%,
+      rgba(124, 92, 255, 0.08),
+      transparent 36%
+    );
+}
+
+.novel-detail-page .novel-detail-shell {
+width: min(1040px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 54px 0;
+}
+
+.novel-detail-page .novel-detail-shell .eyebrow {
+margin: 0 0 10px;
+
+  color: var(--detail-primary);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.novel-detail-page .novel-detail-shell h1 {
+margin: 0 0 10px;
+
+  color: var(--detail-text-strong);
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+
+  text-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.9),
+    0 14px 34px rgba(108, 78, 246, 0.16);
+}
+
+.novel-detail-page .novel-detail-shell > p {
+margin: 0;
+
+  color: var(--detail-muted);
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 700;
+}
+
+.novel-detail-page .detail-form-grid {
+display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+
+  margin: 28px 0;
+}
+
+.novel-detail-page .detail-field {
+display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  padding: 18px;
+
+  border: 1px solid var(--detail-line);
+  border-radius: 22px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.82),
+      rgba(255, 255, 255, 0.62)
+    );
+
+  backdrop-filter: blur(18px);
+  box-shadow: var(--detail-shadow-soft);
+}
+
+.novel-detail-page .detail-field span {
+color: var(--detail-primary);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.novel-detail-page .detail-field textarea {
+min-height: 92px;
+  resize: vertical;
+
+  border: 1px solid rgba(108, 78, 246, 0.18);
+  border-radius: 16px;
+
+  padding: 14px;
+
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--detail-text-strong);
+
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 700;
+
+  outline: none;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 8px 20px rgba(72, 52, 130, 0.06);
+}
+
+.novel-detail-page .detail-field textarea:focus {
+border-color: rgba(108, 78, 246, 0.64);
+  background: rgba(255, 255, 255, 0.94);
+
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.08),
+    0 12px 26px rgba(108, 78, 246, 0.1);
+}
+
+.novel-detail-page .detail-field textarea::placeholder {
+color: rgba(111, 102, 128, 0.48);
+}
+
+.novel-detail-page .detail-actions {
+display: flex;
+  gap: 12px;
+
+  padding: 18px;
+
+  border: 1px solid var(--detail-line);
+  border-radius: 24px;
+
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--detail-shadow-soft);
+}
+
+.novel-detail-page .detail-actions button {
+flex: 1;
+
+  border: 0;
+  border-radius: 20px;
+
+  padding: 17px;
+
+  background: linear-gradient(
+    135deg,
+    var(--detail-primary),
+    var(--detail-primary-light)
+  );
+
+  color: #ffffff;
+
+  font-size: 16px;
+  font-weight: 900;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 12px 28px rgba(108, 78, 246, 0.26),
+    0 0 0 4px rgba(108, 78, 246, 0.08);
+
+  transition: 0.18s ease;
+}
+
+.novel-detail-page .detail-actions button:hover {
+transform: translateY(-2px);
+
+  background: linear-gradient(
+    135deg,
+    var(--detail-primary-hover),
+    var(--detail-primary)
+  );
+
+  box-shadow:
+    0 16px 34px rgba(108, 78, 246, 0.32),
+    0 0 0 4px rgba(108, 78, 246, 0.12);
+}
+
+.novel-detail-page .detail-actions .secondary {
+border: 1px solid rgba(108, 78, 246, 0.2);
+
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--detail-primary);
+
+  box-shadow: 0 10px 24px rgba(72, 52, 130, 0.08);
+}
+
+.novel-detail-page .detail-actions .secondary:hover {
+border-color: rgba(108, 78, 246, 0.46);
+  background: rgba(108, 78, 246, 0.08);
+  color: var(--detail-primary-hover);
+}
+
+@media (max-width: 820px) {
+  .novel-detail-page .novel-detail-shell {
+  width: min(100% - 32px, 1040px);
+      padding: 36px 0;
+  }
+
+  .novel-detail-page .novel-detail-shell h1 {
+  font-size: 34px;
+  }
+
+  .novel-detail-page .detail-form-grid {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-detail-page .detail-actions {
+  flex-direction: column;
+  }
+
+}
+
+@media (max-width: 520px) {
+  .novel-detail-page .novel-detail-shell {
+  width: min(100% - 24px, 1040px);
+      padding: 28px 0;
+  }
+
+  .novel-detail-page .novel-detail-shell h1 {
+  font-size: 30px;
+  }
+
+  .novel-detail-page .detail-field {
+  padding: 16px;
+      border-radius: 18px;
+  }
+
+  .novel-detail-page .detail-actions {
+  padding: 14px;
+      border-radius: 20px;
+  }
+
+  .novel-detail-page .detail-actions button {
+  border-radius: 16px;
+  }
+
+}
+
+
+/* =========================================================
+   NovelScenarioSelectPage.css
+   scoped root: .novel-scenario-page
+========================================================= */
+
+.novel-scenario-page {
+--scenario-primary: #6c4ef6;
+  --scenario-primary-hover: #5b3fe8;
+  --scenario-primary-light: #7c5cff;
+  --scenario-primary-soft: rgba(108, 78, 246, 0.1);
+  --scenario-primary-soft-2: rgba(108, 78, 246, 0.18);
+
+  --scenario-bg: #faf8ff;
+  --scenario-glass: rgba(255, 255, 255, 0.68);
+  --scenario-glass-strong: rgba(255, 255, 255, 0.84);
+  --scenario-glass-soft: rgba(255, 255, 255, 0.52);
+
+  --scenario-text: #211a35;
+  --scenario-text-strong: #191429;
+  --scenario-muted: #6f6680;
+  --scenario-muted-light: #8b82a0;
+
+  --scenario-line: rgba(108, 78, 246, 0.18);
+  --scenario-line-strong: rgba(108, 78, 246, 0.48);
+
+  --scenario-shadow: 0 20px 54px rgba(72, 52, 130, 0.16);
+  --scenario-shadow-soft: 0 12px 34px rgba(72, 52, 130, 0.1);
+}
+
+.novel-scenario-page {
+position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  color: var(--scenario-text);
+  overflow-x: hidden;
+  background: var(--scenario-bg);
+}
+
+.novel-scenario-page .novel-scenario-bg {
+position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.novel-scenario-page .novel-scenario-dim {
+position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.66) 0%,
+      rgba(255, 255, 255, 0.46) 44%,
+      rgba(250, 248, 255, 0.78) 100%
+    ),
+    radial-gradient(
+      circle at 50% 28%,
+      rgba(108, 78, 246, 0.12),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 82% 70%,
+      rgba(124, 92, 255, 0.08),
+      transparent 36%
+    );
+}
+
+.novel-scenario-page .novel-scenario-bg,
+.novel-scenario-page .novel-scenario-dim,
+.novel-scenario-page::before,
+.novel-scenario-page::after {
+pointer-events: none;
+}
+
+.novel-scenario-page .scenario-header,
+.novel-scenario-page .scenario-main,
+.novel-scenario-page .scenario-board,
+.novel-scenario-page .filter-panel,
+.novel-scenario-page .scenario-list-panel,
+.novel-scenario-page .summary-panel {
+position: relative;
+  z-index: 10;
+}
+
+.novel-scenario-page .filter-chip-wrap button,
+.novel-scenario-page .scenario-card,
+.novel-scenario-page .scenario-start-btn,
+.novel-scenario-page .scenario-nav button,
+.novel-scenario-page .scenario-user button {
+position: relative;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.novel-scenario-page .scenario-header {
+position: relative;
+  z-index: 5;
+  height: 72px;
+  padding: 0 36px;
+
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 360px;
+  align-items: center;
+  gap: 24px;
+
+  background: rgba(255, 255, 255, 0.72);
+  border-bottom: 1px solid rgba(108, 78, 246, 0.14);
+  box-shadow: 0 10px 28px rgba(72, 52, 130, 0.1);
+  backdrop-filter: blur(18px);
+}
+
+.novel-scenario-page .scenario-brand {
+display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.novel-scenario-page .brand-icon {
+width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  font-size: 25px;
+  color: var(--scenario-primary);
+}
+
+.novel-scenario-page .scenario-brand strong {
+color: var(--scenario-primary);
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-scenario-page .scenario-nav {
+display: flex;
+  justify-content: center;
+  gap: 48px;
+}
+
+.novel-scenario-page .scenario-nav button,
+.novel-scenario-page .scenario-user button {
+border: none;
+  background: transparent;
+  color: #403754;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.novel-scenario-page .scenario-nav button:hover,
+.novel-scenario-page .scenario-user button:hover {
+color: var(--scenario-primary);
+}
+
+.novel-scenario-page .scenario-user {
+display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.novel-scenario-page .premium-button {
+height: 40px;
+  padding: 0 18px;
+  border: 1px solid rgba(108, 78, 246, 0.34) !important;
+  border-radius: 12px;
+  color: var(--scenario-primary) !important;
+  background: rgba(108, 78, 246, 0.08) !important;
+  font-weight: 900 !important;
+}
+
+.novel-scenario-page .premium-button:hover {
+background: rgba(108, 78, 246, 0.14) !important;
+}
+
+.novel-scenario-page .bell-button {
+font-size: 20px !important;
+}
+
+.novel-scenario-page .profile-button {
+font-weight: 900 !important;
+}
+
+.novel-scenario-page .scenario-main {
+position: relative;
+  z-index: 4;
+  min-height: calc(100dvh - 72px);
+  padding: 34px 54px 32px;
+
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 22px;
+}
+
+.novel-scenario-page .scenario-title-section {
+text-align: center;
+}
+
+.novel-scenario-page .eyebrow {
+margin: 0 0 8px;
+  color: var(--scenario-primary);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.novel-scenario-page .scenario-title-section h1 {
+margin: 0;
+  color: var(--scenario-text-strong);
+  font-size: clamp(36px, 3.8vw, 62px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  word-break: keep-all;
+  text-align: center;
+  text-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.9),
+    0 14px 34px rgba(108, 78, 246, 0.18);
+}
+
+.novel-scenario-page .scenario-title-section > p:not(.eyebrow) {
+margin: 12px 0 0;
+  color: var(--scenario-muted);
+  font-size: 17px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.novel-scenario-page .scenario-progress {
+width: min(850px, 100%);
+  margin: 22px auto 0;
+  padding: 12px 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+
+  border: 1px solid rgba(108, 78, 246, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.66);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--scenario-shadow-soft);
+}
+
+.novel-scenario-page .progress-step {
+display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--scenario-muted);
+  font-weight: 800;
+}
+
+.novel-scenario-page .progress-step span {
+width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+  border: 1px solid rgba(108, 78, 246, 0.24);
+  color: var(--scenario-primary);
+  background: rgba(255, 255, 255, 0.78);
+  font-weight: 900;
+}
+
+.novel-scenario-page .progress-step.active span {
+color: #fff;
+  border-color: rgba(108, 78, 246, 0.72);
+  background: linear-gradient(135deg, var(--scenario-primary), var(--scenario-primary-light));
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.08),
+    0 10px 24px rgba(108, 78, 246, 0.24);
+}
+
+.novel-scenario-page .progress-step strong {
+font-size: 15px;
+  white-space: nowrap;
+}
+
+.novel-scenario-page .scenario-progress em {
+color: var(--scenario-primary);
+  font-style: normal;
+  font-weight: 900;
+}
+
+.novel-scenario-page .scenario-board {
+min-height: 0;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr) 360px;
+  gap: 18px;
+}
+
+.novel-scenario-page .filter-panel,
+.novel-scenario-page .scenario-list-panel,
+.novel-scenario-page .summary-panel {
+min-height: 0;
+  border: 1px solid var(--scenario-line);
+  border-radius: 22px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.78),
+      rgba(255, 255, 255, 0.6)
+    );
+  box-shadow: var(--scenario-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.novel-scenario-page .filter-panel {
+padding: 22px;
+  overflow-y: auto;
+}
+
+.novel-scenario-page .filter-panel h2,
+.novel-scenario-page .scenario-list-panel h2,
+.novel-scenario-page .summary-panel h2 {
+margin: 0;
+  color: var(--scenario-text-strong);
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-scenario-page .filter-group {
+margin-top: 20px;
+}
+
+.novel-scenario-page .filter-group h3 {
+margin: 0 0 10px;
+  color: var(--scenario-text-strong);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.novel-scenario-page .filter-chip-wrap {
+display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.novel-scenario-page .filter-chip-wrap button {
+height: 34px;
+  padding: 0 13px;
+  border: 1px solid rgba(108, 78, 246, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--scenario-primary);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(72, 52, 130, 0.06);
+  transition: 0.18s ease;
+}
+
+.novel-scenario-page .filter-chip-wrap button:hover {
+border-color: rgba(108, 78, 246, 0.46);
+  background: rgba(108, 78, 246, 0.08);
+}
+
+.novel-scenario-page .filter-chip-wrap button.active {
+color: #fff;
+  background: linear-gradient(135deg, var(--scenario-primary), var(--scenario-primary-light));
+  border-color: rgba(108, 78, 246, 0.58);
+  font-weight: 900;
+  box-shadow:
+    0 10px 22px rgba(108, 78, 246, 0.22),
+    0 0 0 3px rgba(108, 78, 246, 0.08);
+}
+
+.novel-scenario-page .scenario-list-panel {
+padding: 22px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.novel-scenario-page .panel-title-row {
+display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  flex-shrink: 0;
+}
+
+.novel-scenario-page .panel-title-row span {
+color: var(--scenario-muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.novel-scenario-page .scenario-card-list {
+flex: 1;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 330px));
+  gap: 18px;
+
+  justify-content: center;
+  align-content: center;
+  align-items: stretch;
+}
+
+.novel-scenario-page .scenario-card {
+min-height: 330px;
+  padding: 20px;
+  border: 1px solid rgba(108, 78, 246, 0.14);
+  border-radius: 18px;
+  background:
+    radial-gradient(
+      circle at 50% 10%,
+      rgba(108, 78, 246, 0.1),
+      transparent 40%
+    ),
+    rgba(255, 255, 255, 0.72);
+  color: var(--scenario-text);
+  text-align: left;
+  cursor: pointer;
+  transition: 0.24s ease;
+  box-shadow: 0 12px 30px rgba(72, 52, 130, 0.09);
+}
+
+.novel-scenario-page .scenario-card:hover {
+transform: translateY(-5px);
+  border-color: rgba(108, 78, 246, 0.42);
+  background:
+    radial-gradient(
+      circle at 50% 10%,
+      rgba(108, 78, 246, 0.13),
+      transparent 40%
+    ),
+    rgba(255, 255, 255, 0.86);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.07),
+    0 20px 38px rgba(108, 78, 246, 0.13);
+}
+
+.novel-scenario-page .scenario-card.selected {
+border-color: rgba(108, 78, 246, 0.66);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(108, 78, 246, 0.12),
+      rgba(255, 255, 255, 0.88)
+    );
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.1),
+    0 22px 44px rgba(108, 78, 246, 0.16);
+}
+
+.novel-scenario-page .scenario-card-top {
+display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.novel-scenario-page .scenario-card-top span {
+color: var(--scenario-primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.novel-scenario-page .scenario-card-top em {
+padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(108, 78, 246, 0.1);
+  color: var(--scenario-primary);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.novel-scenario-page .scenario-card h3 {
+margin: 18px 0 18px;
+  color: var(--scenario-text-strong);
+  font-size: 23px;
+  line-height: 1.38;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+  font-weight: 900;
+}
+
+.novel-scenario-page .scenario-card dl {
+margin: 0;
+}
+
+.novel-scenario-page .scenario-card dl div {
+padding: 12px 0;
+  border-top: 1px solid rgba(108, 78, 246, 0.1);
+}
+
+.novel-scenario-page .scenario-card dt {
+color: var(--scenario-primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.novel-scenario-page .scenario-card dd {
+margin: 4px 0 0;
+  color: var(--scenario-muted);
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+.novel-scenario-page .summary-panel {
+padding: 22px;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.novel-scenario-page .summary-panel h2 {
+text-align: left;
+}
+
+.novel-scenario-page .summary-box {
+margin-top: 20px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(108, 78, 246, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 8px 22px rgba(72, 52, 130, 0.06);
+
+  text-align: left;
+  overflow: hidden;
+}
+
+.novel-scenario-page .summary-label {
+margin: 0 0 10px;
+  color: var(--scenario-primary);
+  font-size: 13px;
+  font-weight: 900;
+  text-align: left;
+}
+
+.novel-scenario-page .summary-box h3 {
+margin: 0;
+  color: var(--scenario-text-strong);
+  font-size: 21px;
+  line-height: 1.45;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  font-weight: 900;
+  text-align: left;
+}
+
+.novel-scenario-page .summary-item {
+width: 100%;
+  min-width: 0;
+  margin-top: 16px;
+  padding: 16px 18px;
+  border: 1px solid rgba(108, 78, 246, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 8px 22px rgba(72, 52, 130, 0.05);
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+
+  text-align: left;
+  overflow: hidden;
+}
+
+.novel-scenario-page .summary-item span {
+display: block;
+  flex-shrink: 0;
+  color: var(--scenario-primary);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.novel-scenario-page .summary-item strong {
+display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  color: var(--scenario-text-strong);
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 800;
+
+  text-align: left;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.novel-scenario-page .scenario-start-btn {
+width: 100%;
+  max-width: 100%;
+  height: 56px;
+  margin-top: 22px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--scenario-primary), var(--scenario-primary-light));
+  color: #fff;
+  font-size: 17px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow:
+    0 12px 28px rgba(108, 78, 246, 0.26),
+    0 0 0 4px rgba(108, 78, 246, 0.08);
+  transition: 0.18s ease;
+}
+
+.novel-scenario-page .scenario-start-btn:hover {
+transform: translateY(-2px);
+  background: linear-gradient(135deg, var(--scenario-primary-hover), var(--scenario-primary));
+  box-shadow:
+    0 16px 34px rgba(108, 78, 246, 0.32),
+    0 0 0 4px rgba(108, 78, 246, 0.12);
+}
+
+@media (max-width: 1280px) {
+  .novel-scenario-page {
+  height: auto;
+      min-height: 100dvh;
+      overflow-y: visible;
+  }
+
+  .novel-scenario-page .scenario-main {
+  height: auto;
+  }
+
+  .novel-scenario-page .scenario-board {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-scenario-page .scenario-card-list {
+  grid-template-columns: 1fr;
+  }
+
+}
+
+@media (max-width: 760px) {
+  .novel-scenario-page .scenario-header {
+  height: auto;
+      grid-template-columns: 1fr;
+      padding: 18px;
+  }
+
+  .novel-scenario-page .scenario-nav,
+  .novel-scenario-page .scenario-user {
+  display: none;
+  }
+
+  .novel-scenario-page .scenario-main {
+  padding: 24px 18px;
+  }
+
+  .novel-scenario-page .scenario-progress {
+  overflow-x: auto;
+      justify-content: flex-start;
+      border-radius: 18px;
+  }
+
+}
+
+.novel-scenario-page .scenario-title-section,
+.novel-scenario-page .scenario-card,
+.novel-scenario-page .summary-panel,
+.novel-scenario-page .filter-panel {
+word-break: keep-all;
+}
+
+.novel-scenario-page .scenario-title-section h1,
+.novel-scenario-page .scenario-card h3,
+.novel-scenario-page .summary-box h3,
+.novel-scenario-page .filter-panel h2,
+.novel-scenario-page .scenario-list-panel h2,
+.novel-scenario-page .summary-panel h2 {
+letter-spacing: -0.03em;
+}
+
+
+/* =========================================================
+   NovelSettingConfirmPage.css
+   scoped root: .novel-confirm-page
+========================================================= */
+
+.novel-confirm-page {
+--confirm-primary: #6c4ef6;
+  --confirm-primary-hover: #5b3fe8;
+  --confirm-primary-light: #7c5cff;
+  --confirm-primary-soft: rgba(108, 78, 246, 0.1);
+  --confirm-primary-soft-2: rgba(108, 78, 246, 0.18);
+
+  --confirm-bg: #faf8ff;
+  --confirm-glass: rgba(255, 255, 255, 0.68);
+  --confirm-glass-strong: rgba(255, 255, 255, 0.82);
+  --confirm-glass-soft: rgba(255, 255, 255, 0.5);
+
+  --confirm-text: #211a35;
+  --confirm-text-strong: #191429;
+  --confirm-muted: #6f6680;
+  --confirm-muted-light: #8b82a0;
+
+  --confirm-line: rgba(108, 78, 246, 0.18);
+  --confirm-line-strong: rgba(108, 78, 246, 0.48);
+
+  --confirm-shadow: 0 20px 54px rgba(72, 52, 130, 0.16);
+  --confirm-shadow-soft: 0 12px 34px rgba(72, 52, 130, 0.1);
+
+  --confirm-success: #32b985;
+  --confirm-success-soft: rgba(50, 185, 133, 0.12);
+}
+
+.novel-confirm-page {
+position: relative;
+  min-height: 100dvh;
+  color: var(--confirm-text);
+  overflow-x: hidden;
+  background: var(--confirm-bg);
+}
+
+.novel-confirm-page .novel-confirm-bg {
+position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.novel-confirm-page .novel-confirm-overlay {
+position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.62) 0%,
+      rgba(255, 255, 255, 0.42) 42%,
+      rgba(250, 248, 255, 0.72) 100%
+    ),
+    radial-gradient(
+      circle at 50% 18%,
+      rgba(108, 78, 246, 0.12),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 80% 64%,
+      rgba(124, 92, 255, 0.08),
+      transparent 34%
+    );
+}
+
+.novel-confirm-page .novel-confirm-header {
+position: relative;
+  z-index: 5;
+
+  height: 68px;
+  padding: 0 36px;
+
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr) 420px;
+  align-items: center;
+  gap: 24px;
+
+  background: rgba(255, 255, 255, 0.72);
+  border-bottom: 1px solid rgba(108, 78, 246, 0.14);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 10px 28px rgba(72, 52, 130, 0.1);
+}
+
+.novel-confirm-page .novel-confirm-brand {
+display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.novel-confirm-page .novel-confirm-brand span {
+font-size: 26px;
+}
+
+.novel-confirm-page .novel-confirm-brand strong {
+color: var(--confirm-primary);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-confirm-page .novel-confirm-nav {
+display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+}
+
+.novel-confirm-page .novel-confirm-nav button,
+.novel-confirm-page .novel-confirm-user button {
+border: none;
+  background: transparent;
+  color: #403754;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.novel-confirm-page .novel-confirm-nav button:hover,
+.novel-confirm-page .novel-confirm-user button:hover {
+color: var(--confirm-primary);
+}
+
+.novel-confirm-page .novel-confirm-user {
+display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
+}
+
+.novel-confirm-page .novel-premium-btn {
+height: 38px;
+  padding: 0 20px;
+  border: 1px solid rgba(108, 78, 246, 0.36) !important;
+  border-radius: 999px;
+  color: var(--confirm-primary) !important;
+  background: rgba(108, 78, 246, 0.08) !important;
+  font-weight: 900 !important;
+}
+
+.novel-confirm-page .novel-premium-btn:hover {
+background: rgba(108, 78, 246, 0.14) !important;
+}
+
+.novel-confirm-page .novel-bell-btn {
+font-size: 20px !important;
+}
+
+.novel-confirm-page .novel-profile-btn {
+color: #403754 !important;
+  font-weight: 900 !important;
+}
+
+.novel-confirm-page .novel-confirm-main {
+position: relative;
+  z-index: 3;
+  padding: 34px 76px 70px;
+}
+
+.novel-confirm-page .confirm-title-area {
+text-align: center;
+}
+
+.novel-confirm-page .confirm-title-area h1 {
+margin: 0;
+  color: var(--confirm-text-strong);
+  font-size: clamp(40px, 4vw, 64px);
+  line-height: 1.1;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  text-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.9),
+    0 14px 34px rgba(108, 78, 246, 0.18);
+}
+
+.novel-confirm-page .confirm-title-area p {
+margin: 10px 0 0;
+  color: var(--confirm-primary);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.novel-confirm-page .confirm-step-bar {
+width: min(900px, 100%);
+  margin: 24px auto 22px;
+  padding: 8px 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+
+  border: 1px solid rgba(108, 78, 246, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.66);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--confirm-shadow-soft);
+}
+
+.novel-confirm-page .confirm-step {
+min-height: 50px;
+  padding: 0 20px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  border-radius: 999px;
+  color: var(--confirm-muted);
+  white-space: nowrap;
+  font-weight: 800;
+}
+
+.novel-confirm-page .confirm-step span {
+width: 34px;
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(108, 78, 246, 0.24);
+  border-radius: 50%;
+
+  color: var(--confirm-primary);
+  background: rgba(255, 255, 255, 0.78);
+  font-weight: 900;
+}
+
+.novel-confirm-page .confirm-step.done span {
+color: #fff;
+  border-color: rgba(108, 78, 246, 0.68);
+  background: linear-gradient(135deg, var(--confirm-primary-hover), var(--confirm-primary));
+  box-shadow: 0 10px 22px rgba(108, 78, 246, 0.2);
+}
+
+.novel-confirm-page .confirm-step.active {
+color: var(--confirm-primary);
+  background: rgba(108, 78, 246, 0.1);
+  border: 1px solid rgba(108, 78, 246, 0.28);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.06),
+    0 12px 26px rgba(108, 78, 246, 0.12);
+}
+
+.novel-confirm-page .confirm-step.active span {
+color: white;
+  border-color: rgba(108, 78, 246, 0.72);
+  background: linear-gradient(135deg, var(--confirm-primary), var(--confirm-primary-light));
+}
+
+.novel-confirm-page .confirm-step-bar > em {
+width: 70px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(108, 78, 246, 0.34),
+    transparent
+  );
+}
+
+.novel-confirm-page .confirm-layout {
+width: min(1500px, 100%);
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: 300px minmax(620px, 1fr) 330px;
+  gap: 22px;
+  align-items: stretch;
+}
+
+.novel-confirm-page .directing-progress-panel,
+.novel-confirm-page .directing-chat-panel,
+.novel-confirm-page .live-minutes-panel {
+min-height: 660px;
+
+  border: 1px solid var(--confirm-line);
+  border-radius: 22px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.76),
+      rgba(255, 255, 255, 0.58)
+    );
+  box-shadow: var(--confirm-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.novel-confirm-page .directing-progress-panel,
+.novel-confirm-page .live-minutes-panel {
+padding: 22px;
+}
+
+.novel-confirm-page .directing-chat-panel {
+padding: 22px 26px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.novel-confirm-page .directing-progress-panel h2,
+.novel-confirm-page .directing-chat-panel h2,
+.novel-confirm-page .live-minutes-panel h2 {
+margin: 0 0 22px;
+  color: var(--confirm-text-strong);
+  text-align: center;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.novel-confirm-page .directing-progress-list {
+display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.novel-confirm-page .directing-progress-item {
+min-height: 68px;
+  padding: 12px 14px;
+
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+
+  border: 1px solid rgba(108, 78, 246, 0.12);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.58);
+  color: var(--confirm-text);
+  box-shadow: 0 8px 20px rgba(72, 52, 130, 0.06);
+}
+
+.novel-confirm-page .directing-progress-item.completed,
+.novel-confirm-page .directing-progress-item.active {
+border-color: rgba(108, 78, 246, 0.42);
+  background: rgba(108, 78, 246, 0.1);
+  box-shadow:
+    0 0 0 3px rgba(108, 78, 246, 0.06),
+    0 12px 26px rgba(108, 78, 246, 0.11);
+}
+
+.novel-confirm-page .directing-progress-item.pending {
+opacity: 0.78;
+}
+
+.novel-confirm-page .progress-icon {
+font-size: 20px;
+}
+
+.novel-confirm-page .directing-progress-item strong {
+display: block;
+  color: var(--confirm-text-strong);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.novel-confirm-page .directing-progress-item p {
+margin: 5px 0 0;
+  color: var(--confirm-muted);
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.novel-confirm-page .directing-progress-item em {
+width: 24px;
+  height: 24px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--confirm-primary), var(--confirm-primary-light));
+  color: white;
+
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.novel-confirm-page .directing-progress-item small {
+color: var(--confirm-primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.novel-confirm-page .directing-progress-item i {
+width: 22px;
+  height: 22px;
+  border: 1px solid rgba(108, 78, 246, 0.28);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.novel-confirm-page .directing-help-box {
+margin-top: 18px;
+  min-height: 130px;
+  padding: 22px;
+
+  border: 1px solid rgba(108, 78, 246, 0.14);
+  border-radius: 16px;
+
+  background: rgba(255, 255, 255, 0.58);
+  text-align: center;
+  box-shadow: 0 8px 22px rgba(72, 52, 130, 0.06);
+}
+
+.novel-confirm-page .directing-help-box span {
+color: var(--confirm-primary);
+  font-size: 28px;
+}
+
+.novel-confirm-page .directing-help-box p {
+margin: 12px 0 0;
+  color: var(--confirm-text);
+  line-height: 1.7;
+  font-weight: 800;
+}
+
+.novel-confirm-page .novel-chat-window {
+flex: 1;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  border: 1px solid rgba(108, 78, 246, 0.14);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.58);
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.novel-confirm-page .novel-chat-messages {
+flex: 1;
+  min-height: 220px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 22px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  background: transparent;
+}
+
+.novel-confirm-page .novel-chat-message {
+width: 100%;
+  display: flex;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+
+.novel-confirm-page .novel-chat-message.ai {
+justify-content: flex-start;
+}
+
+.novel-confirm-page .novel-chat-message.user {
+justify-content: flex-end;
+}
+
+.novel-confirm-page .novel-message-bubble {
+max-width: 78%;
+  padding: 14px 18px;
+
+  border-radius: 16px;
+
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 750;
+
+  box-shadow: 0 10px 22px rgba(72, 52, 130, 0.08);
+}
+
+.novel-confirm-page .novel-chat-message.ai .novel-message-bubble {
+border-top-left-radius: 4px;
+  color: var(--confirm-text);
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(108, 78, 246, 0.14);
+}
+
+.novel-confirm-page .novel-chat-message.user .novel-message-bubble {
+border-top-right-radius: 4px;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--confirm-primary), var(--confirm-primary-light));
+  border: 1px solid rgba(108, 78, 246, 0.38);
+}
+
+.novel-confirm-page .current-question-box {
+margin: 0 22px 18px;
+  padding: 18px;
+
+  border: 1px solid rgba(108, 78, 246, 0.16);
+  border-radius: 16px;
+
+  background:
+    radial-gradient(
+      circle at 10% 10%,
+      rgba(108, 78, 246, 0.1),
+      transparent 32%
+    ),
+    rgba(255, 255, 255, 0.72);
+}
+
+.novel-confirm-page .current-question-box.complete {
+text-align: center;
+  border-color: rgba(50, 185, 133, 0.42);
+  background: var(--confirm-success-soft);
+}
+
+.novel-confirm-page .question-header {
+display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.novel-confirm-page .question-header span {
+padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(108, 78, 246, 0.12);
+  color: var(--confirm-primary);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.novel-confirm-page .question-header strong {
+color: var(--confirm-text-strong);
+}
+
+.novel-confirm-page .current-question-box h3 {
+margin: 0;
+  color: var(--confirm-text-strong);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.novel-confirm-page .current-question-box p {
+margin: 8px 0 16px;
+  color: var(--confirm-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.novel-confirm-page .novel-chat-option-grid {
+display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.novel-confirm-page .novel-chat-option-grid button {
+min-height: 44px;
+  padding: 10px 12px;
+
+  border: 1px solid rgba(108, 78, 246, 0.22);
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--confirm-primary);
+
+  font-size: 14px;
+  font-weight: 850;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(72, 52, 130, 0.06);
+}
+
+.novel-confirm-page .novel-chat-option-grid button:hover {
+border-color: rgba(108, 78, 246, 0.5);
+  background: rgba(108, 78, 246, 0.1);
+}
+
+.novel-confirm-page .novel-chat-input-area {
+padding: 18px 22px 22px;
+  border-top: 1px solid rgba(108, 78, 246, 0.12);
+}
+
+.novel-confirm-page .novel-chat-input-area textarea {
+width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  padding: 16px;
+
+  border: 1px solid rgba(108, 78, 246, 0.18);
+  border-radius: 14px;
+  outline: none;
+
+  background: rgba(255, 255, 255, 0.84);
+  color: var(--confirm-text-strong);
+
+  font-size: 15px;
+  line-height: 1.6;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 8px 20px rgba(72, 52, 130, 0.06);
+}
+
+.novel-confirm-page .novel-chat-input-area textarea:focus {
+border-color: rgba(108, 78, 246, 0.68);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow:
+    0 0 0 4px rgba(108, 78, 246, 0.09),
+    0 12px 28px rgba(108, 78, 246, 0.12);
+}
+
+.novel-confirm-page .novel-chat-input-area textarea::placeholder {
+color: rgba(79, 71, 104, 0.46);
+}
+
+.novel-confirm-page .novel-chat-input-area textarea:disabled {
+opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.novel-confirm-page .novel-chat-actions {
+margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 12px;
+}
+
+.novel-confirm-page .novel-chat-actions button {
+height: 48px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.novel-confirm-page .novel-chat-actions button:disabled {
+opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.novel-confirm-page .novel-sub-btn {
+border: 1px solid rgba(108, 78, 246, 0.2);
+  color: var(--confirm-primary);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.novel-confirm-page .novel-sub-btn:hover:not(:disabled) {
+border-color: rgba(108, 78, 246, 0.46);
+  background: rgba(108, 78, 246, 0.08);
+}
+
+.novel-confirm-page .novel-send-btn {
+border: none;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--confirm-primary), var(--confirm-primary-light));
+  box-shadow:
+    0 10px 24px rgba(108, 78, 246, 0.22),
+    0 0 0 4px rgba(108, 78, 246, 0.07);
+}
+
+.novel-confirm-page .novel-send-btn:hover:not(:disabled) {
+transform: translateY(-1px);
+  background: linear-gradient(135deg, var(--confirm-primary-hover), var(--confirm-primary));
+  box-shadow:
+    0 14px 30px rgba(108, 78, 246, 0.28),
+    0 0 0 4px rgba(108, 78, 246, 0.1);
+}
+
+.novel-confirm-page .live-minutes-panel {
+display: flex;
+  flex-direction: column;
+}
+
+.novel-confirm-page .live-minutes-box {
+padding: 16px;
+  border: 1px solid rgba(108, 78, 246, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.novel-confirm-page .live-minutes-box + .live-minutes-box {
+margin-top: 14px;
+}
+
+.novel-confirm-page .live-minutes-box h3 {
+margin: 0 0 12px;
+  color: var(--confirm-primary);
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.novel-confirm-page .novel-summary-row {
+display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(108, 78, 246, 0.1);
+}
+
+.novel-confirm-page .novel-summary-row:last-child {
+border-bottom: none;
+}
+
+.novel-confirm-page .novel-summary-row span {
+color: var(--confirm-text-strong);
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.novel-confirm-page .novel-summary-row strong {
+color: var(--confirm-muted);
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+.novel-confirm-page .novel-summary-row.completed span {
+color: var(--confirm-primary);
+}
+
+.novel-confirm-page .novel-summary-row.completed strong {
+color: var(--confirm-text-strong);
+}
+
+.novel-confirm-page .live-progress-box {
+margin-top: 14px;
+  padding: 16px;
+  border: 1px solid rgba(108, 78, 246, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.novel-confirm-page .live-progress-box > div:first-child {
+display: flex;
+  justify-content: space-between;
+  color: var(--confirm-text-strong);
+  font-weight: 900;
+}
+
+.novel-confirm-page .novel-progress-track {
+height: 8px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: rgba(108, 78, 246, 0.12);
+  overflow: hidden;
+}
+
+.novel-confirm-page .novel-progress-track em {
+display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--confirm-primary), var(--confirm-primary-light));
+}
+
+.novel-confirm-page .move-editor-btn {
+width: 100%;
+  height: 58px;
+  margin-top: auto;
+
+  border: 1px solid rgba(108, 78, 246, 0.18);
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.62);
+  color: rgba(79, 71, 104, 0.56);
+
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.novel-confirm-page .move-editor-btn:disabled {
+opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.novel-confirm-page .move-editor-btn.enabled {
+color: #ffffff;
+  border: none;
+  background: linear-gradient(135deg, var(--confirm-primary), var(--confirm-primary-light));
+  box-shadow:
+    0 12px 28px rgba(108, 78, 246, 0.26),
+    0 0 0 4px rgba(108, 78, 246, 0.08);
+}
+
+.novel-confirm-page .move-editor-btn.enabled:hover {
+background: linear-gradient(135deg, var(--confirm-primary-hover), var(--confirm-primary));
+  transform: translateY(-1px);
+}
+
+@media (max-width: 1400px) {
+  .novel-confirm-page .novel-confirm-main {
+  padding: 28px 34px 60px;
+  }
+
+  .novel-confirm-page .confirm-layout {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-confirm-page .directing-progress-panel,
+  .novel-confirm-page .directing-chat-panel,
+  .novel-confirm-page .live-minutes-panel {
+  min-height: auto;
+  }
+
+  .novel-confirm-page .novel-chat-messages {
+  max-height: 420px;
+  }
+
+}
+
+@media (max-width: 920px) {
+  .novel-confirm-page .novel-confirm-header {
+  height: auto;
+      padding: 18px;
+      grid-template-columns: 1fr;
+  }
+
+  .novel-confirm-page .novel-confirm-nav,
+  .novel-confirm-page .novel-confirm-user {
+  display: none;
+  }
+
+  .novel-confirm-page .confirm-step-bar {
+  justify-content: flex-start;
+      overflow-x: auto;
+      border-radius: 18px;
+  }
+
+}
+
+@media (max-width: 720px) {
+  .novel-confirm-page .novel-chat-option-grid,
+  .novel-confirm-page .novel-chat-actions {
+  grid-template-columns: 1fr;
+  }
+
+  .novel-confirm-page .novel-summary-row {
+  grid-template-columns: 1fr;
+  }
+
+}
+
+@media (max-width: 560px) {
+  .novel-confirm-page .novel-confirm-main {
+  padding: 24px 18px 48px;
+  }
+
+  .novel-confirm-page .confirm-title-area h1 {
+  font-size: 34px;
+  }
+
+}
+
+}
