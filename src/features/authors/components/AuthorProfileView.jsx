@@ -6,11 +6,11 @@ import { submitReport, isReported } from "@/src/shared/utils/reports";
 // 장르 뱃지 스타일 - 통일감 있는 팔레트
 const genreBadge = (genre) => {
   const map = {
-   "소설":    { cls: "bg-[#ddd6fe] text-[#5b21b6] border-[#c4b5fd]", label: "소설" },
-"시":      { cls: "bg-[#e9d5ff] text-[#7e22ce] border-[#d8b4fe]", label: "시" },
-"에세이":  { cls: "bg-[#ede9ff] text-[#6b54e7] border-[#d4cdf2]", label: "에세이" },
-"동화":    { cls: "bg-[#f3e8ff] text-[#9333ea] border-[#e9d5ff]", label: "동화" },
-"지식정보":{ cls: "bg-[#faf5ff] text-[#a855f7] border-[#f3e8ff]", label: "지식정보" },
+    "소설": { cls: "bg-[#ddd6fe] text-[#5b21b6] border-[#c4b5fd]", label: "소설" },
+    "시": { cls: "bg-[#e9d5ff] text-[#7e22ce] border-[#d8b4fe]", label: "시" },
+    "에세이": { cls: "bg-[#ede9ff] text-[#6b54e7] border-[#d4cdf2]", label: "에세이" },
+    "동화": { cls: "bg-[#f3e8ff] text-[#9333ea] border-[#e9d5ff]", label: "동화" },
+    "지식정보": { cls: "bg-[#faf5ff] text-[#a855f7] border-[#f3e8ff]", label: "지식정보" },
   };
   return map[genre] || { cls: "bg-[#e6e2fc] text-[#6b54e7] border-[#d4cdf2]", label: genre };
 };
@@ -103,7 +103,8 @@ export default function AuthorProfileView({
   allBooks,
   onSelectBook,
   onBackToLibrary,
-  onBackToDirectory
+  onBackToDirectory,
+  mode = "viewer"
 }) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -133,7 +134,7 @@ export default function AuthorProfileView({
   const displayFollowers = isFollowing ? authorProfile.followers + 1 : authorProfile.followers;
 
   return <div className="w-full max-w-4xl mx-auto px-4 md:px-0 py-8 animate-fadeIn">
-    
+
     {/* 1. 프로필 헤더 */}
     <div className="flex flex-col bg-white rounded-2xl p-7 md:p-10 border border-[#e6e2fc] shadow-sm mb-8 text-left gap-7">
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
@@ -151,17 +152,21 @@ export default function AuthorProfileView({
             <h2 className="font-serif text-3xl md:text-4xl font-bold text-[#2f2d59] tracking-tight">
               {authorProfile.name}
             </h2>
-            <button onClick={handleFollowToggle} className={`px-5 py-1.5 rounded-full text-xs font-sans font-bold transition duration-300 shadow-xs cursor-pointer ${isFollowing ? "bg-gray-150 text-[#7c769d] border border-gray-250 hover:bg-gray-200" : `${authorProfile.themeColor} text-white`}`}>
-              {isFollowing ? "팔로잉" : "팔로우"}
-            </button>
-            <button
-              onClick={() => !hasReported && setIsReportOpen(true)}
-              disabled={hasReported}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-sans font-medium border border-gray-200 text-[#b9b0dc] hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-[#b9b0dc] disabled:cursor-default"
-            >
-              <Flag className="w-3 h-3" />
-              {hasReported ? "신고됨" : "신고"}
-            </button>
+            {mode !== "owner" && (
+              <>
+                <button onClick={handleFollowToggle} className={`px-5 py-1.5 rounded-full text-xs font-sans font-bold transition duration-300 shadow-xs cursor-pointer ${isFollowing ? "bg-gray-150 text-[#7c769d] border border-gray-250 hover:bg-gray-200" : `${authorProfile.themeColor} text-white`}`}>
+                  {isFollowing ? "팔로잉" : "팔로우"}
+                </button>
+                <button
+                  onClick={() => !hasReported && setIsReportOpen(true)}
+                  disabled={hasReported}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-sans font-medium border border-gray-200 text-[#b9b0dc] hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-[#b9b0dc] disabled:cursor-default"
+                >
+                  <Flag className="w-3 h-3" />
+                  {hasReported ? "신고됨" : "신고"}
+                </button>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-8 justify-center sm:justify-start">
             <div className="text-center">

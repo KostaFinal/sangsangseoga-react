@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 
-export default function SavedAuthorTab({ favoriteAuthors, setFavoriteAuthors, setActiveTab }) {
+export default function SavedAuthorTab({ favoriteAuthors,
+  setFavoriteAuthors,
+  setActiveTab,
+  onSelectAuthor }) {
   // Local form states co-located in the tab
   const [isAddAuthorOpen, setIsAddAuthorOpen] = useState(false);
   const [newAuthorName, setNewAuthorName] = useState('');
@@ -16,7 +19,7 @@ export default function SavedAuthorTab({ favoriteAuthors, setFavoriteAuthors, se
           <h3 className="font-plus text-xl font-black text-navy-purple">관심 작가 목록</h3>
         </div>
 
-        <button 
+        <button
           onClick={() => setIsAddAuthorOpen(true)}
           id="toggle-add-author-btn"
           className="flex items-center gap-1.5 bg-brand-purple hover:bg-brand-dark text-white font-bold text-xs px-4 py-2.5 rounded-full shadow-sm cursor-pointer select-none transition-all"
@@ -27,16 +30,16 @@ export default function SavedAuthorTab({ favoriteAuthors, setFavoriteAuthors, se
 
       {/* Inline collapse Author Adding FORM inside UI directly */}
       {isAddAuthorOpen && (
-        <div 
+        <div
           className="bg-white p-5 rounded-3xl border border-lavender-border shadow-sm space-y-4 overflow-hidden"
         >
           <h4 className="font-plus font-bold text-sm text-navy-purple">새 관심 작가 신규 등록</h4>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1">
               <label className="text-[9px] font-bold text-navy-purple/70">작가 이름</label>
-              <input 
-                type="text" 
-                placeholder="예: 지우작가, 구름요정" 
+              <input
+                type="text"
+                placeholder="예: 지우작가, 구름요정"
                 value={newAuthorName}
                 onChange={(e) => setNewAuthorName(e.target.value)}
                 className="w-full bg-white border border-lavender-border focus:border-brand-purple rounded-xl px-3 py-2 text-xs outline-none text-navy-purple"
@@ -44,9 +47,9 @@ export default function SavedAuthorTab({ favoriteAuthors, setFavoriteAuthors, se
             </div>
             <div className="space-y-1">
               <label className="text-[9px] font-bold text-navy-purple/70">주 장르</label>
-              <input 
-                type="text" 
-                placeholder="예: 공룡 어드벤처, 수채화 만화" 
+              <input
+                type="text"
+                placeholder="예: 공룡 어드벤처, 수채화 만화"
                 value={newAuthorGenre}
                 onChange={(e) => setNewAuthorGenre(e.target.value)}
                 className="w-full bg-white border border-lavender-border focus:border-brand-purple rounded-xl px-3 py-2 text-xs outline-none text-navy-purple"
@@ -54,9 +57,9 @@ export default function SavedAuthorTab({ favoriteAuthors, setFavoriteAuthors, se
             </div>
             <div className="space-y-1">
               <label className="text-[9px] font-bold text-navy-purple/70">대표작</label>
-              <input 
-                type="text" 
-                placeholder="예: 아기사우루스의 가치 등" 
+              <input
+                type="text"
+                placeholder="예: 아기사우루스의 가치 등"
                 value={newAuthorWorks}
                 onChange={(e) => setNewAuthorWorks(e.target.value)}
                 className="w-full bg-white border border-lavender-border focus:border-brand-purple rounded-xl px-3 py-2 text-xs outline-none text-navy-purple"
@@ -65,7 +68,7 @@ export default function SavedAuthorTab({ favoriteAuthors, setFavoriteAuthors, se
           </div>
 
           <div className="flex gap-2 justify-end pt-2">
-            <button 
+            <button
               className="px-4 py-2 bg-white text-brand-purple hover:bg-lavender-bg rounded-full text-xs font-bold border border-lavender-border"
               onClick={() => {
                 setIsAddAuthorOpen(false);
@@ -76,7 +79,7 @@ export default function SavedAuthorTab({ favoriteAuthors, setFavoriteAuthors, se
             >
               취소
             </button>
-            <button 
+            <button
               disabled={!newAuthorName.trim()}
               className="px-5 py-2 bg-brand-purple hover:bg-brand-dark text-white rounded-full text-xs font-bold disabled:opacity-45 transition-all"
               onClick={() => {
@@ -104,7 +107,7 @@ export default function SavedAuthorTab({ favoriteAuthors, setFavoriteAuthors, se
 
       {/* Authors Display Group split into My Favorites and Recommendations */}
       <div className="space-y-5 select-none">
-        
+
         {/* Section 1: My Favorites */}
         <div>
           <h4 className="text-[10px] font-bold text-navy-purple mb-2.5 flex items-center gap-1.5 bg-white border border-lavender-border px-3 py-1.5 rounded-full self-start inline-block">
@@ -112,7 +115,11 @@ export default function SavedAuthorTab({ favoriteAuthors, setFavoriteAuthors, se
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {favoriteAuthors.filter(a => a.isFavorite).map((author) => (
-              <div key={author.id} className="bg-white rounded-2xl border border-lavender-border shadow-sm p-4 flex flex-col justify-between h-[180px] group hover:scale-[1.01] hover:border-brand-purple/50 transition-all">
+              <div
+                key={author.id}
+                onClick={() => onSelectAuthor(author.name)}
+                className="bg-white rounded-2xl border border-lavender-border shadow-sm p-4 flex flex-col justify-between h-[180px] group hover:scale-[1.01] hover:border-brand-purple/50 transition-all cursor-pointer"
+              >
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-white border border-lavender-border flex items-center justify-center text-xl select-none group-hover:scale-110 transition-all shrink-0 shadow-sm">
@@ -123,8 +130,9 @@ export default function SavedAuthorTab({ favoriteAuthors, setFavoriteAuthors, se
                       <span className="text-[9px] text-purple-gray-text">{author.genre}</span>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => {
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setFavoriteAuthors(prev => prev.map(a => a.id === author.id ? { ...a, isFavorite: false } : a));
                     }}
                     className="w-7 h-7 rounded-full bg-white border border-lavender-border text-rose-500 flex items-center justify-center text-xs hover:bg-rose-50 transition-all cursor-pointer"

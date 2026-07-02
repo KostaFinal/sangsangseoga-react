@@ -27,16 +27,18 @@ import { ErrorPage404 } from './shared/components/ErrorPage404';
 import { ErrorPage500 } from './shared/components/ErrorPage500';
 import { CURRENT_USER_PROFILE } from './shared/data';
 import SideMenu from './shared/components/SideMenu';
-import { MainBookshelf, AllBooksTab, FinishedTab, ReadingTab, WishlistTab, BookCreationTab, BookDetailModal } from './features/bookshelf';
+import { MainBookshelf, MyBookTab, FinishedTab, ReadingTab, WishlistTab, BookCreationTab } from './features/bookshelf';
 import { BookViewer } from './features/viewer';
-import { AIChatModal } from './features/chat';
+import { ReviewWithAI } from './features/review';
 import { BookCalendar } from './features/calendar';
 import { BookStats } from './features/stats';
 import { SavedAuthorTab } from './features/library';
 import { initialBooks as myLibraryInitialBooks, bookContents as myLibraryBookContents } from './data.js';
 
 export default function App() {
+  const [myLibraryKey, setMyLibraryKey] = useState(0);
   const [currentScreen, setCurrentScreen] = useState('login');
+  const [previousScreen, setPreviousScreen] = useState(null);
   const [isPremium, setIsPremium] = useState(false);
   const [showDevSwitcher, setShowDevSwitcher] = useState(true);
   const [selectedSocialProvider, setSelectedSocialProvider] = useState('google');
@@ -55,9 +57,9 @@ export default function App() {
   const [freeTrialRemaining, setFreeTrialRemaining] = useState(1);       // 가입 시 지급된 무료 체험 1회 (1 = 사용 가능, 0 = 소진)
   const [freeTrialTextTokens, setFreeTrialTextTokens] = useState(250);     // 텍스트 호출 누적 토큰 점수 (절대캡: 1000)
   const [freeTrialImageCount, setFreeTrialImageCount] = useState(1);      // 이미지 생성 누적 장수 (절대캡: 3장)
-  
+
   const [extraCreditsRemaining, setExtraCreditsRemaining] = useState(0);  // 유료 추가 생성권 잔여 개수 (단건 결제 상품)
-  
+
   const [dailyScore, setDailyScore] = useState(2400);                     // 오늘 사용한 환산 토큰 점수 (소프트캡: 5000)
   const [dailyTextTokens, setDailyTextTokens] = useState(1200);           // 오늘 실제 사용 텍스트 토큰수
   const [dailyImageCount, setDailyImageCount] = useState(1);              // 오늘 실제 생성 이미지수
@@ -73,6 +75,7 @@ export default function App() {
 
   // --- Friends' Library & Authors State Management ---
   const [selectedAuthor, setSelectedAuthor] = useState(null);
+  const [authorProfileMode, setAuthorProfileMode] = useState("viewer");
   const [books, setBooks] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState("전체");
   const [sortBy, setSortBy] = useState("최신순");
@@ -240,11 +243,11 @@ export default function App() {
 
   const genreBadge = (genre) => {
     const map = {
-      "소설":    { cls: "bg-[#ddd6fe] text-[#5b21b6] border-[#c4b5fd]", label: "소설" },
-      "시":      { cls: "bg-[#e9d5ff] text-[#7e22ce] border-[#d8b4fe]", label: "시" },
-      "에세이":  { cls: "bg-[#ede9ff] text-[#6b54e7] border-[#d4cdf2]", label: "에세이" },
-      "동화":    { cls: "bg-[#f3e8ff] text-[#9333ea] border-[#e9d5ff]", label: "동화" },
-      "지식정보":{ cls: "bg-[#faf5ff] text-[#a855f7] border-[#f3e8ff]", label: "지식정보" },
+      "소설": { cls: "bg-[#ddd6fe] text-[#5b21b6] border-[#c4b5fd]", label: "소설" },
+      "시": { cls: "bg-[#e9d5ff] text-[#7e22ce] border-[#d8b4fe]", label: "시" },
+      "에세이": { cls: "bg-[#ede9ff] text-[#6b54e7] border-[#d4cdf2]", label: "에세이" },
+      "동화": { cls: "bg-[#f3e8ff] text-[#9333ea] border-[#e9d5ff]", label: "동화" },
+      "지식정보": { cls: "bg-[#faf5ff] text-[#a855f7] border-[#f3e8ff]", label: "지식정보" },
     };
     return map[genre] || { cls: "bg-[#e6e2fc] text-[#6b54e7] border-[#d4cdf2]", label: genre };
   };
@@ -333,7 +336,7 @@ export default function App() {
               if (tab === 'friends') {
                 setCurrentScreen('friends-library');
               } else if (tab === 'mylibrary') {
-                alert('내 서재 기능이 준비 중입니다.');
+                setCurrentScreen('my-library');
               }
             }}
             isPremium={isPremium}
@@ -365,8 +368,17 @@ export default function App() {
           >
             {viewingBook ? (
               <BookDetailView
+                mode={viewingBook?.mode === "owner" ? "owner" : "viewer"}
                 book={viewingBook}
-                onBack={() => setViewingBook(null)}
+                onBack={() => {
+                  setViewingBook(null);
+
+                  if (previousScreen === 'my-library') {
+                    setCurrentScreen('my-library');
+                  }
+
+                  setPreviousScreen(null);
+                }}
                 onStartReading={() => { setSelectedBook(viewingBook); document.body.style.overflow = "hidden"; }}
                 onToggleLike={e => { handleToggleLike(e, viewingBook.id); setTimeout(() => { setBooks(prev => { const f = prev.find(b => b.id === viewingBook.id); if (f) setViewingBook(f); return prev; }); }, 50); }}
                 onToggleBookmark={e => { handleToggleBookmark(e, viewingBook.id); setTimeout(() => { setBooks(prev => { const f = prev.find(b => b.id === viewingBook.id); if (f) setViewingBook(f); return prev; }); }, 50); }}
@@ -374,7 +386,12 @@ export default function App() {
                 onSelectRecommended={b => setViewingBook(b)}
                 onSaveComment={(user, text) => handleDetailAddComment(viewingBook.id, user, text)}
                 onSaveReply={(parentId, user, text) => handleAddReply(viewingBook.id, parentId, user, text)}
-                onSelectAuthor={name => { setSelectedAuthor(name); setCurrentScreen("author-search"); setViewingBook(null); }}
+                onSelectAuthor={(name) => {
+                  setSelectedAuthor(name);
+                  setAuthorProfileMode(viewingBook?.mode === "owner" ? "owner" : "viewer");
+                  setCurrentScreen("author-search");
+                  setViewingBook(null);
+                }}
               />
             ) : (
               <div className="max-w-7xl mx-auto px-6 md:px-10 py-8 text-left">
@@ -444,11 +461,10 @@ export default function App() {
                     <button
                       key={genre}
                       onClick={() => { setSelectedGenre(genre); setCurrentPage(1); }}
-                      className={`shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all duration-200 cursor-pointer ${
-                        selectedGenre === genre
-                          ? "bg-[#6b54e7] text-white border-[#6b54e7] shadow-sm shadow-[#6b54e7]/20"
-                          : "bg-white text-[#7c769d] border-[#e6e2fc] hover:border-[#6b54e7]/40 hover:text-[#6b54e7]"
-                      }`}
+                      className={`shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all duration-200 cursor-pointer ${selectedGenre === genre
+                        ? "bg-[#6b54e7] text-white border-[#6b54e7] shadow-sm shadow-[#6b54e7]/20"
+                        : "bg-white text-[#7c769d] border-[#e6e2fc] hover:border-[#6b54e7]/40 hover:text-[#6b54e7]"
+                        }`}
                     >
                       {genre}
                     </button>
@@ -551,11 +567,10 @@ export default function App() {
                       <button
                         key={p}
                         onClick={() => handlePageChange(p)}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                          currentPage === p
-                            ? "bg-[#6b54e7] text-white shadow-sm shadow-[#6b54e7]/30"
-                            : "text-[#7c769d] hover:bg-[#f3f0ff] hover:text-[#6b54e7]"
-                        }`}
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-all cursor-pointer ${currentPage === p
+                          ? "bg-[#6b54e7] text-white shadow-sm shadow-[#6b54e7]/30"
+                          : "text-[#7c769d] hover:bg-[#f3f0ff] hover:text-[#6b54e7]"
+                          }`}
                       >
                         {p}
                       </button>
@@ -575,7 +590,13 @@ export default function App() {
         );
       case 'my-library':
         return (
-          <MyLibraryApp />
+          <MyLibraryApp key={myLibraryKey}
+            setViewingBook={setViewingBook}
+            setCurrentScreen={setCurrentScreen}
+            setPreviousScreen={setPreviousScreen}
+            setSelectedAuthor={setSelectedAuthor}
+            setAuthorProfileMode={setAuthorProfileMode}
+          />
         );
       case 'author-search':
         return (
@@ -594,6 +615,7 @@ export default function App() {
                 onSelectBook={b => { setViewingBook(b); setCurrentScreen("friends-library"); }}
                 onBackToLibrary={() => setCurrentScreen("friends-library")}
                 onBackToDirectory={() => setSelectedAuthor(null)}
+                mode={authorProfileMode}
               />
             ) : (
               <SearchAuthorView allBooks={books} onSelectAuthor={name => setSelectedAuthor(name)} />
@@ -702,13 +724,13 @@ export default function App() {
                 해당 API 및 관리자 통제 패널은 최고 관리자 권한을 승인받은 세션만 인가용 토큰을 통해 접속할 수 있습니다. 메인 화면으로 귀가하시거나 어드민 전용 포털을 통해 로그인해 주십시오.
               </p>
               <div className="flex gap-2 font-sans">
-                <button 
+                <button
                   onClick={() => setCurrentScreen('home')}
                   className="flex-1 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-xl font-bold text-xs transition-all cursor-pointer"
                 >
                   메인 대시보드 대피
                 </button>
-                <button 
+                <button
                   onClick={() => setCurrentScreen('login')}
                   className="flex-1 py-3 bg-black hover:bg-neutral-900 text-white rounded-xl font-bold text-xs transition-all cursor-pointer"
                 >
@@ -728,16 +750,16 @@ export default function App() {
           <div className="max-w-4xl mx-auto py-12">
             <NotificationsView
               notifications={notifications}
-              onMarkAllAsRead={() => setNotifications(prev => prev.map(n => ({...n, read: true})))}
+              onMarkAllAsRead={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))}
             />
           </div>
         );
       case 'profile-edit':
         return (
           <ProfileEditView
-            currentUser={{...currentUser, isSubscribed: isPremium}}
+            currentUser={{ ...currentUser, isSubscribed: isPremium }}
             onNavigateHome={() => setCurrentScreen('home')}
-            onUpdateProfile={(updates) => setCurrentUser(prev => ({...prev, ...updates}))}
+            onUpdateProfile={(updates) => setCurrentUser(prev => ({ ...prev, ...updates }))}
           />
         );
       case 'common-showcase':
@@ -795,18 +817,25 @@ export default function App() {
       }
     }}>
       <div className="relative min-h-screen selection:bg-black selection:text-white">
-        
+
         {/* 1. Global Common Header standard */}
         <Header
+          key={currentScreen}
           currentScreen={currentScreen}
-          currentUser={{...currentUser, isSubscribed: isPremium}}
+          currentUser={{ ...currentUser, isSubscribed: isPremium }}
           freeTrialRemaining={freeTrialRemaining}
           freeTrialTextTokens={freeTrialTextTokens}
           freeTrialImageCount={freeTrialImageCount}
           dailyScore={dailyScore}
           dailyTextTokens={dailyTextTokens}
           dailyImageCount={dailyImageCount}
-          onNavigate={(screen) => setCurrentScreen(screen)}
+          onNavigate={(screen) => {
+            if (screen === 'my-library') {
+              setMyLibraryKey(prev => prev + 1);
+            }
+            setCurrentScreen(screen)
+          }
+          }
           onLogout={() => {
             setIsPremium(false);
             setCurrentUser({
@@ -817,7 +846,7 @@ export default function App() {
             setCurrentScreen('login');
           }}
         />
-        
+
         {/* Route Switch container with smooth fade effects */}
         <AnimatePresence mode="wait">
           <motion.div
@@ -859,19 +888,23 @@ export default function App() {
   );
 }
 
-function MyLibraryApp() {
+function MyLibraryApp({ setViewingBook,
+  setCurrentScreen,
+  setPreviousScreen,
+  setSelectedAuthor,
+  setAuthorProfileMode }) {
   const initialBooks = myLibraryInitialBooks;
   const bookContents = myLibraryBookContents;
   const [activeTab, setActiveTab] = useState('bookshelf');
-  const [books, setBooks] = useState(initialBooks.map(b => ({ 
-    ...b, 
+  const [books, setBooks] = useState(initialBooks.map(b => ({
+    ...b,
     isFavorite: (b.progress === 0 && b.author !== '지우와 상상 AI'),
     totalViews: Math.floor(Math.random() * 500),
     totalLikes: Math.floor(Math.random() * 100),
     reviews: []
   })));
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Active Viewer state
   const [selectedBookContent, setSelectedBookContent] = useState(null);
   const [viewerInitialPage, setViewerInitialPage] = useState(null);
@@ -903,7 +936,7 @@ function MyLibraryApp() {
   // AI 생성 동화책 꽂기 콜백
   const handleFairyTaleCreated = (newTale) => {
     const customId = `user_${Date.now()}`;
-    
+
     // 1. 책 목록 데이터에 추가
     const newBookObj = {
       id: customId,
@@ -986,7 +1019,7 @@ function MyLibraryApp() {
     const content = bookContents[bookId];
     if (content) {
       setSelectedBookContent(content);
-      
+
       setBooks((prev) => prev.map((b) => {
         if (b.id === bookId && b.progress === 0) {
           return { ...b, progress: 12 };
@@ -1090,7 +1123,7 @@ function MyLibraryApp() {
     setBooks(prev => prev.map(b => b.id === bookId ? { ...b, reviews: b.reviews.filter(r => r.id !== reviewId) } : b));
   };
 
-  const filteredBooks = books.filter(b => 
+  const filteredBooks = books.filter(b =>
     b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -1102,10 +1135,10 @@ function MyLibraryApp() {
 
       {/* Outer wrapper container */}
       <main className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-12 pt-24 bg-transparent text-navy-purple">
-        
+
         {/* Dynamic Reader Book Viewer - Absolute Priority Overlay */}
         {selectedBookContent ? (
-          <BookViewer 
+          <BookViewer
             bookContent={selectedBookContent}
             onClose={() => {
               setSelectedBookContent(null);
@@ -1115,6 +1148,47 @@ function MyLibraryApp() {
             onAddBookmark={handleAddBookmark}
             onRemoveBookmark={handleRemoveBookmark}
             initialPage={viewerInitialPage}
+          />
+        ) : selectedDetailBook ? (
+          <BookDetailView
+            book={{
+              ...selectedDetailBook,
+              genre: selectedDetailBook.category,
+              summary: selectedDetailBook.description,
+              coverImage: selectedDetailBook.coverUrl,
+              likes: selectedDetailBook.totalLikes || 0,
+              isLikedByMe: selectedDetailBook.isLikedByMe || false,
+              comments: selectedDetailBook.reviews || [],
+              mode: "owner"
+            }}
+            onBack={() => setSelectedDetailBookId(null)}
+            onStartReading={() => handleStartWishReading(selectedDetailBook.id)}
+            onToggleLike={() => handleLikeBook(selectedDetailBook.id)}
+            onToggleBookmark={() => handleToggleFavorite(selectedDetailBook.id)}
+            allBooks={books.map(b => ({
+              ...b,
+              genre: b.category,
+              summary: b.description,
+              coverImage: b.coverUrl,
+              likes: b.totalLikes || 0,
+              isLikedByMe: b.isLikedByMe || false,
+              comments: b.reviews || []
+            }))}
+            onSelectRecommended={(book) => setSelectedDetailBookId(book.id)}
+            onSaveComment={(user, text) =>
+              handleAddReview(selectedDetailBook.id, {
+                user,
+                comment: text,
+                date: new Date().toLocaleDateString('ko-KR')
+              })
+            }
+            onSaveReply={() => { }}
+            onSelectAuthor={(name) => {
+              setSelectedAuthor(name);
+              setAuthorProfileMode("owner");
+              setCurrentScreen("author-search");
+              setViewingBook(null);
+            }}
           />
         ) : (
           <AnimatePresence mode="wait">
@@ -1126,108 +1200,146 @@ function MyLibraryApp() {
               transition={{ duration: 0.35 }}
               className="bg-transparent text-navy-purple"
             >
-              
-              {/* TAB 1: Main Bookshelf shelf list */}
               {activeTab === 'bookshelf' && (
-                <MainBookshelf 
-                  setActiveTab={setActiveTab} 
+                <MainBookshelf
+                  setActiveTab={setActiveTab}
                   onOpenCreateModal={() => setIsCreateOpen(true)}
                 />
               )}
 
-              {/* TAB 2: Reading Wishlist */}
               {activeTab === 'wishlist' && (
-                <WishlistTab 
+                <WishlistTab
                   filteredBooks={filteredBooks}
                   onOpenCreateModal={() => setIsCreateOpen(true)}
                   onStartReading={handleStartWishReading}
-                  onOpenDetail={(book) => setSelectedDetailBookId(book.id)}
+                  onOpenDetail={(book) => {
+                    const convertedBook = {
+                      ...book,
+                      genre: book.category,
+                      summary: book.description,
+                      coverImage: book.coverUrl,
+                      likes: book.totalLikes || 0,
+                      isLikedByMe: book.isLikedByMe || false,
+                      isBookmarked: book.isFavorite || false,
+                      comments: book.reviews || [],
+                      commentsCount: book.reviews?.length || 0
+                    };
+
+                    setPreviousScreen('my-library');
+                    setViewingBook(convertedBook);
+                    setCurrentScreen('friends-library');
+                  }}
                   onToggleFavorite={handleToggleFavorite}
                 />
               )}
 
-              {/* TAB 3: Reading list */}
               {activeTab === 'reading' && (
-                <ReadingTab 
+                <ReadingTab
                   filteredBooks={filteredBooks}
                   onOpenViewer={handleOpenViewer}
-                  onOpenDetail={(book) => setSelectedDetailBookId(book.id)}
+                  onOpenDetail={(book) => {
+                    const convertedBook = {
+                      ...book,
+                      genre: book.category,
+                      summary: book.description,
+                      coverImage: book.coverUrl,
+                      likes: book.totalLikes || 0,
+                      isLikedByMe: book.isLikedByMe || false,
+                      isBookmarked: book.isFavorite || false,
+                      comments: book.reviews || [],
+                      commentsCount: book.reviews?.length || 0
+                    };
+
+                    setPreviousScreen('my-library');
+                    setViewingBook(convertedBook);
+                    setCurrentScreen('friends-library');
+                  }}
                 />
               )}
 
-              {/* TAB 4: Finished */}
               {activeTab === 'finished' && (
-                <FinishedTab 
+                <FinishedTab
                   filteredBooks={filteredBooks}
                   onOpenViewer={handleOpenViewer}
                   setActiveTab={setActiveTab}
-                  onOpenDetail={(book) => setSelectedDetailBookId(book.id)}
+                  onOpenDetail={(book) => {
+                    const convertedBook = {
+                      ...book,
+                      genre: book.category,
+                      summary: book.description,
+                      coverImage: book.coverUrl,
+                      likes: book.totalLikes || 0,
+                      isLikedByMe: book.isLikedByMe || false,
+                      isBookmarked: book.isFavorite || false,
+                      comments: book.reviews || [],
+                      commentsCount: book.reviews?.length || 0
+                    };
+
+                    setPreviousScreen('my-library');
+                    setViewingBook(convertedBook);
+                    setCurrentScreen('friends-library');
+                  }}
                 />
               )}
 
-              {/* TAB 4.5: Book Reading Statistics */}
               {activeTab === 'stats' && (
                 <BookStats books={books} />
               )}
 
-              {/* TAB 5: Book Calendar */}
               {activeTab === 'calendar' && (
                 <BookCalendar onSelectBook={handleOpenViewer} />
               )}
 
-              {/* TAB 6: AI Chat review & Tale generation */}
               {activeTab === 'ai-chat' && (
-                <AIChatModal onFairyTaleCreated={handleFairyTaleCreated} />
+                <ReviewWithAI onFairyTaleCreated={handleFairyTaleCreated} />
               )}
 
-              {/* TAB 6.5: Book Creation (책 만들기) */}
               {activeTab === 'create' && (
                 <BookCreationTab onCreateBook={handleCreateBookSubmit} />
               )}
 
-              {/* TAB 7: All Books (내가 쓴 책 모아보기) */}
               {activeTab === 'all-books' && (
-                <AllBooksTab 
+                <MyBookTab
                   filteredBooks={filteredBooks}
                   onOpenViewer={handleOpenViewer}
                   setActiveTab={setActiveTab}
                   onUpdateBook={handleUpdateBook}
+                  onOpenDetail={(book) => {
+                    const convertedBook = {
+                      ...book,
+                      genre: book.category,
+                      summary: book.description,
+                      coverImage: book.coverUrl,
+                      likes: book.totalLikes || 0,
+                      isLikedByMe: book.isLikedByMe || false,
+                      isBookmarked: book.isFavorite || false,
+                      comments: book.reviews || [],
+                      commentsCount: book.reviews?.length || 0,
+                      mode: 'owner'
+                    };
+
+                    setPreviousScreen('my-library');
+                    setViewingBook(convertedBook);
+                    setCurrentScreen('friends-library');
+                  }}
                 />
               )}
 
-              {/* TAB 8: Saved Author */}
               {activeTab === 'saved-author' && (
-                <SavedAuthorTab 
+                <SavedAuthorTab
                   favoriteAuthors={favoriteAuthors}
                   setFavoriteAuthors={setFavoriteAuthors}
                   setActiveTab={setActiveTab}
+                  onSelectAuthor={(authorName) => {
+                    setSelectedAuthor(authorName);
+                    setAuthorProfileMode("viewer");
+                    setCurrentScreen("author-search");
+                  }}
                 />
               )}
-
             </motion.div>
           </AnimatePresence>
         )}
-
-
-
-        {/* Book Detailed Information Dialog Modal */}
-        <AnimatePresence>
-          {selectedDetailBook && (
-            <BookDetailModal
-              book={selectedDetailBook}
-              onClose={() => setSelectedDetailBookId(null)}
-              onStartReading={handleStartWishReading}
-              onOpenViewer={handleOpenViewer}
-              setActiveTab={setActiveTab}
-              onLike={handleLikeBook}
-              onAddReview={handleAddReview}
-              onUpdateReview={handleUpdateReview}
-              onDeleteReview={handleDeleteReview}
-              onReportReview={handleReportReview}
-              onToggleFavorite={handleToggleFavorite}
-            />
-          )}
-        </AnimatePresence>
 
       </main>
     </div>

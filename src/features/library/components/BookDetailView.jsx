@@ -12,7 +12,9 @@ export default function BookDetailView({
   onSelectRecommended,
   onSaveComment,
   onSaveReply,
-  onSelectAuthor
+  onSelectAuthor,
+  mode = "viewer",
+  onUpdateDescription
 }) {
   const [commentUser, setCommentUser] = useState("");
   const [commentText, setCommentText] = useState("");
@@ -22,6 +24,8 @@ export default function BookDetailView({
   const [replyText, setReplyText] = useState("");
   const [reportTarget, setReportTarget] = useState(null); // { type, id, label }
   const [reportedIds, setReportedIds] = useState([]);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [editSummary, setEditSummary] = useState(book.summary || "");
 
   const handleStartReport = (type, id, label) => setReportTarget({ type, id, label });
   const handleSubmitReport = ({ reason, detail }) => {
@@ -191,73 +195,78 @@ export default function BookDetailView({
     return "w-10 h-10 rounded-full bg-[#2f2d59] border border-black/5 flex items-center justify-center text-[#ffd9b6] font-bold text-sm font-serif shadow-inner shrink-0";
   };
   return <div className="w-full max-w-4xl mx-auto px-4 md:px-0 py-4 animate-fadeIn">
-      {/* Back button */}
-      <button onClick={onBack} className="group mb-6 flex items-center gap-1.5 text-sm font-medium text-[#7c769d] hover:text-[#6b54e7] transition">
-        <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-        전체 서재로 돌아가기
-      </button>
+    {/* Back button */}
+    <button onClick={onBack} className="group mb-6 flex items-center gap-1.5 text-sm font-medium text-[#7c769d] hover:text-[#6b54e7] transition">
+      <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+      전체 서재로 돌아가기
+    </button>
 
-      {/* Main Container Card with Genre-Themed background */}
-      <div className={`rounded-3xl p-6 md:p-12 space-y-12 transition-all duration-300 relative ${cardBgClass}`}>
+    {/* Main Container Card with Genre-Themed background */}
+    <div className={`rounded-3xl p-6 md:p-12 space-y-12 transition-all duration-300 relative ${cardBgClass}`}>
 
-        {/* Upper Layout: Cover and Meta info */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-start relative z-10">
-          
-          {/* Left Column: 3D Book Cover styled with real shadow */}
-          <div className="md:col-span-5 flex justify-center">
-            <div className={`relative w-full max-w-[270px] aspect-[3/4.5] bg-white shadow-2xl overflow-hidden group ${coverBorderClass}`}>
-              <div className={`absolute top-3 left-3 z-20 px-2.5 py-1 text-[10px] font-sans rounded shadow-sm tracking-wide ${genreTagStyle}`}>
-                {genreTagText}
-              </div>
-              <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" src={book.coverImage} alt={book.title} referrerPolicy="no-referrer" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-transparent pointer-events-none" />
-              {/* Cover realistic binder edge shadow */}
-              <div className="absolute left-0 top-0 bottom-0 w-2.5 bg-gradient-to-r from-black/25 via-black/10 to-transparent pointer-events-none" />
+      {/* Upper Layout: Cover and Meta info */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-start relative z-10">
+
+        {/* Left Column: 3D Book Cover styled with real shadow */}
+        <div className="md:col-span-5 flex justify-center">
+          <div className={`relative w-full max-w-[270px] aspect-[3/4.5] bg-white shadow-2xl overflow-hidden group ${coverBorderClass}`}>
+            <div className={`absolute top-3 left-3 z-20 px-2.5 py-1 text-[10px] font-sans rounded shadow-sm tracking-wide ${genreTagStyle}`}>
+              {genreTagText}
             </div>
+            <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" src={book.coverImage} alt={book.title} referrerPolicy="no-referrer" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-transparent pointer-events-none" />
+            {/* Cover realistic binder edge shadow */}
+            <div className="absolute left-0 top-0 bottom-0 w-2.5 bg-gradient-to-r from-black/25 via-black/10 to-transparent pointer-events-none" />
+          </div>
+        </div>
+
+        {/* Right Column: Title Info Metadata details */}
+        <div className="md:col-span-7 flex flex-col space-y-6 text-left">
+          <div className="space-y-2">
+            <h2 className={getTitleStyle()}>
+              {book.title}
+            </h2>
+            <p className={getSubtitleStyle()}>
+              {getSubtitle(book)}
+            </p>
+            <p className="font-sans text-[15px] font-medium text-gray-700 mt-2 pl-[10px]">
+              저자:{" "}
+              <span onClick={() => onSelectAuthor(book.author, mode === "owner")} className={`font-semibold text-black hover:underline cursor-pointer transition duration-150 ${isPoetry ? "text-amber-900 hover:text-amber-950" : "hover:text-[#6b54e7]"}`} title={`${book.author} 작가소개 보기`}>
+                {book.author}
+              </span>
+            </p>
           </div>
 
-          {/* Right Column: Title Info Metadata details */}
-          <div className="md:col-span-7 flex flex-col space-y-6 text-left">
-            <div className="space-y-2">
-              <h2 className={getTitleStyle()}>
-                {book.title}
-              </h2>
-              <p className={getSubtitleStyle()}>
-                {getSubtitle(book)}
-              </p>
-              <p className="font-sans text-[15px] font-medium text-gray-700 mt-2 pl-[10px]">
-                저자:{" "}
-                <span onClick={() => onSelectAuthor(book.author)} className={`font-semibold text-black hover:underline cursor-pointer transition duration-150 ${isPoetry ? "text-amber-900 hover:text-amber-950" : "hover:text-[#6b54e7]"}`} title={`${book.author} 작가소개 보기`}>
-                  {book.author}
-                </span>
-              </p>
-            </div>
+          {/* Tags Outline Row 1 */}
+          <div className="flex flex-wrap gap-2">
+            {getTags(book.genre).map((tag, idx) => <span key={idx} className={`px-3.5 py-1 text-[11px] font-sans font-bold tracking-normal rounded-full border transition duration-200 cursor-pointer ${isPoetry ? "bg-amber-50/40 border-amber-200 text-amber-800 hover:bg-amber-100" : "border-[#e6e2fc] text-[#7c769d] hover:border-[#6b54e7]/40 hover:text-[#6b54e7]"}`}>
+              {isPoetry && "❊ "}
+              {tag}
+            </span>)}
+          </div>
 
-            {/* Tags Outline Row 1 */}
-            <div className="flex flex-wrap gap-2">
-              {getTags(book.genre).map((tag, idx) => <span key={idx} className={`px-3.5 py-1 text-[11px] font-sans font-bold tracking-normal rounded-full border transition duration-200 cursor-pointer ${isPoetry ? "bg-amber-50/40 border-amber-200 text-amber-800 hover:bg-amber-100" : "border-[#e6e2fc] text-[#7c769d] hover:border-[#6b54e7]/40 hover:text-[#6b54e7]"}`}>
-                  {isPoetry && "❊ "}
-                  {tag}
-                </span>)}
-            </div>
-
-            {/* Likes heart and follow button block */}
-            <div className="flex flex-wrap items-center gap-3">
+          {/* Likes heart and follow button block */}
+          <div className="flex flex-wrap items-center gap-3">
+            {mode !== "owner" && (
               <button onClick={onToggleLike} className="inline-flex items-center gap-1.5 border px-4 py-2 text-xs md:text-sm font-sans font-bold rounded-lg transition duration-200 border-[#d4cdf2] text-[#7c769d] hover:bg-[#f3f0ff] hover:border-[#6b54e7] bg-white">
                 <Heart className={`w-4 h-4 ${book.isLikedByMe ? "fill-red-500 stroke-red-500 text-red-500" : ""}`} />
                 <span>좋아요 {book.likes.toLocaleString()}</span>
               </button>
+            )}
 
+            {mode !== "owner" && (
               <button onClick={() => setIsFollowing(!isFollowing)} className={`inline-flex items-center gap-1.5 border px-4 py-2 text-xs md:text-sm font-sans font-bold rounded-lg transition duration-200 shadow-sm ${isFollowing ? "bg-[#6b54e7] text-white border-[#6b54e7]" : "border-[#d4cdf2] text-[#7c769d] hover:bg-[#f3f0ff] bg-white"}`}>
                 {isFollowing ? <>
-                    <Check className="w-4 h-4 text-[#ffd9b6]" />
-                    <span>팔로잉</span>
-                  </> : <>
-                    <UserPlus className="w-4 h-4" />
-                    <span>팔로우</span>
-                  </>}
+                  <Check className="w-4 h-4 text-[#ffd9b6]" />
+                  <span>팔로잉</span>
+                </> : <>
+                  <UserPlus className="w-4 h-4" />
+                  <span>팔로우</span>
+                </>}
               </button>
+            )}
 
+            {mode !== "owner" && (
               <button
                 onClick={() => !reportedIds.includes(book.id) && handleStartReport("book", book.id, `'${book.title}'`)}
                 disabled={reportedIds.includes(book.id)}
@@ -267,40 +276,83 @@ export default function BookDetailView({
                 <Flag className="w-3.5 h-3.5" />
                 <span>{reportedIds.includes(book.id) ? "신고됨" : "신고"}</span>
               </button>
-            </div>
+            )}
+          </div>
 
-            {/* Tags outline Row 2 */}
-            <div className="flex flex-wrap gap-2">
-              {getHashTags(book.genre).map((tag, idx) => <span key={idx} className={`px-3 py-1.5 text-xs font-sans font-bold rounded-md transition cursor-pointer ${isPoetry ? "bg-[#faf6ee] text-amber-800/80 hover:bg-[#f6eeea]" : "bg-gray-50 text-[#7c769d] hover:bg-gray-100"}`}>
-                  {tag}
-                </span>)}
-            </div>
+          {/* Tags outline Row 2 */}
+          <div className="flex flex-wrap gap-2">
+            {getHashTags(book.genre).map((tag, idx) => <span key={idx} className={`px-3 py-1.5 text-xs font-sans font-bold rounded-md transition cursor-pointer ${isPoetry ? "bg-[#faf6ee] text-amber-800/80 hover:bg-[#f6eeea]" : "bg-gray-50 text-[#7c769d] hover:bg-gray-100"}`}>
+              {tag}
+            </span>)}
+          </div>
 
-            {/* Thick Border Primary CTA button: Start reading matching customized brand colors */}
-            <div className="pt-2">
-              <button onClick={onStartReading} className={getCtaButtonStyle()}>
-                책 펼치기 📖
-              </button>
-            </div>
+          {/* Thick Border Primary CTA button: Start reading matching customized brand colors */}
+          <div className="pt-2">
+            <button onClick={onStartReading} className={getCtaButtonStyle()}>
+              책 펼치기 📖
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* 작품 소개 section */}
-        <div className="space-y-4 text-left relative z-10">
-          <h3 className={getSummaryHeaderStyle()}>
-            {isPoetry && "❊ "}
-            작품소개
-          </h3>
-          <div className={getSummaryBoxStyle()}>
-            <div className={getSummaryBorderClass()}>
-              <p className="font-sans text-[15px] md:text-[16px] leading-[1.8] text-gray-800 whitespace-pre-wrap">
-                {book.summary}
-              </p>
-            </div>
+      {/* 작품 소개 section */}
+      <div className="space-y-4 text-left relative z-10">
+        <h3 className={getSummaryHeaderStyle()}>
+          {isPoetry && "❊ "}
+          작품소개
+        </h3>
+        <div className={getSummaryBoxStyle()}>
+          <div className={getSummaryBorderClass()}>
+            {isEditingDescription ? (
+              <div className="space-y-3">
+                <textarea
+                  value={editSummary}
+                  onChange={(e) => setEditSummary(e.target.value)}
+                  className="w-full min-h-36 border border-[#d4cdf2] rounded-xl p-4 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-[#6b54e7]"
+                />
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => {
+                      setEditSummary(book.summary || "");
+                      setIsEditingDescription(false);
+                    }}
+                    className="px-4 py-2 rounded-lg border border-[#d4cdf2] text-xs font-bold text-[#7c769d]"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={() => {
+                      onUpdateDescription?.(editSummary);
+                      setIsEditingDescription(false);
+                    }}
+                    className="px-4 py-2 rounded-lg bg-[#6b54e7] text-white text-xs font-bold"
+                  >
+                    저장
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="font-sans text-[15px] md:text-[16px] leading-[1.8] text-gray-800 whitespace-pre-wrap">
+                  {book.summary}
+                </p>
+
+                {mode === "owner" && (
+                  <button
+                    onClick={() => setIsEditingDescription(true)}
+                    className="mt-4 px-4 py-2 rounded-lg border border-[#d4cdf2] text-xs font-bold text-[#6b54e7] hover:bg-[#f3f0ff]"
+                  >
+                    책 소개 수정
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* 이 책을 좋아한다면 section */}
+      {/* 이 책을 좋아한다면 section */}
+      {mode !== "owner" && (
         <div className="space-y-6 text-left relative z-10">
           <div className="flex justify-between items-end border-b border-[#e6e2fc] pb-3">
             <h3 className="font-serif text-[19px] md:text-xl font-bold text-gray-900">
@@ -311,139 +363,144 @@ export default function BookDetailView({
             </span>
           </div>
 
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {recommendations.map(rec => <div key={rec.id} onClick={() => onSelectRecommended(rec)} className="group flex flex-col items-center text-center cursor-pointer">
-                <div className="relative aspect-[3/4.5] bg-[#f3f0ff] overflow-hidden border border-[#e6e2fc] shadow-sm group-hover:shadow-md group-hover:border-[#d4cdf2] transition duration-300 rounded-lg">
-                  <img className="w-full h-full object-cover group-hover:scale-105 duration-500 transition-all" src={rec.coverImage} alt={rec.title} referrerPolicy="no-referrer" />
-                  <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition duration-350" />
-                </div>
-                <h4 className="font-serif text-sm font-bold text-gray-900 mt-2.5 truncate group-hover:text-black/70">
-                  {rec.title}
-                </h4>
-                <p className="text-[11px] text-neutral-400 mt-1 truncate">
-                  {rec.author}
-                </p>
-              </div>)}
+              <div className="relative aspect-[3/4.5] bg-[#f3f0ff] overflow-hidden border border-[#e6e2fc] shadow-sm group-hover:shadow-md group-hover:border-[#d4cdf2] transition duration-300 rounded-lg">
+                <img className="w-full h-full object-cover group-hover:scale-105 duration-500 transition-all" src={rec.coverImage} alt={rec.title} referrerPolicy="no-referrer" />
+                <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition duration-350" />
+              </div>
+              <h4 className="font-serif text-sm font-bold text-gray-900 mt-2.5 truncate group-hover:text-black/70">
+                {rec.title}
+              </h4>
+              <p className="text-[11px] text-neutral-400 mt-1 truncate">
+                {rec.author}
+              </p>
+            </div>)}
           </div>
         </div>
+      )}
 
-        {/* 댓글 section */}
-        <div id="detail-comments-section" className="space-y-6 text-left pt-2 relative z-10">
-          <h3 className="font-serif text-[19px] md:text-xl font-bold text-gray-900">
-            독자들의 따스한 사색 {book.comments.length}
-          </h3>
+      {/* 댓글 section */}
+      <div id="detail-comments-section" className="space-y-6 text-left pt-2 relative z-10">
+        <h3 className="font-serif text-[19px] md:text-xl font-bold text-gray-900">
+          독자들의 따스한 사색 {book.comments.length}
+        </h3>
 
-          {/* Comments feed list layout */}
-          <div className="space-y-5 pr-1">
-            {book.comments.length === 0 ? <p className="font-sans text-sm text-[#b9b0dc] py-4 text-center">
-                작품에 남겨진 사색이 아직 없습니다. 첫 의견을 심어보세요.
-              </p> : book.comments.map((comment, index) => <div key={comment.id || index} className="pb-5 border-b border-[#e6e2fc] last:border-none last:pb-0">
-                  <div className="flex gap-4 items-start">
-                    {/* Circular visual avatar profile representation with custom background */}
-                    <div className={getCommentAvatarStyle()}>
-                      {comment.user.charAt(0)}
-                    </div>
+        {/* Comments feed list layout */}
+        <div className="space-y-5 pr-1">
+          {book.comments.length === 0 ? <p className="font-sans text-sm text-[#b9b0dc] py-4 text-center">
+            작품에 남겨진 사색이 아직 없습니다. 첫 의견을 심어보세요.
+          </p> : book.comments.map((comment, index) => <div key={comment.id || index} className="pb-5 border-b border-[#e6e2fc] last:border-none last:pb-0">
+            <div className="flex gap-4 items-start">
+              {/* Circular visual avatar profile representation with custom background */}
+              <div className={getCommentAvatarStyle()}>
+                {comment.user.charAt(0)}
+              </div>
 
-                    <div className="flex-1 space-y-1">
-                      <div className="flex justify-between items-center">
-                        <h5 className="font-serif font-bold text-sm text-gray-900">
-                          {comment.user}
-                        </h5>
-                        <span className="font-mono text-[11px] text-[#b9b0dc]">
-                          {comment.date || getCommentTime(index)}
-                        </span>
-                      </div>
-                      {reportedIds.includes(comment.id) ? (
-                        <p className="font-sans text-[13px] text-[#b9b0dc] italic">신고가 접수된 댓글입니다.</p>
-                      ) : (
-                        <p className="font-sans text-[14px] leading-relaxed text-gray-700">
-                          {comment.text}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-3 pt-1">
-                        <button
-                          onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                          className="text-[11px] font-sans font-bold text-[#b9b0dc] hover:text-gray-900 transition"
-                        >
-                          답글쓰기
-                        </button>
-                        <button
-                          onClick={() => handleStartReport("comment", comment.id, `${comment.user}님의 댓글`)}
-                          className="text-[11px] font-sans font-medium text-gray-300 hover:text-red-600 transition inline-flex items-center gap-0.5"
-                        >
-                          <Flag className="w-3 h-3" /> 신고
-                        </button>
-                      </div>
+              <div className="flex-1 space-y-1">
+                <div className="flex justify-between items-center">
+                  <h5 className="font-serif font-bold text-sm text-gray-900">
+                    {comment.user}
+                  </h5>
+                  <span className="font-mono text-[11px] text-[#b9b0dc]">
+                    {comment.date || getCommentTime(index)}
+                  </span>
+                </div>
+                {reportedIds.includes(comment.id) ? (
+                  <p className="font-sans text-[13px] text-[#b9b0dc] italic">신고가 접수된 댓글입니다.</p>
+                ) : (
+                  <p className="font-sans text-[14px] leading-relaxed text-gray-700">
+                    {comment.text}
+                  </p>
+                )}
+                <div className="flex items-center gap-3 pt-1">
+                  <button
+                    onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                    className="text-[11px] font-sans font-bold text-[#b9b0dc] hover:text-gray-900 transition"
+                  >
+                    답글쓰기
+                  </button>
 
-                      {/* 답글 입력 폼 */}
-                      {replyingTo === comment.id && (
-                        <form onSubmit={e => handleSubmitReply(e, comment.id)} className="mt-3 flex gap-2">
-                          <input
-                            type="text"
-                            placeholder="닉네임"
-                            value={replyUser}
-                            onChange={e => setReplyUser(e.target.value)}
-                            className="border border-[#d4cdf2]/60 px-3 py-2 text-xs font-sans text-black w-24 focus:outline-none focus:bg-white placeholder-gray-400 bg-[#f3f0ff] rounded-lg focus:ring-1 focus:ring-[#6b54e7]/50"
-                          />
-                          <input
-                            type="text"
-                            placeholder="답글을 남겨보세요..."
-                            required
-                            value={replyText}
-                            onChange={e => setReplyText(e.target.value)}
-                            className="flex-1 border border-[#d4cdf2]/60 px-3 py-2 text-xs font-sans text-black focus:outline-none focus:bg-white placeholder-gray-400 bg-[#f3f0ff] rounded-lg focus:ring-1 focus:ring-[#6b54e7]/50"
-                          />
-                          <button type="submit" className="text-xs font-bold px-3.5 rounded-lg transition shadow-sm cursor-pointer shrink-0 bg-[#6b54e7] hover:bg-[#6148e1] text-white">
-                            등록
-                          </button>
-                        </form>
-                      )}
+                  {mode !== "owner" && (
+                    <button
+                      onClick={() => handleStartReport("comment", comment.id, `${comment.user}님의 댓글`)}
+                      className="text-[11px] font-sans font-medium text-gray-300 hover:text-red-600 transition inline-flex items-center gap-0.5"
+                    >
+                      <Flag className="w-3 h-3" /> 신고
+                    </button>
+                  )}
+                </div>
 
-                      {/* 답글 목록 */}
-                      {comment.replies?.length > 0 && (
-                        <div className="mt-3 pl-4 border-l-2 border-[#e6e2fc] space-y-3">
-                          {comment.replies.map((reply, rIdx) => (
-                            <div key={reply.id || rIdx} className="flex gap-3 items-start">
-                              <div className="w-7 h-7 rounded-full bg-gray-100 border border-black/5 flex items-center justify-center text-[#7c769d] font-bold text-[11px] font-serif shrink-0">
-                                {reply.user.charAt(0)}
-                              </div>
-                              <div className="flex-1">
-                                <div className="flex justify-between items-center">
-                                  <h6 className="font-serif font-bold text-xs text-gray-800">{reply.user}</h6>
-                                  <span className="font-mono text-[10px] text-[#b9b0dc]">{reply.date}</span>
-                                </div>
-                                <p className="font-sans text-[13px] leading-relaxed text-[#7c769d]">{reply.text}</p>
-                              </div>
-                            </div>
-                          ))}
+                {/* 답글 입력 폼 */}
+                {replyingTo === comment.id && (
+                  <form onSubmit={e => handleSubmitReply(e, comment.id)} className="mt-3 flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="닉네임"
+                      value={replyUser}
+                      onChange={e => setReplyUser(e.target.value)}
+                      className="border border-[#d4cdf2]/60 px-3 py-2 text-xs font-sans text-black w-24 focus:outline-none focus:bg-white placeholder-gray-400 bg-[#f3f0ff] rounded-lg focus:ring-1 focus:ring-[#6b54e7]/50"
+                    />
+                    <input
+                      type="text"
+                      placeholder="답글을 남겨보세요..."
+                      required
+                      value={replyText}
+                      onChange={e => setReplyText(e.target.value)}
+                      className="flex-1 border border-[#d4cdf2]/60 px-3 py-2 text-xs font-sans text-black focus:outline-none focus:bg-white placeholder-gray-400 bg-[#f3f0ff] rounded-lg focus:ring-1 focus:ring-[#6b54e7]/50"
+                    />
+                    <button type="submit" className="text-xs font-bold px-3.5 rounded-lg transition shadow-sm cursor-pointer shrink-0 bg-[#6b54e7] hover:bg-[#6148e1] text-white">
+                      등록
+                    </button>
+                  </form>
+                )}
+
+                {/* 답글 목록 */}
+                {comment.replies?.length > 0 && (
+                  <div className="mt-3 pl-4 border-l-2 border-[#e6e2fc] space-y-3">
+                    {comment.replies.map((reply, rIdx) => (
+                      <div key={reply.id || rIdx} className="flex gap-3 items-start">
+                        <div className="w-7 h-7 rounded-full bg-gray-100 border border-black/5 flex items-center justify-center text-[#7c769d] font-bold text-[11px] font-serif shrink-0">
+                          {reply.user.charAt(0)}
                         </div>
-                      )}
-                    </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center">
+                            <h6 className="font-serif font-bold text-xs text-gray-800">{reply.user}</h6>
+                            <span className="font-mono text-[10px] text-[#b9b0dc]">{reply.date}</span>
+                          </div>
+                          <p className="font-sans text-[13px] leading-relaxed text-[#7c769d]">{reply.text}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>)}
-          </div>
-
-          {/* Comment register form box */}
-          <form onSubmit={handleSubmitComment} className="mt-8 space-y-3">
-            <div className="flex gap-3">
-              <input type="text" placeholder="닉네임" value={commentUser} onChange={e => setCommentUser(e.target.value)} className="border border-[#d4cdf2]/60 px-4.5 py-3.5 text-sm font-sans text-black w-28 md:w-36 focus:outline-none focus:bg-white placeholder-gray-400 bg-[#f3f0ff] rounded-lg focus:ring-1 focus:ring-[#6b54e7]/50" />
-              <div className="relative flex-1 flex">
-                <input type="text" placeholder="댓글을 남겨보세요..." required value={commentText} onChange={e => setCommentText(e.target.value)} className="flex-1 border border-[#d4cdf2]/60 py-3.5 pl-4.5 pr-20 text-sm font-sans text-black focus:outline-none focus:bg-white placeholder-gray-400 bg-[#f3f0ff] rounded-xl focus:ring-1 focus:ring-[#6b54e7]/50" />
-                <button type="submit" className="absolute right-1.5 top-1.5 h-[calc(100%-12px)] text-xs font-bold px-5 rounded-lg transition shadow-sm cursor-pointer shrink-0 bg-[#6b54e7] hover:bg-[#6148e1] text-white">
-                  등록
-                </button>
+                )}
               </div>
             </div>
-          </form>
+          </div>)}
         </div>
 
+        {/* Comment register form box */}
+        <form onSubmit={handleSubmitComment} className="mt-8 space-y-3">
+          <div className="flex gap-3">
+            <input type="text" placeholder="닉네임" value={commentUser} onChange={e => setCommentUser(e.target.value)} className="border border-[#d4cdf2]/60 px-4.5 py-3.5 text-sm font-sans text-black w-28 md:w-36 focus:outline-none focus:bg-white placeholder-gray-400 bg-[#f3f0ff] rounded-lg focus:ring-1 focus:ring-[#6b54e7]/50" />
+            <div className="relative flex-1 flex">
+              <input type="text" placeholder="댓글을 남겨보세요..." required value={commentText} onChange={e => setCommentText(e.target.value)} className="flex-1 border border-[#d4cdf2]/60 py-3.5 pl-4.5 pr-20 text-sm font-sans text-black focus:outline-none focus:bg-white placeholder-gray-400 bg-[#f3f0ff] rounded-xl focus:ring-1 focus:ring-[#6b54e7]/50" />
+              <button type="submit" className="absolute right-1.5 top-1.5 h-[calc(100%-12px)] text-xs font-bold px-5 rounded-lg transition shadow-sm cursor-pointer shrink-0 bg-[#6b54e7] hover:bg-[#6148e1] text-white">
+                등록
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
 
-      <ReportModal
-        isOpen={!!reportTarget}
-        onClose={() => setReportTarget(null)}
-        targetLabel={reportTarget?.label || ""}
-        onSubmit={handleSubmitReport}
-      />
-    </div>;
+    </div>
+
+    <ReportModal
+      isOpen={!!reportTarget}
+      onClose={() => setReportTarget(null)}
+      targetLabel={reportTarget?.label || ""}
+      onSubmit={handleSubmitReport}
+    />
+  </div>;
 }

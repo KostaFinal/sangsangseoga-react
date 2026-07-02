@@ -1,50 +1,32 @@
 import React, { useState } from 'react';
 import { Sparkles, ChevronRight, X, Edit2, Save, BookOpen, Clock, Tag, FileText, Award, Calendar } from 'lucide-react';
 
-export default function AllBooksTab({ filteredBooks, onOpenViewer, setActiveTab, onUpdateBook }) {
+export default function AllBooksTab({ filteredBooks,
+  onOpenViewer,
+  setActiveTab,
+  onUpdateBook,
+  onOpenDetail }) {
   const [selectedBook, setSelectedBook] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
-    id: '',
-    title: '',
-    author: '',
-    category: '',
-    description: '',
-    readingTime: '',
-    pages: 30,
-    magicLevel: 'Lv. 1'
+    description: ''
   });
 
   const handleOpenDetail = (book) => {
     setSelectedBook(book);
     setEditForm({
-      id: book.id,
-      title: book.title,
-      author: book.author,
-      category: book.category,
-      description: book.description,
-      readingTime: book.readingTime || '10분',
-      pages: book.pages || 15,
-      magicLevel: book.magicLevel || 'Lv. 1',
-      isPublic: book.isPublic ?? true
+      description: book.description
     });
     setIsEditing(false);
   };
 
   const handleSaveEdit = (e) => {
     e.preventDefault();
-    if (!editForm.title.trim()) return;
+
 
     const updated = {
       ...selectedBook,
-      title: editForm.title,
-      author: editForm.author,
-      category: editForm.category,
-      description: editForm.description,
-      readingTime: editForm.readingTime,
-      pages: Number(editForm.pages),
-      magicLevel: editForm.magicLevel,
-      isPublic: editForm.isPublic
+      description: editForm.description
     };
 
     onUpdateBook(updated);
@@ -63,7 +45,7 @@ export default function AllBooksTab({ filteredBooks, onOpenViewer, setActiveTab,
           <h3 className="font-plus text-xl font-black text-navy-purple">내가 쓴 책</h3>
         </div>
 
-        <button 
+        <button
           onClick={() => setActiveTab('create')}
           id="shortcut-ai-btn"
           className="flex items-center gap-1.5 bg-brand-gradient hover:opacity-95 text-white font-bold text-xs px-4 py-2 rounded-full shadow-md shadow-brand-purple/10 border border-white/10 cursor-pointer select-none transition-all active:scale-95"
@@ -74,15 +56,15 @@ export default function AllBooksTab({ filteredBooks, onOpenViewer, setActiveTab,
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {myBooks.map(book => (
-          <div 
-            key={book.id} 
+          <div
+            key={book.id}
             id={`userbook-${book.id}`}
             className="bg-white rounded-2xl border border-lavender-border shadow-sm overflow-hidden flex flex-col justify-between group hover:shadow-md hover:border-brand-purple/50 transition-all h-[340px]"
           >
             <div className="relative aspect-[16/9] overflow-hidden">
               <img src={book.coverUrl} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" alt="Book Cover" referrerPolicy="no-referrer" />
               <span className="absolute top-2 left-2 bg-white text-navy-purple font-bold text-[9px] px-2.5 py-0.5 rounded-full border border-lavender-border shadow-sm">
-                 내가 쓴 책 {book.isPublic === false ? '(비공개)' : ''}
+                내가 쓴 책
               </span>
             </div>
             <div className="p-4 flex-grow flex flex-col justify-between">
@@ -101,7 +83,7 @@ export default function AllBooksTab({ filteredBooks, onOpenViewer, setActiveTab,
 
               <div className="flex gap-2 mt-3">
                 <button
-                  onClick={() => handleOpenDetail(book)}
+                  onClick={() => onOpenDetail(book)}
                   className="px-3.5 py-2 bg-lavender-bg hover:bg-lavender-card text-brand-purple font-bold text-xs rounded-full cursor-pointer transition-all flex items-center justify-center gap-1 border border-lavender-border"
                   title="도서 정보 조회 및 수정"
                 >
@@ -142,7 +124,7 @@ export default function AllBooksTab({ filteredBooks, onOpenViewer, setActiveTab,
                   {isEditing ? '내 이야기 수정하기 🧙' : '도서 상세 정보 📖'}
                 </h4>
               </div>
-              <button 
+              <button
                 onClick={() => setSelectedBook(null)}
                 className="w-8 h-8 rounded-full bg-white hover:bg-lavender-bg text-navy-purple border border-lavender-border flex items-center justify-center cursor-pointer transition-all"
               >
@@ -154,86 +136,20 @@ export default function AllBooksTab({ filteredBooks, onOpenViewer, setActiveTab,
             <div className="p-6">
               {isEditing ? (
                 <form onSubmit={handleSaveEdit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[10px] font-extrabold text-navy-purple block mb-1">도서 제목</label>
-                      <input 
-                        type="text"
-                        value={editForm.title}
-                        onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                        required
-                        className="w-full bg-white border border-lavender-border rounded-xl px-3.5 py-2 text-xs font-bold text-navy-purple outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple transition-all"
-                        placeholder="이야기 제목을 지어주세요"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-extrabold text-navy-purple block mb-1">지은이 (작가)</label>
-                      <input 
-                        type="text"
-                        value={editForm.author}
-                        onChange={(e) => setEditForm({ ...editForm, author: e.target.value })}
-                        required
-                        className="w-full bg-white border border-lavender-border rounded-xl px-3.5 py-2 text-xs font-bold text-navy-purple outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple transition-all"
-                        placeholder="작가명을 지정해 주세요"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="md:col-span-2">
-                      <label className="text-[10px] font-extrabold text-navy-purple block mb-1">장르 및 카테고리</label>
-                      <select
-                        value={editForm.category}
-                        onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                        className="w-full bg-white border border-lavender-border rounded-xl px-3 py-2 text-xs font-extrabold text-navy-purple outline-none cursor-pointer hover:border-brand-purple focus:border-brand-purple transition-all"
-                      >
-                        <option value="동화">동화 (Fantasy Fairy Tale)</option>
-                        <option value="SF">SF (Sci-Fi Adventure)</option>
-                        <option value="나만의 AI 창작">나만의 AI 창작</option>
-                        <option value="모험">스릴 만점 모험</option>
-                        <option value="학습">지혜로운 학습</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-extrabold text-navy-purple block mb-1">독서 시간</label>
-                      <input 
-                        type="text"
-                        value={editForm.readingTime}
-                        onChange={(e) => setEditForm({ ...editForm, readingTime: e.target.value })}
-                        className="w-full bg-white border border-lavender-border rounded-xl px-3.5 py-2 text-xs font-bold text-navy-purple outline-none focus:border-brand-purple transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-extrabold text-navy-purple block mb-1">총 페이지 수</label>
-                      <input 
-                        type="number"
-                        value={editForm.pages}
-                        onChange={(e) => setEditForm({ ...editForm, pages: Number(e.target.value) })}
-                        className="w-full bg-white border border-lavender-border rounded-xl px-3.5 py-2 text-xs font-bold text-navy-purple outline-none focus:border-brand-purple transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-extrabold text-navy-purple block mb-1">공개 설정</label>
-                      <button
-                        type="button"
-                        onClick={() => setEditForm({ ...editForm, isPublic: !editForm.isPublic })}
-                        className={`w-full py-2 rounded-xl text-xs font-bold transition-all border ${editForm.isPublic ? 'bg-brand-purple text-white border-brand-purple' : 'bg-lavender-bg text-navy-purple border-lavender-border'}`}
-                      >
-                        {editForm.isPublic ? '공개 중' : '비공개 중'}
-                      </button>
-                    </div>
-                  </div>
-
                   <div>
-                    <label className="text-[10px] font-extrabold text-navy-purple block mb-1">줄거리 및 설명</label>
-                    <textarea 
-                      rows={4}
+                    <label className="text-[10px] font-extrabold text-navy-purple block mb-1">
+                      책 소개
+                    </label>
+                    <textarea
+                      rows={5}
                       value={editForm.description}
                       onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                       className="w-full bg-white border border-lavender-border rounded-xl p-3.5 text-xs text-navy-purple outline-none resize-none tracking-wide font-medium focus:border-brand-purple focus:ring-1 focus:ring-brand-purple transition-all leading-relaxed"
-                      placeholder="도서의 상상 줄거리를 아름답게 펼쳐 적어보세요..."
+                      placeholder="책 소개를 입력하세요"
                     />
                   </div>
+
+
 
                   <div className="flex justify-end gap-2.5 pt-2">
                     <button
@@ -247,7 +163,7 @@ export default function AllBooksTab({ filteredBooks, onOpenViewer, setActiveTab,
                       type="submit"
                       className="px-5 py-2 bg-brand-purple hover:bg-brand-dark text-white rounded-full text-xs font-bold shadow-md transition-all flex items-center gap-1 cursor-pointer"
                     >
-                      <Save className="w-3.5 h-3.5" /> 설정 저장하기
+                      <Save className="w-3.5 h-3.5" /> 저장하기
                     </button>
                   </div>
                 </form>
@@ -261,7 +177,7 @@ export default function AllBooksTab({ filteredBooks, onOpenViewer, setActiveTab,
                         {selectedBook.magicLevel || 'Lv. 1'}
                       </div>
                     </div>
-                    
+
                     <div className="flex justify-center gap-2 mt-4">
                       <span className="text-[9px] font-extrabold px-2.5 py-1 bg-white border border-lavender-border text-brand-purple rounded-full shadow-xs">
                         {selectedBook.category}
@@ -317,7 +233,7 @@ export default function AllBooksTab({ filteredBooks, onOpenViewer, setActiveTab,
                       >
                         <Edit2 className="w-3 h-3 text-brand-purple" /> 정보 수정
                       </button>
-                      
+
                       <button
                         onClick={() => {
                           onOpenViewer(selectedBook.id);
