@@ -1,4 +1,3 @@
-export { default as FairyTaleBookEditorPage } from "./pages/FairyTaleBookEditorPage";
 export { default as FairyTaleChatWritingPage } from "./pages/FairyTaleChatWritingPage";
 export { default as FairyTaleChoiceBuilderPage } from "./pages/FairyTaleChoiceBuilderPage";
 export { default as FairyTaleCoCreationStudioPage } from "./pages/FairyTaleCoCreationStudioPage";

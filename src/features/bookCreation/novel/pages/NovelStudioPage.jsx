@@ -13,74 +13,19 @@ export default function NovelStudioPage() {
     activeScene,
     handleStart,
   } = useNovelStudio();
+
   return (
     <div
       className="novel-studio-page"
       style={{ "--novel-studio-bg": `url(${novelstudiobg})` }}
     >
-      <header className="novel-header">
-        <div className="novel-brand">
-          <div className="brand-mark">🎬</div>
-          <strong>소설 스튜디오</strong>
-        </div>
-
-        <nav className="novel-nav">
-          <button type="button">프로젝트</button>
-          <button type="button">세계관 설정</button>
-          <button type="button">캐릭터</button>
-          <button type="button">자료실</button>
-          <button type="button">요금제</button>
-          <button type="button">가이드</button>
-        </nav>
-
-        <div className="novel-header-actions">
-          <button type="button" className="premium-btn">
-            ♛ 프리미엄
-          </button>
-          <button type="button" className="icon-btn">
-            🔔
-          </button>
-          <button type="button" className="profile-btn">
-            작가의 서재 ▾
-          </button>
-        </div>
-      </header>
-
       <main className="novel-main">
         <section className="novel-hero">
           <div className="stage-light" />
 
           <div className="hero-copy">
             <h1>소설 스튜디오</h1>
-            <p>당신의 이야기가 한 편의 장면이 됩니다</p>
-
-            <div className="start-card">
-              <span>새로운 소설을 시작합니다</span>
-              <small>• • •</small>
-            </div>
-          </div>
-
-          <div className="stat-panel">
-            <div>
-              <span>누적 프로젝트</span>
-              <strong>12,842</strong>
-              <em>편</em>
-            </div>
-            <div>
-              <span>완성된 원고</span>
-              <strong>3,671,209</strong>
-              <em>자</em>
-            </div>
-            <div>
-              <span>활동 작가</span>
-              <strong>28,915</strong>
-              <em>명</em>
-            </div>
-            <div>
-              <span>이번 달 인기 장르</span>
-              <strong>판타지</strong>
-              <em>1위</em>
-            </div>
+            <p>당신의 이야기가 한 편의 소설이 됩니다.</p>
           </div>
         </section>
 
@@ -113,8 +58,8 @@ export default function NovelStudioPage() {
           <div className="setup-panel">
             <div className="section-title">
               <div>
-                <h2>1단계. 작가 수준 선택 ✦</h2>
-                <p>현재의 나에게 맞는 수준을 선택해 보세요.</p>
+                <h2>1단계. 작가 수준 선택</h2>
+                <p>현재 작가에게 맞는 수준을 선택해 보세요.</p>
               </div>
             </div>
 
@@ -138,7 +83,7 @@ export default function NovelStudioPage() {
 
                     <ul>
                       {level.points.map((point) => (
-                        <li key={point}>✓ {point}</li>
+                        <li key={point}>ㆍ{point}</li>
                       ))}
                     </ul>
                   </div>
@@ -150,8 +95,8 @@ export default function NovelStudioPage() {
           <div className="setup-panel mode-panel">
             <div className="section-title">
               <div>
-                <h2>2단계. 작업 방식 선택 ✦</h2>
-                <p>나에게 맞는 작업 방식을 선택해 보세요.</p>
+                <h2>2단계. 작업 방식 선택</h2>
+                <p>소설을 만드는 방식을 선택해 보세요.</p>
               </div>
             </div>
 
@@ -171,7 +116,7 @@ export default function NovelStudioPage() {
                   <p>{mode.desc}</p>
 
                   <span>{mode.tag}</span>
-                  <b>→</b>
+                  <b>선택</b>
                 </button>
               ))}
             </div>
@@ -183,13 +128,10 @@ export default function NovelStudioPage() {
             onClick={handleStart}
             disabled={!canStart}
           >
-            AI 편집자와 소설 만들기 시작 →
+            AI 편집자와 소설 만들기 시작
           </button>
         </section>
       </main>
     </div>
   );
 }
-
-
-

@@ -5,56 +5,34 @@ import { useFairyTaleCoCreationStudio } from "../hooks/useFairyTaleCoCreationStu
 function FairyTaleCoCreationStudioPage() {
     const {
         outlineData,
-        friendOptions,
-        selectedFriend,
-        setSelectedFriend,
-        customFriend,
-        setCustomFriend,
+        choices,
+        choiceQuestion,
+        selectedChoiceId,
+        setSelectedChoiceId,
+        customAnswer,
+        setCustomAnswer,
         currentPage,
-        setCurrentPage,
+        pageCount,
         isPreviewOpen,
         setIsPreviewOpen,
         previewPage,
         setPreviewPage,
         pageButtons,
-        handlePrev,
+        isLoadingChoiceStep,
+        canCreateNextScene,
+        pagePlans,
         handleNextScene,
     } = useFairyTaleCoCreationStudio();
+
+    const previewPlan =
+        pagePlans.find((plan) => plan.pageNo === previewPage) || pagePlans[0];
+
     return (
         <div
             className="ft-studio-page"
             style={{ backgroundImage: `url(${fairyback})` }}
         >
-            {/* 헤더 */}
-            <header className="ft-studio-header">
-                <div className="ft-studio-brand">
-                    <div className="ft-studio-brand-icon">🏰</div>
-                    <div>
-                        <strong>동화별</strong>
-                        <span>이야기가 자라는 곳</span>
-                    </div>
-                </div>
 
-                <nav className="ft-studio-nav">
-                    <button type="button">내 책장</button>
-                    <button type="button" className="active">동화 만들기</button>
-                    <button type="button">템플릿</button>
-                    <button type="button">이용 가이드</button>
-                    <button type="button">요금제</button>
-                </nav>
-
-                <div className="ft-studio-user">
-                    <button type="button" className="premium-btn">👑 프리미엄</button>
-                    <button type="button" className="icon-btn">🔔</button>
-                    <div className="profile-chip">
-                        <span className="avatar">🐑</span>
-                        <span>하늘빛 작가님</span>
-                        <span>⌄</span>
-                    </div>
-                </div>
-            </header>
-
-            {/* 상단 타이틀 */}
             <section className="ft-studio-topbar">
                 <div className="title-wrap">
                     <div className="wand-icon">🪄</div>
@@ -65,21 +43,18 @@ function FairyTaleCoCreationStudioPage() {
                 </div>
 
                 <div className="top-actions">
-                    <button type="button" className="ghost-btn">☁️ 임시 저장</button>
                     <button type="button" className="outline-btn" onClick={() => setIsPreviewOpen(true)}>📖 동화책 미리보기</button>
                 </div>
             </section>
 
-            {/* 본문 */}
             <main className="ft-studio-layout">
-                {/* 왼쪽 설계판 */}
                 <aside className="story-board">
-                    <h2>✨ 이야기 설계판</h2>
+                    <h2>이야기 설계도</h2>
 
                     <div className="phase-list">
                         {outlineData.map((section) => (
                             <div className="phase-card" key={section.phase}>
-                                <div className={`phase-badge phase-${section.phase}`}>
+                                <div className={`phase-badge phase-${section.className}`}>
                                     <strong>{section.phase}</strong>
                                     <span>{section.icon}</span>
                                 </div>
@@ -91,7 +66,7 @@ function FairyTaleCoCreationStudioPage() {
                                             className={`phase-item ${item.done ? "done" : ""} ${item.current ? "current" : ""}`}
                                         >
                                             <span className="marker">
-                                                {item.done ? "✔" : item.current ? "●" : "○"}
+                                                {item.done ? "✓" : item.current ? "●" : "○"}
                                             </span>
                                             <span className="page-label">{item.page}p</span>
                                             <span className="item-text">{item.text}</span>
@@ -104,25 +79,25 @@ function FairyTaleCoCreationStudioPage() {
                     </div>
 
                     <div className="page-nav-box">
-                        <h3>📖 페이지 구성</h3>
+                        <h3>📖 페이지 진행</h3>
                         <div className="page-buttons">
-                            {pageButtons.map((page) => (
+                            {pageButtons.map((item) => (
                                 <button
-                                    key={page}
+                                    key={item.page}
                                     type="button"
-                                    className={page === currentPage ? "active" : ""}
-                                    onClick={() => setCurrentPage(page)}
+                                    className={`${item.current ? "active" : ""} ${item.done ? "done" : ""}`}
+                                    disabled={item.disabled}
+                                    aria-current={item.current ? "step" : undefined}
                                 >
-                                    {page}
+                                    {item.page}
                                 </button>
                             ))}
                         </div>
                     </div>
                 </aside>
 
-                {/* 가운데 메인 */}
                 <section className="creation-panel">
-                    <h2>✦ AI 선생님과 이야기 만들기</h2>
+                    <h2>AI 선생님과 이야기 만들기</h2>
 
                     <div className="ai-box">
                         <div className="ai-character">
@@ -130,61 +105,65 @@ function FairyTaleCoCreationStudioPage() {
                         </div>
                         <div className="ai-speech">
                             <p>
-                                이제 루미가
+                                이제 다음 장면을
                                 <br />
-                                <strong>첫 친구를 만날 차례예요!</strong>
+                                <strong>함께 정해볼 차례예요!</strong>
                                 <br />
-                                어떤 친구를 만나면 좋을까요?
+                                {choiceQuestion}
                             </p>
                         </div>
                     </div>
 
                     <div className="question-panel">
-                        <div className="step-label">STEP 4 / 10</div>
-                        <h3>✦ 루미가 어떤 친구를 만날까요?</h3>
+                        <div className="step-label">STEP {currentPage} / {pageCount}</div>
+                        <h3>✨ {choiceQuestion}</h3>
 
                         <div className="friend-grid">
-                            {friendOptions.map((option) => (
+                            {choices.map((choice, index) => (
                                 <button
-                                    key={option.id}
+                                    key={choice.id}
                                     type="button"
-                                    className={`friend-card ${option.color} ${selectedFriend === option.id ? "selected" : ""
-                                        }`}
-                                    onClick={() => setSelectedFriend(option.id)}
+                                    className={`friend-card ${choice.color} ${selectedChoiceId === choice.id ? "selected" : ""}`}
+                                    onClick={() => setSelectedChoiceId(choice.id)}
                                 >
-                                    <div className="friend-image">{option.img}</div>
-                                    <strong>{option.title}</strong>
-                                    <p>{option.desc}</p>
+                                    <div className="friend-image choice-number-badge">
+                                        {index + 1}
+                                    </div>
+                                    <strong>{choice.title}</strong>
+                                    <p>{choice.desc}</p>
                                 </button>
                             ))}
                         </div>
 
                         <div className="custom-row">
                             <label htmlFor="customFriend" className="custom-label">
-                                ✎ 직접 입력하기
+                                직접 입력하기
                             </label>
                             <input
                                 id="customFriend"
                                 type="text"
                                 maxLength={50}
-                                value={customFriend}
-                                onChange={(e) => setCustomFriend(e.target.value)}
-                                placeholder="친구의 이름이나 특징을 자유롭게 입력해 주세요!"
+                                value={customAnswer}
+                                onChange={(e) => setCustomAnswer(e.target.value)}
+                                placeholder="선택지 대신 직접 떠오른 내용을 입력해 주세요"
                             />
-                            <span className="count">{customFriend.length} / 50</span>
+                            <span className="count">{customAnswer.length} / 50</span>
                         </div>
                     </div>
 
                     <div className="bottom-actions">
-                        <button type="button" className="prev-btn" onClick={handlePrev}>
-                            ← 이전 질문
-                        </button>
-                        <button type="button" className="next-scene-btn" onClick={handleNextScene}>
-                            ✨ 다음 장면 만들기 →
+                        <button
+                            type="button"
+                            className="next-scene-btn"
+                            onClick={handleNextScene}
+                            disabled={!canCreateNextScene}
+                        >
+                            {isLoadingChoiceStep ? "장면 만드는 중..." : "다음 장면 만들기"}
                         </button>
                     </div>
                 </section>
             </main>
+
             {isPreviewOpen && (
                 <div
                     className="book-preview-backdrop"
@@ -205,12 +184,12 @@ function FairyTaleCoCreationStudioPage() {
                             ×
                         </button>
 
-                        <div className="book-preview-sparkle sparkle-left">✦</div>
+                        <div className="book-preview-sparkle sparkle-left">✨</div>
                         <div className="book-preview-sparkle sparkle-right">✨</div>
 
                         <header className="book-preview-header">
                             <h2>동화책 미리보기</h2>
-                            <p>완성된 동화책의 내용을 미리 확인해요</p>
+                            <p>완성될 동화책의 내용을 미리 확인해요</p>
                         </header>
 
                         <section className="book-frame">
@@ -225,7 +204,7 @@ function FairyTaleCoCreationStudioPage() {
                             <article className="open-book">
                                 <div className="book-page left-page">
                                     <div className="book-paper">
-                                        <h3>{previewPage}p. 숲에서 만난 친구</h3>
+                                        <h3>{previewPage}p. {previewPlan?.title}</h3>
 
                                         <div className="book-illustration">
                                             <div className="scene-bg">
@@ -236,10 +215,7 @@ function FairyTaleCoCreationStudioPage() {
                                         </div>
 
                                         <div className="book-text">
-                                            <p>루미가 반짝이는 숲길을 걸어가고 있었어요.</p>
-                                            <p>그때, 나뭇잎 뒤에서 작은 울음소리가 들렸어요.</p>
-                                            <p>조심스럽게 다가가 보니,</p>
-                                            <p>겁에 질린 작은 용이 숨어 있었지요.</p>
+                                            <p>{previewPlan?.summary || "아직 만들어지지 않은 장면이에요."}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -248,7 +224,7 @@ function FairyTaleCoCreationStudioPage() {
                             <button
                                 type="button"
                                 className="book-arrow book-arrow-right"
-                                onClick={() => setPreviewPage((prev) => Math.min(10, prev + 1))}
+                                onClick={() => setPreviewPage((prev) => Math.min(pageButtons.length, prev + 1))}
                             >
                                 ›
                             </button>
@@ -277,15 +253,15 @@ function FairyTaleCoCreationStudioPage() {
 
                             <button
                                 type="button"
-                                className={previewPage === 10 ? "active" : ""}
-                                onClick={() => setPreviewPage(10)}
+                                className={previewPage === pageButtons.length ? "active" : ""}
+                                onClick={() => setPreviewPage(pageButtons.length)}
                             >
-                                10
+                                {pageButtons.length}
                             </button>
 
                             <button
                                 type="button"
-                                onClick={() => setPreviewPage((prev) => Math.min(10, prev + 1))}
+                                onClick={() => setPreviewPage((prev) => Math.min(pageButtons.length, prev + 1))}
                             >
                                 ›
                             </button>
@@ -303,17 +279,14 @@ function FairyTaleCoCreationStudioPage() {
                             <button
                                 type="button"
                                 className="book-preview-select"
-                                onClick={() => {
-                                    setCurrentPage(previewPage);
-                                    setIsPreviewOpen(false);
-                                }}
+                                onClick={() => setIsPreviewOpen(false)}
                             >
-                                ✨ 이 페이지로 보기
+                                확인
                             </button>
                         </div>
 
                         <div className="book-preview-note">
-                            ✨ 미리보기는 저장되지 않아요
+                            미리보기는 저장되지 않아요
                         </div>
                     </div>
                 </div>
@@ -323,9 +296,3 @@ function FairyTaleCoCreationStudioPage() {
 }
 
 export default FairyTaleCoCreationStudioPage;
-
-
-
-
-
-

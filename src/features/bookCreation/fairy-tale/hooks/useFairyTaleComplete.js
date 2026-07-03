@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
+
 export function useFairyTaleComplete() {
   const navigate = useNavigate();
 
@@ -8,7 +10,7 @@ export function useFairyTaleComplete() {
   };
 
   const handleRestart = () => {
-    navigate("/fairy-tale/setting");
+    navigate(BOOK_CREATION_ROUTES.FAIRY_TALE.SETTING);
   };
 
   const handleShare = () => {

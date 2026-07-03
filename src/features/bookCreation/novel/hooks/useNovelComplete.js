@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import { fallbackData } from "../data/novelCompleteOptions";
 
 export function useNovelComplete() {
@@ -36,7 +37,7 @@ export function useNovelComplete() {
   };
 
   const handleNewNovel = () => {
-    navigate("/bookmaker/novel/chat");
+    navigate(BOOK_CREATION_ROUTES.NOVEL.CHAT);
   };
 
   return {

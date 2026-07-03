@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
+import {
+  createPagePlan,
+  extractGeneratedPages,
+  extractGeneratedText,
+  writePage,
+} from "../../services/aiGenerateService";
 import {
   CHAT_HELP_ACTIONS,
   DEFAULT_SETTING,
@@ -33,6 +40,41 @@ export function useFairyTaleChatWriting() {
 
     chatLogRef.current.scrollTop = chatLogRef.current.scrollHeight;
   }, [messages]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncPagePlan = async () => {
+      const response = await createPagePlan(
+        {
+          ...setupData,
+          fairyTaleSetting: setting,
+          fairyTalePages: pages,
+        },
+        {
+          pageCount,
+        }
+      );
+      const aiPages = response.ok ? extractGeneratedPages(response.data) : [];
+
+      if (isMounted && aiPages.length) {
+        setPages((prev) =>
+          aiPages.map((page, index) => ({
+            ...prev[index],
+            ...page,
+            pageNo: page.pageNo || prev[index]?.pageNo || index + 1,
+            status: page.status || prev[index]?.status || "WAITING",
+          }))
+        );
+      }
+    };
+
+    syncPagePlan();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const currentPage = useMemo(() => {
     return pages.find((page) => page.pageNo === currentPageNo) || pages[0];
@@ -73,12 +115,29 @@ export function useFairyTaleChatWriting() {
     ]);
   };
 
-  const handleWritePage = () => {
-    const body = makePageText({
+  const handleWritePage = async () => {
+    let body = makePageText({
       page: currentPage,
       setting,
       tone: "기본",
     });
+    const response = await writePage(
+      {
+        ...setupData,
+        fairyTaleSetting: setting,
+        fairyTalePages: pages,
+      },
+      {
+        page: currentPage,
+        pageNo: currentPageNo,
+      }
+    );
+
+    if (response.ok) {
+      body = extractGeneratedText(response.data) || body;
+    } else {
+      console.warn("WRITE_PAGE failed:", response.message);
+    }
 
     updateCurrentPage({
       body,
@@ -277,7 +336,7 @@ export function useFairyTaleChatWriting() {
   };
 
   const handleGoImageDesign = () => {
-    navigate("/fairy-tale/images", {
+    navigate(BOOK_CREATION_ROUTES.FAIRY_TALE.IMAGES, {
       state: {
         ...setupData,
         fairyTaleSetting: setting,

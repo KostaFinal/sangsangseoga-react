@@ -51,36 +51,3 @@ export const interactionModes = [
     icon: "🔘",
   },
 ];
-
-export const readerAges = [
-  {
-    id: "PRESCHOOL",
-    label: "미취학아동",
-    description: "그림 중심의 쉬운 동화",
-    icon: "🧸",
-  },
-  {
-    id: "LOWER_ELEMENTARY",
-    label: "초등 저학년",
-    description: "짧고 쉬운 문장",
-    icon: "🎒",
-  },
-  {
-    id: "UPPER_ELEMENTARY",
-    label: "초등 고학년",
-    description: "사건과 감정이 있는 이야기",
-    icon: "📚",
-  },
-  {
-    id: "TEEN",
-    label: "청소년",
-    description: "주제 의식이 있는 이야기",
-    icon: "🧑",
-  },
-  {
-    id: "ADULT",
-    label: "성인",
-    description: "완성도와 구조 중심",
-    icon: "👨‍💼",
-  },
-];

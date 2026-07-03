@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import {
   agendaKeyMap,
   initialMinutes,
@@ -10,6 +11,12 @@ import {
 
 export function useNovelAuthorMeeting() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const setupData = location.state || {
+    bookType: "NOVEL",
+    writerLevel: "TEEN",
+    interactionMode: "FREE",
+  };
 
   const [activeAgenda, setActiveAgenda] = useState("이야기 씨앗");
   const [answer, setAnswer] = useState("");
@@ -78,8 +85,9 @@ export function useNovelAuthorMeeting() {
       return;
     }
 
-    navigate("/bookmaker/novel/confirm", {
+    navigate(BOOK_CREATION_ROUTES.NOVEL.CONFIRM, {
       state: {
+        ...setupData,
         minutes,
       },
     });

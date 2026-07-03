@@ -1,6 +1,5 @@
 import fairyBg from "../../assets/fairy-bg.png";
 
-import FairyHeader from "../components/setup/FairyHeader";
 import FairyHero from "../components/setup/FairyHero";
 import InteractionModeSection from "../components/setup/InteractionModeSection";
 import SetupSummaryBox from "../components/setup/SetupSummaryBox";
@@ -28,8 +27,6 @@ export default function FairyTaleSetupPage() {
       style={{ "--fairy-bg": `url(${fairyBg})` }}
     >
       <div className="fairy-bg-overlay"></div>
-
-      <FairyHeader />
 
       <main className="fairy-main">
         <FairyHero />

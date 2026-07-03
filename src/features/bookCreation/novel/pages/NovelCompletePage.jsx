@@ -27,31 +27,6 @@ function NovelCompletePage() {
       />
       <div className="novel-complete-overlay" />
 
-      <header className="novel-complete-header">
-        <div className="novel-complete-brand">
-          <span>✒</span>
-          <strong>소설 스튜디오</strong>
-        </div>
-
-        <nav className="novel-complete-nav">
-          <button type="button">내 서재</button>
-          <button type="button">프로젝트</button>
-          <button type="button">설정</button>
-          <button type="button">가이드</button>
-        </nav>
-
-        <div className="novel-complete-user">
-          <button type="button" className="premium-btn">
-            👑 프리미엄
-          </button>
-          <button type="button" className="bell-btn">
-            🔔
-          </button>
-          <button type="button" className="profile-btn">
-            작가의 서재⌄
-          </button>
-        </div>
-      </header>
 
       <main className="novel-complete-main">
         <section className="complete-hero">
