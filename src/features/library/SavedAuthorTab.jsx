@@ -4,7 +4,8 @@ import { Plus } from 'lucide-react';
 export default function SavedAuthorTab({ favoriteAuthors,
   setFavoriteAuthors,
   setActiveTab,
-  onSelectAuthor }) {
+  onSelectAuthor,
+  onOpenAuthorSearch }) {
   // Local form states co-located in the tab
   const [isAddAuthorOpen, setIsAddAuthorOpen] = useState(false);
   const [newAuthorName, setNewAuthorName] = useState('');
@@ -20,7 +21,7 @@ export default function SavedAuthorTab({ favoriteAuthors,
         </div>
 
         <button
-          onClick={() => setIsAddAuthorOpen(true)}
+          onClick={onOpenAuthorSearch}
           id="toggle-add-author-btn"
           className="flex items-center gap-1.5 bg-brand-purple hover:bg-brand-dark text-white font-bold text-xs px-4 py-2.5 rounded-full shadow-sm cursor-pointer select-none transition-all"
         >

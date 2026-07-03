@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Plus, ChevronRight, Heart } from 'lucide-react';
+import { ChevronRight, Heart } from 'lucide-react';
 
-export default function WishlistTab({ filteredBooks, onOpenCreateModal, onStartReading, onOpenDetail, onToggleFavorite }) {
+export default function WishlistTab({ filteredBooks, onStartReading, onOpenDetail, onToggleFavorite }) {
   const [wishlistCategory, setWishlistCategory] = useState('all');
 
   return (

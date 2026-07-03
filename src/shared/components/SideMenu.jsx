@@ -24,24 +24,21 @@ export default function SideMenu({ activeTab, setActiveTab, disabled = false }) 
         const IconComponent = b.icon;
 
         return (
-          <div 
+          <div
             key={b.id}
             id={`sidebookmark-${b.id}`}
-            onClick={() => setActiveTab(b.id)}
-            className="flex items-center group cursor-pointer select-none"
+            className="flex items-center group select-none"
           >
-            {/* Hover sliding label */}
-            <span className="opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300 mr-2 font-bold text-xs bg-white text-navy-purple border border-lavender-border shadow-md px-3 py-1.5 rounded-lg whitespace-nowrap">
+            <span className="pointer-events-none opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300 mr-2 font-bold text-xs bg-white text-navy-purple border border-lavender-border shadow-md px-3 py-1.5 rounded-lg whitespace-nowrap">
               {b.label}
             </span>
 
-            {/* Bookmark tabs - pop out when active */}
-            <div 
-              className={`h-14 transition-all duration-300 rounded-l-2xl flex items-center justify-center border-l border-y border-lavender-border shadow-md ${
-                isActive 
-                  ? `bg-brand-purple text-white w-20 shadow-[-5px_0_15px_rgba(107,84,231,0.25)] border-l-4 border-brand-dark` 
+            <div
+              onClick={() => setActiveTab(b.id)}
+              className={`h-14 transition-all duration-300 rounded-l-2xl flex items-center justify-center border-l border-y border-lavender-border shadow-md cursor-pointer ${isActive
+                  ? `bg-brand-purple text-white w-20 shadow-[-5px_0_15px_rgba(107,84,231,0.25)] border-l-4 border-brand-dark`
                   : 'bg-white hover:bg-lavender-bg hover:w-16 text-navy-purple/70 w-12'
-              }`}
+                }`}
             >
               <IconComponent className={`w-5 h-5 ${isActive ? 'scale-110' : ''}`} />
             </div>

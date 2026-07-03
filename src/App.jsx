@@ -27,13 +27,12 @@ import { ErrorPage404 } from './shared/components/ErrorPage404';
 import { ErrorPage500 } from './shared/components/ErrorPage500';
 import { CURRENT_USER_PROFILE } from './shared/data';
 import SideMenu from './shared/components/SideMenu';
-import { MainBookshelf, MyBookTab, FinishedTab, ReadingTab, WishlistTab, BookCreationTab } from './features/bookshelf';
-import { BookViewer } from './features/viewer';
+import { MainBookshelf, MyBookTab, FinishedTab, ReadingTab, WishlistTab } from './features/bookshelf';
 import { ReviewWithAI } from './features/review';
 import { BookCalendar } from './features/calendar';
 import { BookStats } from './features/stats';
 import { SavedAuthorTab } from './features/library';
-import { initialBooks as myLibraryInitialBooks, bookContents as myLibraryBookContents } from './data.js';
+import { initialBooks as myLibraryInitialBooks } from './data.js';
 
 export default function App() {
   const [myLibraryKey, setMyLibraryKey] = useState(0);
@@ -894,7 +893,6 @@ function MyLibraryApp({ setViewingBook,
   setSelectedAuthor,
   setAuthorProfileMode }) {
   const initialBooks = myLibraryInitialBooks;
-  const bookContents = myLibraryBookContents;
   const [activeTab, setActiveTab] = useState('bookshelf');
   const [books, setBooks] = useState(initialBooks.map(b => ({
     ...b,
@@ -906,23 +904,8 @@ function MyLibraryApp({ setViewingBook,
   const [searchQuery, setSearchQuery] = useState('');
 
   // Active Viewer state
-  const [selectedBookContent, setSelectedBookContent] = useState(null);
-  const [viewerInitialPage, setViewerInitialPage] = useState(null);
-  const [selectedDetailBookId, setSelectedDetailBookId] = useState(null);
-  const selectedDetailBook = books.find(b => b.id === selectedDetailBookId);
+  const [selectedReaderBook, setSelectedReaderBook] = useState(null);
 
-  // Creative manual creator/add books dialog
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [newBookTitle, setNewBookTitle] = useState('');
-  const [newBookCategory, setNewBookCategory] = useState('동화');
-  const [newBookDesc, setNewBookDesc] = useState('');
-  const [wishlistCategory, setWishlistCategory] = useState('all');
-
-  // Floating notifications box
-  const [appBookmarks, setAppBookmarks] = useState([
-    { title: '우주 탐험대의 모험', page: 12, id: 1 },
-    { title: '시간을 걷는 아이', page: 4, id: 2 }
-  ]);
 
   // Favorite Authors List State
   const [favoriteAuthors, setFavoriteAuthors] = useState([
@@ -953,111 +936,31 @@ function MyLibraryApp({ setViewingBook,
       progress: 0,
       isPublic: true
     };
-
-    // 2. 책 본문 데이터베이스에 동적 바인딩
-    bookContents[customId] = {
-      id: customId,
-      title: newTale.title,
-      chapters: [
-        {
-          title: '1. 모험가 상상이의 출발',
-          page: 1,
-          content: newTale.content,
-          illustration: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBPVBWqLsCBgg8PJuoJJomJC3f8OSvgE89YHcxnMWKBy4wvRvL1cZQN6QDSbPrmqpA04kfaFL2WLamfw2T7ahBXAP-9D0-TGdKVb_uoubDPsJezesu4X-K9HiU_oKXf_tB7Hy4Bok0W0ay0YbQVSQ9fXyrxDGxFAOPnnFbdoS6IibG-20KBf-1LDX2uNBWVRt8IaSkxGr-5Ju6m1k8HKa6v72K1NKdKOODyRlIvMbFo9t1A9QzUF49YmARdMrheFQYF97bn-chMLXQr'
-        }
-      ]
-    };
-
-    setBooks((prev) => [newBookObj, ...prev]);
-  };
-
-  // 직접 책 뷰 보관함 추가
-  const handleCreateBookSubmit = ({ title, category, desc }) => {
-    if (!title.trim()) return;
-
-    const customId = `manual_${Date.now()}`;
-    const newB = {
-      id: customId,
-      title: title,
-      author: '김지우 님',
-      illustrator: '상상서가',
-      coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDI6_9o3ivagt0U0ZJhyWk8kCy6y8zQGge0rR_epJsHnAoDaUJTRODbMbk3INGzHpSouisJV6Y4L_DG1Nvajif5PIfDVzzLzXtyalNpAlPNJ9n3jvkCr3mS2LVMy3oJqWPTtXYBWOPJXZavJsN5Tm0Ozy_5MIV0hMt6fFyADARfXlazAqdfWuNHDodoUJ-Zp7uw5Gj2QIQ9iDrUKv_-BXF3iNJhxyUmZXpjWJ5YTxHeKpwoIumUKLx090wOlIdRY1rslqNke_9guV17',
-      category: category,
-      rating: 4.5,
-      description: desc || '내가 직접 제목을 짓고 독서 위시리스트에 소중히 등재한 창작 모험서입니다.',
-      readingTime: '15분',
-      magicLevel: 'Lv. 1',
-      pages: 30,
-      progress: 0,
-      isPublic: true
-    };
-
-    // 실시간 본문 챕터 바인딩
-    bookContents[customId] = {
-      id: customId,
-      title: title,
-      chapters: [
-        {
-          title: '1. 비밀 장벽의 개방',
-          page: 1,
-          content: `${title}의 찬란한 여정이 막 시작되었습니다! 주인공은 깊고 푸른 상상의 숲에 둘러싸인 자신의 작은 서재 오두막에서 나와, 소문으로만 전해지던 고장 난 시계 열쇠를 복원하기 시작했습니다...`,
-          illustration: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDI6_9o3ivagt0U0ZJhyWk8kCy6y8zQGge0rR_epJsHnAoDaUJTRODbMbk3INGzHpSouisJV6Y4L_DG1Nvajif5PIfDVzzLzXtyalNpAlPNJ9n3jvkCr3mS2LVMy3oJqWPTtXYBWOPJXZavJsN5Tm0Ozy_5MIV0hMt6fFyADARfXlazAqdfWuNHDodoUJ-Zp7uw5Gj2QIQ9iDrUKv_-BXF3iNJhxyUmZXpjWJ5YTxHeKpwoIumUKLx090wOlIdRY1rslqNke_9guV17'
-        }
-      ]
-    };
-
-    setBooks((prev) => [newB, ...prev]);
-    setIsCreateOpen(false);
-    setActiveTab('wishlist');
+    setBooks(prev => [newBookObj, ...prev]);
   };
 
   const handleOpenViewer = (bookId) => {
-    if (bookId === 'stats_magic_book') {
-      setActiveTab('stats');
-      return;
-    }
-    const content = bookContents[bookId];
-    if (content) {
-      setSelectedBookContent(content);
+    const book = books.find(b => b.id === bookId);
 
-      setBooks((prev) => prev.map((b) => {
-        if (b.id === bookId && b.progress === 0) {
-          return { ...b, progress: 12 };
-        }
-        return b;
-      }));
-    } else {
-      const foundBook = books.find(b => b.id === bookId);
-      if (foundBook) {
-        const dummyContent = {
-          id: bookId,
-          title: foundBook.title,
-          chapters: [
-            {
-              title: '1. 신비한 여정의 첫걸음',
-              page: 1,
-              content: `"${foundBook.title}"의 세계관에 오신 것을 환영합니다! \n\n이곳에는 대단한 상상력을 발휘하는 독자님들을 수호하는 마법 은하 철도 신호등이 서있습니다. 숲속 대사서 거북이 할머니는 마법 지팡이 끝을 노랗게 콕 짚어서 마른 땅에서 아름다운 민들레 꽃잎 줄기가 무럭무럭 자라나도록 마법을 휘둘렀답니다. \n\n너만을 위한 신비한 모험 스토리가 시작되고 있는 순간이에요! 뷰어 하단에서 글씨 크기나 손글씨 글씨체, 줄 간격을 실시간으로 편안하게 조절하면서 귀로 생생히 들려오는 음성 리딩과 함께 오감으로 독서를 즐겨보세요.`,
-              illustration: foundBook.coverUrl
-            },
-            {
-              title: '2. 빛을 되찾은 꼬마 영웅들',
-              page: 15,
-              content: `결국 주인공 김지우 님이 상상력을 총동원하여 고장 난 오르골의 태엽 배를 수리하는 데 성공했습니다! \n\n기쁨에 들뜬 인근 오렌지 숲 유니콘과 요정들이 다람쥐 오두막에 옹기종기 둥글게 모여 아름다운 달빛 우정 연주회를 활짝 개최했습니다. 지우도 머리 위에 멋진 은빛 왕관을 받아 얹으며 오늘의 독서 여행을 보람차게 완료했답니다. 짝짝짝!`,
-              illustration: foundBook.coverUrl
-            }
-          ]
-        };
-        setSelectedBookContent(dummyContent);
-        setBooks((prev) => prev.map((b) => {
-          if (b.id === bookId && b.progress === 0) {
-            return { ...b, progress: 12 };
-          }
-          return b;
-        }));
-      }
-    }
+    if (!book) return;
+
+    setSelectedReaderBook({
+      ...book,
+      genre: book.category,
+      summary: book.description,
+      coverImage: book.coverUrl,
+      likes: book.totalLikes || 0,
+      comments: book.reviews || []
+    });
+
+    setBooks(prev =>
+      prev.map(b =>
+        b.id === bookId && b.progress === 0
+          ? { ...b, progress: 12 }
+          : b
+      )
+    );
   };
-
   const handleStartWishReading = (bookId) => {
     setBooks(prev => prev.map(b => {
       if (b.id === bookId) {
@@ -1068,35 +971,9 @@ function MyLibraryApp({ setViewingBook,
     handleOpenViewer(bookId);
   };
 
-  const handleAddBookmark = (title, page) => {
-    const newId = Date.now();
-    setAppBookmarks(prev => [{ title, page, id: newId }, ...prev]);
-  };
-
-  const handleRemoveBookmark = (id) => {
-    setAppBookmarks(prev => prev.filter(b => b.id !== id));
-  };
-
-  const handleBookmarkClick = (bm) => {
-    const foundBook = books.find(b => b.title === bm.title);
-    if (foundBook) {
-      setViewerInitialPage(bm.page);
-      handleOpenViewer(foundBook.id);
-    } else {
-      const foundId = Object.keys(bookContents).find(key => bookContents[key].title === bm.title);
-      if (foundId) {
-        setViewerInitialPage(bm.page);
-        handleOpenViewer(foundId);
-      }
-    }
-  };
 
   const handleUpdateBook = (updatedBook) => {
     setBooks((prev) => prev.map((b) => (b.id === updatedBook.id ? { ...b, ...updatedBook } : b)));
-    // 본문 컨텐츠의 제목도 동기화
-    if (bookContents[updatedBook.id]) {
-      bookContents[updatedBook.id].title = updatedBook.title;
-    }
   };
 
   const handleToggleFavorite = (bookId) => {
@@ -1131,65 +1008,24 @@ function MyLibraryApp({ setViewingBook,
   return (
     <div className="min-h-screen pb-24 relative overflow-x-hidden md:overflow-visible bg-white text-navy-purple">
       {/* Floating sliding Sidebar Navigation Bookmarks */}
-      <SideMenu activeTab={activeTab} setActiveTab={setActiveTab} disabled={selectedBookContent !== null} />
+      <SideMenu activeTab={activeTab} setActiveTab={setActiveTab} disabled={selectedReaderBook !== null} />
 
       {/* Outer wrapper container */}
       <main className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-12 pt-24 bg-transparent text-navy-purple">
 
         {/* Dynamic Reader Book Viewer - Absolute Priority Overlay */}
-        {selectedBookContent ? (
-          <BookViewer
-            bookContent={selectedBookContent}
-            onClose={() => {
-              setSelectedBookContent(null);
-              setViewerInitialPage(null);
-            }}
-            appBookmarks={appBookmarks}
-            onAddBookmark={handleAddBookmark}
-            onRemoveBookmark={handleRemoveBookmark}
-            initialPage={viewerInitialPage}
-          />
-        ) : selectedDetailBook ? (
-          <BookDetailView
-            book={{
-              ...selectedDetailBook,
-              genre: selectedDetailBook.category,
-              summary: selectedDetailBook.description,
-              coverImage: selectedDetailBook.coverUrl,
-              likes: selectedDetailBook.totalLikes || 0,
-              isLikedByMe: selectedDetailBook.isLikedByMe || false,
-              comments: selectedDetailBook.reviews || [],
-              mode: "owner"
-            }}
-            onBack={() => setSelectedDetailBookId(null)}
-            onStartReading={() => handleStartWishReading(selectedDetailBook.id)}
-            onToggleLike={() => handleLikeBook(selectedDetailBook.id)}
-            onToggleBookmark={() => handleToggleFavorite(selectedDetailBook.id)}
-            allBooks={books.map(b => ({
-              ...b,
-              genre: b.category,
-              summary: b.description,
-              coverImage: b.coverUrl,
-              likes: b.totalLikes || 0,
-              isLikedByMe: b.isLikedByMe || false,
-              comments: b.reviews || []
-            }))}
-            onSelectRecommended={(book) => setSelectedDetailBookId(book.id)}
-            onSaveComment={(user, text) =>
-              handleAddReview(selectedDetailBook.id, {
-                user,
-                comment: text,
-                date: new Date().toLocaleDateString('ko-KR')
-              })
-            }
-            onSaveReply={() => { }}
-            onSelectAuthor={(name) => {
-              setSelectedAuthor(name);
-              setAuthorProfileMode("owner");
-              setCurrentScreen("author-search");
-              setViewingBook(null);
+        {selectedReaderBook ? (
+          <BookReaderView
+            book={selectedReaderBook}
+            books={books}
+            onBack={() => setSelectedReaderBook(null)}
+            onToggleBookmark={() => handleToggleFavorite(selectedReaderBook.id)}
+            onToggleLike={() => handleLikeBook(selectedReaderBook.id)}
+            onSelectRecommended={(book) => {
+              setSelectedReaderBook(book);
             }}
           />
+
         ) : (
           <AnimatePresence mode="wait">
             <motion.div
@@ -1203,14 +1039,12 @@ function MyLibraryApp({ setViewingBook,
               {activeTab === 'bookshelf' && (
                 <MainBookshelf
                   setActiveTab={setActiveTab}
-                  onOpenCreateModal={() => setIsCreateOpen(true)}
                 />
               )}
 
               {activeTab === 'wishlist' && (
                 <WishlistTab
                   filteredBooks={filteredBooks}
-                  onOpenCreateModal={() => setIsCreateOpen(true)}
                   onStartReading={handleStartWishReading}
                   onOpenDetail={(book) => {
                     const convertedBook = {
@@ -1287,15 +1121,11 @@ function MyLibraryApp({ setViewingBook,
               )}
 
               {activeTab === 'calendar' && (
-                <BookCalendar onSelectBook={handleOpenViewer} />
+                <BookCalendar books={books} />
               )}
 
               {activeTab === 'ai-chat' && (
                 <ReviewWithAI onFairyTaleCreated={handleFairyTaleCreated} />
-              )}
-
-              {activeTab === 'create' && (
-                <BookCreationTab onCreateBook={handleCreateBookSubmit} />
               )}
 
               {activeTab === 'all-books' && (
@@ -1332,6 +1162,11 @@ function MyLibraryApp({ setViewingBook,
                   setActiveTab={setActiveTab}
                   onSelectAuthor={(authorName) => {
                     setSelectedAuthor(authorName);
+                    setAuthorProfileMode("viewer");
+                    setCurrentScreen("author-search");
+                  }}
+                  onOpenAuthorSearch={() => {
+                    setSelectedAuthor(null);
                     setAuthorProfileMode("viewer");
                     setCurrentScreen("author-search");
                   }}

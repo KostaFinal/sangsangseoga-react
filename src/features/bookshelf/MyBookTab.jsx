@@ -45,13 +45,7 @@ export default function AllBooksTab({ filteredBooks,
           <h3 className="font-plus text-xl font-black text-navy-purple">내가 쓴 책</h3>
         </div>
 
-        <button
-          onClick={() => setActiveTab('create')}
-          id="shortcut-ai-btn"
-          className="flex items-center gap-1.5 bg-brand-gradient hover:opacity-95 text-white font-bold text-xs px-4 py-2 rounded-full shadow-md shadow-brand-purple/10 border border-white/10 cursor-pointer select-none transition-all active:scale-95"
-        >
-          <Sparkles className="w-4 h-4 text-white animate-spin" /> 새 이야기 집필하러 가기
-        </button>
+       
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

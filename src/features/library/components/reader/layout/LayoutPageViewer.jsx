@@ -85,7 +85,39 @@ export default function LayoutPageViewer({
   onComplete,
   onLastPageBlocked,
 }) {
-  const pages = book.pages;
+  const pages = Array.isArray(book.pages)
+    ? book.pages
+    : [
+      {
+        id: `${book.id}-page-1`,
+        backgroundColor: "#ffffff",
+        elements: [
+          {
+            id: "title",
+            type: "text",
+            x: 50,
+            y: 60,
+            w: 380,
+            h: 80,
+            fontSize: 26,
+            fontWeight: 800,
+            align: "center",
+            html: book.title || "제목 없음"
+          },
+          {
+            id: "summary",
+            type: "text",
+            x: 55,
+            y: 180,
+            w: 370,
+            h: 340,
+            fontSize: 17,
+            lineHeight: 1.8,
+            html: book.summary || book.description || "본문이 준비되지 않았습니다."
+          }
+        ]
+      }
+    ];
   const bookRef = useRef(null);
   const lastIndex = pages.length - 1;
   // usePortrait=false(항상 2페이지 펼침) 모드에서는 마지막으로 도달 가능한
