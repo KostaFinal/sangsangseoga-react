@@ -13,6 +13,7 @@ export const initialBooks = [
     magicLevel: 'Lv. 4',
     pages: 100,
     progress: 100,
+    startedDate: "2026.06.18",
     finishedDate: '매일 업데이트됨'
   },
   {
@@ -112,6 +113,7 @@ export const initialBooks = [
     magicLevel: 'Lv. 2',
     pages: 25,
     progress: 100,
+    startedDate: "2026.06.18",
     finishedDate: '2026.06.20'
   },
   {
@@ -127,6 +129,7 @@ export const initialBooks = [
     magicLevel: 'Lv. 2',
     pages: 30,
     progress: 100,
+    startedDate: "2026.06.15",
     finishedDate: '2026.06.18'
   },
   {

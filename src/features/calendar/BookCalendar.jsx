@@ -1,184 +1,403 @@
-import React, { useState } from 'react';
-import { CalendarDays, Star, Award, Heart, ShieldCheck, Clock, X } from 'lucide-react';
-import { calendarDays } from '@/data';
+import React, { useMemo, useState } from 'react';
+import { Plus, Check, Trash2, X, Edit3 } from 'lucide-react';
 
-export default function BookCalendar({ onSelectBook }) {
-  const [selectedDayNum, setSelectedDayNum] = useState(null);
-  const [modalDay, setModalDay] = useState(null);
+export default function BookCalendar({ books = [] }) {
+  const today = new Date();
+  const todayString = today.toISOString().slice(0, 10);
 
-  const daysInMonth = 30; // 5월로 가정한 독서 캘린더 기준
-  const firstDayOffset = 5; // 금요일 시작 가상 세팅
+  const [currentMonth, setCurrentMonth] = useState(today);
+  const [selectedDate, setSelectedDate] = useState(todayString);
+  const [readingPlans, setReadingPlans] = useState([]);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
 
-  const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  const emptyCells = Array.from({ length: firstDayOffset }, (_, i) => i);
+  const [form, setForm] = useState({
+    bookId: '',
+    targetPage: '',
+    memo: ''
+  });
 
-  const monthName = '2026년 6월';
+  const [editingPlanId, setEditingPlanId] = useState(null);
 
-  const handleCellClick = (dayNum) => {
-    setSelectedDayNum(dayNum);
-    const detail = calendarDays[dayNum];
-    if (detail) {
-      setModalDay(detail);
+  const monthLabel = `${currentMonth.getFullYear()}년 ${currentMonth.getMonth() + 1}월`;
+
+  const calendarDays = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+
+    const firstDay = new Date(year, month, 1);
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const startDay = firstDay.getDay();
+
+    const days = [];
+
+    for (let i = 0; i < startDay; i++) {
+      days.push(null);
     }
+
+    for (let day = 1; day <= lastDate; day++) {
+      const date = new Date(year, month, day);
+      days.push(date.toISOString().slice(0, 10));
+    }
+
+    return days;
+  }, [currentMonth]);
+
+  const plansByDate = readingPlans.filter(plan => plan.planDate === selectedDate);
+
+  const moveMonth = (amount) => {
+    setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + amount, 1));
+  };
+
+  const openCreateModal = () => {
+    setForm({
+      bookId: '',
+      targetPage: '',
+      memo: ''
+    });
+    setIsPlanModalOpen(true);
+    setEditingPlanId(null);
+  };
+
+  const createReadingPlan = () => {
+    if (editingPlanId) {
+      const selectedBook = books.find(book => String(book.id) === String(form.bookId));
+
+      setReadingPlans(prev =>
+        prev.map(plan =>
+          plan.id === editingPlanId
+            ? {
+              ...plan,
+              bookId: selectedBook?.id || plan.bookId,
+              bookTitle: selectedBook?.title || plan.bookTitle,
+              coverUrl: selectedBook?.coverUrl || selectedBook?.coverImage || plan.coverUrl,
+              planDate: selectedDate,
+              targetPage: form.targetPage,
+              memo: form.memo
+            }
+            : plan
+        )
+      );
+
+      setEditingPlanId(null);
+      setIsPlanModalOpen(false);
+      return;
+    }
+
+
+    const selectedBook = books.find(book => String(book.id) === String(form.bookId));
+
+    if (!selectedBook) return;
+
+    const newPlan = {
+      id: Date.now(),
+      bookId: selectedBook.id,
+      bookTitle: selectedBook.title,
+      coverUrl: selectedBook.coverUrl || selectedBook.coverImage,
+      planDate: selectedDate,
+      targetPage: form.targetPage,
+      memo: form.memo,
+      isCompleted: false,
+      completedAt: null
+    };
+
+    setReadingPlans(prev => [...prev, newPlan]);
+    setIsPlanModalOpen(false);
+  };
+
+  const openEditModal = (plan) => {
+    setEditingPlanId(plan.id);
+    setSelectedDate(plan.planDate);
+    setForm({
+      bookId: plan.bookId,
+      targetPage: plan.targetPage,
+      memo: plan.memo
+    });
+    setIsPlanModalOpen(true);
+  };
+
+  const completeReadingPlan = (planId) => {
+    setReadingPlans(prev =>
+      prev.map(plan =>
+        plan.id === planId
+          ? { ...plan, isCompleted: true, completedAt: new Date().toISOString() }
+          : plan
+      )
+    );
+  };
+
+  const deleteReadingPlan = (planId) => {
+    setReadingPlans(prev => prev.filter(plan => plan.id !== planId));
   };
 
   return (
-    <div className="w-full flex flex-col pt-1 animate-in fade-in-50 duration-500 select-none text-navy-purple bg-transparent">
-      {/* Description header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+    <div className="space-y-6 bg-transparent text-navy-purple pr-24">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 select-none">
         <div>
-          <h3 className="font-plus text-xl font-black text-navy-purple">
-            {monthName}
-          </h3>
+          <h3 className="font-plus text-xl font-black text-navy-purple">독서 계획표</h3>
+          <p className="text-xs text-purple-gray-text mt-1">
+            날짜별로 읽을 책과 목표 페이지를 계획해보세요.
+          </p>
         </div>
+
+        <button
+          onClick={openCreateModal}
+          className="mr-20 flex items-center gap-1.5 bg-brand-purple hover:bg-brand-dark text-white font-bold text-xs px-4 py-2.5 rounded-full shadow-sm cursor-pointer transition-all"
+        >
+          <Plus className="w-4 h-4" />
+          계획 추가
+        </button>
+        
       </div>
 
-      <div className="w-full">
-        {/* Calendar visual board matrix */}
-        <div className="w-full bg-white rounded-3xl border border-lavender-border shadow-sm p-4 md:p-5">
-          {/* Day of Week headers */}
-          <div className="grid grid-cols-7 gap-1.5 text-center text-[10px] font-bold text-purple-gray-text/60 mb-3 tracking-widest uppercase">
-            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span className="text-brand-purple">금</span><span className="text-brand-purple">토</span>
+      <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-5">
+        <div className="bg-white border border-lavender-border rounded-3xl shadow-sm p-5">
+          <div className="flex justify-between items-center mb-4">
+            <button
+              onClick={() => moveMonth(-1)}
+              className="px-3 py-1.5 rounded-full border border-lavender-border text-xs font-bold text-purple-gray-text hover:bg-lavender-bg"
+            >
+              이전
+            </button>
+
+            <h4 className="font-plus font-black text-lg text-navy-purple">
+              {monthLabel}
+            </h4>
+
+            <button
+              onClick={() => moveMonth(1)}
+              className="px-3 py-1.5 rounded-full border border-lavender-border text-xs font-bold text-purple-gray-text hover:bg-lavender-bg"
+            >
+              다음
+            </button>
           </div>
 
-          {/* Grid rows */}
-          <div className="grid grid-cols-7 gap-2">
-            {/* Pad offset cells */}
-            {emptyCells.map((val) => (
-              <div key={`empty-${val}`} className="aspect-square bg-lavender-bg rounded-lg border border-lavender-border/50" />
+          <div className="grid grid-cols-7 gap-2 text-center text-[10px] font-bold text-purple-gray-text mb-2">
+            {['일', '월', '화', '수', '목', '금', '토'].map(day => (
+              <div key={day}>{day}</div>
             ))}
+          </div>
 
-            {/* Real day cells */}
-            {daysArray.map((day) => {
-              const detail = calendarDays[day];
-              const hasActivity = !!detail;
-              const isSelected = selectedDayNum === day;
+          <div className="grid grid-cols-7 gap-2">
+            {calendarDays.map((date, index) => {
+              if (!date) {
+                return <div key={`empty-${index}`} className="h-14" />;
+              }
+
+              const dayNumber = Number(date.slice(-2));
+              const count = readingPlans.filter(plan => plan.planDate === date).length;
+              const isSelected = selectedDate === date;
 
               return (
-                <div 
-                  key={`day-${day}`}
-                  id={`calendar-day-${day}`}
-                  onClick={() => handleCellClick(day)}
-                  className={`aspect-square rounded-xl relative border transition-all cursor-pointer flex flex-col justify-between overflow-hidden p-1 ${
-                    isSelected
-                      ? 'ring-4 ring-brand-purple ring-offset-2 scale-105 z-30 border-brand-purple bg-white shadow-md'
-                      : hasActivity 
-                        ? 'border-brand-purple bg-white hover:shadow-md hover:scale-105 group' 
-                        : 'border-lavender-border/80 bg-white hover:bg-lavender-bg'
-                  }`}
+                <button
+                  key={date}
+                  onClick={() => setSelectedDate(date)}
+                  className={`h-14 rounded-2xl border text-xs font-bold transition-all ${isSelected
+                    ? 'bg-brand-purple text-white border-brand-purple shadow-sm'
+                    : 'bg-white text-navy-purple border-lavender-border hover:bg-lavender-bg hover:border-brand-purple/50'
+                    }`}
                 >
-                  {/* Miniature Cover Fill if has activity */}
-                  {hasActivity && detail.books && detail.books.length > 0 && (
-                    <div className="absolute inset-0 z-10 opacity-75 group-hover:opacity-100 transition-all flex w-full h-full">
-                      {detail.books.length === 1 ? (
-                        <div className="w-full h-full relative">
-                          <img 
-                            src={detail.books[0].coverUrl} 
-                            alt="Miniature Book" 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        /* Multi-book style: split views horizontally showing halves of both covers */
-                        <div className="w-full h-full relative flex overflow-hidden">
-                          {detail.books.slice(0, 2).map((book, bIdx) => (
-                            <div 
-                              key={bIdx} 
-                              className="h-full relative border-r last:border-0 border-white/40"
-                              style={{ width: `${100 / Math.min(detail.books.length, 2)}%` }}
-                            >
-                              <img 
-                                src={book.coverUrl} 
-                                alt={`Miniature Book ${bIdx}`} 
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          ))}
-                          {/* Crimson dynamic count overlay badge */}
-                          <div className="absolute top-1.5 right-1.5 bg-brand-purple text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-lg border border-lavender-border scale-95 z-30">
-                            {detail.books.length}
-                          </div>
-                        </div>
-                      )}
-                      {/* Contrast Overlay dark gradient */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent pointer-events-none" />
+                  <div>{dayNumber}</div>
+                  {count > 0 && (
+                    <div className={`mt-1 text-[9px] ${isSelected ? 'text-white' : 'text-brand-purple'}`}>
+                      계획 {count}
                     </div>
                   )}
-
-                  {/* Day Number text */}
-                  <span className={`text-xs font-bold font-plus z-20 relative select-none ${
-                    hasActivity 
-                      ? 'text-white drop-shadow-[0_1.5px_3.5px_rgba(0,0,0,0.95)]' 
-                      : 'text-navy-purple'
-                  }`}>
-                    {day}
-                  </span>
-
-                  {/* Stamp badge marker index bottom */}
-                  {hasActivity && (
-                    <span className="self-end z-20 relative text-[9px] font-extrabold select-none text-white drop-shadow-[0_1.2px_3px_rgba(0,0,0,0.95)] max-w-full truncate bg-brand-purple/60 px-1 rounded scale-90">
-                      {detail.books.length > 1 ? `📚 ${detail.books.length}권` : (detail.books[0].status === '완독' ? '🌟 완독' : '📖 읽는중')}
-                    </span>
-                  )}
-                </div>
+                </button>
               );
             })}
           </div>
         </div>
-      </div>
 
-      {/* Modal for Book List (팝업) */}
-      {modalDay && (
-        <div 
-          className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
-          id="dayModal"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setModalDay(null);
-            }
-          }}
-        >
-          <div className="bg-white rounded-[2rem] shadow-2xl max-w-lg w-full p-8 relative animate-in zoom-in-95 duration-300 border border-lavender-border flex flex-col gap-6">
-            <button 
-              className="absolute top-6 right-6 w-9 h-9 rounded-full bg-white hover:bg-lavender-bg flex items-center justify-center text-navy-purple border border-lavender-border transition-all cursor-pointer shadow-sm"
-              onClick={() => setModalDay(null)}
+        <div className="bg-white border border-lavender-border rounded-3xl shadow-sm p-5 min-h-[420px]">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h4 className="font-plus font-bold text-sm text-navy-purple">
+                선택한 날짜의 계획
+              </h4>
+              <p className="text-[10px] text-purple-gray-text mt-1">{selectedDate}</p>
+            </div>
+
+            <button
+              onClick={openCreateModal}
+              className="text-xs font-bold text-brand-purple hover:text-brand-dark"
             >
-              <X className="w-5 h-5" />
+              + 추가
             </button>
-            
-            <h3 className="text-xl md:text-2xl font-black text-navy-purple font-plus pr-10">
-              📅 {modalDay.day}일 독서 기록
-            </h3>
+          </div>
 
-            <div className="space-y-4 max-h-[360px] overflow-y-auto custom-scrollbar pr-1">
-              {modalDay.books.map((b, bIdx) => (
-                <div key={bIdx} className="flex gap-4 p-4 bg-white rounded-2xl items-center border border-lavender-border shadow-sm transition-all hover:scale-[1.01]">
-                  <div 
-                    className="w-16 h-24 bg-cover bg-center rounded-xl flex-shrink-0 shadow-md border border-lavender-border"
-                    style={{ backgroundImage: `url('${b.coverUrl}')` }}
-                  />
-                  <div className="min-w-0 flex-grow">
-                    <h4 className="text-base font-bold text-navy-purple truncate font-plus">{b.title}</h4>
-                    <p className="text-xs font-semibold text-purple-gray-text mt-1 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-brand-purple" /> 독서 시간: <strong className="text-navy-purple">{b.time}</strong>
-                    </p>
-                    
-                    <div className="mt-2.5 flex flex-wrap gap-1.5">
-                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-brand-purple text-white`}>
-                        {b.status}
-                      </span>
+          {plansByDate.length === 0 ? (
+            <div className="h-[300px] flex flex-col items-center justify-center border border-dashed border-lavender-border rounded-2xl text-center">
+              <p className="text-sm font-bold text-navy-purple">
+                아직 등록된 계획이 없어요.
+              </p>
+              <p className="text-[10px] text-purple-gray-text mt-1">
+                계획 추가 버튼으로 오늘 읽을 책을 정해보세요.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {plansByDate.map(plan => (
+                <div
+                  key={plan.id}
+                  className={`border rounded-2xl p-4 transition-all ${plan.isCompleted
+                    ? 'bg-lavender-bg/40 border-lavender-border opacity-75'
+                    : 'bg-white border-lavender-border hover:border-brand-purple/50 hover:shadow-sm'
+                    }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex gap-3">
+                      {plan.coverUrl && (
+                        <img
+                          src={plan.coverUrl}
+                          alt={plan.bookTitle}
+                          className="w-14 h-20 object-cover rounded-xl border border-lavender-border"
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
+
+                      <div className="flex-1">
+                        <h5 className="font-plus font-bold text-sm text-navy-purple">
+                          {plan.bookTitle}
+                        </h5>
+                        <p className="text-[10px] text-purple-gray-text mt-1">
+                          목표 페이지: {plan.targetPage || '-'}p
+                        </p>
+                        <p className="text-[10px] text-purple-gray-text mt-1">
+                          메모: {plan.memo || '없음'}
+                        </p>
+
+                        {plan.isCompleted && (
+                          <p className="text-[10px] text-green-600 font-bold mt-2">
+                            완료됨
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => completeReadingPlan(plan.id)}
+                        disabled={plan.isCompleted}
+                        className="flex items-center gap-1.5 bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 font-bold text-xs px-3 py-2 rounded-xl transition-all"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        완료
+                      </button>
+
+                      <button
+                        onClick={() => openEditModal(plan)}
+                        className="flex items-center gap-1.5 bg-lavender-bg text-brand-purple hover:bg-lavender-card font-bold text-xs px-3 py-2 rounded-xl transition-all"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        수정
+                      </button>
+
+                      <button
+                        onClick={() => deleteReadingPlan(plan.id)}
+                        className="flex items-center gap-1.5 bg-rose-50 text-rose-500 hover:bg-rose-100 font-bold text-xs px-3 py-2 rounded-xl transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        삭제
+                      </button>
                     </div>
                   </div>
+                  {plan.isCompleted ? (
+                    <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-bold">
+                      완료
+                    </span>
+                  ) : (
+                    <span className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 text-[10px] font-bold">
+                      진행중
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
+          )}
+        </div>
+      </div>
 
-            <button 
-              onClick={() => setModalDay(null)}
-              className="w-full py-4 bg-brand-purple hover:bg-brand-dark text-white rounded-full font-bold active:scale-95 transition-all shadow-md text-xs cursor-pointer tracking-wider"
-            >
-              전체 기록 확인 완료
-            </button>
+      {isPlanModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-3xl border border-lavender-border shadow-2xl p-6">
+            <div className="flex justify-between items-center mb-5">
+              <h4 className="font-plus font-black text-lg text-navy-purple">
+                {editingPlanId ? '독서 계획 수정' : '독서 계획 등록'}
+              </h4>
+
+              <button
+                onClick={() => setIsPlanModalOpen(false)}
+                className="w-8 h-8 rounded-full border border-lavender-border flex items-center justify-center text-purple-gray-text hover:bg-lavender-bg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-[10px] font-bold text-purple-gray-text">책 선택</label>
+                <select
+                  value={form.bookId}
+                  onChange={(e) => setForm(prev => ({ ...prev, bookId: e.target.value }))}
+                  className="mt-1 w-full bg-white border border-lavender-border focus:border-brand-purple rounded-xl px-3 py-2 text-xs outline-none text-navy-purple"
+                >
+                  <option value="">책을 선택하세요</option>
+                  {books.map(book => (
+                    <option key={book.id} value={book.id}>
+                      {book.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-purple-gray-text">계획 날짜</label>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="mt-1 w-full bg-white border border-lavender-border focus:border-brand-purple rounded-xl px-3 py-2 text-xs outline-none text-navy-purple"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-purple-gray-text">목표 페이지</label>
+                <input
+                  type="number"
+                  value={form.targetPage}
+                  onChange={(e) => setForm(prev => ({ ...prev, targetPage: e.target.value }))}
+                  placeholder="예: 50"
+                  className="mt-1 w-full bg-white border border-lavender-border focus:border-brand-purple rounded-xl px-3 py-2 text-xs outline-none text-navy-purple"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-purple-gray-text">메모</label>
+                <textarea
+                  value={form.memo}
+                  onChange={(e) => setForm(prev => ({ ...prev, memo: e.target.value }))}
+                  placeholder="오늘 읽을 계획을 적어보세요."
+                  className="mt-1 w-full bg-white border border-lavender-border focus:border-brand-purple rounded-xl px-3 py-2 text-xs outline-none text-navy-purple resize-none h-24"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-5">
+              <button
+                onClick={() => setIsPlanModalOpen(false)}
+                className="px-4 py-2 bg-white text-brand-purple hover:bg-lavender-bg rounded-full text-xs font-bold border border-lavender-border"
+              >
+                취소
+              </button>
+
+              <button
+                onClick={createReadingPlan}
+                disabled={!form.bookId}
+                className="px-5 py-2 bg-brand-purple hover:bg-brand-dark text-white rounded-full text-xs font-bold disabled:opacity-45 transition-all"
+              >
+                {editingPlanId ? '저장' : '등록'}
+              </button>
+            </div>
           </div>
         </div>
       )}

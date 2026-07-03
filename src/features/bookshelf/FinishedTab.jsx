@@ -12,6 +12,18 @@ export default function FinishedTab({ filteredBooks, onOpenViewer, setActiveTab,
     ? finishedBooks
     : finishedBooks.filter(b => b.category === selectedGenre);
 
+  const getReadingPeriod = (startedDate, finishedDate) => {
+    if (!startedDate || !finishedDate) return '-';
+
+    const start = new Date(startedDate.replaceAll('.', '-'));
+    const end = new Date(finishedDate.replaceAll('.', '-'));
+
+    const diffDays =
+      Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    return diffDays > 0 ? `${diffDays}일` : '-';
+  };
+
   return (
     <div className="space-y-4 bg-transparent text-navy-purple">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 select-none">
@@ -26,11 +38,10 @@ export default function FinishedTab({ filteredBooks, onOpenViewer, setActiveTab,
           <button
             key={genre}
             onClick={() => setSelectedGenre(genre)}
-            className={`shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all duration-200 cursor-pointer ${
-              selectedGenre === genre
-                ? "bg-brand-purple text-white border-brand-purple shadow-sm shadow-brand-purple/20"
-                : "bg-white text-purple-gray-text border-lavender-border hover:border-brand-purple/40 hover:text-brand-purple"
-            }`}
+            className={`shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all duration-200 cursor-pointer ${selectedGenre === genre
+              ? "bg-brand-purple text-white border-brand-purple shadow-sm shadow-brand-purple/20"
+              : "bg-white text-purple-gray-text border-lavender-border hover:border-brand-purple/40 hover:text-brand-purple"
+              }`}
           >
             {genre}
           </button>
@@ -48,11 +59,11 @@ export default function FinishedTab({ filteredBooks, onOpenViewer, setActiveTab,
         /* Novel lists grids */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {genreFilteredBooks.map(book => (
-            <div 
-              key={book.id} 
+            <div
+              key={book.id}
               id={`finishedbook-${book.id}`}
               onClick={() => onOpenDetail(book)}
-              className="bg-white rounded-2xl border border-lavender-border shadow-sm p-4 flex flex-col justify-between h-[270px] group hover:shadow-md hover:border-brand-purple/50 transition-all cursor-pointer"
+              className="bg-white rounded-2xl border border-lavender-border shadow-sm p-4 flex flex-col justify-between h-[300px] group hover:shadow-md hover:border-brand-purple/50 transition-all cursor-pointer"
             >
               <div className="flex gap-4">
                 <div className="w-16 h-24 rounded-lg overflow-hidden shrink-0 border border-lavender-border shadow-sm">
@@ -61,8 +72,16 @@ export default function FinishedTab({ filteredBooks, onOpenViewer, setActiveTab,
                 <div className="min-w-0">
                   <span className="text-[9px] font-bold text-navy-purple bg-white border border-lavender-border px-2 py-0.5 rounded-full">{book.category}</span>
                   <h4 className="font-plus font-bold text-sm text-navy-purple mt-1 truncate tracking-tight">{book.title}</h4>
-                  <p className="text-[10px] text-purple-gray-text mt-0.5">완독일: {book.finishedDate || '전일'}</p>
-                  
+                  <p className="text-[10px] text-purple-gray-text mt-0.5">
+                    독서 시작일: {book.startedDate || '-'}
+                  </p>
+                  <p className="text-[10px] text-purple-gray-text mt-0.5">
+                    완독일: {book.finishedDate || '-'}
+                  </p>
+                  <p className="text-[10px] text-brand-purple font-bold mt-0.5">
+                    독서 기간: {getReadingPeriod(book.startedDate, book.finishedDate)}
+                  </p>
+
                   {/* Stats */}
                   <div className="flex gap-3 mt-1.5 text-[10px] text-purple-gray-text">
                     <div className="flex items-center gap-1">
