@@ -63,8 +63,6 @@ export const MainDashboard = ({
   setDailyImageCount,
   isSubscriptionCanceled
 }) => {
-  const [showNotifications, setShowNotifications] = useState(false);
-  
   // Local state for genre filter in "내 서재"
   const [libraryGenreFilter, setLibraryGenreFilter] = useState('전체');
   

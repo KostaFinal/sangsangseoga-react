@@ -11,12 +11,10 @@ import {
   LogOut,
   Edit,
   Sparkles,
-  Info,
-  Bell
+  Info
 } from 'lucide-react';
 import { CURRENT_USER_PROFILE } from '../data';
 import logoUrl from '../../assets/images/sangsangseoga_official_logo_1782313504336.jpg';
-import { NotificationPanel } from './NotificationPanel';
 
 export const NavigationContext = createContext(null);
 
@@ -54,12 +52,6 @@ export const Header = ({
   const [showEditInfoModal, setShowEditInfoModal] = useState(false);
   const [nickname, setNickname] = useState('상상의작가');
   const [showSaveAlert, setShowSaveAlert] = useState(false);
-  const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
-  const [headerNotifications, setHeaderNotifications] = useState([
-    { id: 1, text: '🎉 새 소설 편지가 도착했습니다!', time: '방금 전', read: false },
-    { id: 2, text: '💎 책 만들기 생성권이 충전되었습니다.', time: '2시간 전', read: false },
-    { id: 3, text: '📖 작성하시던 소설책이 임시 저장되었습니다.', time: '1일 전', read: true }
-  ]);
 
   // Sync state nickname with logged-in user profile
   useEffect(() => {
@@ -294,40 +286,6 @@ export const Header = ({
 
               {/* 3. Auth states: [Login/Join] vs [Profile Avatar + Menu] */}
               <div className="flex items-center space-x-4">
-                
-                {isLoggedIn && (
-                  <div className="relative">
-                    <button 
-                      onClick={() => setShowNotificationsDropdown(!showNotificationsDropdown)}
-                      className="p-1.5 text-neutral-500 hover:text-[#6B54E7] hover:bg-[#F3F0FF] rounded-full transition-colors cursor-pointer relative flex items-center justify-center"
-                      title="알림 확인"
-                    >
-                      <Bell className="w-4 h-4" />
-                      {headerNotifications.some(n => !n.read) && (
-                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 ring-1 ring-white animate-pulse"></span>
-                      )}
-                    </button>
-                    
-                    <NotificationPanel
-                      isOpen={showNotificationsDropdown}
-                      onClose={() => setShowNotificationsDropdown(false)}
-                      notifications={headerNotifications}
-                      onMarkAsRead={(id) => {
-                        setHeaderNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-                      }}
-                      onMarkAllAsRead={() => {
-                        setHeaderNotifications(prev => prev.map(n => ({ ...n, read: true })));
-                      }}
-                      onClearAll={() => {
-                        setHeaderNotifications([]);
-                      }}
-                      onViewAll={() => {
-                        onNavigate('notifications');
-                        setShowNotificationsDropdown(false);
-                      }}
-                    />
-                  </div>
-                )}
 
                 {!isLoggedIn ? (
                   // 3-A. Logged-out state: [로그인 / 회원가입]

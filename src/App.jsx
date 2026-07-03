@@ -17,7 +17,6 @@ import { SubscriptionView } from './features/subscription/components/Subscriptio
 import { AdminView } from './features/admin/components/AdminView';
 import { ProfileEditView } from './features/profile/components/ProfileEditView';
 import { PasswordResetView } from './features/auth/components/PasswordResetView';
-import { NotificationsView } from './features/dashboard/components/NotificationsView';
 import { BookCreationRouter } from './features/bookCreation';
 
 import { SocialAuthGateway } from './features/auth/components/SocialAuthGateway';
@@ -45,10 +44,6 @@ export default function App() {
   const [isPremium, setIsPremium] = useState(false);
   const [showDevSwitcher, setShowDevSwitcher] = useState(true);
   const [selectedSocialProvider, setSelectedSocialProvider] = useState('google');
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: '신규 도서가 등록되었습니다.', time: '10분 전', read: false },
-    { id: 2, text: '회원님의 도서가 신고되었습니다.', time: '1시간 전', read: false }
-  ]);
   const [currentUser, setCurrentUser] = useState({
     email: 'writer@sangsang.com',
     role: 'USER',
@@ -515,15 +510,6 @@ export default function App() {
           <AdminView
             onNavigateHome={() => setCurrentScreen('home')}
           />
-        );
-      case 'notifications':
-        return (
-          <div className="max-w-4xl mx-auto py-12">
-            <NotificationsView
-              notifications={notifications}
-              onMarkAllAsRead={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))}
-            />
-          </div>
         );
       case 'profile-edit':
         return (

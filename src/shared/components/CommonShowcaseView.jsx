@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
 import { ConfirmModal } from './ConfirmModal';
 import { Toast } from './Toast';
-import { NotificationPanel } from './NotificationPanel';
 import { SkeletonLoading } from './SkeletonLoading';
 import { NetworkError } from './NetworkError';
 import { ErrorPage404 } from './ErrorPage404';
 import { ErrorPage500 } from './ErrorPage500';
-import { 
-  Bell, 
-  Layers, 
-  AlertTriangle, 
-  CheckCircle, 
-  Info, 
+import {
+  Layers,
+  AlertTriangle,
+  CheckCircle,
+  Info,
   FileQuestion,
   ServerCrash,
   Play
@@ -27,14 +25,6 @@ export const CommonShowcaseView = ({ onNavigate }) => {
   // Toast States
   const [activeToast, setActiveToast] = useState(null); // { message, type }
 
-  // Notification States
-  const [isNotifOpen, setIsNotifOpen] = useState(true);
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: '🎉 새 소설 편지가 도착했습니다!', time: '방금 전', read: false },
-    { id: 2, text: '💎 책 만들기 생성권이 충전되었습니다.', time: '2시간 전', read: false },
-    { id: 3, text: '📖 작성하시던 소설책이 임시 저장되었습니다.', time: '1일 전', read: true }
-  ]);
-
   // Skeleton States
   const [skeletonType, setSkeletonType] = useState('card');
   const [skeletonCount, setSkeletonCount] = useState(4);
@@ -48,21 +38,6 @@ export const CommonShowcaseView = ({ onNavigate }) => {
 
   const handleConfirmAction = () => {
     showToast(`"${confirmTitle}" 처리가 정상적으로 완료되었습니다.`, 'success');
-  };
-
-  const handleNotificationRead = (id) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    showToast('알림을 확인했습니다.', 'info');
-  };
-
-  const handleMarkAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    showToast('모든 알림을 읽음 처리했습니다.', 'success');
-  };
-
-  const handleClearNotifications = () => {
-    setNotifications([]);
-    showToast('모든 알림 내역을 삭제했습니다.', 'warning');
   };
 
   const handleNetworkRetry = () => {
@@ -236,63 +211,14 @@ export const CommonShowcaseView = ({ onNavigate }) => {
 
         </div>
 
-        {/* Right column - Notification Dropdown Preview & Full Screen Pages */}
+        {/* Right column - Full Screen Pages */}
         <div className="space-y-8">
-          
-          {/* 5. Notification Panel Area */}
-          <div className="bg-[#FAF9FF] rounded-3xl p-6 border border-[#E6E2FC] shadow-inner space-y-4 relative overflow-visible">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
-                <h2 className="text-base font-extrabold text-[#2F2D59]">5. 알림 패널 (Dropdown)</h2>
-              </div>
-              <button
-                onClick={() => setIsNotifOpen(!isNotifOpen)}
-                className="px-2.5 py-1 bg-white hover:bg-[#F3F0FF] border border-[#E6E2FC] text-[#6B54E7] text-[10px] font-bold rounded-lg cursor-pointer"
-              >
-                {isNotifOpen ? '숨기기' : '다시보기'}
-              </button>
-            </div>
-            <p className="text-xs text-[#7C769D]">
-              헤더의 알림 아이콘(종)을 누를 때 하단에 펼쳐지는 알림 목록창의 가상 데모입니다.
-            </p>
-
-            <div className="relative min-h-[340px] border border-neutral-150 rounded-2xl bg-white p-4 overflow-hidden flex flex-col justify-between">
-              <div className="flex justify-between items-center text-xs pb-2 border-b border-neutral-100">
-                <span className="font-bold text-[#2F2D59] flex items-center gap-1.5">
-                  <Bell className="w-3.5 h-3.5 text-[#6B54E7]" />
-                  알림 목록
-                </span>
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-              </div>
-              
-              <div className="flex-1 py-8 flex items-center justify-center">
-                {isNotifOpen ? (
-                  <div className="w-full relative">
-                    <NotificationPanel
-                      isOpen={true}
-                      onClose={() => setIsNotifOpen(false)}
-                      notifications={notifications}
-                      onMarkAsRead={handleNotificationRead}
-                      onMarkAllAsRead={handleMarkAllRead}
-                      onClearAll={handleClearNotifications}
-                      onViewAll={() => onNavigate('notifications')}
-                    />
-                  </div>
-                ) : (
-                  <div className="text-center text-[11px] text-[#7C769D] py-12">
-                    우측 상단의 [다시보기] 버튼을 클릭하면 테스트용 가상 알림 내역이 표시됩니다.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
 
           {/* 6. Static Error Pages Navigation */}
           <div className="bg-white rounded-3xl p-6 border border-[#E6E2FC]/60 shadow-xs space-y-4">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-orange-400"></span>
-              <h2 className="text-base font-extrabold text-[#2F2D59]">6. 전체 화면 에러 페이지</h2>
+              <h2 className="text-base font-extrabold text-[#2F2D59]">5. 전체 화면 에러 페이지</h2>
             </div>
             <p className="text-xs text-[#7C769D]">
               주소 오류나 시스템 에러 시 사용자에게 노출되는 안내 화면입니다.

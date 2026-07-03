@@ -42,8 +42,6 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [showPwText, setShowPwText] = useState(false);
 
-  // Notifications Toggles (Removed as per requirements)
-
   // Minor Under 14 specific Parent Email
   const [isMinor, setIsMinor] = useState(currentUser?.ageGroup === 'MINOR_U14' || currentUser?.birthdate === '2015-05-15' || true); // Default true for simulation
   const [guardianEmail, setGuardianEmail] = useState(currentUser?.guardianEmail || 'parent@guardian.com');
