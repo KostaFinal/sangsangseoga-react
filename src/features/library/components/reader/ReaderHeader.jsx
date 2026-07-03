@@ -1,4 +1,4 @@
-import { ChevronLeft, Languages, Type, Bookmark, StickyNote } from "lucide-react";
+import { ChevronLeft, Languages, Bookmark, StickyNote } from "lucide-react";
 
 export default function ReaderHeader({
   book,
@@ -13,6 +13,9 @@ export default function ReaderHeader({
   setFontSize,
   isMemoOpen,
   setIsMemoOpen,
+  isPageBookmarked,
+  viewType,
+  setViewType,
 }) {
   return (
     <header className="w-full bg-white border-b border-black/5 px-4 md:px-8 h-16 flex items-center justify-between sticky top-0 z-40 shadow-sm">
@@ -30,6 +33,16 @@ export default function ReaderHeader({
       </div>
 
       <div className="flex items-center gap-3 md:gap-5">
+
+        {/* 페이지 전환 방식 토글 - 영문 버튼 왼쪽 */}
+        <button
+          onClick={() => setViewType(viewType === "FLIP" ? "FADE" : "FLIP")}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-sans font-medium border transition-all cursor-pointer bg-white hover:bg-black/5 border-black/10 text-black/60"
+          title="페이지 전환 방식 변경"
+        >
+          {viewType === "FLIP" ? "두 페이지" : "한 페이지"}
+        </button>
+
         <button
           onClick={() => setIsEnglish(!isEnglish)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-sans font-medium border transition-all cursor-pointer ${
@@ -39,21 +52,6 @@ export default function ReaderHeader({
         >
           <Languages className="w-4 h-4" />
           <span className="text-xs">{isEnglish ? "국문" : "영문"}</span>
-        </button>
-
-        <button
-          onClick={() => {
-            if (fontFamily === "serif") setFontFamily("sans");
-            else if (fontFamily === "sans") setFontFamily("mono");
-            else setFontFamily("serif");
-          }}
-          className="p-2 hover:bg-black/5 rounded-lg border border-black/10 text-black/60 hover:text-black flex items-center gap-1 transition cursor-pointer"
-          title="서체 전환 (바탕체 / 고딕체 / 코딩체)"
-        >
-          <Type className="w-4 h-4" />
-          <span className="text-[10px] font-bold font-sans">
-            {fontFamily === "serif" ? "바탕체" : fontFamily === "sans" ? "고딕체" : "코딩체"}
-          </span>
         </button>
 
         <button
@@ -71,11 +69,11 @@ export default function ReaderHeader({
         <button
           onClick={onToggleBookmark}
           className={`p-2 rounded-lg border transition-all cursor-pointer ${
-            book.isBookmarked ? "bg-amber-100 border-amber-300 text-amber-600" : "border-black/10 hover:bg-black/5 text-black/60"
+            isPageBookmarked ? "bg-amber-100 border-amber-300 text-amber-600" : "border-black/10 hover:bg-black/5 text-black/60"
           }`}
-          title="내 서재 북마크 보관"
+          title="이 페이지 북마크"
         >
-          <Bookmark className={`w-4 h-4 ${book.isBookmarked ? "fill-amber-500" : ""}`} />
+          <Bookmark className={`w-4 h-4 ${isPageBookmarked ? "fill-amber-500" : ""}`} />
         </button>
 
         <button

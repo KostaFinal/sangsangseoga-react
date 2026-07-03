@@ -9,13 +9,12 @@ import EssayReaderView from "./reader/EssayReaderView";
 import FairytaleReaderView from "./reader/FairytaleReaderView";
 import KnowledgeReaderView from "./reader/KnowledgeReaderView";
 
-// 동화/시/소설/에세이/지식정보 — 5개 장르가 각자의 전용 뷰어를 씀.
 function getReaderMode(genre) {
   if (genre === "동화") return "fairytale";
   if (genre === "시") return "poetry";
   if (genre === "에세이") return "essay";
   if (genre === "지식정보") return "knowledge";
-  return "novel"; // 소설
+  return "novel";
 }
 
 const READER_COMPONENTS = {
@@ -32,10 +31,19 @@ export default function BookReaderView({ book, books = [], onBack, onToggleBookm
   const [isEnglish, setIsEnglish] = useState(false);
   const [fontSize, setFontSize] = useState("base");
   const [fontFamily, setFontFamily] = useState("serif");
-  const [isMemoOpen, setIsMemoOpen] = useState(true);
+  const [isMemoOpen, setIsMemoOpen] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showLastPageAlert, setShowLastPageAlert] = useState(false);
   const [currentPageKey, setCurrentPageKey] = useState(0);
+  const [bookmarkedPages, setBookmarkedPages] = useState({});
+  const [viewType, setViewType] = useState("FLIP");
+
+  const handleTogglePageBookmark = () => {
+    setBookmarkedPages(prev => ({
+      ...prev,
+      [currentPageKey]: !prev[currentPageKey],
+    }));
+  };
 
   const [memos, setMemos] = useState({});
 
@@ -75,7 +83,7 @@ export default function BookReaderView({ book, books = [], onBack, onToggleBookm
         book={book}
         readerMode={readerMode}
         onBack={onBack}
-        onToggleBookmark={onToggleBookmark}
+        onToggleBookmark={handleTogglePageBookmark}
         isEnglish={isEnglish}
         setIsEnglish={setIsEnglish}
         fontFamily={fontFamily}
@@ -84,6 +92,9 @@ export default function BookReaderView({ book, books = [], onBack, onToggleBookm
         setFontSize={setFontSize}
         isMemoOpen={isMemoOpen}
         setIsMemoOpen={setIsMemoOpen}
+        isPageBookmarked={!!bookmarkedPages[currentPageKey]}
+        viewType={viewType}
+        setViewType={setViewType}
       />
 
       <main className="flex-1 flex flex-col items-center justify-center py-6 md:py-12 px-4 md:px-12 relative max-w-7xl mx-auto w-full gap-6">
@@ -98,7 +109,40 @@ export default function BookReaderView({ book, books = [], onBack, onToggleBookm
             onPageChange={setCurrentPageKey}
             editable={editable}
             onLayoutChange={onLayoutChange}
+            viewType={viewType}
           />
+
+          {bookmarkedPages[currentPageKey] && (
+            <div
+              onClick={handleTogglePageBookmark}
+              title="북마크 제거"
+              style={{
+                position: 'absolute',
+                top: '20px',
+                left: viewType === "FADE" ? 'calc(50% + 280px)' : 'calc(50% + 520px)',
+                transform: 'translateX(-100%)',
+                cursor: 'pointer',
+                zIndex: 30,
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+              }}
+            >
+              <div style={{
+                width: '60px',
+                height: '30px',
+                backgroundColor: '#1e3a8a',
+                boxShadow: '0 2px 8px rgba(30,58,138,0.4)',
+              }} />
+              <div style={{
+                width: 0,
+                height: 0,
+                borderTop: '15px solid #1e3a8a',
+                borderBottom: '15px solid #1e3a8a',
+                borderRight: '8px solid transparent',
+              }} />
+            </div>
+          )}
 
           <MemoStickyNote isOpen={isMemoOpen} bookId={book.id} pageKey={currentPageKey} memos={memos} setMemos={setMemos} />
         </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { StickyNote, Trash2, Check } from "lucide-react";
+import { getMemo, addMemo, updateMemo, deleteMemo } from "@/src/api/memoApi";
 
 function loadPos(bookId) {
   try {
@@ -20,25 +21,53 @@ export default function MemoStickyNote({ isOpen, bookId, pageKey, memos, setMemo
     setPos(loadPos(bookId));
   }, [bookId]);
 
+  // 페이지 변경 시 API로 메모 조회
   useEffect(() => {
-    setMemoInput(memos[pageKey] || "");
+    if (!bookId || pageKey === undefined || pageKey === null) return;
+    getMemo(bookId, pageKey)
+      .then(res => {
+        const data = res.data?.data;
+        if (data?.content) {
+          setMemos(prev => ({ ...prev, [pageKey]: data.content }));
+          setMemoInput(data.content);
+        } else {
+          setMemoInput(memos[pageKey] || "");
+        }
+      })
+      .catch(() => {
+        setMemoInput(memos[pageKey] || "");
+      });
     setIsEditing(false);
-  }, [pageKey, memos]);
+  }, [pageKey, bookId]);
 
-  const handleSave = () => {
-    const updated = { ...memos, [pageKey]: memoInput };
-    setMemos(updated);
-    localStorage.setItem(`sangsang_memos_${bookId}`, JSON.stringify(updated));
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      const existing = memos[pageKey];
+      if (existing) {
+        await updateMemo(bookId, pageKey, memoInput);
+      } else {
+        await addMemo(bookId, pageKey, memoInput);
+      }
+      setMemos(prev => ({ ...prev, [pageKey]: memoInput }));
+      setIsEditing(false);
+    } catch (err) {
+      console.error("메모 저장 실패", err);
+    }
   };
 
-  const handleDelete = () => {
-    const updated = { ...memos };
-    delete updated[pageKey];
-    setMemos(updated);
-    localStorage.setItem(`sangsang_memos_${bookId}`, JSON.stringify(updated));
-    setMemoInput("");
-    setIsEditing(false);
+  const handleDelete = async () => {
+    try {
+      await deleteMemo(bookId, pageKey);
+      setMemos(prev => {
+        const updated = { ...prev };
+        delete updated[pageKey];
+        return updated;
+      });
+      setMemoInput("");
+      setIsEditing(false);
+    } catch (err) {
+      console.error("메모 삭제 실패", err);
+    }
   };
 
   // 메모지 드래그 이동 (탭 부분을 손잡이로 사용)

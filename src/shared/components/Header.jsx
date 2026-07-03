@@ -50,6 +50,7 @@ export const Header = ({
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showSangsangMenu, setShowSangsangMenu] = useState(false);
+  const [showFriendsMenu, setShowFriendsMenu] = useState(false);
   const [showEditInfoModal, setShowEditInfoModal] = useState(false);
   const [nickname, setNickname] = useState('상상의작가');
   const [showSaveAlert, setShowSaveAlert] = useState(false);
@@ -142,33 +143,47 @@ export const Header = ({
                 내 서재
               </button>
 
-              {/* 친구의 서재 link */}
-              <button 
-                onClick={() => {
-                  if (isLoggedIn) {
-                    onNavigate('friends-library');
-                  } else {
-                    onNavigate('login');
-                  }
-                }}
-                className={`transition-colors py-1 cursor-pointer hover:text-black ${currentScreen === 'friends-library' ? 'text-black border-b border-black' : ''}`}
-              >
-                친구의 서재
-              </button>
+              {/* 친구의 서재 Dropdown Menu */}
+              <div className="relative inline-block text-left">
+                <button 
+                  onClick={() => {
+                    if (isLoggedIn) {
+                      setShowFriendsMenu(!showFriendsMenu);
+                    } else {
+                      onNavigate('login');
+                    }
+                  }}
+                  className={`transition-colors py-1 cursor-pointer hover:text-black flex items-center gap-1 ${['friends-library', 'author-search'].includes(currentScreen) ? 'text-black border-b border-black' : ''}`}
+                >
+                  <span>친구의 서재</span>
+                  <ChevronDown className="w-3 h-3 text-neutral-400 shrink-0" />
+                </button>
 
-              {/* 작가 검색 link */}
-              <button 
-                onClick={() => {
-                  if (isLoggedIn) {
-                    onNavigate('author-search');
-                  } else {
-                    onNavigate('login');
-                  }
-                }}
-                className={`transition-colors py-1 cursor-pointer hover:text-black ${currentScreen === 'author-search' ? 'text-black border-b border-black' : ''}`}
-              >
-                작가 검색
-              </button>
+                {showFriendsMenu && (
+                  <div className="absolute left-0 top-full pt-2 w-32 z-50">
+                    <div className="bg-white rounded-2xl shadow-xl border border-neutral-200 py-1.5 animate-in fade-in slide-in-from-top-2 duration-150">
+                      <button
+                        onClick={() => {
+                          onNavigate('friends-library');
+                          setShowFriendsMenu(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[#F3F0FF] hover:text-[#6B54E7] flex items-center transition-colors font-bold ${currentScreen === 'friends-library' ? 'text-[#6B54E7] bg-[#F3F0FF]/50' : 'text-neutral-700'}`}
+                      >
+                        도서 검색
+                      </button>
+                      <button
+                        onClick={() => {
+                          onNavigate('author-search');
+                          setShowFriendsMenu(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[#F3F0FF] hover:text-[#6B54E7] flex items-center transition-colors font-bold ${currentScreen === 'author-search' ? 'text-[#6B54E7] bg-[#F3F0FF]/50' : 'text-neutral-700'}`}
+                      >
+                        작가 검색
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* 상상더하기 Dropdown Menu */}
               <div 
