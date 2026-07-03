@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Heart, MessageSquare, Flag } from "lucide-react";
+import { ArrowRight, Heart, MessageSquare, Flag, ArrowLeft } from "lucide-react";
 import ReportModal from "@/src/shared/components/ReportModal";
 import { submitReport, isReported } from "@/src/shared/utils/reports";
 
@@ -15,6 +15,7 @@ const genreBadge = (genre) => {
   return map[genre] || { cls: "bg-[#e6e2fc] text-[#6b54e7] border-[#d4cdf2]", label: genre };
 };
 
+// 다른 파일에서 참조하므로 반드시 export 유지해야 함
 export const authorsRegistry = {
   "이서윤": {
     name: "이서윤",
@@ -129,148 +130,144 @@ export default function AuthorProfileView({
   };
 
   const realAuthorBooks = allBooks.filter(b => b.author.trim() === authorName.trim());
-
-  const handleFollowToggle = () => setIsFollowing(!isFollowing);
   const displayFollowers = isFollowing ? authorProfile.followers + 1 : authorProfile.followers;
 
-  return <div className="w-full max-w-4xl mx-auto px-4 md:px-0 py-8 animate-fadeIn">
+  return (
+    <div className="w-full max-w-4xl mx-auto px-4 md:px-0 py-8 animate-fadeIn font-gowun">
+      
+      {/* 1. 상단 내비게이션 (요청하신 프로필 왼쪽 위 배치) */}
+      <div className="flex items-center gap-4 mb-6">
+        <button onClick={onBackToLibrary} className="inline-flex items-center gap-1.5 text-sm text-[#4d4671] hover:text-[#6b54e7] font-bold transition">
+          <ArrowLeft className="w-4 h-4" /> 전체 서재로 돌아가기
+        </button>
+      </div>
 
-    {/* 1. 프로필 헤더 */}
-    <div className="flex flex-col bg-white rounded-2xl p-7 md:p-10 border border-[#e6e2fc] shadow-sm mb-8 text-left gap-7">
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
-        <div className="relative shrink-0">
-          <div className="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden p-1 border-2 border-[#e6e2fc] shadow-md">
-            <img src={authorProfile.avatar} alt={authorProfile.name} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
+      {/* 2. 프로필 헤더 */}
+      <div className="flex flex-col bg-white rounded-2xl p-7 md:p-10 border border-[#e3def7] shadow-[0_4px_20px_-4px_rgba(107,84,231,0.06)] mb-8 text-left gap-7">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
+          <div className="relative shrink-0">
+            <div className="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden p-1 border-2 border-[#e6e2fc] shadow-md">
+              <img src={authorProfile.avatar} alt={authorProfile.name} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
+            </div>
+            <div className="absolute right-1 bottom-1 w-6 h-6 bg-[#6b54e7] border-2 border-white rounded-full flex items-center justify-center shadow-xs">
+              <span className="text-[10px] text-white">✓</span>
+            </div>
           </div>
-          <div className="absolute right-1 bottom-1 w-6 h-6 bg-[#6b54e7] border-2 border-white rounded-full flex items-center justify-center shadow-xs">
-            <span className="text-[10px] text-white">✓</span>
+
+          <div className="space-y-4 text-center sm:text-left flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-center sm:justify-start">
+              <h2 className="text-3xl md:text-4xl font-bold text-[#110f24] tracking-tight">
+                {authorProfile.name}
+              </h2>
+              {mode !== "owner" && (
+                <div className="flex gap-2 justify-center sm:justify-start">
+                  <button onClick={() => setIsFollowing(!isFollowing)} className={`px-5 py-1.5 rounded-full text-xs font-bold transition duration-300 shadow-xs cursor-pointer ${isFollowing ? "bg-gray-200 text-[#4d4671]" : `${authorProfile.themeColor} text-white`}`}>
+                    {isFollowing ? "팔로잉" : "팔로우"}
+                  </button>
+                  <button
+                    onClick={() => !hasReported && setIsReportOpen(true)}
+                    disabled={hasReported}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 text-[#69619a] hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition disabled:opacity-50"
+                  >
+                    <Flag className="w-3 h-3" />
+                    {hasReported ? "신고됨" : "신고"}
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            {/* 통계 정보 - 가독성을 위해 더 진하게 변경 */}
+            <div className="flex items-center gap-8 justify-center sm:justify-start">
+              <div className="text-center">
+                <p className="text-[11px] font-bold text-[#69619a] uppercase tracking-wide">팔로워</p>
+                <p className="text-lg font-bold text-[#110f24] mt-0.5">{displayFollowers.toLocaleString()}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[11px] font-bold text-[#69619a] uppercase tracking-wide">작품 수</p>
+                <p className="text-lg font-bold text-[#110f24] mt-0.5">{authorProfile.publishedWorksCount}</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="space-y-4 text-center sm:text-left flex-1">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-center sm:justify-start">
-            <h2 className="font-serif text-3xl md:text-4xl font-bold text-[#2f2d59] tracking-tight">
-              {authorProfile.name}
-            </h2>
-            {mode !== "owner" && (
-              <>
-                <button onClick={handleFollowToggle} className={`px-5 py-1.5 rounded-full text-xs font-sans font-bold transition duration-300 shadow-xs cursor-pointer ${isFollowing ? "bg-gray-150 text-[#7c769d] border border-gray-250 hover:bg-gray-200" : `${authorProfile.themeColor} text-white`}`}>
-                  {isFollowing ? "팔로잉" : "팔로우"}
-                </button>
-                <button
-                  onClick={() => !hasReported && setIsReportOpen(true)}
-                  disabled={hasReported}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-sans font-medium border border-gray-200 text-[#b9b0dc] hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-[#b9b0dc] disabled:cursor-default"
-                >
-                  <Flag className="w-3 h-3" />
-                  {hasReported ? "신고됨" : "신고"}
-                </button>
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-8 justify-center sm:justify-start">
-            <div className="text-center">
-              <p className="text-[10px] font-mono tracking-wider text-[#b9b0dc] font-bold uppercase">팔로워</p>
-              <p className="font-serif text-lg font-bold text-gray-900 mt-0.5">{displayFollowers.toLocaleString()}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] font-mono tracking-wider text-[#b9b0dc] font-bold uppercase">작품 수</p>
-              <p className="font-serif text-lg font-bold text-gray-900 mt-0.5">{authorProfile.publishedWorksCount}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="w-full border-l-[3px] border-[#6b54e7]/40 pl-6 py-2 select-text bg-[#f3f0ff]/40 rounded-r-2xl pr-4">
-        <p className="font-serif text-[15px] md:text-[16px] italic leading-relaxed text-[#7c769d] font-medium whitespace-pre-line">
-          &ldquo;{authorProfile.bio}&rdquo;
-        </p>
-      </div>
-    </div>
-
-    {/* 2. 작가의 작품 - 이미지 그리드 */}
-    <div className="space-y-6 text-left">
-      <div className="flex justify-between items-end">
-        <div>
-          <h3 className="font-serif text-[22px] md:text-2xl font-bold text-[#1a1c1d]">작가의 작품</h3>
-          <p className="text-xs text-[#b9b0dc] font-sans tracking-wide mt-1">
-            {authorProfile.name} 작가의 따스한 문학적 여정을 함께 거닐어 보세요.
+        {/* 작가 소개글 - 텍스트색 더 진하고 선명하게 변경 */}
+        <div className="w-full border-l-[3px] border-[#6b54e7] pl-6 py-2 bg-[#f6f5ff] rounded-r-2xl pr-4">
+          <p className="text-[16px] leading-relaxed text-[#2f2852] font-semibold whitespace-pre-line">
+            &ldquo;{authorProfile.bio}&rdquo;
           </p>
         </div>
-        <div className="flex items-center gap-4">
+      </div>
+
+      {/* 3. 작가의 작품 영역 */}
+      <div className="space-y-6 text-left">
+        <div className="flex justify-between items-end">
+          <div>
+            <h3 className="text-[22px] font-bold text-[#110f24]">작가의 작품</h3>
+            <p className="text-xs text-[#5c538c] font-bold tracking-wide mt-1">
+              {authorProfile.name} 작가의 따스한 문학적 여정을 함께 거닐어 보세요.
+            </p>
+          </div>
           {onBackToDirectory && (
-            <button onClick={onBackToDirectory} className="inline-flex items-center gap-1.5 text-sm text-[#7c769d] hover:text-[#6b54e7] font-medium transition duration-200">
+            <button onClick={onBackToDirectory} className="text-sm text-[#69619a] hover:text-[#6b54e7] font-bold transition">
               작가 목록
             </button>
           )}
-          <button onClick={onBackToLibrary} className="inline-flex items-center gap-1.5 text-sm text-[#7c769d] hover:text-[#6b54e7] font-medium transition duration-200">
-            전체 서재 <ArrowRight className="w-3.5 h-3.5" />
-          </button>
         </div>
+
+        {realAuthorBooks.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center bg-[#faf9ff] rounded-2xl border border-[#e3def7]">
+            <p className="text-[#69619a] text-sm font-bold">아직 등록된 작품이 없습니다</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+            {realAuthorBooks.map((book) => {
+              const badge = genreBadge(book.genre);
+              return (
+                <div key={book.id} onClick={() => onSelectBook(book)} className="group cursor-pointer">
+                  {/* 도서 표지 */}
+                  <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-[#e3def7] group-hover:shadow-md transition-all duration-300 group-hover:-translate-y-1 bg-[#f8f7ff]">
+                    <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src={book.coverImage} alt={book.title} referrerPolicy="no-referrer" />
+                    
+                    {/* 장르 뱃지 */}
+                    <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold border backdrop-blur-sm ${badge.cls}`}>
+                      {badge.label}
+                    </div>
+
+                    {/* 소셜 정보 */}
+                    <div className="absolute bottom-2 left-0 right-0 px-2 flex items-center gap-2 text-white font-bold bg-black/20 py-1 text-[10px] backdrop-blur-[1px]">
+                      <span className="flex items-center gap-0.5 ml-1">
+                        <Heart className="w-2.5 h-2.5 fill-white/80" />
+                        {book.likes >= 1000 ? `${(book.likes / 1000).toFixed(1)}k` : book.likes}
+                      </span>
+                      <span className="flex items-center gap-0.5">
+                        <MessageSquare className="w-2.5 h-2.5 fill-white/80" />
+                        {book.commentsCount}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 제목 정보 - 더 또렷하고 선명한 검은색 적용 */}
+                  <div className="mt-2.5 px-0.5">
+                    <p className="text-[14px] font-bold text-[#110f24] leading-tight line-clamp-1 group-hover:text-[#6b54e7] transition-colors">
+                      {book.title}
+                    </p>
+                    <p className="text-[11px] text-[#69619a] font-bold mt-0.5 group-hover:text-[#6b54e7] transition-colors">
+                      읽으러 가기 →
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {realAuthorBooks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center bg-[#faf9ff] rounded-2xl border border-[#e6e2fc]">
-          <p className="text-[#7c769d] text-sm font-medium">아직 등록된 작품이 없습니다</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-5">
-          {realAuthorBooks.map((book) => {
-            const badge = genreBadge(book.genre);
-            return (
-              <div
-                key={book.id}
-                onClick={() => onSelectBook(book)}
-                className="group cursor-pointer"
-              >
-                {/* 표지 */}
-                <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-[#f0eeff] group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-[#f8f7ff]">
-                  <img
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    src={book.coverImage}
-                    alt={book.title}
-                    referrerPolicy="no-referrer"
-                  />
-
-                  {/* 장르 뱃지 */}
-                  <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold border backdrop-blur-sm ${badge.cls}`}>
-                    {badge.label}
-                  </div>
-
-                  {/* 좋아요/댓글 */}
-                  <div className="absolute bottom-2 left-0 right-0 px-2 flex items-center gap-2 text-white/80 text-[10px]">
-                    <span className="flex items-center gap-0.5">
-                      <Heart className="w-2.5 h-2.5" />
-                      {book.likes >= 1000 ? `${(book.likes / 1000).toFixed(1)}k` : book.likes}
-                    </span>
-                    <span className="flex items-center gap-0.5">
-                      <MessageSquare className="w-2.5 h-2.5" />
-                      {book.commentsCount}
-                    </span>
-                  </div>
-                </div>
-
-                {/* 제목 + 읽으러가기 */}
-                <div className="mt-2.5 px-0.5">
-                  <p className="text-[13px] font-semibold text-[#2f2d59] leading-tight line-clamp-1 group-hover:text-[#6b54e7] transition-colors">
-                    {book.title}
-                  </p>
-                  <p className="text-[10px] text-[#b9b0dc] mt-0.5 group-hover:text-[#7c769d] transition-colors">
-                    읽으러 가기 →
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <ReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        targetLabel={`작가 '${authorProfile.name}'`}
+        onSubmit={handleSubmitReport}
+      />
     </div>
-
-    <ReportModal
-      isOpen={isReportOpen}
-      onClose={() => setIsReportOpen(false)}
-      targetLabel={`작가 '${authorProfile.name}'`}
-      onSubmit={handleSubmitReport}
-    />
-  </div>;
+  );
 }

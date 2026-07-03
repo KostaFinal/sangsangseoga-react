@@ -1,12 +1,15 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { normalizeSetting } from "../../services/aiGenerateService";
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import {
   EMPTY_SETTINGS,
   REQUIRED_FIELDS,
   STEPS,
   SUMMARY_ITEMS,
 } from "../data/fairyTaleFreeSettingOptions";
+import { normalizeFairyTaleDraftState } from "../utils/normalizeFairyTaleDraftState";
 
 export function useFairyTaleFreeSetting() {
   const navigate = useNavigate();
@@ -140,20 +143,24 @@ export function useFairyTaleFreeSetting() {
   const handleStartStudio = () => {
     if (!isRequiredComplete) return;
 
-    const finalData = {
-      ...setupData,
-      bookType: "FAIRY_TALE",
-      creationMode: "FREE",
-      interactionMode: "FREE",
-      fairyTaleSetting: {
+    const finalData = normalizeFairyTaleDraftState(
+      {
+        ...setupData,
         ...settings,
-        pageCount: Number(settings.pageCount),
       },
-    };
+      {
+        creationMode: "FREE",
+        interactionMode: "FREE",
+      }
+    );
 
     console.log("자유형 기본설정 완료 데이터:", finalData);
 
-    navigate("/fairy-tale/chat", {
+    normalizeSetting(finalData, {
+      source: "fairyTaleFreeSetting",
+    });
+
+    navigate(BOOK_CREATION_ROUTES.FAIRY_TALE.CHAT, {
       state: finalData,
     });
   };

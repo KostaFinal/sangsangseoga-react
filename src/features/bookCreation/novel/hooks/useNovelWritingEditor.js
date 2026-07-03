@@ -1,6 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import {
+  createScenePlan,
+  extractGeneratedScenes,
+  extractGeneratedText,
+  writeScene,
+} from "../../services/aiGenerateService";
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import {
   createInitialScenes,
   fallbackSetting,
@@ -11,10 +18,47 @@ export function useNovelWritingEditor() {
   const location = useLocation();
 
   const setting = location.state || fallbackSetting;
+  const normalizeAiScenes = (aiScenes, fallbackScenes) =>
+    aiScenes.map((scene, index) => ({
+      ...fallbackScenes[index],
+      ...scene,
+      id: scene.id || fallbackScenes[index]?.id || index + 1,
+      status: scene.status || fallbackScenes[index]?.status || "초안",
+      content: scene.content || scene.body || scene.text || fallbackScenes[index]?.content || "",
+    }));
 
   const [scenes, setScenes] = useState(() => createInitialScenes(setting));
   const [currentSceneId, setCurrentSceneId] = useState(1);
   const [selectedSentence, setSelectedSentence] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncScenePlan = async () => {
+      const response = await createScenePlan(
+        {
+          ...setting,
+          bookType: "NOVEL",
+          scenes,
+        },
+        {
+          sceneCount: scenes.length,
+        }
+      );
+      const aiScenes = response.ok ? extractGeneratedScenes(response.data) : [];
+
+      if (isMounted && aiScenes.length) {
+        setScenes((prev) => normalizeAiScenes(aiScenes, prev));
+        setCurrentSceneId(aiScenes[0].id || 1);
+      }
+    };
+
+    syncScenePlan();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const currentScene = useMemo(
     () => scenes.find((scene) => scene.id === currentSceneId) || scenes[0],
@@ -26,6 +70,8 @@ export function useNovelWritingEditor() {
   );
 
   const updateCurrentScene = (field, value) => {
+    if (!currentScene) return;
+
     setScenes((prev) =>
       prev.map((scene) =>
         scene.id === currentSceneId
@@ -67,21 +113,55 @@ export function useNovelWritingEditor() {
   };
 
   const handleNextScene = () => {
+    if (currentSceneIndex < 0) return;
+
     if (currentSceneIndex < scenes.length - 1) {
       setCurrentSceneId(scenes[currentSceneIndex + 1].id);
     }
   };
 
   const handlePrevScene = () => {
+    if (currentSceneIndex < 0) return;
+
     if (currentSceneIndex > 0) {
       setCurrentSceneId(scenes[currentSceneIndex - 1].id);
     }
   };
 
-  const handleAiAction = (type) => {
+  const handleAiAction = async (type) => {
+    if (!currentScene) return;
+
     const baseContent = currentScene.content || "";
 
     if (type === "continue") {
+      const response = await writeScene(
+        {
+          ...setting,
+          bookType: "NOVEL",
+          scenes,
+        },
+        {
+          scene: currentScene,
+          sceneIndex: currentSceneIndex,
+        }
+      );
+      const generatedText = response.ok ? extractGeneratedText(response.data) : "";
+      const aiScenes = response.ok ? extractGeneratedScenes(response.data) : [];
+
+      if (aiScenes.length) {
+        setScenes((prev) => normalizeAiScenes(aiScenes, prev));
+        return;
+      }
+
+      if (generatedText) {
+        updateCurrentScene("content", generatedText);
+        return;
+      }
+
+      if (!response.ok) {
+        console.warn("WRITE_SCENE failed:", response.message);
+      }
+
       updateCurrentScene(
         "content",
         `${baseContent}
@@ -107,6 +187,8 @@ export function useNovelWritingEditor() {
   };
 
   const handleComplete = () => {
+    if (!scenes.length) return;
+
     const payload = {
       setting,
       scenes,
@@ -114,7 +196,7 @@ export function useNovelWritingEditor() {
 
     console.log("표지 선택 화면으로 이동:", payload);
 
-    navigate("/bookmaker/novel/cover", {
+    navigate(BOOK_CREATION_ROUTES.NOVEL.COVER, {
       state: payload,
     });
   };

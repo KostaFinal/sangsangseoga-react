@@ -3,7 +3,6 @@ import React from "react";
 import fairyback from "../../assets/fairyback.png";
 import {
   modeLabel,
-  readerAgeLabel,
   stepList,
   summaryLabels,
   writerLevelLabel,
@@ -214,14 +213,6 @@ function FairyTaleChoiceBuilderPage() {
                   {writerLevelLabel[previousData.writerLevel] ||
                     previousData.writerLevel ||
                     "미정"}
-                </strong>
-              </div>
-              <div>
-                <span>독자 연령</span>
-                <strong>
-                  {readerAgeLabel[previousData.readerAge] ||
-                    previousData.readerAge ||
-                    "선택 안 함"}
                 </strong>
               </div>
             </div>

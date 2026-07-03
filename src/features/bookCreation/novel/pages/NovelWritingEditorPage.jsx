@@ -19,6 +19,40 @@ function NovelWritingEditorPage() {
     handleAiAction,
     handleComplete,
   } = useNovelWritingEditor();
+  const isLastScene = scenes.length > 0 && currentSceneIndex === scenes.length - 1;
+
+  if (!currentScene) {
+    return (
+      <div className="novel-editor-page">
+        <img
+          className="novel-editor-bg"
+          src={scenarioBg}
+          alt=""
+          aria-hidden="true"
+        />
+        <div className="novel-editor-overlay" />
+
+        <main className="novel-editor-layout">
+          <section className="manuscript-panel">
+            <div className="current-scene-info">
+              <div>
+                <span>현재 장면</span>
+                <h1>장면 데이터를 불러오지 못했습니다.</h1>
+                <p>새 장면을 추가하면 이어서 편집할 수 있습니다.</p>
+              </div>
+            </div>
+
+            <div className="editor-bottom-actions">
+              <button type="button" className="save-btn" onClick={handleAddScene}>
+                장면 추가
+              </button>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="novel-editor-page">
       <img
@@ -28,32 +62,6 @@ function NovelWritingEditorPage() {
         aria-hidden="true"
       />
       <div className="novel-editor-overlay" />
-
-      <header className="novel-editor-header">
-        <div className="novel-editor-brand">
-          <span>✒</span>
-          <strong>소설 스튜디오</strong>
-        </div>
-
-        <div className="novel-editor-title">
-          <strong>{setting.storySeed || "제목 없는 소설"}</strong>
-          <button type="button">✎</button>
-          <span>✓ 자동 저장됨</span>
-          <em>오후 3:42</em>
-        </div>
-
-        <div className="novel-editor-actions">
-          <button type="button" className="ghost-btn">
-            📖 미리보기
-          </button>
-          <button type="button" className="ghost-btn" onClick={handleSave}>
-            💾 저장
-          </button>
-          <button type="button" className="complete-btn" onClick={handleComplete}>
-            ✓ 완성하기
-          </button>
-        </div>
-      </header>
 
       <main className="novel-editor-layout">
         <aside className="scene-list-panel">
@@ -84,7 +92,7 @@ function NovelWritingEditorPage() {
                 <p>{scene.goal}</p>
 
                 <div className="scene-status-row">
-                  <em className={scene.status === "미작성" ? "empty" : "draft"}>
+                  <em className={scene.content?.trim() ? "draft" : "empty"}>
                     {scene.status}
                   </em>
                 </div>
@@ -188,10 +196,12 @@ function NovelWritingEditorPage() {
             <button
               type="button"
               className="next-scene-btn"
-              onClick={handleNextScene}
-              disabled={currentSceneIndex === scenes.length - 1}
+              onClick={isLastScene ? handleComplete : handleNextScene}
+              disabled={!currentScene || scenes.length === 0}
             >
-              다음 장면 →
+              <span className="editor-next-action-label">
+                {isLastScene ? "표지 선택으로 →" : "다음 장면 →"}
+              </span>
             </button>
           </div>
         </section>
@@ -215,7 +225,7 @@ function NovelWritingEditorPage() {
             <h3>선택한 문장</h3>
             <p>
               {selectedSentence.trim()
-                ? `“${selectedSentence.trim()}”`
+                ? `"${selectedSentence.trim()}"`
                 : "본문에서 문장을 드래그하면 여기에 표시됩니다."}
             </p>
           </section>

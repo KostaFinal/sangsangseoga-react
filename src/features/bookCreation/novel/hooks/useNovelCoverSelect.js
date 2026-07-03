@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import { coverOptions, fallbackData } from "../data/novelCoverSelectOptions";
 
 export function useNovelCoverSelect() {
@@ -31,7 +32,7 @@ export function useNovelCoverSelect() {
 
     console.log("표지 확정 데이터:", payload);
 
-    navigate("/bookmaker/novel/complete", {
+    navigate(BOOK_CREATION_ROUTES.NOVEL.COMPLETE, {
       state: payload,
     });
   };

@@ -8,6 +8,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import HTMLFlipBook from "react-pageflip";
 
 import fairyback from "../../assets/fairyback.png";
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 
 import {
   ChevronLeft,
@@ -1016,7 +1017,7 @@ export default function FairytaleEditor() {
   const handleSave = useCallback(() => {
     console.log("저장할 페이지 데이터:", pages);
 
-    navigate("/fairy-tale/complete", {
+    navigate(BOOK_CREATION_ROUTES.FAIRY_TALE.COMPLETE, {
       state: {
         pages,
       },

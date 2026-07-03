@@ -1,10 +1,15 @@
+import React, { useEffect, useRef, useState } from "react";
 import fairyback from "../../assets/fairyback.png";
 import fairybook from "../../assets/fairybook.png";
 import { useFairyTaleImageDesign } from "../hooks/useFairyTaleImageDesign";
 
 function FairyTaleImageDesignPage() {
+  const fileInputRef = useRef(null);
+  const localFaceImageUrlRef = useRef(null);
+
+  const [faceReferenceImage, setFaceReferenceImage] = useState(null);
+
   const {
-    uploadedImages,
     styles,
     selectedStyle,
     setSelectedStyle,
@@ -23,43 +28,54 @@ function FairyTaleImageDesignPage() {
     handleGenerateImages,
     getCardStatusText,
   } = useFairyTaleImageDesign();
+
+  const handleFaceUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFaceImageChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (localFaceImageUrlRef.current) {
+      URL.revokeObjectURL(localFaceImageUrlRef.current);
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    localFaceImageUrlRef.current = objectUrl;
+
+    setFaceReferenceImage({
+      id: `face-reference-${file.name}-${Date.now()}`,
+      src: objectUrl,
+      alt: file.name,
+      file,
+    });
+
+    event.target.value = "";
+  };
+
+  useEffect(() => {
+    return () => {
+      if (localFaceImageUrlRef.current) {
+        URL.revokeObjectURL(localFaceImageUrlRef.current);
+        localFaceImageUrlRef.current = null;
+      }
+    };
+  }, []);
+
   return (
     <div
       className="ft-image-page"
       style={{ "--image-page-bg": `url(${fairyback})` }}
     >
-      <header className="ft-image-header">
-        <div className="ft-image-brand">
-          <div className="ft-image-brand-icon">🏰</div>
-          <div>
-            <strong>동화마을</strong>
-          </div>
-        </div>
-
-        <nav className="ft-image-nav">
-          <button type="button">내 책장</button>
-          <button type="button" className="active">
-            동화 만들기
-          </button>
-          <button type="button">템플릿</button>
-          <button type="button">이용 가이드</button>
-          <button type="button">요금제</button>
-        </nav>
-
-        <div className="ft-image-user">
-          <button type="button" className="premium-btn">
-            👑 프리미엄
-          </button>
-          <button type="button" className="icon-btn">
-            🔔
-          </button>
-          <div className="profile-chip">
-            <span className="avatar">🐵</span>
-            <span>하늘빛 작가님</span>
-            <span>⌄</span>
-          </div>
-        </div>
-      </header>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={handleFaceImageChange}
+      />
 
       <main className="ft-image-layout">
         <aside className="image-summary-card">
@@ -91,22 +107,45 @@ function FairyTaleImageDesignPage() {
               <div className="ready-block-title">
                 <span>01</span>
                 <div>
-                  <strong>참고 이미지</strong>
-                  <p>캐릭터와 분위기를 맞추기 위한 이미지예요.</p>
+                  <strong>내 얼굴로 캐릭터 만들기</strong>
+                  <p>얼굴 사진을 참고해서 주인공 이미지 분위기를 맞춰요.</p>
                 </div>
               </div>
 
-              <div className="reference-image-grid">
-                {uploadedImages.map((image) => (
-                  <div className="reference-thumb" key={image.id}>
-                    <img src={image.src} alt={image.alt} />
-                  </div>
-                ))}
+              <div className="face-reference-box">
+                {faceReferenceImage ? (
+                  <div className="face-preview-card">
+                    <img
+                      src={faceReferenceImage.src}
+                      alt="캐릭터 얼굴 참고 이미지"
+                    />
 
-                <button type="button" className="reference-add-btn">
-                  <strong>＋</strong>
-                  <span>추가</span>
-                </button>
+                    <div className="face-preview-info">
+                      <strong>얼굴 사진이 추가되었어요</strong>
+                      <p>
+                        이 사진은 주인공 캐릭터 분위기 참고용으로 사용돼요.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="face-change-btn"
+                      onClick={handleFaceUploadClick}
+                    >
+                      다시 선택
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="face-upload-card"
+                    onClick={handleFaceUploadClick}
+                  >
+                    <strong>＋</strong>
+                    <span>얼굴 사진 추가</span>
+                    <p>정면에 가까운 밝은 사진을 올려주세요.</p>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -221,10 +260,6 @@ function FairyTaleImageDesignPage() {
                   key={row.page}
                 >
                   <div className={`page-label ${row.color}`}>{row.page}</div>
-
-                  <div className="page-thumb">
-                    <img src={row.image} alt={`${row.page} 삽화`} />
-                  </div>
 
                   <div className="scene-info">
                     <strong>장면</strong>
@@ -344,5 +379,3 @@ function FairyTaleImageDesignPage() {
 }
 
 export default FairyTaleImageDesignPage;
-
-

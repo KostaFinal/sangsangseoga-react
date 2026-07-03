@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import { workModes, writerLevels } from "../data/novelStudioOptions";
 
 export function useNovelStudio() {
@@ -32,17 +33,17 @@ export function useNovelStudio() {
     console.log("소설 만들기 시작:", payload);
 
     if (workMode === "FREE") {
-      navigate("/bookmaker/novel/chat", { state: payload });
+      navigate(BOOK_CREATION_ROUTES.NOVEL.CHAT, { state: payload });
       return;
     }
 
     if (workMode === "MIXED") {
-      navigate("/bookmaker/novel/builder", { state: payload });
+      navigate(BOOK_CREATION_ROUTES.NOVEL.BUILDER, { state: payload });
       return;
     }
 
     if (workMode === "CHOICE") {
-      navigate("/bookmaker/novel/quick", { state: payload });
+      navigate(BOOK_CREATION_ROUTES.NOVEL.QUICK, { state: payload });
     }
   };
 

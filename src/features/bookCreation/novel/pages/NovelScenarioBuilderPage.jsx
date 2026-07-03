@@ -1,5 +1,19 @@
-import scenarioBg from "../../assets/scenario-bg.png";
 import { useNovelScenarioBuilder } from "../hooks/useNovelScenarioBuilder";
+
+const getAgendaIcon = (label) => {
+  if (label.includes("씨앗")) return "▣";
+  if (label.includes("장르")) return "▤";
+  if (label.includes("주인공")) return "♙";
+  if (label.includes("배경")) return "♧";
+  if (label.includes("갈등")) return "✦";
+  if (label.includes("결말")) return "◈";
+  return "•";
+};
+
+const getRecommendIcon = (index) => {
+  const icons = ["▣", "✎", "✦"];
+  return icons[index] || "✦";
+};
 
 function NovelScenarioBuilderPage() {
   const {
@@ -21,55 +35,29 @@ function NovelScenarioBuilderPage() {
     handleNextAgenda,
     handleConfirm,
   } = useNovelScenarioBuilder();
+
+  const currentValue = settings[selectedKey] || "";
+
+  const handleBackToDashboard = () => {
+    window.history.back();
+  };
+
   return (
     <div className="novel-builder-page">
-      <img
-        className="novel-builder-bg"
-        src={scenarioBg}
-        alt=""
-        aria-hidden="true"
-      />
-      <div className="novel-builder-overlay" />
-
       <main className="novel-builder-shell">
-        <header className="novel-builder-header">
-          <div>
-            <p className="novel-builder-eyebrow">AUTHOR MEETING MODE</p>
-            <h1>소설 작가 회의</h1>
-            <p>
-              AI 추천안을 선택하거나 직접 수정하면서 소설의 기본 설정을
-              확정하세요.
-            </p>
-          </div>
-
-          <aside className="novel-builder-progress-card">
-            <span>설정 진행률</span>
-            <strong>{progressPercent}%</strong>
-
-            <div className="novel-builder-progress-track">
-              <div
-                className="novel-builder-progress-fill"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-
-            <small>
-              {completedCount} / {agendaItems.length}개 확정
-            </small>
-          </aside>
-        </header>
-
         <section className="novel-builder-layout">
+          {/* 왼쪽 안건 목록 */}
           <aside className="novel-agenda-panel">
-            <div className="novel-panel-title-row">
-              <h2>회의 안건</h2>
-              <span>{selectedAgenda.number}</span>
+            <div className="novel-agenda-title">
+              <span className="novel-title-icon">☷</span>
+              <h2>소설 회의 안건</h2>
             </div>
 
             <nav className="novel-agenda-list">
               {agendaItems.map((item) => {
+                const value = settings[item.key] || "";
                 const isActive = item.key === selectedKey;
-                const isCompleted = settings[item.key].trim() !== "";
+                const isCompleted = value.trim() !== "";
 
                 return (
                   <button
@@ -80,57 +68,98 @@ function NovelScenarioBuilderPage() {
                     } ${isCompleted ? "completed" : ""}`}
                     onClick={() => handleAgendaClick(item.key)}
                   >
-                    <span>{item.number}</span>
-                    <strong>{item.label}</strong>
-                    {isCompleted && <em>완료</em>}
+                    <span className="agenda-number">{item.number}</span>
+
+                    <span className="agenda-text">
+                      <strong>{item.label}</strong>
+                      {isActive && <em>현재 안건</em>}
+                      {isCompleted && !isActive && <em>완료</em>}
+                    </span>
+
+                    {isActive && <b>›</b>}
                   </button>
                 );
               })}
             </nav>
-          </aside>
 
-          <section className="novel-meeting-panel">
-            <div className="novel-panel-title-row">
+            <div className="novel-progress-card">
               <div>
-                <h2>AI와 설정 회의</h2>
-                <p>{selectedAgenda.description}</p>
+                <strong>진행 상황</strong>
+                <span>
+                  {completedCount} / {agendaItems.length} 안건 완료
+                </span>
               </div>
 
-              <span>
-                {selectedIndex + 1} / {agendaItems.length}
-              </span>
+              <div className="novel-progress-line">
+                <i style={{ width: `${progressPercent}%` }} />
+              </div>
             </div>
 
-            <div className="novel-question-box">
-              <span>{selectedAgenda.number}</span>
-              <h3>{selectedAgenda.question}</h3>
+            <div className="novel-tip-card">
+              <strong>TIP</strong>
+              <p>
+                각 안건에서 선택한 내용은 이야기 설계에 자동으로 반영돼요.
+              </p>
+            </div>
+          </aside>
+
+          {/* 중앙 회의 영역 */}
+          <section className="novel-meeting-panel">
+            <div className="novel-meeting-top">
+              <p>소설의 출발점이 되는 핵심 아이디어를 정합니다.</p>
+
+              <div className="novel-step-progress">
+                <strong>
+                  {selectedIndex + 1} / {agendaItems.length}
+                </strong>
+                <div>
+                  <i style={{ width: `${progressPercent}%` }} />
+                </div>
+              </div>
+            </div>
+
+            <div className="novel-question-row">
+              <span>{getAgendaIcon(selectedAgenda.label)}</span>
+              <h2>{selectedAgenda.question}</h2>
             </div>
 
             <section className="novel-recommendation-area">
               <p className="novel-section-label">AI 추천 안건</p>
 
               <div className="novel-recommendation-grid">
-                {selectedAgenda.recommendations.map((recommendation, index) => (
-                  <button
-                    key={`${selectedAgenda.key}-${recommendation.title}`}
-                    type="button"
-                    className={`novel-recommendation-card ${
-                      selectedRecommendationIndex === index ? "selected" : ""
-                    }`}
-                    onClick={() =>
-                      handleSelectRecommendation(recommendation, index)
-                    }
-                  >
-                    <strong>{recommendation.title}</strong>
-                    <p>{recommendation.text}</p>
+                {selectedAgenda.recommendations.map((recommendation, index) => {
+                  const isSelected = selectedRecommendationIndex === index;
 
-                    <div className="novel-tag-row">
-                      {recommendation.tags.map((tag) => (
-                        <span key={tag}>{tag}</span>
-                      ))}
-                    </div>
-                  </button>
-                ))}
+                  return (
+                    <button
+                      key={`${selectedAgenda.key}-${recommendation.title}`}
+                      type="button"
+                      className={`novel-recommendation-card ${
+                        isSelected ? "selected" : ""
+                      }`}
+                      onClick={() =>
+                        handleSelectRecommendation(recommendation, index)
+                      }
+                    >
+                      <span className="recommend-icon">
+                        {getRecommendIcon(index)}
+                      </span>
+
+                      <span className="recommend-check">
+                        {isSelected ? "✓" : ""}
+                      </span>
+
+                      <strong>{recommendation.title}</strong>
+                      <p>{recommendation.text}</p>
+
+                      <div className="novel-tag-row">
+                        {recommendation.tags.map((tag) => (
+                          <span key={tag}>{tag}</span>
+                        ))}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </section>
 
@@ -147,12 +176,26 @@ function NovelScenarioBuilderPage() {
                 onChange={handleCustomTextChange}
                 placeholder={selectedAgenda.placeholder}
               />
+            </section>
+
+            <section className="novel-current-preview">
+              <p className="novel-section-label">현재 선택값 미리보기</p>
 
               <div className="novel-current-choice-box">
-                <span>현재 선택값</span>
-                <p>
-                  {settings[selectedKey] || "아직 선택되지 않았습니다."}
-                </p>
+                {currentValue ? (
+                  <>
+                    <strong>{currentValue}</strong>
+                    <div className="novel-tag-row">
+                      {selectedAgenda.recommendations[
+                        selectedRecommendationIndex
+                      ]?.tags?.map((tag) => (
+                        <span key={`current-${tag}`}>{tag}</span>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <strong className="empty">아직 선택되지 않았습니다.</strong>
+                )}
               </div>
             </section>
 
@@ -163,7 +206,7 @@ function NovelScenarioBuilderPage() {
                 onClick={handlePreviousAgenda}
                 disabled={selectedIndex === 0}
               >
-                이전 안건
+                ← 이전 안건
               </button>
 
               <button
@@ -171,12 +214,12 @@ function NovelScenarioBuilderPage() {
                 className="novel-ghost-button"
                 onClick={handleResetCurrent}
               >
-                현재 안건 초기화
+                ↻ 현재 안건 초기화
               </button>
 
               <button
                 type="button"
-                className="novel-gold-button"
+                className="novel-primary-button"
                 onClick={handleNextAgenda}
                 disabled={selectedIndex === agendaItems.length - 1}
               >
@@ -185,27 +228,52 @@ function NovelScenarioBuilderPage() {
             </div>
           </section>
 
+          {/* 오른쪽 설정 요약 */}
           <aside className="novel-summary-panel">
-            <div className="novel-panel-title-row">
+            <div className="novel-summary-title">
+              <span>▱</span>
               <h2>현재 설정 요약</h2>
-              <span>{completedCount}</span>
             </div>
 
             <div className="novel-summary-list">
-              {agendaItems.map((item) => (
-                <div key={`summary-${item.key}`} className="novel-summary-item">
-                  <span>{item.label}</span>
-                  <p>{settings[item.key] || "미정"}</p>
-                </div>
-              ))}
+              {agendaItems.map((item) => {
+                const value = settings[item.key] || "";
+                const isCompleted = value.trim() !== "";
+
+                return (
+                  <div
+                    key={`summary-${item.key}`}
+                    className={`novel-summary-item ${
+                      isCompleted ? "completed" : ""
+                    }`}
+                  >
+                    <span className="summary-icon">
+                      {getAgendaIcon(item.label)}
+                    </span>
+
+                    <div>
+                      <strong>{item.label}</strong>
+                      <p>{isCompleted ? value : "미정"}</p>
+                    </div>
+
+                    {!isCompleted && <em>미정</em>}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="novel-summary-guide">
+              <strong>모든 안건을 설정하면</strong>
+              <p>나만의 이야기 설계도가 완성돼요!</p>
             </div>
 
             <button
               type="button"
-              className={`novel-start-writing-button ${
+              className={`novel-confirm-button ${
                 isAllComplete ? "enabled" : ""
               }`}
               onClick={handleConfirm}
+              disabled={!isAllComplete}
             >
               설정 확정하기 →
             </button>
@@ -217,7 +285,3 @@ function NovelScenarioBuilderPage() {
 }
 
 export default NovelScenarioBuilderPage;
-
-
-
-

@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { normalizeSetting } from "../../services/aiGenerateService";
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import {
   defaultMinutes,
   directingSteps,
@@ -10,7 +12,8 @@ import {
 export function useNovelSettingConfirm() {
   const navigate = useNavigate();
   const location = useLocation();
-  const minutes = location.state?.minutes || defaultMinutes;
+  const setupData = location.state || {};
+  const minutes = setupData.minutes || defaultMinutes;
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [directing, setDirecting] = useState(initialDirecting);
@@ -145,13 +148,19 @@ export function useNovelSettingConfirm() {
     }
 
     const payload = {
+      ...setupData,
       ...minutes,
+      minutes,
       directing,
     };
 
     console.log("소설 집필 에디터 이동 데이터:", payload);
 
-    navigate("/bookmaker/novel/editor", {
+    normalizeSetting(payload, {
+      source: "novelSettingConfirm",
+    });
+
+    navigate(BOOK_CREATION_ROUTES.NOVEL.EDITOR, {
       state: payload,
     });
   };

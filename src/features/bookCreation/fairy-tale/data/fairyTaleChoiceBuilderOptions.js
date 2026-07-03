@@ -380,13 +380,6 @@ export const optionSets = {
   pageCount: [
     [
       {
-        id: "PAGE_8",
-        icon: "8",
-        title: "8페이지",
-        desc: "짧고 빠르게 완성하는 동화",
-        value: 8,
-      },
-      {
         id: "PAGE_12",
         icon: "12",
         title: "12페이지",
@@ -433,13 +426,4 @@ export const writerLevelLabel = {
   TEEN: "청소년",
   ADULT: "성인",
 };
-
-export const readerAgeLabel = {
-  PRESCHOOL: "미취학아동",
-  LOWER_ELEMENTARY: "초등 저학년",
-  UPPER_ELEMENTARY: "초등 고학년",
-  TEEN: "청소년",
-  ADULT: "성인",
-};
-
 

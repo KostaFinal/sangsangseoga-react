@@ -68,7 +68,7 @@ export const SubscriptionView = ({
       const newRecord = {
         id: `pay_${Date.now().toString().slice(-4)}`,
         title: `추가 생성권 (${extraCreditsCount}매)`,
-        date: '방금 전 • 테스트 결제 완료',
+        date: '방금 전 • 결제 완료',
         amount: calculatedCost,
         status: '완료',
         icon: 'add_circle'
@@ -340,7 +340,7 @@ export const SubscriptionView = ({
                       <div className="bg-[#FAF9FF] border border-[#E6E2FC]/40 rounded-xl p-4 text-[11px] text-[#7C769D] leading-relaxed text-left flex items-start gap-2">
                         <HelpCircle className="w-4 h-4 text-[#6B54E7] shrink-0 mt-0.5" />
                         <p>
-                          <strong>체험판 자산 안내:</strong> 새싹 작가님의 신규 공간에서는 무료 가상 인프라 무단 탈취 방지를 위해 텍스트와 그림 리소스가 정비 가중치 형태로 환산 제어되고 있습니다.
+                          <strong>체험판 이용 안내:</strong> 신규 작가님께는 부정 이용 방지를 위해 무료 체험 리소스가 일정 한도로 제공됩니다.
                         </p>
                       </div>
 
@@ -663,7 +663,7 @@ export const SubscriptionView = ({
                     onClick={handleBuyCredits}
                     className="px-4 py-2.5 bg-[#6B54E7] hover:bg-[#5b45d6] text-white text-xs font-black rounded-xl transition-all shadow-md shadow-[#6B54E7]/15 cursor-pointer hover:scale-[1.02] active:scale-95"
                   >
-                    가상 결제 승인
+                    충전하기
                   </button>
                 </div>
               </div>
@@ -797,7 +797,7 @@ export const SubscriptionView = ({
             <div className="text-xs text-[#7C769D] mt-3.5 space-y-1.5 text-left bg-[#FAF9FF] p-4 rounded-2xl border border-[#E6E2FC]/60 font-mono">
               <p>📦 <strong>물품:</strong> 아틀리에 생성권 {extraCreditsCount}장</p>
               <p>💳 <strong>정산금액:</strong> ₩{calculatedCost.toLocaleString()} 원</p>
-              <p>✓ 안전 가상 테스트 충전이 완료되었습니다.</p>
+              <p>✓ 안전하게 충전이 완료되었습니다.</p>
             </div>
 
             <button
@@ -873,9 +873,9 @@ export const SubscriptionView = ({
             <div className="mx-auto w-12 h-12 bg-[#FAF9FF] border border-[#E6E2FC]/50 rounded-2xl flex items-center justify-center text-[#6B54E7] mb-4 animate-pulse">
               <Printer className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-black text-[#2F2D59]">인쇄 전산 빌딩 중</h3>
+            <h3 className="text-base font-black text-[#2F2D59]">인쇄 파일 생성 중</h3>
             <p className="text-xs text-[#7C769D] mt-2 leading-relaxed">
-              명세가 포함된 가상 원본 인쇄 파일을 신속하게 빌딩하고 있습니다. 곧 보관 브라우저 전산창에 인쇄 또는 PDF 변환 레이어가 가상 시뮬레이션됩니다.
+              명세서가 포함된 인쇄용 파일을 생성하고 있습니다. 잠시 후 브라우저에서 인쇄하거나 PDF로 저장하실 수 있습니다.
             </p>
             <button
               onClick={() => setPrintSuccess(false)}

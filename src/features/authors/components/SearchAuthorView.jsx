@@ -24,7 +24,7 @@ export default function SearchAuthorView({ allBooks, onSelectAuthor }) {
         onSortByChange={setSortBy}
       />
 
-      <div className="divide-y divide-[#f3f0ff]">
+      <div className="flex flex-col gap-3">
         {filteredAndSortedAuthors.map(author => (
           <AuthorStatCard key={author.name} author={author} onSelect={onSelectAuthor} />
         ))}

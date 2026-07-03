@@ -63,8 +63,6 @@ export const MainDashboard = ({
   setDailyImageCount,
   isSubscriptionCanceled
 }) => {
-  const [showNotifications, setShowNotifications] = useState(false);
-  
   // Local state for genre filter in "내 서재"
   const [libraryGenreFilter, setLibraryGenreFilter] = useState('전체');
   
@@ -389,7 +387,7 @@ export const MainDashboard = ({
               
               <div className="bg-white rounded-3xl p-6 shadow-xs border border-transparent flex flex-col md:flex-row gap-8">
                 <div className="flex-1 flex flex-col sm:flex-row gap-6 text-left">
-                  <div className="w-full sm:w-44 aspect-[3/4] rounded-2xl overflow-hidden shadow-md flex-shrink-0 relative group cursor-pointer" onClick={() => alert('별이 잠든 밤 작품의 이어서 읽기를 시작합니다.')}>
+                  <div className="w-full sm:w-44 aspect-[3/4] rounded-2xl overflow-hidden shadow-md flex-shrink-0 relative group cursor-pointer" onClick={() => alert('이어서 읽기 기능은 준비 중입니다.')}>
                     <img 
                       src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4qbLMXrDeSvtACQrqxaabRXhUcLWI6ISEPbVCL4zP57a5y85IerCnkSy5pgzsSQmnNvDc1q2s-ibxVkN7ZqJ31_b8pC4F9l3lfBrQYbyPWPxUbP86iX2oTav5lZ0ev4-koEU62F0a8awUxxeRhuKpbx11aiJCLL1Ac5DNjJFB_E6OqjY7OCfsrzj9vnGnBx1ksipJacKjVdyp8736LnR-kx6bUc_klYIKrF7BlzGIXFzpeSpGXPTsZHSfJlVMQOc3tUYU5ecEPPc" 
                       alt="별이 잠든 밤" 
@@ -399,7 +397,7 @@ export const MainDashboard = ({
                   </div>
                   <div className="flex-1 flex flex-col justify-between py-1.5 text-left">
                     <div className="space-y-1">
-                      <h3 className="text-base sm:text-lg font-extrabold text-[#2F2D59] hover:text-[#6B54E7] cursor-pointer transition-colors" onClick={() => alert('별이 잠든 밤 작품의 이어서 읽기를 시작합니다.')}>
+                      <h3 className="text-base sm:text-lg font-extrabold text-[#2F2D59] hover:text-[#6B54E7] cursor-pointer transition-colors" onClick={() => alert('이어서 읽기 기능은 준비 중입니다.')}>
                         별이 잠든 밤
                       </h3>
                       <p className="text-xs text-[#7C769D] font-bold">판타지 · 12화까지 읽음</p>
@@ -418,7 +416,7 @@ export const MainDashboard = ({
                     
                     <div className="pt-2">
                       <button 
-                        onClick={() => alert('별이 잠든 밤 작품의 이어서 읽기를 시작합니다.')}
+                        onClick={() => alert('이어서 읽기 기능은 준비 중입니다.')}
                         className="px-5 py-2 bg-[#F3F0FF] hover:bg-[#E6E2FC] text-[#6B54E7] text-xs font-bold rounded-xl inline-flex items-center gap-1 cursor-pointer transition-all hover:shadow-xs active:scale-98"
                       >
                         <span>이어보기</span>
@@ -435,7 +433,7 @@ export const MainDashboard = ({
                     { title: '바람이 분다, 여름', desc: '소설 · 8화까지', cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAQHaZbTIh-qZz2zWXqdVpVBhMMmTyM82fnx_hh17ZiHkj27S_HTNBgEow5mw54n8enyKHv0aPXoZbHoIIXHQmmXPYyRAtWlG3basGWcjJDb2OGTNsSjQRphauo8WObivk8sXjpu1J1CjKEOqGmfZ3pHaollH6-uGl4Z_VNgSwPD_VrGTnOK5yRUg1QsaQIefQG1oXxyMmfjWGkX2FLRL5jfOanTv7SGBdqwgeB-adv_ra9SHzaImv3uqDJp5GDI4pKZeRAApklAaA' },
                     { title: '그날의 우리', desc: '로맨스 · 5화까지', cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC2O_PD7xdQCc_iGfXoKwNrVIurVlo0ugo_weeYOYZOG-Wh7f6vj3_DVFNiSln1HzMbFHhwypEYn9qPXQRQ2x8rytzojL6ot4tX_9mXRZB-OO0IANHl_DZM9OrB17ajZemU93sWq3W66bOlFJdjmkeDtvqCmbG_BQln7wrzg4vFRQrmn0Mqlbt4NOhAIZX_FDgxT1X3R9q6wVpNMIjLbN0ioReZ88c5QTD0GfjDeChjMbk1UZw-N3JIAVoL1fzcD4ansUKeIZxSdXk' }
                   ].map((b, idx) => (
-                    <div key={idx} className="space-y-2.5 group cursor-pointer" onClick={() => alert(`${b.title} 작품을 이어서 읽습니다.`)}>
+                    <div key={idx} className="space-y-2.5 group cursor-pointer" onClick={() => alert('이어서 읽기 기능은 준비 중입니다.')}>
                       <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-slate-50 shadow-xs relative">
                         <img 
                           src={b.cover} 
@@ -501,7 +499,7 @@ export const MainDashboard = ({
                 </div>
                 
                 <button 
-                  onClick={() => alert('다음 페이지의 인기 도서 리스트를 로드합니다.')}
+                  onClick={() => alert('더보기 기능은 준비 중입니다.')}
                   className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4.5 w-9 h-9 rounded-full bg-white shadow-lg border border-neutral-100 flex items-center justify-center text-[#2F2D59] hover:bg-[#F3F0FF] hover:scale-105 active:scale-95 transition-all z-10"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -564,7 +562,7 @@ export const MainDashboard = ({
                       cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAQHaZbTIh-qZz2zWXqdVpVBhMMmTyM82fnx_hh17ZiHkj27S_HTNBgEow5mw54n8enyKHv0aPXoZbHoIIXHQmmXPYyRAtWlG3basGWcjJDb2OGTNsSjQRphauo8WObivk8sXjpu1J1CjKEOqGmfZ3pHaollH6-uGl4Z_VNgSwPD_VrGTnOK5yRUg1QsaQIefQG1oXxyMmfjWGkX2FLRL5jfOanTv7SGBdqwgeB-adv_ra9SHzaImv3uqDJp5GDI4pKZeRAApklAaA'
                     }
                   ].map((card, idx) => (
-                    <div key={idx} className="bg-white border border-[#E6E2FC] hover:border-[#6B54E7]/50 rounded-3xl p-5 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] cursor-pointer group" onClick={() => alert(`${card.title} 작가 신작을 조회합니다.`)}>
+                    <div key={idx} className="bg-white border border-[#E6E2FC] hover:border-[#6B54E7]/50 rounded-3xl p-5 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] cursor-pointer group" onClick={() => alert('작품 상세 페이지는 준비 중입니다.')}>
                       <div className="flex items-center justify-between gap-3 pb-3 border-b border-[#E6E2FC]/50">
                         <div className="flex items-center gap-2.5">
                           <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
@@ -617,7 +615,7 @@ export const MainDashboard = ({
                 </div>
                 
                 <button 
-                  onClick={() => alert('다음 페이지의 팔로우한 작가 신작 리스트를 로드합니다.')}
+                  onClick={() => alert('더보기 기능은 준비 중입니다.')}
                   className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4.5 w-10 h-10 rounded-full bg-white shadow-lg border border-[#E6E2FC] flex items-center justify-center text-[#2F2D59] hover:bg-[#F3F0FF] hover:scale-105 active:scale-95 transition-all z-20"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -638,13 +636,13 @@ export const MainDashboard = ({
           </div>
 
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[#7C769D]">
-            <button onClick={() => alert('이용약관')} className="hover:text-[#2F2D59]">이용약관</button>
+            <button onClick={() => alert('이용약관 페이지는 준비 중입니다.')} className="hover:text-[#2F2D59]">이용약관</button>
             <span>•</span>
-            <button onClick={() => alert('개인정보처리방침')} className="hover:text-[#2F2D59] font-bold">개인정보처리방침</button>
+            <button onClick={() => alert('개인정보처리방침 페이지는 준비 중입니다.')} className="hover:text-[#2F2D59] font-bold">개인정보처리방침</button>
             <span>•</span>
-            <button onClick={() => alert('고객센터')} className="hover:text-[#2F2D59]">고객센터</button>
+            <button onClick={() => alert('고객센터 페이지는 준비 중입니다.')} className="hover:text-[#2F2D59]">고객센터</button>
             <span>•</span>
-            <button onClick={() => alert('공지사항')} className="hover:text-[#2F2D59]">공지사항</button>
+            <button onClick={() => alert('공지사항 페이지는 준비 중입니다.')} className="hover:text-[#2F2D59]">공지사항</button>
           </div>
         </div>
         <p className="text-[10px] text-[#B9B0DC] pt-2">
@@ -928,10 +926,10 @@ export const MainDashboard = ({
                     <div className="flex justify-end pt-3 space-x-2 border-t border-neutral-150 mt-3">
                       <button 
                         type="button"
-                        onClick={() => { alert('독자님의 임시 보관함(내 서재)에 챕터가 안전하게 보관되었습니다.'); }}
+                        onClick={() => { alert('내 서재에 챕터가 안전하게 보관되었습니다.'); }}
                         className="px-3 py-1.5 bg-white border border-neutral-200 hover:bg-[#FAF9FF] text-[11px] text-[#6B54E7] rounded-lg font-bold cursor-pointer"
                       >
-                        내 서재 임시보관
+                        내 서재에 보관
                       </button>
                       <button 
                         type="button"

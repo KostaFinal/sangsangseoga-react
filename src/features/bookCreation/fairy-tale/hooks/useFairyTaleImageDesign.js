@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import {
   createPagePlans,
   LOADING_MESSAGES,
@@ -146,7 +147,7 @@ export function useFairyTaleImageDesign() {
         );
 
         navigationTimerRef.current = setTimeout(() => {
-          navigate("/fairy-tale/editor", {
+          navigate(BOOK_CREATION_ROUTES.FAIRY_TALE.EDITOR, {
             state: payload,
           });
         }, 1200);

@@ -23,33 +23,6 @@ function NovelScenarioSelectPage() {
 
       <div className="novel-scenario-dim" />
 
-      <header className="scenario-header">
-        <div className="scenario-brand">
-          <span className="brand-icon">🎬</span>
-          <strong>소설 스튜디오</strong>
-        </div>
-
-        <nav className="scenario-nav">
-          <button type="button">프로젝트</button>
-          <button type="button">세계관 설정</button>
-          <button type="button">캐릭터</button>
-          <button type="button">자료실</button>
-          <button type="button">요금제</button>
-          <button type="button">가이드</button>
-        </nav>
-
-        <div className="scenario-user">
-          <button type="button" className="premium-button">
-            👑 프리미엄
-          </button>
-          <button type="button" className="bell-button">
-            🔔
-          </button>
-          <button type="button" className="profile-button">
-            작가의 서재 ▾
-          </button>
-        </div>
-      </header>
 
       <main className="scenario-main">
         <section className="scenario-title-section">

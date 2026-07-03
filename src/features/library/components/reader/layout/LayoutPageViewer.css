@@ -11,10 +11,31 @@
   position: relative;
 }
 
-.layout-flip-book {
-  box-shadow: 0 24px 70px rgba(18, 16, 40, 0.18);
-  border-radius: 6px;
+.layout-binding-shadow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  background: rgba(0,0,0,0.30);
+  pointer-events: none;
+  z-index: 10;
 }
+
+.layout-flip-book {
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.12),
+    0 4px 8px rgba(0,0,0,0.15),
+    0 12px 30px rgba(0,0,0,0.2),
+    0 30px 70px rgba(0,0,0,0.18),
+    0 50px 100px rgba(0,0,0,0.1);
+  border-radius: 2px 6px 6px 2px;
+}
+
+/* 가운데 바인딩 그림자 - overflow hidden 밖에 별도로 */
+
+
 
 .layout-flip-page {
   position: relative;
@@ -22,6 +43,8 @@
   height: 100%;
   background: #ffffff;
   overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-sizing: border-box;
 }
 
 .layout-page-image {
@@ -81,12 +104,25 @@
 .layout-page-footer {
   position: absolute;
   bottom: -52px;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 960px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 14px;
+}
+
+.layout-page-footer .reader-page-dots {
+  justify-self: unset;
+}
+
+.layout-page-footer .reader-page-count {
+  justify-self: unset;
+}
+
+.layout-page-footer .layout-page-complete-btn {
+  justify-self: unset;
 }
 
 .reader-page-dots {
@@ -121,10 +157,15 @@
   font-family: ui-monospace, monospace;
 }
 
+.layout-page-complete-wrap {
+  display: none;
+}
+
 .layout-page-complete-btn {
-  position: absolute;
-  right: 0;
-  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 14px;
   border-radius: 999px;
   background: #6b54e7;
   color: #fff;
@@ -132,11 +173,22 @@
   font-weight: 700;
   border: none;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 2px 8px rgba(107, 84, 231, 0.3);
+  white-space: nowrap;
+  animation: fadeSlideUp 0.3s ease forwards;
+  position: absolute;
+  right: 0;
 }
 
 .layout-page-complete-btn:hover {
   background: #6148e1;
+  transform: translateY(-1px);
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @media (max-width: 900px) {

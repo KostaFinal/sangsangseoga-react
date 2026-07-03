@@ -1,10 +1,12 @@
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import {
   fallbackConfirmData,
   modeLabel,
   rows,
 } from "../data/fairyTaleConfirmOptions";
+import { normalizeFairyTaleDraftState } from "../utils/normalizeFairyTaleDraftState";
 
 export function useFairyTaleConfirm() {
   const navigate = useNavigate();
@@ -21,7 +23,12 @@ export function useFairyTaleConfirm() {
   };
 
   const handleGoImages = () => {
-    navigate("/fairy-tale/images", { state: data });
+    const finalData = normalizeFairyTaleDraftState(data, {
+      creationMode: data.creationMode || data.interactionMode,
+      interactionMode: data.interactionMode || data.creationMode,
+    });
+
+    navigate(BOOK_CREATION_ROUTES.FAIRY_TALE.IMAGES, { state: finalData });
   };
 
   return {

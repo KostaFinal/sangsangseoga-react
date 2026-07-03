@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import {
   interactionModes,
-  readerAges,
   writerLevels,
 } from "../data/fairyTaleSetupOptions";
 
@@ -12,7 +12,6 @@ export function useFairyTaleSetup() {
 
   const [writerLevel, setWriterLevel] = useState(null);
   const [interactionMode, setInteractionMode] = useState(null);
-  const [readerAge, setReaderAge] = useState(null);
 
   const isReady = writerLevel && interactionMode;
 
@@ -23,17 +22,16 @@ export function useFairyTaleSetup() {
       bookType: "FAIRY_TALE",
       writerLevel,
       interactionMode,
-      readerAge,
     };
 
     console.log("동화 만들기 시작 데이터:", setupData);
 
     if (interactionMode === "FREE") {
-      navigate("/fairy-tale/free-setting", { state: setupData });
+      navigate(BOOK_CREATION_ROUTES.FAIRY_TALE.FREE_SETTING, { state: setupData });
     } else if (interactionMode === "MIXED") {
-      navigate("/fairy-tale/setting", { state: setupData });
+      navigate(BOOK_CREATION_ROUTES.FAIRY_TALE.SETTING, { state: setupData });
     } else if (interactionMode === "CHOICE") {
-      navigate("/fairy-tale/builder", { state: setupData });
+      navigate(BOOK_CREATION_ROUTES.FAIRY_TALE.BUILDER, { state: setupData });
     }
   };
 
@@ -43,23 +41,16 @@ export function useFairyTaleSetup() {
   const getInteractionModeLabel = (id) =>
     interactionModes.find((mode) => mode.id === id)?.label;
 
-  const getReaderAgeLabel = (id) =>
-    readerAges.find((reader) => reader.id === id)?.label;
-
   return {
     writerLevels,
     interactionModes,
-    readerAges,
     writerLevel,
     setWriterLevel,
     interactionMode,
     setInteractionMode,
-    readerAge,
-    setReaderAge,
     isReady,
     handleStart,
     getWriterLevelLabel,
     getInteractionModeLabel,
-    getReaderAgeLabel,
   };
 }

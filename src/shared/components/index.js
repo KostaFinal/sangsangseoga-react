@@ -4,7 +4,6 @@ export { ErrorPage404 } from './ErrorPage404';
 export { ErrorPage500 } from './ErrorPage500';
 export { ConfirmModal } from './ConfirmModal';
 export { NetworkError } from './NetworkError';
-export { NotificationPanel } from './NotificationPanel';
 export { SkeletonLoading } from './SkeletonLoading';
 export { Toast } from './Toast';
 export { default as SideMenu } from './SideMenu';

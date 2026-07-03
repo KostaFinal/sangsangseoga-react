@@ -27,36 +27,6 @@ const FairyTaleChatWritingPage = () => {
     >
       <div className="fairy-writing-overlay" />
 
-      <header className="writing-header">
-        <div className="writing-brand">
-          <span className="brand-icon">📖</span>
-          <div>
-            <strong>AI 선생님과 동화 쓰기</strong>
-            <p>기본설정을 바탕으로 한 페이지씩 동화를 완성해요</p>
-          </div>
-        </div>
-
-        <div className="writing-header-status">
-          <span>전체 {pageCount}페이지 중</span>
-          <strong>{currentPageNo}페이지 작성 중</strong>
-        </div>
-
-        <div className="writing-header-actions">
-          <button type="button" onClick={handleShowSetting}>
-            기본설정 보기
-          </button>
-          {/* <button type="button" onClick={handleSave}>
-            저장
-          </button> */}
-          <button
-            type="button"
-            className="image-move-btn"
-            onClick={handleGoImageDesign}
-          >
-            이미지 만들기로 이동
-          </button>
-        </div>
-      </header>
 
       <main className="writing-main">
         <section className="page-progress-bar">

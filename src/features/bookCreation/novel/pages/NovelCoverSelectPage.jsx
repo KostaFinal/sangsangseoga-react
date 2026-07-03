@@ -1,5 +1,6 @@
 import scenarioBg from "../../assets/scenario-bg.png";
 import { useNovelCoverSelect } from "../hooks/useNovelCoverSelect";
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 
 function NovelCoverSelectPage() {
   const {
@@ -24,33 +25,6 @@ function NovelCoverSelectPage() {
       />
       <div className="novel-cover-overlay" />
 
-      <header className="novel-cover-header">
-        <div className="novel-cover-brand">
-          <span>✒</span>
-          <strong>소설 스튜디오</strong>
-        </div>
-
-        <nav className="novel-cover-nav">
-          <button type="button">프로젝트</button>
-          <button type="button">세계관 설정</button>
-          <button type="button">캐릭터</button>
-          <button type="button">자료실</button>
-          <button type="button">요금제</button>
-          <button type="button">가이드</button>
-        </nav>
-
-        <div className="novel-cover-user">
-          <button type="button" className="premium-btn">
-            👑 프리미엄
-          </button>
-          <button type="button" className="bell-btn">
-            🔔
-          </button>
-          <button type="button" className="profile-btn">
-            작가의 서재⌄
-          </button>
-        </div>
-      </header>
 
       <main className="novel-cover-main">
         <section className="cover-title-area">
@@ -186,7 +160,7 @@ function NovelCoverSelectPage() {
           <button
             type="button"
             className="back-btn"
-            onClick={() => navigate("/bookmaker/novel/editor", { state: data })}
+            onClick={() => navigate(BOOK_CREATION_ROUTES.NOVEL.EDITOR, { state: data })}
           >
             ← 이전으로
           </button>

@@ -1,6 +1,6 @@
-import { forwardRef, useRef, useCallback } from "react";
+import { forwardRef, useRef, useCallback, useEffect } from "react";
 import HTMLFlipBook from "react-pageflip";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import "./LayoutPageViewer.css";
 
 const PAGE_WIDTH = 480;
@@ -85,51 +85,40 @@ export default function LayoutPageViewer({
   onComplete,
   onLastPageBlocked,
 }) {
-  const pages = Array.isArray(book.pages)
-    ? book.pages
-    : [
-      {
-        id: `${book.id}-page-1`,
-        backgroundColor: "#ffffff",
-        elements: [
-          {
-            id: "title",
-            type: "text",
-            x: 50,
-            y: 60,
-            w: 380,
-            h: 80,
-            fontSize: 26,
-            fontWeight: 800,
-            align: "center",
-            html: book.title || "제목 없음"
-          },
-          {
-            id: "summary",
-            type: "text",
-            x: 55,
-            y: 180,
-            w: 370,
-            h: 340,
-            fontSize: 17,
-            lineHeight: 1.8,
-            html: book.summary || book.description || "본문이 준비되지 않았습니다."
-          }
-        ]
-      }
-    ];
+  const rawPages = book.pages;
+  // react-pageflip은 페이지가 짝수여야 마지막 스프레드 에러가 안 남
+  const pages = rawPages.length % 2 !== 0
+    ? [...rawPages, { id: '__blank__', elements: [], backgroundColor: '#ffffff' }]
+    : rawPages;
+
   const bookRef = useRef(null);
-  const lastIndex = pages.length - 1;
-  // usePortrait=false(항상 2페이지 펼침) 모드에서는 마지막으로 도달 가능한
-  // getCurrentPageIndex()가 lastIndex가 아니라 "마지막 스프레드의 첫 페이지" 인덱스다.
-  const lastReachableIndex = pages.length % 2 === 0 ? Math.max(0, pages.length - 2) : lastIndex;
+  const lastReachableIndex = rawPages.length % 2 === 0
+    ? Math.max(0, rawPages.length - 2)
+    : rawPages.length - 1;
   const isLast = currentIndex >= lastReachableIndex;
+
+  // 마지막 페이지 도달 시 모달 - 렌더링 중 setState 방지를 위해 useEffect 사용
+  const prevIsLast = useRef(false);
+  useEffect(() => {
+    if (isLast && !prevIsLast.current) {
+      prevIsLast.current = true;
+      onLastPageBlocked?.();
+    } else if (!isLast) {
+      prevIsLast.current = false;
+    }
+  }, [isLast, onLastPageBlocked]);
 
   const handleFlip = useCallback(
     e => {
-      onIndexChange?.(e.data);
+      const idx = e.data;
+      // 빈 페이지(짝수 맞추기용)로 넘어가지 않도록 lastReachableIndex로 제한
+      const safeIdx = Math.min(idx, lastReachableIndex);
+      onIndexChange?.(safeIdx);
+      if (safeIdx !== idx) {
+        bookRef.current?.pageFlip()?.turnToPage(lastReachableIndex);
+      }
     },
-    [onIndexChange]
+    [onIndexChange, lastReachableIndex]
   );
 
   const goPrev = () => {
@@ -149,8 +138,11 @@ export default function LayoutPageViewer({
   };
 
   const goToIndex = idx => {
-    bookRef.current?.pageFlip()?.turnToPage(idx);
-    onIndexChange?.(idx);
+    const safeIdx = Math.min(idx, lastReachableIndex);
+    const api = bookRef.current?.pageFlip();
+    if (!api) return;
+    api.turnToPage(safeIdx);
+    onIndexChange?.(safeIdx);
   };
 
   return (
@@ -159,7 +151,7 @@ export default function LayoutPageViewer({
         <ChevronLeft size={22} />
       </button>
 
-      <div className="layout-flip-stage" style={{ width: PAGE_WIDTH * 2, height: PAGE_HEIGHT }}>
+      <div className="layout-flip-stage" style={{ width: PAGE_WIDTH * 2, height: PAGE_HEIGHT, position: 'relative' }}>
         <HTMLFlipBook
           width={PAGE_WIDTH}
           height={PAGE_HEIGHT}
@@ -174,6 +166,7 @@ export default function LayoutPageViewer({
           flippingTime={1100}
           maxShadowOpacity={0.4}
           mobileScrollSupport={false}
+          swipeDistance={30}
           className="layout-flip-book"
           ref={bookRef}
           onFlip={handleFlip}
@@ -184,13 +177,16 @@ export default function LayoutPageViewer({
         </HTMLFlipBook>
       </div>
 
+      {/* 가운데 바인딩 선 - layout-flip-stage 밖에 위치해야 overflow hidden에 안 잘림 */}
+      <div className="layout-binding-shadow" style={{ height: PAGE_HEIGHT }} />
+
       <button type="button" className="layout-page-arrow right" disabled={isLast} onClick={goNext}>
         <ChevronRight size={22} />
       </button>
 
       <div className="layout-page-footer">
         <div className="reader-page-dots">
-          {pages.map((p, idx) => (
+          {rawPages.map((p, idx) => (
             <button
               key={p.id}
               type="button"
@@ -199,10 +195,11 @@ export default function LayoutPageViewer({
             />
           ))}
         </div>
-        <span className="reader-page-count">{currentIndex + 1} / {pages.length}</span>
+        <span className="reader-page-count">{currentIndex + 1} / {rawPages.length}</span>
         {isLast && (
           <button type="button" className="layout-page-complete-btn" onClick={onComplete}>
-            완독하기
+            <BookOpen size={13} />
+            독서 마치기
           </button>
         )}
       </div>

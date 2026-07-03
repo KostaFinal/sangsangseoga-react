@@ -29,34 +29,6 @@ function NovelSettingConfirmPage() {
       />
       <div className="novel-confirm-overlay" />
 
-      <header className="novel-confirm-header">
-        <div className="novel-confirm-brand">
-          <span>🌙</span>
-          <strong>소설 스튜디오</strong>
-        </div>
-
-        <nav className="novel-confirm-nav">
-          <button type="button">프로젝트</button>
-          <button type="button">세계관 설정</button>
-          <button type="button">캐릭터</button>
-          <button type="button">자료실</button>
-          <button type="button">요금제</button>
-          <button type="button">가이드</button>
-        </nav>
-
-        <div className="novel-confirm-user">
-          <button type="button" className="novel-premium-btn">
-            👑 프리미엄
-          </button>
-          <button type="button" className="novel-bell-btn">
-            🔔
-          </button>
-          <button type="button" className="novel-profile-btn">
-            작가의 서재⌄
-          </button>
-        </div>
-      </header>
-
       <main className="novel-confirm-main">
         <section className="confirm-title-area">
           <h1>✦ 작가 회의실 ✦</h1>

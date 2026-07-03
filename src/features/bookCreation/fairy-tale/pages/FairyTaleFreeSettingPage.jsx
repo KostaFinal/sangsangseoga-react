@@ -33,27 +33,6 @@ const FairyTaleFreeSettingPage = () => {
     >
       <div className="free-setting-overlay" />
 
-      <header className="free-setting-header">
-        <div className="free-header-left">
-          <div className="free-logo">🏰</div>
-          <span className="free-brand">동화마을</span>
-        </div>
-
-        <div className="free-header-center">
-          <span>동화 만들기</span>
-          <span>→</span>
-          <strong>자유형 기본설정</strong>
-        </div>
-
-        <button
-          type="button"
-          className="free-header-back"
-          onClick={() => navigate(-1)}
-        >
-          이전으로
-        </button>
-      </header>
-
       <main className="free-setting-main">
         <section className="free-title-section">
           <p className="free-kicker">AI 기본설정 인터뷰</p>

@@ -1,10 +1,13 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { normalizeSetting } from "../../services/aiGenerateService";
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import {
   optionSets,
   stepList,
 } from "../data/fairyTaleChoiceBuilderOptions";
+import { normalizeFairyTaleDraftState } from "../utils/normalizeFairyTaleDraftState";
 
 export function useFairyTaleChoiceBuilder() {
   const navigate = useNavigate();
@@ -96,7 +99,6 @@ export function useFairyTaleChoiceBuilder() {
       bookType: "FAIRY_TALE",
       interactionMode: "CHOICE",
       writerLevel: previousData.writerLevel || "LOWER_ELEMENTARY",
-      readerAge: previousData.readerAge || "",
       storySeed,
       protagonistName: protagonistValue.protagonistName || "",
       protagonistDesc: protagonistValue.protagonistDesc || "",
@@ -120,9 +122,15 @@ export function useFairyTaleChoiceBuilder() {
     }
 
     if (isLastStep) {
-      const finalData = makeFinalData();
+      const finalData = normalizeFairyTaleDraftState(makeFinalData(), {
+        creationMode: "CHOICE",
+        interactionMode: "CHOICE",
+      });
+      normalizeSetting(finalData, {
+        source: "fairyTaleChoiceBuilder",
+      });
 
-      navigate("/fairy-tale/confirm", {
+      navigate(BOOK_CREATION_ROUTES.FAIRY_TALE.CONFIRM, {
         state: finalData,
       });
 

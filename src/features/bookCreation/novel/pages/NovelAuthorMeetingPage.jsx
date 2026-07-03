@@ -30,33 +30,6 @@ function NovelAuthorMeetingPage() {
 
       <div className="author-meeting-overlay" />
 
-      <header className="author-header">
-        <div className="author-brand">
-          <span className="author-brand-icon">📚</span>
-          <strong>소설 스튜디오</strong>
-        </div>
-
-        <nav className="author-nav">
-          <button type="button">프로젝트</button>
-          <button type="button">세계관 설정</button>
-          <button type="button">캐릭터</button>
-          <button type="button">자료실</button>
-          <button type="button">요금제</button>
-          <button type="button">가이드</button>
-        </nav>
-
-        <div className="author-user">
-          <button type="button" className="author-premium-btn">
-            👑 프리미엄
-          </button>
-          <button type="button" className="author-bell-btn">
-            🔔
-          </button>
-          <button type="button" className="author-profile-btn">
-            작가의 서재⌄
-          </button>
-        </div>
-      </header>
 
       <main className="author-main">
         <section className="author-title-area">

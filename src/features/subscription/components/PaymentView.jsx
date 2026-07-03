@@ -106,17 +106,17 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
           
           <div className="space-y-2">
             <h3 className="text-xl font-bold text-[#2F2D59]">
-              ❌ 모의 결제 승인이 실패하였습니다
+              ❌ 결제 승인이 실패하였습니다
             </h3>
             <p className="text-xs text-[#7C769D] mt-1">
-              토스페이먼츠(Toss Payments) 가상 게이트웨이 승인 검사 실패
+              토스페이먼츠(Toss Payments) 결제 게이트웨이 승인 검사 실패
             </p>
           </div>
 
           <div className="p-4 bg-red-50/50 rounded-2xl text-left border border-red-100 text-xs text-red-800 space-y-2.5">
             <p className="font-extrabold text-red-900 flex items-center gap-1.5 border-b border-red-100 pb-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-              신 수납대행 거절 사유
+              결제 수납대행 거절 사유
             </p>
             <p className="leading-relaxed text-[11px]">{failureReason}</p>
           </div>
@@ -171,7 +171,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
             <div className="text-left">
               <h3 id="payment-form-title" className="text-base font-bold text-[#2F2D59]">결제 신용카드 정보 등록</h3>
               <p className="text-[11px] text-[#7C769D] mt-0.5">
-                {isSubscriptionType ? '정기 아틀리에 구독 가입 수령에 연동할 카드 정보를 등록합니다.' : '추가 생성권 일시 충전에 필요한 카드를 인증 결제 전송합니다.'}
+                {isSubscriptionType ? '정기 아틀리에 구독 가입에 연동할 카드 정보를 등록합니다.' : '추가 생성권 충전에 필요한 카드 정보를 등록합니다.'}
               </p>
             </div>
             <button
@@ -182,32 +182,15 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
             </button>
           </div>
 
-          {/* Test Badge Warnings */}
+          {/* 결제 보안 안내 */}
           <div className="bg-[#FAF9FF] text-[#2F2D59] border border-[#E6E2FC] p-4 rounded-2xl text-xs space-y-3 text-left">
             <p className="font-extrabold flex items-center text-[#2F2D59] gap-1">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              토스페이먼츠 테스트 모드 시뮬레이터 안내
+              안전한 결제 시스템 안내
             </p>
             <p className="text-[11px] text-[#7C769D] leading-relaxed mt-0.5">
-              * 본 화면은 토스페이먼츠 PG 카드결제 수단을 완벽 재현한 모사 시스템입니다. 실제 전산 청구는 청구되지 않으니 안심하십시오.
+              * 토스페이먼츠(Toss Payments)의 보안 결제 시스템을 통해 카드 정보가 암호화되어 안전하게 처리됩니다.
             </p>
-
-            {/* 승인 모의 분기 컨트롤러 */}
-            <div className="bg-white p-3 rounded-xl border border-[#E6E2FC] space-y-1.5">
-              <label className="block text-[11px] font-black text-[#2F2D59]">
-                🚨 결제 결과 임의 모의 (수납 검증 시뮬레이터)
-              </label>
-              <select
-                value={simulatedStatus}
-                onChange={(e) => setSimulatedStatus(e.target.value)}
-                className="w-full px-2.5 py-1.5 bg-[#FAF9FF] text-xs border border-[#E6E2FC] text-[#2F2D59] rounded-lg cursor-pointer focus:outline-none"
-              >
-                <option value="SUCCESS">✅ 정상 승인 완료 (Success Test)</option>
-                <option value="EXCEEDED_LIMIT">❌ 반려 테스트: 카드 한도 초과 오류 (EXCEEDED_LIMIT)</option>
-                <option value="INSUFFICIENT_BALANCE">❌ 반려 테스트: 잔액 부족 오류 (INSUFFICIENT_BALANCE)</option>
-                <option value="LOST_CARD">❌ 반려 테스트: 정지 및 분실 신고 카드 (LOST_CARD)</option>
-              </select>
-            </div>
           </div>
 
           {error && (
@@ -305,10 +288,10 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
                 {success ? (
                   <span className="flex items-center justify-center text-white font-bold gap-1">
                     <ShieldCheck className="w-4 h-4 text-white" />
-                    토스 모의 승인 및 충전 처리 완료!
+                    결제 승인 및 처리 완료!
                   </span>
                 ) : (
-                  `가상 신용카드 등록 및 ${isSubscriptionType ? '구독 시작' : '단건 즉시결제'}`
+                  `신용카드 등록 및 ${isSubscriptionType ? '구독 시작' : '단건 즉시결제'}`
                 )}
               </button>
             </div>
@@ -359,7 +342,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
             )}
             
             <div className="flex justify-between">
-              <span>정결 주기</span>
+              <span>결제 주기</span>
               <span>{isSubscriptionType ? '매월 자동결제 (토스 수납대행)' : '일회적 즉시 구매'}</span>
             </div>
           </div>
@@ -372,7 +355,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
           </div>
 
           <p className="text-[10px] text-neutral-400 leading-relaxed pt-2">
-            * 시범 테스트 모드로 연동하므로 모의 인증카드 등록이 완료되면 프리미엄 혜택과 생성 캡 제한이 실시간 해소/연동 적용됩니다.
+            * 카드 등록 및 결제가 완료되면 프리미엄 혜택과 생성권 제한이 즉시 적용됩니다.
           </p>
         </div>
 

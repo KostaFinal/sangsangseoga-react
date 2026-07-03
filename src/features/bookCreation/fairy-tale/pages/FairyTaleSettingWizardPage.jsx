@@ -12,48 +12,23 @@ function FairyTaleSettingWizardPage() {
         settings,
         setSettings,
         currentStepInfo,
+        currentStepOptions,
         completedCount,
         progressPercent,
         handleSeedSelect,
+        handleOptionSelect,
         handleCustomSeedChange,
         handleNext,
         isSeedStep,
+        isChoiceStep,
+        isLoadingChoiceStep,
     } = useFairyTaleSettingWizard();
     return (
         <div
-        className="fairy-setup-page"
-        style={{ "--fairy-bg": `url(${fairyBg})` }}
+            className="fairy-setup-page"
+            style={{ "--fairy-bg": `url(${fairyBg})` }}
         >
-            <header className="fairy-header">
-                <div className="header-brand">
-                    <div className="brand-icon">📖</div>
-                    <strong>동화마을</strong>
-                </div>
 
-                <nav className="header-nav">
-                    <button type="button">내 책장</button>
-                    <button type="button" className="active">
-                        동화 만들기
-                    </button>
-                    <button type="button">템플릿</button>
-                    <button type="button">이용 가이드</button>
-                    <button type="button">요금제</button>
-                </nav>
-
-                <div className="header-user">
-                    <button type="button" className="premium-btn">
-                        👑 프리미엄
-                    </button>
-                    <button type="button" className="bell-btn">
-                        🔔
-                    </button>
-                    <div className="profile-chip">
-                        <span className="profile-avatar">🐑</span>
-                        <span>하늘빛 작가님</span>
-                        <span>⌄</span>
-                    </div>
-                </div>
-            </header>
 
             <main className="fairy-layout">
                 <section className="hero-area">
@@ -101,37 +76,67 @@ function FairyTaleSettingWizardPage() {
                             : `${currentStepInfo.label}에 대해 정해볼까요?`}
                     </p>
 
-                    {isSeedStep ? (
+                    {isChoiceStep ? (
                         <>
                             <div className="seed-grid">
-                                {seedOptions.map((option) => (
+                                {currentStepOptions.map((option) => (
                                     <button
                                         key={option.id}
                                         type="button"
-                                        className={`seed-option ${selectedSeed === option.id ? "selected" : ""
+                                        className={`seed-option ${(isSeedStep
+                                            ? selectedSeed === option.id
+                                            : String(settings[currentStepInfo.key]) === String(option.value || option.title)) ? "selected" : ""
                                             } ${option.id === "CUSTOM" ? "wide" : ""}`}
-                                        onClick={() => handleSeedSelect(option)}
+                                        onClick={() => handleOptionSelect(option)}
                                     >
-                                        <span className="seed-icon">{option.icon}</span>
+                                        <span className="seed-icon">{option.icon || option.emoji}</span>
                                         <span>{option.title}</span>
-
-                                        {selectedSeed === option.id && (
-                                            <span className="check-mark">✓</span>
+                                        {option.description && (
+                                            <small>{option.description}</small>
                                         )}
+
+                                        {(isSeedStep
+                                            ? selectedSeed === option.id
+                                            : String(settings[currentStepInfo.key]) === String(option.value || option.title)) && (
+                                                <span className="check-mark">✓</span>
+                                            )}
                                     </button>
                                 ))}
                             </div>
+                            {isChoiceStep && currentStepInfo.key !== "pageCount" && (
+                                <label className="custom-input-area">
+                                    <span>직접 입력</span>
+                                    <input
+                                        type="text"
+                                        value={
+                                            isSeedStep
+                                                ? customSeed
+                                                : settings[currentStepInfo.key]
+                                        }
+                                        onChange={(e) => {
+                                            if (isSeedStep) {
+                                                handleCustomSeedChange(e);
+                                                return;
+                                            }
 
-                            <label className="custom-input-area">
-                                <span>직접 입력</span>
-                                <input
-                                    type="text"
-                                    value={customSeed}
-                                    onChange={handleCustomSeedChange}
-                                    onFocus={() => handleSeedSelect(seedOptions[4])}
-                                    placeholder="만들고 싶은 이야기를 자유롭게 입력해 주세요!"
-                                />
-                            </label>
+                                            setSettings((prev) => ({
+                                                ...prev,
+                                                [currentStepInfo.key]: e.target.value,
+                                            }));
+                                        }}
+                                        onFocus={() => {
+                                            const customOption = currentStepOptions.find((option) =>
+                                                String(option.id).includes("CUSTOM")
+                                            );
+
+                                            if (customOption) {
+                                                handleOptionSelect(customOption);
+                                            }
+                                        }}
+                                        placeholder={`${currentStepInfo.label}을 자유롭게 입력해 주세요!`}
+                                    />
+                                </label>
+                            )}
                         </>
                     ) : (
                         <div className="simple-input-box">
@@ -148,7 +153,12 @@ function FairyTaleSettingWizardPage() {
                         </div>
                     )}
 
-                    <button type="button" className="next-btn" onClick={handleNext}>
+                    <button
+                        type="button"
+                        className="next-btn"
+                        onClick={handleNext}
+                        disabled={isLoadingChoiceStep}
+                    >
                         {currentStep === steps.length - 1 ? "동화 만들기 시작" : "다음 질문"}
                         <span>→</span>
                     </button>
@@ -229,7 +239,7 @@ function FairyTaleSettingWizardPage() {
     );
 }
 
-export default FairyTaleSettingWizardPage;  
+export default FairyTaleSettingWizardPage;
 
 
 

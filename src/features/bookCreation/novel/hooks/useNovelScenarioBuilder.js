@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import {
   agendaItems,
   initialSettings,
@@ -12,7 +13,7 @@ export function useNovelScenarioBuilder() {
 
   const setupData = location.state || {
     bookType: "NOVEL",
-    writerLevel: "BALANCED",
+    writerLevel: "TEEN",
     interactionMode: "MIXED",
   };
 
@@ -109,7 +110,7 @@ export function useNovelScenarioBuilder() {
       return;
     }
 
-    navigate("/bookmaker/novel/confirm", {
+    navigate(BOOK_CREATION_ROUTES.NOVEL.CONFIRM, {
       state: {
         ...setupData,
         minutes: settings,
