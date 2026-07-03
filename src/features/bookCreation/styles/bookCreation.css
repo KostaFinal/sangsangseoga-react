@@ -512,6 +512,34 @@
   box-shadow: 0 0 0 3px rgba(107, 84, 231, 0.12);
 }
 
+/* Poem setting step: direct input appears only for answer mode topic/mood rows. */
+.setting-row .poem-setting-input {
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--editor-border);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--editor-navy);
+  font-size: 13px;
+  font-weight: 850;
+  outline: none;
+}
+
+.setting-row .poem-setting-input::placeholder {
+  color: #b5afc9;
+}
+
+.setting-row .poem-setting-input:focus {
+  border-color: var(--editor-purple);
+  box-shadow: 0 0 0 3px rgba(107, 84, 231, 0.12);
+}
+
+.keyword-option-control .poem-setting-input + .option-button-grid {
+  margin-top: 8px;
+}
+
 .editor-step,
 .preview-step {
   height: calc(100vh - 128px);
@@ -1903,6 +1931,19 @@
   gap: 16px;
   padding-top: 18px;
   border-top: 1px solid #f1e8ff;
+}
+
+.essay-option-row {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 16px;
+  padding-top: 18px;
+  border-top: 1px solid #f1e8ff;
+}
+
+.essay-setting-card .essay-option-row:first-child {
+  padding-top: 0;
+  border-top: 0;
 }
 
 .essay-option-row small {

@@ -1,17 +1,38 @@
 import React, { useState, useContext } from 'react';
 import { NavigationContext } from '../../../shared/components/Header';
-import { LogOut } from 'lucide-react';
-import PoemApp from './PoemCreationView.jsx';
-import EssayApp from './EssayCreationView.jsx';
-import NonfictionApp from './NonfictionCreationView.jsx';
+import PoemApp from '../poem/PoemCreationView.jsx';
+import EssayApp from '../essay/EssayCreationView.jsx';
+import NonfictionApp from '../nonfiction/NonfictionCreationView.jsx';
 import MemberCreationRoutes from '../routes/MemberCreationRoutes.jsx';
 import '../styles/bookCreation.css';
 
-export default function BookCreationRouter({ initialGenre }) {
+export default function BookCreationRouter({ initialGenre, onGoToMyBooks, onBookComplete }) {
   const { onNavigate } = useContext(NavigationContext);
   const [activeGenre, setActiveGenre] = useState(initialGenre || 'poem');
   const [initialView, setInitialView] = useState('step1');
   const [switchKey, setSwitchKey] = useState(0);
+
+  const handleGoToMyBooks = (payload = {}) => {
+    const normalizedPayload = {
+      ...payload,
+      targetPage: 'my-library',
+      targetTab: 'all-books',
+      activeTab: 'all-books',
+      targetComponent: 'AllBooksTab',
+    };
+
+    onBookComplete?.(normalizedPayload.book);
+    onGoToMyBooks?.(normalizedPayload);
+
+    if (typeof window !== 'undefined') {
+      window.localStorage?.setItem('sangsang:my-library-active-tab', 'all-books');
+      window.dispatchEvent(new CustomEvent('sangsang:go-to-my-books', { detail: normalizedPayload }));
+    }
+
+    if (onNavigate) {
+      onNavigate('my-library', normalizedPayload);
+    }
+  };
 
   const switchGenre = (genre) => {
     setActiveGenre(genre);
@@ -19,32 +40,17 @@ export default function BookCreationRouter({ initialGenre }) {
     setSwitchKey((prev) => prev + 1);
   };
 
-  const handleExit = () => {
-    if (onNavigate) {
-      onNavigate('home');
-    }
-  };
-
   return (
     <div className="book-creation-scope relative min-h-screen bg-[#f8f7ff]">
-      {/* Floating Exit Button */}
-      <button
-        onClick={handleExit}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-[#6b54e7] hover:bg-[#5140c6] text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 font-sans text-sm font-semibold cursor-pointer border-none"
-        style={{ boxShadow: '0 10px 25px rgba(107, 84, 231, 0.3)' }}
-      >
-        <LogOut className="w-4 h-4" />
-        <span>대시보드로 돌아가기</span>
-      </button>
 
       {activeGenre === 'essay' && (
-        <EssayApp key={`essay-${switchKey}`} onSwitchGenre={switchGenre} initialView={initialView} />
+        <EssayApp key={`essay-${switchKey}`} onSwitchGenre={switchGenre} initialView={initialView} onGoToMyBooks={handleGoToMyBooks} onBookComplete={onBookComplete} />
       )}
       {activeGenre === 'nonfiction' && (
-        <NonfictionApp key={`nonfiction-${switchKey}`} onSwitchGenre={switchGenre} initialView={initialView} />
+        <NonfictionApp key={`nonfiction-${switchKey}`} onSwitchGenre={switchGenre} initialView={initialView} onGoToMyBooks={handleGoToMyBooks} onBookComplete={onBookComplete} />
       )}
       {activeGenre === 'poem' && (
-        <PoemApp key={`poem-${switchKey}`} onSwitchGenre={switchGenre} initialView={initialView} />
+        <PoemApp key={`poem-${switchKey}`} onSwitchGenre={switchGenre} initialView={initialView} onGoToMyBooks={handleGoToMyBooks} onBookComplete={onBookComplete} />
       )}
       {activeGenre === 'fairy-tale' && (
         <MemberCreationRoutes key={`fairy-tale-${switchKey}`} initialGenre="fairy-tale" />
