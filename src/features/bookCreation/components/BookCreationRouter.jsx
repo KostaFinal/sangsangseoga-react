@@ -1,8 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { NavigationContext } from '../../../shared/components/Header';
-import PoemApp from '../poem/PoemCreationView.jsx';
-import EssayApp from '../essay/EssayCreationView.jsx';
-import NonfictionApp from '../nonfiction/NonfictionCreationView.jsx';
+import PoemApp from '../poem/components/PoemCreationView.jsx';
+import EssayApp from '../essay/components/EssayCreationView.jsx';
 import MemberCreationRoutes from '../routes/MemberCreationRoutes.jsx';
 import '../styles/bookCreation.css';
 
@@ -45,9 +44,6 @@ export default function BookCreationRouter({ initialGenre, onGoToMyBooks, onBook
 
       {activeGenre === 'essay' && (
         <EssayApp key={`essay-${switchKey}`} onSwitchGenre={switchGenre} initialView={initialView} onGoToMyBooks={handleGoToMyBooks} onBookComplete={onBookComplete} />
-      )}
-      {activeGenre === 'nonfiction' && (
-        <NonfictionApp key={`nonfiction-${switchKey}`} onSwitchGenre={switchGenre} initialView={initialView} onGoToMyBooks={handleGoToMyBooks} onBookComplete={onBookComplete} />
       )}
       {activeGenre === 'poem' && (
         <PoemApp key={`poem-${switchKey}`} onSwitchGenre={switchGenre} initialView={initialView} onGoToMyBooks={handleGoToMyBooks} onBookComplete={onBookComplete} />
