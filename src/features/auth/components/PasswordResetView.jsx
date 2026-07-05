@@ -1,123 +1,22 @@
-import React, { useState } from 'react';
-
-const generateUUID = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-};
+import React from 'react';
+import { usePasswordResetState } from '../hooks/usePasswordResetState';
 
 export const PasswordResetView = ({ onNavigateToLogin }) => {
-  const [email, setEmail] = useState('writer@sangsang.com');
-  const [stage, setStage] = useState('request'); 
-  
-  const [redisTokens, setRedisTokens] = useState({});
-  const [activeToken, setActiveToken] = useState(null);
-  const [simulatedInbox, setSimulatedInbox] = useState([]);
-  
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [validationErrors, setValidationErrors] = useState([]);
-  const [serverError, setServerError] = useState('');
-  
-  const hasLetter = /[a-zA-Z]/.test(newPassword);
-  const hasNumber = /[0-9]/.test(newPassword);
-  const hasSpecial = /[^A-Za-z0-9]/.test(newPassword);
-  const isMinLength = newPassword.length >= 8;
+  const {
+    email, setEmail,
+    stage, setStage,
+    simulatedInbox,
+    newPassword, setNewPassword,
+    confirmPassword, setConfirmPassword,
+    validationErrors,
+    serverError,
+    passwordStrength,
+    handleRequestLink,
+    handleLinkClick,
+    handlePasswordSubmit,
+  } = usePasswordResetState();
 
-  const PREVIOUS_BUILTIN_PASSWORD = 'password123';
-
-  const handleRequestLink = (e) => {
-    e.preventDefault();
-    if (!email) return;
-
-    const tokenUuid = generateUUID();
-    const expiryTime = new Date(Date.now() + 30 * 60 * 1000); 
-    
-    const tokenRecord = {
-      email: email,
-      token: tokenUuid,
-      expiresAt: expiryTime,
-      used: false
-    };
-
-    setRedisTokens(prev => ({
-      ...prev,
-      [tokenUuid]: tokenRecord
-    }));
-
-    const mailItem = {
-      id: Date.now(),
-      sender: '상상서가 보안센터 (security@sangsang.com)',
-      title: '[상상서가] 회원님의 비밀번호 재설정을 위한 임시 토큰 메일입니다.',
-      sentAt: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-      token: tokenUuid,
-      link: `https://sangsang.com/reset-password?token=${tokenUuid}`
-    };
-
-    setSimulatedInbox([mailItem, ...simulatedInbox]);
-    setStage('sent_success');
-  };
-
-  const handleLinkClick = (tokenUuid) => {
-    const record = redisTokens[tokenUuid];
-    
-    if (!record) {
-      setServerError('유효하지 않은 보안 토큰입니다. 다시 링크를 발급해 주세요.');
-      return;
-    }
-
-    if (new Date() > record.expiresAt) {
-      setServerError('유효성 기준 시간(30분)이 지나 토큰이 자동 만료되었습니다.');
-      return;
-    }
-
-    if (record.used) {
-      setServerError('❌ 보안 규정 위반: 이 인증 토큰 링크는 이미 1회 사용되어 즉시 파기(만료)되었습니다.');
-      return;
-    }
-
-    setActiveToken(tokenUuid);
-    setServerError('');
-    setStage('new_password');
-  };
-
-  const handlePasswordSubmit = (e) => {
-    e.preventDefault();
-    
-    setValidationErrors([]);
-    const errors = [];
-
-    if (!hasLetter || !hasNumber || !hasSpecial || !isMinLength) {
-      errors.push('비밀번호 복잡도 규칙(영문+숫자+특수문자 최소 8자 이상)을 충족해야 합니다.');
-    }
-
-    if (newPassword !== confirmPassword) {
-      errors.push('새 비밀번호와 비밀번호 확인 입력값이 일치하지 않습니다.');
-    }
-
-    if (newPassword === PREVIOUS_BUILTIN_PASSWORD) {
-      errors.push('🔒 보안 규칙 위반: 직전에 사용하셨던 비밀번호("password123")와 완전히 동일한 비밀번호로는 변경할 수 없습니다.');
-    }
-
-    if (errors.length > 0) {
-      setValidationErrors(errors);
-      return;
-    }
-
-    if (activeToken) {
-      setRedisTokens(prev => ({
-        ...prev,
-        [activeToken]: {
-          ...prev[activeToken],
-          used: true
-        }
-      }));
-    }
-
-    setStage('finished_success');
-  };
+  const { hasLetter, hasNumber, hasSpecial, isMinLength } = passwordStrength;
 
   return (
     <div id="password-reset-container" className="min-h-screen bg-neutral-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative font-sans text-neutral-900">

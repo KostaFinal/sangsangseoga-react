@@ -1,89 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useSignupState } from '../hooks/useSignupState';
 
 export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [birthdate, setBirthdate] = useState('2015-05-15'); 
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [agreeMarketing, setAgreeMarketing] = useState(false);
-  
-  const [step, setStep] = useState('info');
-  const [guardianEmail, setGuardianEmail] = useState('');
-  const [guardianName, setGuardianName] = useState('');
-
-  const [error, setError] = useState('');
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [isMinorUnder14, setIsMinorUnder14] = useState(false);
-  const [showTermsModal, setShowTermsModal] = useState(null);
-
-  const checkIsMinorUnder14 = (dateString) => {
-    if (!dateString) return false;
-    const birthDate = new Date(dateString);
-    const today = new Date();
-    
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    const dayDiff = today.getDate() - birthDate.getDate();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
-      age--;
-    }
-    return age < 14;
-  };
-
-  const handleNextOrSubmit = (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (!email) {
-      setError('이메일을 입력해 주세요.');
-      return;
-    }
-    
-    if (password.length < 6) {
-      setError('보안을 위해 비밀번호는 6자리 이상으로 등록해 주세요.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('입력하신 두 비밀번호가 서로 일치하지 않습니다.');
-      return;
-    }
-    if (!agreeTerms) {
-      setError('이용약관 및 개인정보 수집 이용 동의는 필수 사항입니다.');
-      return;
-    }
-
-    const under14 = checkIsMinorUnder14(birthdate);
-    setIsMinorUnder14(under14);
-
-    if (under14) {
-      setStep('guardian_consent');
-    } else {
-      setShowSuccessModal(true);
-    }
-  };
-
-  const handleGuardianSubmit = (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (!guardianName.trim()) {
-      setError('법정대리인의 실명을 정확하게 입력해 주세요.');
-      return;
-    }
-    if (!guardianEmail.includes('@')) {
-      setError('올바른 법정대리인 이메일 형식으로 기재해 주세요.');
-      return;
-    }
-
-    setShowSuccessModal(true);
-  };
-
-  const handleModalClose = () => {
-    setShowSuccessModal(false);
-    onSuccess();
-  };
+  const {
+    email, setEmail,
+    password, setPassword,
+    confirmPassword, setConfirmPassword,
+    birthdate, setBirthdate,
+    agreeTerms, setAgreeTerms,
+    agreeMarketing, setAgreeMarketing,
+    step, setStep,
+    guardianEmail, setGuardianEmail,
+    guardianName, setGuardianName,
+    error,
+    showSuccessModal,
+    isMinorUnder14,
+    showTermsModal, setShowTermsModal,
+    handleNextOrSubmit,
+    handleGuardianSubmit,
+    handleModalClose,
+  } = useSignupState({ onSuccess });
 
   return (
     <div id="signup-container" className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative bg-neutral-50 overflow-hidden font-sans">

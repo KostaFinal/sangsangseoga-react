@@ -1,63 +1,37 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ShieldAlert, User, Key, ArrowRight, CornerDownRight } from 'lucide-react';
+import { useLoginState } from '../hooks/useLoginState';
 
-export const LoginView = ({ 
-  onSuccess, 
+export const LoginView = ({
+  onSuccess,
   onNavigateToSignup,
   onQuickNavigate,
   onNavigateToPasswordReset,
   onNavigateToSocial
 }) => {
-  const [isAdminMode, setIsAdminMode] = useState(false);
-  const [email, setEmail] = useState('writer@sangsang.com');
-  const [password, setPassword] = useState('password123');
-  const [adminEmail, setAdminEmail] = useState('admin@sangsang.com');
-  const [adminPassword, setAdminPassword] = useState('admin123');
-  const [rememberMe, setRememberMe] = useState(true);
-  const [error, setError] = useState('');
-  const [isPendingMinor, setIsPendingMinor] = useState(false);
-  const [showResendToast, setShowResendToast] = useState(false);
-
-  const handleUserSubmit = (e) => {
-    e.preventDefault();
-    if (!email || !password) {
-      setError('이메일 주소와 비밀번호를 모두 입력해 주세요.');
-      return;
-    }
-    setError('');
-    
-    if (email.includes('child') || email.includes('pending') || email === 'minor@sangsang.com') {
-      setIsPendingMinor(true);
-      return;
-    }
-
-    onSuccess({
-      email,
-      role: 'USER',
-      nickname: '상상의작가'
-    });
-  };
-
-  const handleAdminSubmit = (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (adminEmail !== 'admin@sangsang.com') {
-      setError('이메일 또는 비밀번호가 잘못되었거나, 관리자 권한이 없는 계정입니다.');
-      return;
-    }
-
-    if (adminPassword !== 'admin123') {
-      setError('어드민 패스위드가 알맞지 않습니다. 다시 입력해 주세요.');
-      return;
-    }
-
-    onSuccess({
-      email: adminEmail,
-      role: 'ADMIN',
-      nickname: '상상관리팀장'
-    });
-  };
+  const {
+    isAdminMode,
+    enterAdminMode,
+    exitAdminMode,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    adminEmail,
+    setAdminEmail,
+    adminPassword,
+    setAdminPassword,
+    rememberMe,
+    setRememberMe,
+    error,
+    isPendingMinor,
+    showResendToast,
+    handleUserSubmit,
+    handleAdminSubmit,
+    resendGuardianMail,
+    acceptGuardianConsentDemo,
+    cancelPendingMinor,
+  } = useLoginState({ onSuccess });
 
   return (
     <div id="login-container" className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative bg-neutral-50 overflow-hidden font-sans">
@@ -144,10 +118,7 @@ export const LoginView = ({
           <div className="text-center pt-2">
             <button
               type="button"
-              onClick={() => {
-                setIsAdminMode(false);
-                setError('');
-              }}
+              onClick={exitAdminMode}
               className="font-bold text-xs text-[#7C769D] hover:text-[#6B54E7] hover:underline tracking-tight flex items-center justify-center gap-1.5 mx-auto transition-colors"
             >
               <CornerDownRight className="w-3.5 h-3.5" /> 일반 작가 로그인으로 돌아가기
@@ -189,10 +160,7 @@ export const LoginView = ({
               <div className="space-y-2 font-sans">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowResendToast(true);
-                    setTimeout(() => setShowResendToast(false), 3000);
-                  }}
+                  onClick={resendGuardianMail}
                   className="w-full py-3 bg-black hover:bg-neutral-900 text-white text-xs font-bold rounded-xl transition-all shadow-sm"
                 >
                   보호자 메일로 확인 요청 다시 보내기
@@ -200,16 +168,7 @@ export const LoginView = ({
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsPendingMinor(false);
-                    onSuccess({
-                      email,
-                      role: 'USER',
-                      nickname: '새싹작가_이채민',
-                      ageGroup: 'MINOR_U14',
-                      guardianEmail: 'parent.guardian@sangsang.com'
-                    });
-                  }}
+                  onClick={acceptGuardianConsentDemo}
                   className="w-full py-3 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-neutral-800 text-xs font-bold rounded-xl transition-all"
                 >
                   보호자 수락 완료 처리하고 즉시 입장하기 (체험용)
@@ -223,10 +182,7 @@ export const LoginView = ({
               <div className="pt-3 border-t border-neutral-200 text-center">
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsPendingMinor(false);
-                    setError('');
-                  }}
+                  onClick={cancelPendingMinor}
                   className="text-xs text-neutral-600 font-extrabold hover:text-black hover:underline"
                 >
                   로그인 폼 화면으로 돌아가기
@@ -237,10 +193,7 @@ export const LoginView = ({
             <>
               <div className="text-right">
                 <button
-                  onClick={() => {
-                    setIsAdminMode(true);
-                    setError('');
-                  }}
+                  onClick={enterAdminMode}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-black hover:text-white text-neutral-600 text-[10px] font-sans font-bold transition-all border border-neutral-200"
                 >
                   <ShieldAlert className="w-3 h-3" /> 관리자 로그인
