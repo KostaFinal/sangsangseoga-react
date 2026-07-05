@@ -1,33 +1,38 @@
 import { useMemo, useState } from 'react';
+import { QUESTIONS } from '../data/essayQuestions.js';
 import {
-  initialSettings,
-  initialAnswers,
-  HISTORY_LIMIT,
-  QUESTIONS,
-  createId,
   hasText,
   clean,
   joinText,
   polishText,
   makeOpeningEssay,
-  makeGuidedEssayThrough,
   getGuidedSuggestion,
   makeFreeEssay,
   makeContinuation,
   reviseSelection,
   splitPages,
   getDisplayTitle,
-} from '../essayShared.js';
+} from '../utils/essayTextUtils.js';
+
+const createInitialSettings = () => ({
+  mode: '',
+  title: '',
+  authorAge: '',
+  theme: '',
+  tone: '',
+  length: '',
+});
+
+const createInitialAnswers = () => QUESTIONS.reduce((acc, item) => ({ ...acc, [item.key]: '' }), {});
 
 export default function useEssayCreationState({ initialView = 'step1', onGoToMyBooks, onBookComplete } = {}) {
   const [view, setView] = useState(initialView);
-  const [settings, setSettings] = useState(initialSettings);
-  const [answers, setAnswers] = useState(initialAnswers);
+  const [settings, setSettings] = useState(() => createInitialSettings());
+  const [answers, setAnswers] = useState(() => createInitialAnswers());
   const [questionIndex, setQuestionIndex] = useState(0);
   const [guidedComplete, setGuidedComplete] = useState(false);
   const [content, setContent] = useState('');
   const [workInput, setWorkInput] = useState('');
-  const [history, setHistory] = useState([]);
   const [selectedText, setSelectedText] = useState('');
   const [revisionRequest, setRevisionRequest] = useState('');
   const [freeEditMode, setFreeEditMode] = useState(false);
@@ -41,13 +46,8 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
   const title = getDisplayTitle(settings, answers, content);
   const pages = useMemo(() => splitPages(content), [content]);
 
-  const recordHistory = (label, detail = '') => {
-    setHistory((prev) => [{ id: createId(), label, detail, at: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) }, ...prev].slice(0, HISTORY_LIMIT));
-  };
-
-  const updateContent = (next, label = '본문 수정', detail = '') => {
+  const updateContent = (next) => {
     setContent(next);
-    recordHistory(label, detail);
   };
 
   const makeFreeSnapshot = () => ({
@@ -71,7 +71,6 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     setRevisionRequest('');
     setFreeEditMode(false);
     setGuidedEditMode(false);
-    recordHistory(label, '자유형 작업 상태 복원');
   };
 
   const undoFreeAction = () => {
@@ -95,7 +94,7 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
   };
 
   const resetEssay = () => {
-    setAnswers(initialAnswers);
+    setAnswers(createInitialAnswers());
     setQuestionIndex(0);
     setGuidedComplete(false);
     setContent('');
@@ -106,37 +105,31 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     setGuidedEditMode(false);
     setFreeUndoSnapshot(null);
     setFreeRedoSnapshot(null);
-    setHistory([]);
     setVariant(0);
     setActivePreviewPage(0);
   };
 
-  const startEssay = () => {
-    saveFreeUndoSnapshot();
-    const next = settings.mode === 'free'
-      ? makeFreeEssay(settings, workInput, variant)
-      : makeOpeningEssay(settings, answers, variant);
-    updateContent(next, '에세이 시작', settings.mode === 'free' ? clean(workInput).slice(0, 40) : '질문 답변 기반');
-    setWorkInput('');
-    setVariant((prev) => prev + 1);
+  const selectEssayMode = (mode) => {
+    resetEssay();
+    setSettings({
+      ...createInitialSettings(),
+      mode,
+    });
   };
 
   const writeGuidedStep = () => {
-    const question = QUESTIONS[Math.min(questionIndex, QUESTIONS.length - 1)];
-    if (!question) return;
-    if (!question.optional && !hasText(answers[question.key])) return;
     const requiredReady = QUESTIONS.every((item) => item.optional || hasText(answers[item.key]));
-    if (question.optional && !requiredReady) return;
+    if (!requiredReady) return;
 
-    const next = makeGuidedEssayThrough(settings, answers, questionIndex, variant);
-    updateContent(next, questionIndex === 0 ? '첫 문단 작성' : question.optional ? '에세이 완성' : '에세이 이어쓰기', question.label);
+    const next = makeOpeningEssay(settings, answers, variant);
+    updateContent(next);
+    setGuidedComplete(true);
+    setQuestionIndex(QUESTIONS.length - 1);
+    setSelectedText('');
+    setRevisionRequest('');
+    setGuidedEditMode(false);
+    setWorkInput('');
     setVariant((prev) => prev + 1);
-
-    if (questionIndex >= QUESTIONS.length - 1) {
-      setGuidedComplete(true);
-      return;
-    }
-    setQuestionIndex((prev) => Math.min(QUESTIONS.length - 1, prev + 1));
   };
 
   const recommendGuidedAnswer = () => {
@@ -152,14 +145,14 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
   const appendRaw = () => {
     if (!hasText(workInput)) return;
     saveFreeUndoSnapshot();
-    updateContent(joinText(content, workInput), hasText(content) ? '그대로 이어붙이기' : '그대로 넣기', clean(workInput).slice(0, 40));
+    updateContent(joinText(content, workInput));
     setWorkInput('');
   };
 
   const appendPolished = () => {
     if (!hasText(workInput)) return;
     saveFreeUndoSnapshot();
-    updateContent(joinText(content, polishText(workInput)), hasText(content) ? '다듬어 이어붙이기' : '다듬어 넣기', clean(workInput).slice(0, 40));
+    updateContent(joinText(content, polishText(workInput)));
     setWorkInput('');
   };
 
@@ -167,10 +160,10 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     saveFreeUndoSnapshot();
     if (!hasText(content)) {
       const next = makeFreeEssay(settings, workInput, variant);
-      updateContent(next, 'AI에게 요청하기', clean(workInput).slice(0, 40) || '기본 설정으로 에세이 생성');
+      updateContent(next);
     } else {
       const next = makeContinuation(content, workInput, settings, variant);
-      updateContent(joinText(content, next), 'AI 이어쓰기', clean(workInput).slice(0, 40) || '현재 흐름 이어쓰기');
+      updateContent(joinText(content, next));
     }
     setWorkInput('');
     setVariant((prev) => prev + 1);
@@ -182,11 +175,9 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     if (!replacement) return;
     saveFreeUndoSnapshot();
     const next = content.replace(selectedText, replacement);
-    updateContent(next, '수정하기', clean(revisionRequest).slice(0, 40));
+    updateContent(next);
     setSelectedText('');
     setRevisionRequest('');
-    if (settings.mode === 'free') setFreeEditMode(false);
-    if (settings.mode === 'guided') setGuidedEditMode(false);
   };
 
   const selectFromTextarea = (event) => {
@@ -278,7 +269,6 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     setActivePreviewPage,
     showCompleteModal,
     setShowCompleteModal,
-    startEssay,
     writeGuidedStep,
     recommendGuidedAnswer,
     appendRaw,
@@ -291,6 +281,7 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     selectFromTextarea,
     goStep,
     resetEssay,
+    selectEssayMode,
     moveToMyBooks,
   };
 }

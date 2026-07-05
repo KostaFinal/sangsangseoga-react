@@ -18,7 +18,7 @@ export default function PoemSettingRow({
       <div>
         <strong>
           {label}
-          <em>{required ? "필수" : "선택"}</em>
+          {required && <em>필수</em>}
         </strong>
         <span>{helper}</span>
       </div>

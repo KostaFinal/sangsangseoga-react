@@ -1,11 +1,19 @@
-import { defaultAnswers, defaultSelections, initialPoemBody } from './poemOptions.js';
+const defaultAnswers = {
+  speaker: '',
+  subject: '',
+  firstScene: '',
+  emotionChange: '',
+  ending: '',
+  requiredPhrase: '',
+};
+
+const initialPoemBody = '아직 시가 없어요.\n오른쪽에서 내용을 입력하거나 AI에게 요청해 본문을 추가해 주세요.';
 
 export const createPoem = (order = 1) => ({
   id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
   title: '아직 제목이 없어요',
   content: initialPoemBody,
   order,
-  selections: { ...defaultSelections },
   answers: { ...defaultAnswers },
   freeRequest: '',
   generationSource: '',
@@ -45,21 +53,6 @@ export function cleanAiValue(value) {
   return String(value || '').replace(/^AI 추천:\s*/u, '').trim();
 }
 
-export function getAiChoiceRecommendation(key, settings) {
-  const topic = settings.topic || '꿈';
-  const style = settings.style || '자유시';
-
-  const recommendations = {
-    speaker: style === '동시' ? '어린 내가 직접 말하는 화자' : '미래의 내가 지금의 나에게 말하는 화자',
-    subject: topic === '바다' ? '파도' : topic === '가족' ? '따뜻한 식탁' : topic === '우정' ? '함께 걷는 길' : '작은 불빛',
-    firstScene: style === '산문시' ? '오래된 사진을 바라보는 장면' : '창밖으로 빛이 들어오는 장면',
-    emotionChange: topic === '추억' ? '그리움에서 고마움으로' : '망설임에서 희망으로',
-    ending: style === '동시' ? '밝고 따뜻한 응원' : '조용하지만 오래 남는 여운',
-  };
-
-  return `AI 추천: ${recommendations[key] || '시와 어울리는 방향'}`;
-}
-
 export function getBasicRecommendation(key, settings) {
   if (key === 'topic') {
     if (settings.style === '동시') return '우정';
@@ -77,7 +70,7 @@ export function getBasicRecommendation(key, settings) {
 }
 
 export function getGeneratedPoemText(settings, poem, mode, variant = 0) {
-  const source = mode === 'answer' ? poem.answers || defaultAnswers : poem.selections || defaultSelections;
+  const source = poem.answers || defaultAnswers;
   const speaker = cleanAiValue(source.speaker) || '내가 직접 말하는 화자';
   const subject = cleanAiValue(source.subject) || settings.topic || '꿈';
   const firstScene = cleanAiValue(source.firstScene) || '창밖을 바라보는 장면';
@@ -115,12 +108,11 @@ export function getGeneratedPoemText(settings, poem, mode, variant = 0) {
 }
 
 export function getTitleIdeas(settings, poem) {
-  const selections = poem?.selections || defaultSelections;
   const answers = poem?.answers || defaultAnswers;
   const isFree = settings.mode === 'free';
   const topic = settings.topic || (isFree ? '나의 시' : '꿈');
   const mood = settings.mood || '따뜻한';
-  const image = cleanAiValue(selections.subject || answers.subject) || (isFree ? '문장' : topic);
+  const image = cleanAiValue(answers.subject) || (isFree ? '문장' : topic);
   return [`${topic}을 담은 ${image}`, `${mood} ${topic}`, `${image}이 남은 자리`, `작은 ${topic}의 이름`];
 }
 
@@ -210,3 +202,58 @@ export function getFreeRevisionText(selectedText, request) {
 
   return `${polished}\n${cleanRequest.replace(/해줘|바꿔줘|수정해줘/g, '').trim()} 느낌이 자연스럽게 남도록 다듬었어요`;
 }
+
+
+export function getAnswerRevisionText(selectedText, request) {
+  const selected = String(selectedText || '').trim();
+  const cleanRequest = String(request || '').trim();
+  if (!selected || !cleanRequest) return '';
+
+  if (cleanRequest.includes('간결') || cleanRequest.includes('줄여')) {
+    return selected
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .slice(0, 2)
+      .join('\n');
+  }
+
+  if (cleanRequest.includes('풍성') || cleanRequest.includes('늘려')) {
+    return `${selected}
+달빛과 바람이 그 마음을 천천히 감싸요`;
+  }
+
+  if (cleanRequest.includes('감정')) {
+    return `${selected}
+말하지 못한 마음이 조용히 흔들려요`;
+  }
+
+  if (cleanRequest.includes('리듬')) {
+    return `${selected}
+천천히 흐르고
+다시 조용히 머물러요`;
+  }
+
+  if (cleanRequest.includes('자연스럽') || cleanRequest.includes('어색')) {
+    return selected.replace(/\s+/g, ' ').trim();
+  }
+
+  if (cleanRequest.includes('시적') || cleanRequest.includes('비유') || cleanRequest.includes('달빛')) {
+    return `${selected}
+달빛 같은 마음이 조용히 번져요`;
+  }
+
+  if (cleanRequest.includes('여운')) {
+    return `${selected}
+그 끝에 오래 남는 여운이 머물러요`;
+  }
+
+  if (cleanRequest.includes('따뜻')) {
+    return `${selected}
+따뜻한 숨결처럼 마음에 닿아요`;
+  }
+
+  return `${selected}
+잔잔한 물결처럼 마음에 스며요`;
+}
+

@@ -1,6 +1,5 @@
 import React from 'react';
-import EssayModeStep from './EssayModeStep.jsx';
-import EssaySettingStep from './EssaySettingStep.jsx';
+import EssaySetupStep from './EssaySetupStep.jsx';
 import EssayWorkStep from './EssayWorkStep.jsx';
 import EssayPreviewStep from './EssayPreviewStep.jsx';
 import { ConfirmModal } from '../../../../shared/components';
@@ -35,7 +34,6 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
     setActivePreviewPage,
     showCompleteModal,
     setShowCompleteModal,
-    startEssay,
     writeGuidedStep,
     recommendGuidedAnswer,
     appendRaw,
@@ -48,15 +46,22 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
     selectFromTextarea,
     goStep,
     resetEssay,
+    selectEssayMode,
     moveToMyBooks,
   } = useEssayCreationState({ initialView, onGoToMyBooks, onBookComplete });
 
   return (
     <div className="app-shell essay-only-shell pt-4">
       <main className="workspace essay-workspace-root">
-        {view === 'step1' && <EssayModeStep settings={settings} setSettings={setSettings} goStep={goStep} resetEssay={resetEssay} />}
-        {view === 'step2' && <EssaySettingStep settings={settings} setSettings={setSettings} goStep={goStep} />}
-        {view === 'step3' && (
+        {view === 'step1' && (
+          <EssaySetupStep
+            settings={settings}
+            setSettings={setSettings}
+            goStep={goStep}
+            selectEssayMode={selectEssayMode}
+          />
+        )}
+        {view === 'step2' && (
           <EssayWorkStep
             settings={settings}
             setSettings={setSettings}
@@ -69,7 +74,6 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
             title={title}
             workInput={workInput}
             setWorkInput={setWorkInput}
-            startEssay={startEssay}
             writeGuidedStep={writeGuidedStep}
             recommendGuidedAnswer={recommendGuidedAnswer}
             appendRaw={appendRaw}
@@ -94,7 +98,7 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
             resetEssay={resetEssay}
           />
         )}
-        {view === 'step4' && (
+        {view === 'step3' && (
           <EssayPreviewStep
             title={title}
             pages={pages}

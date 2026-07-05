@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import PoemFlowStepper from './PoemFlowStepper.jsx';
-import { choiceQuestions, answerQuestions, defaultAnswers, initialPoemBody, getGeneratedPoemText, getFreeRequestedText, joinPoemText, polishFreeInput, getFreeContinuationText, getFreeRevisionText, getContentBase, getTitleIdeas, cleanAiValue } from '../poemShared.js';
+import { answerQuestions, POEM_EDIT_DIRECTION_CHOICES } from '../data/poemQuestions.js';
+import { getGeneratedPoemText, getFreeRequestedText, joinPoemText, polishFreeInput, getFreeContinuationText, getFreeRevisionText, getAnswerRevisionText, getContentBase, getTitleIdeas } from '../utils/poemTextUtils.js';
+
 
 export default function PoemWorkStep({
   settings,
-  selections,
   answers,
   poem,
   poems,
+  initialPoemBody,
   activePoem,
   setActivePoem,
   updatePoem,
   questionIndex,
   setQuestionIndex,
-  selectChoice,
   updateCurrentPoemAnswers,
   updateCurrentPoemFreeRequest,
   makePoem,
@@ -27,25 +28,24 @@ export default function PoemWorkStep({
   setCurrentView,
   requestViewChange,
 }) {
-  const mode = settings.mode || 'choice';
-  const isChoiceMode = mode === 'choice';
+  const mode = settings.mode || 'answer';
   const isAnswerMode = mode === 'answer';
   const isFreeMode = mode === 'free';
-  const questions = isAnswerMode ? answerQuestions : choiceQuestions;
+  const questions = answerQuestions;
   const safeQuestionIndex = Math.min(questionIndex, questions.length - 1);
   const q = questions[safeQuestionIndex];
-  const [choiceEditMode, setChoiceEditMode] = useState(false);
-  const [choiceSelectedText, setChoiceSelectedText] = useState('');
+  const currentAnswerChoices = q.choices || [];
   const [answerEditMode, setAnswerEditMode] = useState(false);
+  const [answerChoiceOpen, setAnswerChoiceOpen] = useState(false);
   const [answerSelectedText, setAnswerSelectedText] = useState('');
   const [answerEditRequest, setAnswerEditRequest] = useState('');
+  const [answerEditChoiceOpen, setAnswerEditChoiceOpen] = useState(false);
   const [freeAction, setFreeAction] = useState('raw');
   const [freeEditMode, setFreeEditMode] = useState(false);
   const [freeSelectedText, setFreeSelectedText] = useState('');
   const [freeEditRequest, setFreeEditRequest] = useState('');
   const [freeUndoSnapshot, setFreeUndoSnapshot] = useState(null);
   const [freeRedoSnapshot, setFreeRedoSnapshot] = useState(null);
-  const choiceReady = choiceQuestions.every((item) => selections[item.key]);
   const answerReady = answerQuestions.every((item) => item.optional || String(answers[item.key] || '').trim());
   const freeInputReady = String(poem.freeRequest || '').trim().length > 0;
   const freeBaseContent = getContentBase(poem.content);
@@ -53,11 +53,20 @@ export default function PoemWorkStep({
   const canUseRawFreeAction = freeInputReady;
   const canUseAiRequest = true;
   const poemGenerated = getContentBase(poem.content).trim().length > 0;
-  const choiceGenerated = isChoiceMode && poemGenerated;
 
   const updateAnswer = (value) => {
     const nextAnswers = { ...answers, [q.key]: value };
     updateCurrentPoemAnswers(nextAnswers);
+  };
+
+  const applyAnswerChoice = (choice) => {
+    updateAnswer(choice);
+    setAnswerChoiceOpen(false);
+  };
+
+  const applyAnswerEditChoice = (choice) => {
+    setAnswerEditRequest(choice.request);
+    setAnswerEditChoiceOpen(false);
   };
 
   const goNextAnswer = () => {
@@ -163,6 +172,16 @@ export default function PoemWorkStep({
     setFreeRedoSnapshot(null);
   };
 
+  const resetGuidedWork = () => {
+    const ok = window.confirm('현재 작성 중인 시와 입력 내용을 초기화할까요?');
+    if (!ok) return;
+    resetStep3();
+    setAnswerEditMode(false);
+    setAnswerSelectedText('');
+    setAnswerEditRequest('');
+    setAnswerEditChoiceOpen(false);
+  };
+
   const resetFreeWork = () => {
     const ok = window.confirm('현재 작성 중인 시와 입력 내용을 초기화할까요?');
     if (!ok) return;
@@ -191,7 +210,6 @@ export default function PoemWorkStep({
     updatePoem({ content: poem.content.replace(selected, edited), generationSource: 'free-edit' });
     setFreeSelectedText('');
     setFreeEditRequest('');
-    setFreeEditMode(false);
   };
 
   const closeFreeEditMode = () => {
@@ -201,11 +219,11 @@ export default function PoemWorkStep({
   };
 
   useEffect(() => {
-    setChoiceEditMode(false);
-    setChoiceSelectedText('');
     setAnswerEditMode(false);
+    setAnswerChoiceOpen(false);
     setAnswerSelectedText('');
     setAnswerEditRequest('');
+    setAnswerEditChoiceOpen(false);
     setFreeEditMode(false);
     setFreeSelectedText('');
     setFreeEditRequest('');
@@ -213,17 +231,17 @@ export default function PoemWorkStep({
     setFreeRedoSnapshot(null);
   }, [poem.id, mode]);
 
+  useEffect(() => {
+    setAnswerChoiceOpen(false);
+  }, [safeQuestionIndex]);
+
   const handlePoemTextSelect = (event) => {
-    if (!choiceEditMode && !answerEditMode && !freeEditMode) return;
+    if (!answerEditMode && !freeEditMode) return;
     const target = event.currentTarget;
     const start = target.selectionStart;
     const end = target.selectionEnd;
     if (typeof start !== 'number' || typeof end !== 'number' || start === end) return;
     const selectedText = target.value.slice(start, end);
-
-    if (choiceEditMode) {
-      setChoiceSelectedText(selectedText);
-    }
 
     if (answerEditMode) {
       setAnswerSelectedText(selectedText);
@@ -234,81 +252,22 @@ export default function PoemWorkStep({
     }
   };
 
-  const makeChoiceEditText = (type) => {
-    const selected = choiceSelectedText.trim();
-    if (!selected) return '';
-
-    if (type === 'poetic') {
-      return `${selected}
-처럼 마음에 오래 남는 빛`;
-    }
-
-    if (type === 'polish') {
-      return selected
-        .replace(/\s+/g, ' ')
-        .replace(/은는/g, '은')
-        .replace(/이가/g, '이')
-        .trim();
-    }
-
-    const subject = cleanAiValue(selections.subject) || settings.topic || '꿈';
-    const ending = cleanAiValue(selections.ending) || settings.mood || '조용한 여운';
-    return `${subject}이 ${ending}처럼 남도록 ${selected}을 다시 바라봐요`;
-  };
-
-  const applyChoiceEdit = (type) => {
-    const selected = choiceSelectedText;
-    if (!selected) return;
-    const edited = makeChoiceEditText(type);
-    if (!edited) return;
-    updatePoem({ content: poem.content.replace(selected, edited) });
-    setChoiceSelectedText('');
-  };
-
-  const closeChoiceEditMode = () => {
-    setChoiceEditMode(false);
-    setChoiceSelectedText('');
-  };
-
-  const makeAnswerEditText = () => {
-    const selected = answerSelectedText.trim();
-    const request = answerEditRequest.trim();
-    if (!selected || !request) return '';
-
-    if (request.includes('비유') || request.includes('달빛')) {
-      return `${selected}
-달빛 같은 마음이 조용히 번져요`;
-    }
-
-    if (request.includes('여운')) {
-      return `${selected}
-그 끝에 오래 남는 여운이 머물러요`;
-    }
-
-    if (request.includes('따뜻')) {
-      return `${selected}
-따뜻한 숨결처럼 마음에 닿아요`;
-    }
-
-    return `${selected}
-잔잔한 물결처럼 마음에 스며요`;
-  };
 
   const applyAnswerEdit = () => {
     const selected = answerSelectedText;
     if (!selected || !answerEditRequest.trim()) return;
-    const edited = makeAnswerEditText();
+    const edited = getAnswerRevisionText(selected, answerEditRequest);
     if (!edited) return;
     updatePoem({ content: poem.content.replace(selected, edited) });
     setAnswerSelectedText('');
     setAnswerEditRequest('');
-    setAnswerEditMode(false);
   };
 
   const closeAnswerEditMode = () => {
     setAnswerEditMode(false);
     setAnswerSelectedText('');
     setAnswerEditRequest('');
+    setAnswerEditChoiceOpen(false);
   };
 
   const freeLastActionLabel = freeAction === 'raw'
@@ -329,9 +288,9 @@ export default function PoemWorkStep({
 
   return (
     <section className="step-page editor-step">
-      <PoemFlowStepper active={3} />
+      <PoemFlowStepper active={2} />
 
-      <div className={`editor-grid ${((choiceEditMode && isChoiceMode) || (answerEditMode && isAnswerMode) || isFreeEditing) ? 'edit-mode-grid' : ''}`}>
+      <div className={`editor-grid ${((answerEditMode && isAnswerMode) || isFreeEditing) ? 'edit-mode-grid' : ''}`}>
         <aside className="page-panel">
           <div className="page-panel-head">
             <h3>시</h3>
@@ -383,74 +342,6 @@ export default function PoemWorkStep({
         </section>
 
         <aside className="ai-panel">
-          {isChoiceMode && (
-            <>
-              <div className={`question-card ${choiceEditMode ? 'edit-active-card' : ''}`}>
-                {choiceEditMode ? (
-                  <div className="edit-mode-panel focused-edit-panel">
-                    <div className="edit-mode-head">
-                      <span>수정하기</span>
-                      <strong>시 본문에서 바꾸고 싶은 부분을 드래그해 주세요.</strong>
-                    </div>
-                    <span className="edit-section-label">드래그한 부분</span>
-                    <div className={`selected-edit-text ${choiceSelectedText ? '' : 'empty'}`}>
-                      {choiceSelectedText || '수정하고 싶은 문장이나 구절을 드래그해 주세요.'}
-                    </div>
-                    <span className="edit-section-label edit-button-label">수정 방식</span>
-                    <div className="mini-nav edit-actions">
-                      <button className="primary small" disabled={!choiceSelectedText} onClick={() => applyChoiceEdit('poetic')}>더 시적으로</button>
-                      <button className="primary small" disabled={!choiceSelectedText} onClick={() => applyChoiceEdit('polish')}>어색한 표현 수정</button>
-                      <button className="primary small" disabled={!choiceSelectedText} onClick={() => applyChoiceEdit('partial')}>수정하기</button>
-                      <button className="ghost small" onClick={closeChoiceEditMode}>닫기</button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="question-head">
-                      <span>질문 {safeQuestionIndex + 1} / {choiceQuestions.length}</span>
-                      <strong>{q.label}</strong>
-                    </div>
-                    <h3>{q.question}</h3>
-                    <div className="choice-list">
-                      {q.choices.map((choice, index) => {
-                        const isAiButton = index === q.choices.length - 1;
-                        const selected = isAiButton ? String(selections[q.key] || '').startsWith('AI 추천:') : selections[q.key] === choice;
-
-                        return (
-                          <button key={choice} className={selected ? 'selected' : ''} onClick={() => selectChoice(choice)}>
-                            {choice}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="mini-nav">
-                      <button className="ghost small" disabled={safeQuestionIndex === 0} onClick={() => setQuestionIndex((prev) => Math.max(0, prev - 1))}>이전</button>
-                      <button className="primary small" disabled={!choiceGenerated && !choiceReady} onClick={() => (choiceGenerated ? setChoiceEditMode(true) : makePoem({ selections }))}>
-                        {choiceGenerated ? '수정하기' : '시 만들기'}
-                      </button>
-                      <button className="ghost small" onClick={resetStep3}>초기화</button>
-                      <button className="primary small" onClick={() => (choiceGenerated ? makePoem({ selections }) : makeAll())}>
-                        {choiceGenerated ? 'AI 전체 재생성' : 'AI 전체 만들기'}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {!choiceEditMode && (
-                <div className="history-card">
-                  <h3>선택 히스토리</h3>
-                  {choiceQuestions.map((item) => (
-                    <div key={item.key}>
-                      <span>{item.label}</span>
-                      <strong>{selections[item.key] || ''}</strong>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-
           {isAnswerMode && (
             <>
               <div className={`question-card answer-question-card ${answerEditMode ? 'edit-active-card' : ''}`}>
@@ -468,9 +359,33 @@ export default function PoemWorkStep({
                     <textarea
                       className="answer-input edit-request-input"
                       value={answerEditRequest}
-                      placeholder="예: 더 잔잔한 표현으로 바꿔줘 / 달빛 같은 비유를 넣어줘 / 마지막에 여운이 남게 바꿔줘 / 감정을 더 따뜻하게 다듬어줘"
+                      placeholder="예: 더 시적으로 다듬어줘 / 내용을 더 간결하게 줄여줘 / 이미지와 표현을 조금 더 풍성하게 늘려줘"
                       onChange={(event) => setAnswerEditRequest(event.target.value)}
                     />
+                    <div className="answer-choice-helper edit-choice-helper">
+                      <button
+                        type="button"
+                        className="answer-choice-toggle"
+                        aria-expanded={answerEditChoiceOpen}
+                        onClick={() => setAnswerEditChoiceOpen((open) => !open)}
+                      >
+                        수정 방향 선택하기 ▼
+                      </button>
+                      {answerEditChoiceOpen && (
+                        <div className="answer-choice-options edit-choice-options" aria-label="수정 방향 선택지">
+                          {POEM_EDIT_DIRECTION_CHOICES.map((choice) => (
+                            <button
+                              key={choice.label}
+                              type="button"
+                              className={answerEditRequest === choice.request ? 'selected' : ''}
+                              onClick={() => applyAnswerEditChoice(choice)}
+                            >
+                              {choice.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <div className="mini-nav edit-actions">
                       <button
                         className="primary small"
@@ -495,6 +410,32 @@ export default function PoemWorkStep({
                       placeholder={q.placeholder}
                       onChange={(event) => updateAnswer(event.target.value)}
                     />
+                    {currentAnswerChoices.length > 0 && (
+                      <div className="answer-choice-helper">
+                        <button
+                          type="button"
+                          className="answer-choice-toggle"
+                          aria-expanded={answerChoiceOpen}
+                          onClick={() => setAnswerChoiceOpen((open) => !open)}
+                        >
+                          선택지로 답변하기 ▼
+                        </button>
+                        {answerChoiceOpen && (
+                          <div className="answer-choice-options" aria-label={`${q.label} 선택지`}>
+                            {currentAnswerChoices.map((choice) => (
+                              <button
+                                key={choice}
+                                type="button"
+                                className={answers[q.key] === choice ? 'selected' : ''}
+                                onClick={() => applyAnswerChoice(choice)}
+                              >
+                                {choice}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className="mini-nav">
                       <button className="ghost small" disabled={safeQuestionIndex === 0} onClick={() => setQuestionIndex((prev) => Math.max(0, prev - 1))}>이전</button>
                       {poemGenerated ? (
@@ -504,7 +445,7 @@ export default function PoemWorkStep({
                       ) : (
                         <button className="primary small" disabled={!answerReady} onClick={makeAnswerPoem}>시 만들기</button>
                       )}
-                      <button className="ghost small" onClick={resetStep3}>초기화</button>
+                      <button className="ghost small danger" onClick={resetGuidedWork}>초기화</button>
                       <button className="primary small" onClick={poemGenerated ? regenerateAnswerPoem : makeAll}>
                         {poemGenerated ? 'AI 전체 재생성' : 'AI 전체 만들기'}
                       </button>
@@ -634,8 +575,8 @@ export default function PoemWorkStep({
       </div>
 
       <div className="bottom-actions">
-        <button className="ghost" onClick={() => requestViewChange('step2')}>이전</button>
-        <button className="primary" disabled={!poemGenerated} onClick={() => setCurrentView('step4')}>다음</button>
+        <button className="ghost" onClick={() => requestViewChange('step1')}>이전</button>
+        <button className="primary" disabled={!poemGenerated} onClick={() => setCurrentView('step3')}>다음</button>
       </div>
     </section>
   );
