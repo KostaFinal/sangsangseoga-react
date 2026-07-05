@@ -71,6 +71,7 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
   const [bookDisposalMethod, setBookDisposalMethod] = useState('PRIVATE'); // 'PRIVATE' (비공개 전환) | 'DELETE' (즉각 완전 삭제)
   const [agreeWithdrawTerms, setAgreeWithdrawTerms] = useState(false);
   const [withdrawErrorMsg, setWithdrawErrorMsg] = useState('');
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   // UI Toast Feedbacks
   const [toastMessage, setToastMessage] = useState('');
@@ -179,7 +180,7 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     }
   };
 
-  // Handle Membership Withdrawal Action (회원 탈퇴)
+  // Handle Membership Withdrawal Action (회원 탈퇴) - DELETE /api/members/me
   const handleWithdrawMembershipSubmit = async (e) => {
     e.preventDefault();
     setWithdrawErrorMsg('');
@@ -194,18 +195,20 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
       return;
     }
 
-    if (!profileService.verifyAccountPassword(withdrawConfirmPw)) {
-      setWithdrawErrorMsg('입력하신 본인 확인 패스워드가 장부 기록과 일치하지 않습니다.');
-      return;
+    setIsWithdrawing(true);
+    try {
+      await profileService.withdrawMembership(withdrawConfirmPw, bookDisposalMethod);
+      triggerToast('상상서가 회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.');
+
+      setTimeout(() => {
+        setShowWithdrawModal(false);
+        onLogout(); // Safe session destroy
+      }, 2000);
+    } catch (err) {
+      setWithdrawErrorMsg(err.message);
+    } finally {
+      setIsWithdrawing(false);
     }
-
-    await profileService.withdrawMembership();
-    triggerToast('상상서가 회원 탈퇴가 최종 접수되었습니다. 30일 보관 유예 절차가 진행되며, 즉각 세션을 로그아웃 처리합니다.');
-
-    setTimeout(() => {
-      setShowWithdrawModal(false);
-      onLogout(); // Safe session destroy
-    }, 2500);
   };
 
   const handleRejectGuardianRequest = () => {
@@ -251,6 +254,7 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     bookDisposalMethod, setBookDisposalMethod,
     agreeWithdrawTerms, setAgreeWithdrawTerms,
     withdrawErrorMsg,
+    isWithdrawing,
     openWithdrawModal,
     handleWithdrawMembershipSubmit,
 

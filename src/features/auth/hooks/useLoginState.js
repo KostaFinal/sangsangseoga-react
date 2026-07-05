@@ -5,17 +5,16 @@ import { authService } from '../services/authService';
  * Custom Hook: useLoginState
  *
  * 로그인 화면(일반/관리자) 상태 및 비즈니스 로직 관리 훅.
+ * 일반/관리자 로그인 모두 동일한 /api/auth/login을 사용하며, role로 구분한다.
  */
 export const useLoginState = ({ onSuccess }) => {
   const [isAdminMode, setIsAdminMode] = useState(false);
-  const [email, setEmail] = useState('writer@sangsang.com');
-  const [password, setPassword] = useState('password123');
-  const [adminEmail, setAdminEmail] = useState('admin@sangsang.com');
-  const [adminPassword, setAdminPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
-  const [isPendingMinor, setIsPendingMinor] = useState(false);
-  const [showResendToast, setShowResendToast] = useState(false);
 
   const enterAdminMode = () => {
     setIsAdminMode(true);
@@ -30,13 +29,9 @@ export const useLoginState = ({ onSuccess }) => {
   const handleUserSubmit = async (e) => {
     e.preventDefault();
     try {
-      const result = await authService.loginUser(email, password);
+      const user = await authService.login(email, password, rememberMe);
       setError('');
-      if (result.pendingMinor) {
-        setIsPendingMinor(true);
-        return;
-      }
-      onSuccess(result.user);
+      onSuccess(user);
     } catch (err) {
       setError(err.message);
     }
@@ -45,33 +40,17 @@ export const useLoginState = ({ onSuccess }) => {
   const handleAdminSubmit = async (e) => {
     e.preventDefault();
     try {
-      const adminUser = await authService.loginAdmin(adminEmail, adminPassword);
+      const user = await authService.login(adminEmail, adminPassword, false);
+      if (user.role !== 'ADMIN') {
+        authService.clearLocalSession();
+        setError('관리자 권한이 없는 계정입니다.');
+        return;
+      }
       setError('');
-      onSuccess(adminUser);
+      onSuccess(user);
     } catch (err) {
       setError(err.message);
     }
-  };
-
-  const resendGuardianMail = () => {
-    setShowResendToast(true);
-    setTimeout(() => setShowResendToast(false), 3000);
-  };
-
-  const acceptGuardianConsentDemo = () => {
-    setIsPendingMinor(false);
-    onSuccess({
-      email,
-      role: 'USER',
-      nickname: '새싹작가_이채민',
-      ageGroup: 'MINOR_U14',
-      guardianEmail: 'parent.guardian@sangsang.com'
-    });
-  };
-
-  const cancelPendingMinor = () => {
-    setIsPendingMinor(false);
-    setError('');
   };
 
   return {
@@ -89,12 +68,7 @@ export const useLoginState = ({ onSuccess }) => {
     rememberMe,
     setRememberMe,
     error,
-    isPendingMinor,
-    showResendToast,
     handleUserSubmit,
     handleAdminSubmit,
-    resendGuardianMail,
-    acceptGuardianConsentDemo,
-    cancelPendingMinor,
   };
 };

@@ -5,10 +5,20 @@
  * 현재는 협업 및 페이지 병합을 고려하여 Mock 로직과 인터페이스가 먼저 설계되어 있으며,
  * 실 배포 시 axios 또는 fetch를 이용한 비동기 통신 코드로 간편하게 대체할 수 있도록 설계되었습니다.
  */
+import { withdrawMember } from '../../../api/memberApi';
+import { clearTokens } from '../../../api/tokenStorage';
 
 const RESERVED_NICKNAMES = ['관리자', '상상서가', '어린왕자'];
 const PREVIOUS_BUILTIN_PASSWORD = 'password123';
 const VALID_ACCOUNT_PASSWORDS = ['password123', 'admin123'];
+
+const unwrap = (res) => {
+  const body = res.data;
+  if (!body?.success) {
+    throw new Error(body?.message || '요청 처리 중 문제가 발생했습니다.');
+  }
+  return body.data;
+};
 
 export const profileService = {
   /**
@@ -54,11 +64,14 @@ export const profileService = {
   },
 
   /**
-   * 회원 탈퇴 처리
-   * TODO: API 연동 필요 (POST /api/profile/withdraw)
+   * 회원 탈퇴 처리 (DELETE /api/members/me)
+   * bookDisposalMethod: 'PRIVATE'(비공개 보관) | 'DELETE'(즉시 영구 삭제) → 서버의 bookPolicy 'HIDE'|'DELETE'로 매핑
    */
-  withdrawMembership: async () => {
-    return { success: true };
+  withdrawMembership: async (password, bookDisposalMethod) => {
+    const bookPolicy = bookDisposalMethod === 'DELETE' ? 'DELETE' : 'HIDE';
+    unwrap(await withdrawMember(password, bookPolicy));
+    clearTokens();
+    return true;
   },
 
   /** 학부모 안심 동의 시뮬레이터 - 신규 승인 자녀 계정 목업 생성 */

@@ -4,16 +4,17 @@ import { authService } from '../services/authService';
 /**
  * Custom Hook: usePasswordResetState
  *
- * 비밀번호 재설정(요청 → 메일 확인 → 새 비밀번호 설정) 상태 및 비즈니스 로직 관리 훅.
+ * 비밀번호 재설정(요청 → 토큰 입력 → 새 비밀번호 설정) 상태 및 비즈니스 로직 관리 훅.
+ * 실제 이메일 발송/토큰 검증은 백엔드가 수행하며(POST /api/auth/password/reset_request,
+ * PATCH /api/auth/password/reset), 앱에 실제 라우팅이 없어 토큰은 사용자가 이메일에서
+ * 직접 복사해 입력한다.
  */
 export const usePasswordResetState = () => {
-  const [email, setEmail] = useState('writer@sangsang.com');
+  const [email, setEmail] = useState('');
   const [stage, setStage] = useState('request');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [redisTokens, setRedisTokens] = useState({});
-  const [activeToken, setActiveToken] = useState(null);
-  const [simulatedInbox, setSimulatedInbox] = useState([]);
-
+  const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [validationErrors, setValidationErrors] = useState([]);
@@ -25,26 +26,24 @@ export const usePasswordResetState = () => {
     e.preventDefault();
     if (!email) return;
 
-    const { tokenRecord, mailItem } = await authService.requestPasswordResetEmail(email);
-
-    setRedisTokens(prev => ({
-      ...prev,
-      [tokenRecord.token]: tokenRecord
-    }));
-    setSimulatedInbox([mailItem, ...simulatedInbox]);
-    setStage('sent_success');
+    setIsSubmitting(true);
+    setServerError('');
+    try {
+      await authService.requestPasswordResetEmail(email);
+      setStage('sent_success');
+    } catch (err) {
+      setServerError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleLinkClick = (tokenUuid) => {
-    const record = redisTokens[tokenUuid];
-    const validationError = authService.verifyResetToken(record);
-
-    if (validationError) {
-      setServerError(validationError);
+  const handleTokenSubmit = (e) => {
+    e.preventDefault();
+    if (!resetToken.trim()) {
+      setServerError('이메일로 받은 인증 토큰을 입력해 주세요.');
       return;
     }
-
-    setActiveToken(tokenUuid);
     setServerError('');
     setStage('new_password');
   };
@@ -60,31 +59,30 @@ export const usePasswordResetState = () => {
       return;
     }
 
-    if (activeToken) {
-      setRedisTokens(prev => ({
-        ...prev,
-        [activeToken]: {
-          ...prev[activeToken],
-          used: true
-        }
-      }));
+    setIsSubmitting(true);
+    setServerError('');
+    try {
+      await authService.confirmPasswordReset(resetToken.trim(), newPassword);
+      setStage('finished_success');
+    } catch (err) {
+      setServerError(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    await authService.confirmPasswordReset(newPassword);
-    setStage('finished_success');
   };
 
   return {
     email, setEmail,
     stage, setStage,
-    simulatedInbox,
+    isSubmitting,
+    resetToken, setResetToken,
     newPassword, setNewPassword,
     confirmPassword, setConfirmPassword,
     validationErrors,
     serverError,
     passwordStrength,
     handleRequestLink,
-    handleLinkClick,
+    handleTokenSubmit,
     handlePasswordSubmit,
   };
 };

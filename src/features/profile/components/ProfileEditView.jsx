@@ -59,6 +59,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
     bookDisposalMethod, setBookDisposalMethod,
     agreeWithdrawTerms, setAgreeWithdrawTerms,
     withdrawErrorMsg,
+    isWithdrawing,
     openWithdrawModal,
     handleWithdrawMembershipSubmit,
 
@@ -826,9 +827,10 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
               </button>
               <button
                 type="submit"
-                className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl transition-all shadow-md shadow-rose-600/15 text-center cursor-pointer"
+                disabled={isWithdrawing}
+                className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl transition-all shadow-md shadow-rose-600/15 text-center cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                회원 탈퇴 완료 승인
+                {isWithdrawing ? '처리 중...' : '회원 탈퇴 완료 승인'}
               </button>
             </div>
           </form>

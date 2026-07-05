@@ -24,13 +24,8 @@ export const LoginView = ({
     rememberMe,
     setRememberMe,
     error,
-    isPendingMinor,
-    showResendToast,
     handleUserSubmit,
     handleAdminSubmit,
-    resendGuardianMail,
-    acceptGuardianConsentDemo,
-    cancelPendingMinor,
   } = useLoginState({ onSuccess });
 
   return (
@@ -127,70 +122,6 @@ export const LoginView = ({
         </div>
       ) : (
         <div id="login-card" className="max-w-md w-full space-y-8 bg-white rounded-3xl p-8 sm:p-10 z-10 relative border border-neutral-200/80 shadow-2xl shadow-neutral-950/[0.03]">
-          {isPendingMinor ? (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="text-center font-sans">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-neutral-100 text-neutral-800 mb-3 font-bold border border-neutral-200">
-                  <span className="material-symbols-outlined text-3xl text-neutral-900">family_restroom</span>
-                </div>
-                <h3 className="text-xl font-bold font-literata text-neutral-900">보호자 동의가 필요해요</h3>
-                <p className="text-xs text-neutral-500 mt-2 font-sans font-medium">
-                  만 14세 미만의 어린이 작가는 부모님(보호자)의 승인 후에 서비스를 이용할 수 있습니다.
-                </p>
-              </div>
-
-              <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 text-xs text-left space-y-2 font-sans font-medium">
-                <p className="font-bold text-neutral-900 border-b border-neutral-200 pb-1.5 flex items-center justify-between">
-                  <span>신청 정보</span>
-                  <span className="px-1.5 py-0.5 bg-neutral-200 text-neutral-700 text-[9px] font-bold rounded">확인 중</span>
-                </p>
-                <p>· <strong>신청 이메일:</strong> {email}</p>
-                <p>· <strong>보호자 이메일:</strong> <span className="underline text-black font-bold">parent.guardian@sangsang.com</span></p>
-                <p className="text-[10px] text-neutral-400 mt-2 leading-relaxed">
-                  * 보호자님의 이메일로 승인 확인 메일이 전송되었습니다.
-                </p>
-              </div>
-
-              {showResendToast && (
-                <div className="p-3 bg-neutral-900 text-white text-[11px] rounded-xl text-center leading-normal font-sans animate-in fade-in transition-all">
-                  📨 보호자님의 이메일로 확인 메일을 다시 보내드렸습니다!
-                </div>
-              )}
-
-              <div className="space-y-2 font-sans">
-                <button
-                  type="button"
-                  onClick={resendGuardianMail}
-                  className="w-full py-3 bg-black hover:bg-neutral-900 text-white text-xs font-bold rounded-xl transition-all shadow-sm"
-                >
-                  보호자 메일로 확인 요청 다시 보내기
-                </button>
-
-                <button
-                  type="button"
-                  onClick={acceptGuardianConsentDemo}
-                  className="w-full py-3 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-neutral-800 text-xs font-bold rounded-xl transition-all"
-                >
-                  보호자 수락 완료 처리하고 즉시 입장하기 (체험용)
-                </button>
-
-                <p className="text-[9.5px] text-neutral-400 text-center leading-normal">
-                  * 보호자가 동의하면 가입이 최종 완료됩니다.
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-neutral-200 text-center">
-                <button
-                  type="button"
-                  onClick={cancelPendingMinor}
-                  className="text-xs text-neutral-600 font-extrabold hover:text-black hover:underline"
-                >
-                  로그인 폼 화면으로 돌아가기
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
               <div className="text-right">
                 <button
                   onClick={enterAdminMode}
@@ -339,10 +270,6 @@ export const LoginView = ({
                   </button>
                 </p>
               </div>
-            </>
-          )}
-
-
         </div>
       )}
     </div>
