@@ -1,5 +1,7 @@
 import { toAiGenerateRequest, toBookDraft } from "../utils/bookDraftMapper";
 
+const AI_GENERATE_URL = "http://localhost:8080/api/ai/generate";
+
 const LOG_TASK_TYPES = new Set(["WRITE_PAGE", "WRITE_SCENE"]);
 
 const parseResponseBody = async (response) => {
@@ -79,16 +81,22 @@ export const requestAiGenerate = async ({
 
   try {
     const requestBody = {
-      taskType,
-      draft,
-      extra,
+      bookId: extra?.bookId ?? draft?.bookId ?? null,
+      bookType: draft?.bookType,
+      creationMode: draft?.meta?.interactionMode,
+      authorAgeGroup: draft?.meta?.writerLevel,
+      readerAgeGroup: draft?.meta?.readerAge,
+      stage: taskType,
+      message: extra?.message ?? "",
+      pageNo: extra?.pageNo ?? null,
+      context: { draft, extra },
     };
 
     if (LOG_TASK_TYPES.has(taskType)) {
       console.log("[AI REQUEST]", requestBody);
     }
 
-    const response = await fetch(aiApiRoutes.generateContent(), {
+    const response = await fetch(AI_GENERATE_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

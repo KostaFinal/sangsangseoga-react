@@ -4,10 +4,8 @@ import { useFairyTaleSettingWizard } from "../hooks/useFairyTaleSettingWizard";
 function FairyTaleSettingWizardPage() {
     const {
         steps,
-        seedOptions,
         currentStep,
         setCurrentStep,
-        selectedSeed,
         customSeed,
         settings,
         setSettings,
@@ -15,7 +13,6 @@ function FairyTaleSettingWizardPage() {
         currentStepOptions,
         completedCount,
         progressPercent,
-        handleSeedSelect,
         handleOptionSelect,
         handleCustomSeedChange,
         handleNext,
@@ -23,6 +20,16 @@ function FairyTaleSettingWizardPage() {
         isChoiceStep,
         isLoadingChoiceStep,
     } = useFairyTaleSettingWizard();
+    const isSelectedOption = (option) => {
+        const stepKey = currentStepInfo.key;
+        const currentValue = settings[stepKey];
+
+        if (stepKey === "pageCount") {
+            return currentValue === option.value;
+        }
+
+        return currentValue === option.title;
+    };  
     return (
         <div
             className="fairy-setup-page"
@@ -79,29 +86,41 @@ function FairyTaleSettingWizardPage() {
                     {isChoiceStep ? (
                         <>
                             <div className="seed-grid">
-                                {currentStepOptions.map((option) => (
-                                    <button
+                                {currentStepOptions.map((option) => {
+                                    const isPageCountStep = currentStepInfo.key === "pageCount";
+
+                                    return (
+                                        <button
                                         key={option.id}
                                         type="button"
-                                        className={`seed-option ${(isSeedStep
-                                            ? selectedSeed === option.id
-                                            : String(settings[currentStepInfo.key]) === String(option.value || option.title)) ? "selected" : ""
-                                            } ${option.id === "CUSTOM" ? "wide" : ""}`}
+                                        className={`seed-option ${
+                                            isPageCountStep ? "page-count-option" : ""
+                                        } ${isSelectedOption(option) ? "selected" : ""}`}
                                         onClick={() => handleOptionSelect(option)}
-                                    >
-                                        <span className="seed-icon">{option.icon || option.emoji}</span>
-                                        <span>{option.title}</span>
-                                        {option.description && (
-                                            <small>{option.description}</small>
-                                        )}
+                                        >
+                                        {isPageCountStep ? (
+                                            <>
+                                            <span className="option-icon">{option.icon}</span>
 
-                                        {(isSeedStep
-                                            ? selectedSeed === option.id
-                                            : String(settings[currentStepInfo.key]) === String(option.value || option.title)) && (
-                                                <span className="check-mark">✓</span>
-                                            )}
-                                    </button>
-                                ))}
+                                            <div className="page-count-option-body">
+                                                <strong className="option-page-count">
+                                                {option.value}쪽
+                                                </strong>
+                                                <p className="page-count-description">
+                                                {option.description}
+                                                </p>
+                                            </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                            <span className="option-icon">{option.icon}</span>
+                                            <strong>{option.title}</strong>
+                                            <p>{option.description}</p>
+                                            </>
+                                        )}
+                                        </button>
+                                    );
+                                })}
                             </div>
                             {isChoiceStep && currentStepInfo.key !== "pageCount" && (
                                 <label className="custom-input-area">
@@ -179,6 +198,7 @@ function FairyTaleSettingWizardPage() {
                                 >
                                     <span className="garden-icon">
                                         {step.key === "seed" && "🌱"}
+                                        {step.key === "pageCount" && "📖"}
                                         {step.key === "character" && "🐑"}
                                         {step.key === "setting" && "🏰"}
                                         {step.key === "event" && "⚡"}
@@ -203,8 +223,6 @@ function FairyTaleSettingWizardPage() {
                             <span style={{ width: `${progressPercent}%` }} />
                         </div>
                     </div>
-
-                    <div className="plant-illust">🌱✨</div>
                 </aside>
             </main>
 
