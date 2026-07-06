@@ -22,3 +22,11 @@ export const requestGuardianConsent = (memberId, guardianName, guardianEmail) =>
 
 export const processGuardianConsent = (consentId, token, status) =>
   api.patch(`/api/guardian-consents/${consentId}`, { token, status });
+
+/** 로그인한 보호자 기준 대기 중(REQUESTED) 동의 요청 목록 */
+export const getPendingGuardianConsents = () =>
+  api.get("/api/guardian-consents/pending");
+
+/** 로그인 기반 보호자 동의 승인/거절 (토큰 불필요, Authentication으로 본인 확인) */
+export const decideGuardianConsent = (consentId, status) =>
+  api.patch(`/api/guardian-consents/${consentId}/decision`, { status });
