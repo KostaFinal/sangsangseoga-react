@@ -19,6 +19,8 @@ function FairyTaleSettingWizardPage() {
         isSeedStep,
         isChoiceStep,
         isLoadingChoiceStep,
+        showFallbackNotice,
+        loadingHint,
     } = useFairyTaleSettingWizard();
     const isSelectedOption = (option) => {
         const stepKey = currentStepInfo.key;
@@ -78,10 +80,23 @@ function FairyTaleSettingWizardPage() {
                     </div>
 
                     <p className="question-subtitle">
-                        {isSeedStep
-                            ? "어떤 동화를 만들고 싶나요?"
-                            : `${currentStepInfo.label}에 대해 정해볼까요?`}
+                        {currentStepInfo.question ||
+                            (isSeedStep
+                                ? "어떤 동화를 만들고 싶나요?"
+                                : `${currentStepInfo.label}에 대해 정해볼까요?`)}
                     </p>
+
+                    {isLoadingChoiceStep && (
+                        <p style={{ textAlign: "center", color: "var(--text-sub)", fontWeight: 800, marginBottom: "12px" }}>
+                            🤖 {loadingHint || "AI가 선택지를 만드는 중..."}
+                        </p>
+                    )}
+
+                    {!isLoadingChoiceStep && showFallbackNotice && (
+                        <p style={{ textAlign: "center", color: "var(--text-sub)", fontWeight: 700, marginBottom: "12px" }}>
+                            AI 추천을 불러오지 못해 기본 선택지를 보여드려요.
+                        </p>
+                    )}
 
                     {isChoiceStep ? (
                         <>
@@ -97,6 +112,7 @@ function FairyTaleSettingWizardPage() {
                                             isPageCountStep ? "page-count-option" : ""
                                         } ${isSelectedOption(option) ? "selected" : ""}`}
                                         onClick={() => handleOptionSelect(option)}
+                                        disabled={isLoadingChoiceStep}
                                         >
                                         {isPageCountStep ? (
                                             <>
@@ -248,7 +264,12 @@ function FairyTaleSettingWizardPage() {
                     </p>
                 </div>
 
-                <button type="button" className="big-start-btn" onClick={handleNext}>
+                <button
+                    type="button"
+                    className="big-start-btn"
+                    onClick={handleNext}
+                    disabled={isLoadingChoiceStep}
+                >
                     AI 선생님과 계속 만들기
                     <span>→</span>
                 </button>
