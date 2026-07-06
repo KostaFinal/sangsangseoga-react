@@ -65,7 +65,7 @@ export default function ReadingTab({ filteredBooks, onOpenViewer, onOpenDetail }
             >
               <div className="flex gap-4">
                 <div className="w-16 h-24 rounded-lg overflow-hidden shrink-0 border border-lavender-border shadow-sm">
-                  <img src={book.coverUrl} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" alt="Cover" referrerPolicy="no-referrer" />
+                  <img src={book.coverUrl || "/default-book-cover.png"} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" alt="Cover" referrerPolicy="no-referrer" />
                 </div>
                 <div className="flex-grow min-w-0">
                   <span className="text-[9px] font-bold text-navy-purple bg-white border border-lavender-border px-2 py-0.5 rounded-full">{book.category}</span>

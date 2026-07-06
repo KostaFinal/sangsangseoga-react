@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { initialPaymentRecords } from '../../../shared/data';
-import { 
+import React from 'react';
+import { useSubscriptionState } from '../hooks/useSubscriptionState';
+import {
   Award, 
   Star, 
   Crown, 
@@ -43,61 +43,30 @@ export const SubscriptionView = ({
   benefitEndDate,
   onInitiateCreditsPayment
 }) => {
-  const [records, setRecords] = useState(initialPaymentRecords);
-  const [extraCreditsCount, setExtraCreditsCount] = useState(50);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [purchaseSuccess, setPurchaseSuccess] = useState(false);
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-  const [showCancelSuccess, setShowCancelSuccess] = useState(false);
-  const [printSuccess, setPrintSuccess] = useState(false);
-  const [selectedPlanType, setSelectedPlanType] = useState('monthly');
-  const [openFaqId, setOpenFaqId] = useState(1);
-
-  // Extra Credits dynamic calculations
-  const pricePerCredit = 98; // ₩98 won per credit
-  const calculatedCost = extraCreditsCount * pricePerCredit;
-
-  const handleBuyCredits = () => {
-    if (onInitiateCreditsPayment) {
-      onInitiateCreditsPayment(extraCreditsCount, calculatedCost);
-    } else {
-      setPurchaseSuccess(true);
-      if (setExtraCreditsRemaining) {
-        setExtraCreditsRemaining(prev => prev + extraCreditsCount);
-      }
-      const newRecord = {
-        id: `pay_${Date.now().toString().slice(-4)}`,
-        title: `추가 생성권 (${extraCreditsCount}매)`,
-        date: '방금 전 • 결제 완료',
-        amount: calculatedCost,
-        status: '완료',
-        icon: 'add_circle'
-      };
-      setRecords([newRecord, ...records]);
-    }
-  };
-
-  const faqs = [
-    {
-      id: 1,
-      q: 'AI가 작성하는 소설 단락의 저작권은 누구에게 있나요?',
-      a: '상상서가에서 가공해 드린 모든 소설 텍스트 및 완성된 책의 저작권은 온전히 작가(사용자) 본인에게 귀속됩니다. 상업적 출판 및 판매도 자유롭게 가능합니다.'
-    },
-    {
-      id: 2,
-      q: '프리미엄 요금제의 자동 결제는 언제든 취소가 가능한가요?',
-      a: '네, 마이페이지 결제 및 구독 관리 대시보드에서 정기 구독 해지가 가능하며, 취소 시 해당 결제 주기 마지막 날까지는 모든 프리미엄 기능을 제약 없이 그대로 누리실 수 있습니다.'
-    },
-    {
-      id: 3,
-      q: '무료 요금제와 프리미엄 요금제의 구체적인 AI 퀄리티 차이가 있나요?',
-      a: '프리미엄 요금제는 고매개변수 LLM 모델인 Gemini Pro 계열을 사용하며, 다채로운 묘사, 소설 맥락 및 캐릭터 일관성 제어 가이드 템플릿이 추가 제공됩니다.'
-    }
-  ];
-
-  const toggleFaq = (id) => {
-    setOpenFaqId(openFaqId === id ? null : id);
-  };
+  const {
+    records,
+    extraCreditsCount, setExtraCreditsCount,
+    selectedInvoice,
+    purchaseSuccess, setPurchaseSuccess,
+    showCancelConfirm,
+    showCancelSuccess, setShowCancelSuccess,
+    printSuccess, setPrintSuccess,
+    selectedPlanType, setSelectedPlanType,
+    openFaqId,
+    faqs,
+    creditPackages,
+    pricePerCredit,
+    calculatedCost,
+    toggleFaq,
+    handleBuyCredits,
+    openCancelConfirm,
+    closeCancelConfirm,
+    confirmCancelSubscription,
+    handleSelectPremium,
+    viewInvoice,
+    closeInvoiceModal,
+    printInvoice,
+  } = useSubscriptionState({ onCancelSubscription, onSelectPlan, setExtraCreditsRemaining, onInitiateCreditsPayment });
 
   return (
     <div className="bg-[#FAF9FF] min-h-screen font-sans text-[#2F2D59] w-full px-0 py-0 pb-16 relative">
@@ -430,7 +399,7 @@ export const SubscriptionView = ({
                     disabled={!isPremium}
                     onClick={() => {
                       if (isPremium) {
-                        setShowCancelConfirm(true);
+                        openCancelConfirm();
                       }
                     }}
                     className={`w-full py-3 rounded-xl text-xs font-bold transition-all text-center ${
@@ -503,11 +472,7 @@ export const SubscriptionView = ({
 
                   <div className="space-y-3 pt-4 border-t border-[#E6E2FC]/40">
                     <button
-                      onClick={() => {
-                        if (onSelectPlan) {
-                          onSelectPlan(selectedPlanType);
-                        }
-                      }}
+                      onClick={handleSelectPremium}
                       className={`w-full py-3 rounded-xl text-xs font-black transition-all text-center cursor-pointer shadow-md ${
                         isPremium && !isSubscriptionCanceled
                           ? 'bg-[#110F24] hover:bg-neutral-800 text-white'
@@ -521,7 +486,7 @@ export const SubscriptionView = ({
                       <div className="text-center">
                         <button
                           type="button"
-                          onClick={() => setShowCancelConfirm(true)}
+                          onClick={openCancelConfirm}
                           className="text-[11px] text-rose-500 hover:text-rose-600 font-extrabold transition-all cursor-pointer inline-flex items-center gap-1 hover:underline"
                         >
                           <X className="w-3.5 h-3.5" />
@@ -597,11 +562,7 @@ export const SubscriptionView = ({
 
               {/* Direct Package Selection list */}
               <div className="space-y-3 pt-1">
-                {[
-                  { count: 3, label: '🥉 3회 단편 이용권', price: 2900, desc: '가벼운 체험 및 습작' },
-                  { count: 5, label: '🥈 5회 실속 이용권', price: 4500, desc: '중장편 소설 1권 완벽 제본' },
-                  { count: 10, label: '👑 10회 스페셜 패키지', price: 8000, desc: '정가 대비 10% 즉시 보정 할인', isPopular: true }
-                ].map((pkg) => (
+                {creditPackages.map((pkg) => (
                   <button
                     key={pkg.count}
                     type="button"
@@ -655,7 +616,7 @@ export const SubscriptionView = ({
                   <div className="space-y-0.5">
                     <span className="text-[#7C769D] text-[10px] font-bold block">총 결제 금액</span>
                     <span className="text-base font-black text-[#2F2D59] font-mono">
-                      ₩{(extraCreditsCount === 3 ? 2900 : extraCreditsCount === 5 ? 4500 : extraCreditsCount === 10 ? 8000 : extraCreditsCount * pricePerCredit).toLocaleString()}원
+                      ₩{calculatedCost.toLocaleString()}원
                     </span>
                   </div>
 
@@ -699,7 +660,7 @@ export const SubscriptionView = ({
                         ₩{rec.amount.toLocaleString()}
                       </span>
                       <button
-                        onClick={() => setSelectedInvoice(rec)}
+                        onClick={() => viewInvoice(rec)}
                         className="px-2 py-1 bg-[#FAF9FF] hover:bg-[#E6E2FC]/30 border border-[#E6E2FC]/60 text-[#6B54E7] text-[10px] font-bold rounded-lg cursor-pointer transition-all active:scale-95"
                       >
                         상세
@@ -723,7 +684,7 @@ export const SubscriptionView = ({
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-left border border-[#E6E2FC]/50 shadow-2xl relative animate-in zoom-in-95 duration-200">
             
             <button
-              onClick={() => setSelectedInvoice(null)}
+              onClick={closeInvoiceModal}
               className="absolute top-5 right-5 p-1.5 rounded-full hover:bg-[#FAF9FF] text-[#7C769D] transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
@@ -770,10 +731,7 @@ export const SubscriptionView = ({
               <div className="pt-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setPrintSuccess(true);
-                    setSelectedInvoice(null);
-                  }}
+                  onClick={printInvoice}
                   className="w-full py-3 bg-[#6B54E7] hover:bg-[#5b45d6] text-white text-xs font-black rounded-xl text-center cursor-pointer transition-colors flex items-center justify-center gap-2 shadow-md shadow-[#6B54E7]/15"
                 >
                   <Printer className="w-4 h-4" />
@@ -825,17 +783,13 @@ export const SubscriptionView = ({
 
             <div className="mt-5 flex space-x-3">
               <button
-                onClick={() => setShowCancelConfirm(false)}
+                onClick={closeCancelConfirm}
                 className="flex-1 py-3 bg-[#FAF9FF] hover:bg-[#E6E2FC]/30 text-[#6B54E7] border border-[#E6E2FC]/60 text-xs font-bold rounded-xl cursor-pointer transition-all active:scale-95"
               >
                 멤버십 계속 유지
               </button>
               <button
-                onClick={() => {
-                  setShowCancelConfirm(false);
-                  onCancelSubscription();
-                  setShowCancelSuccess(true);
-                }}
+                onClick={confirmCancelSubscription}
                 className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl cursor-pointer transition-all active:scale-95 shadow-md shadow-rose-600/15"
               >
                 해지 진행 승인

@@ -1,123 +1,23 @@
-import React, { useState } from 'react';
-
-const generateUUID = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-};
+import React from 'react';
+import { usePasswordResetState } from '../hooks/usePasswordResetState';
 
 export const PasswordResetView = ({ onNavigateToLogin }) => {
-  const [email, setEmail] = useState('writer@sangsang.com');
-  const [stage, setStage] = useState('request'); 
-  
-  const [redisTokens, setRedisTokens] = useState({});
-  const [activeToken, setActiveToken] = useState(null);
-  const [simulatedInbox, setSimulatedInbox] = useState([]);
-  
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [validationErrors, setValidationErrors] = useState([]);
-  const [serverError, setServerError] = useState('');
-  
-  const hasLetter = /[a-zA-Z]/.test(newPassword);
-  const hasNumber = /[0-9]/.test(newPassword);
-  const hasSpecial = /[^A-Za-z0-9]/.test(newPassword);
-  const isMinLength = newPassword.length >= 8;
+  const {
+    email, setEmail,
+    stage, setStage,
+    isSubmitting,
+    resetToken, setResetToken,
+    newPassword, setNewPassword,
+    confirmPassword, setConfirmPassword,
+    validationErrors,
+    serverError,
+    passwordStrength,
+    handleRequestLink,
+    handleTokenSubmit,
+    handlePasswordSubmit,
+  } = usePasswordResetState();
 
-  const PREVIOUS_BUILTIN_PASSWORD = 'password123';
-
-  const handleRequestLink = (e) => {
-    e.preventDefault();
-    if (!email) return;
-
-    const tokenUuid = generateUUID();
-    const expiryTime = new Date(Date.now() + 30 * 60 * 1000); 
-    
-    const tokenRecord = {
-      email: email,
-      token: tokenUuid,
-      expiresAt: expiryTime,
-      used: false
-    };
-
-    setRedisTokens(prev => ({
-      ...prev,
-      [tokenUuid]: tokenRecord
-    }));
-
-    const mailItem = {
-      id: Date.now(),
-      sender: '상상서가 보안센터 (security@sangsang.com)',
-      title: '[상상서가] 회원님의 비밀번호 재설정을 위한 임시 토큰 메일입니다.',
-      sentAt: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-      token: tokenUuid,
-      link: `https://sangsang.com/reset-password?token=${tokenUuid}`
-    };
-
-    setSimulatedInbox([mailItem, ...simulatedInbox]);
-    setStage('sent_success');
-  };
-
-  const handleLinkClick = (tokenUuid) => {
-    const record = redisTokens[tokenUuid];
-    
-    if (!record) {
-      setServerError('유효하지 않은 보안 토큰입니다. 다시 링크를 발급해 주세요.');
-      return;
-    }
-
-    if (new Date() > record.expiresAt) {
-      setServerError('유효성 기준 시간(30분)이 지나 토큰이 자동 만료되었습니다.');
-      return;
-    }
-
-    if (record.used) {
-      setServerError('❌ 보안 규정 위반: 이 인증 토큰 링크는 이미 1회 사용되어 즉시 파기(만료)되었습니다.');
-      return;
-    }
-
-    setActiveToken(tokenUuid);
-    setServerError('');
-    setStage('new_password');
-  };
-
-  const handlePasswordSubmit = (e) => {
-    e.preventDefault();
-    
-    setValidationErrors([]);
-    const errors = [];
-
-    if (!hasLetter || !hasNumber || !hasSpecial || !isMinLength) {
-      errors.push('비밀번호 복잡도 규칙(영문+숫자+특수문자 최소 8자 이상)을 충족해야 합니다.');
-    }
-
-    if (newPassword !== confirmPassword) {
-      errors.push('새 비밀번호와 비밀번호 확인 입력값이 일치하지 않습니다.');
-    }
-
-    if (newPassword === PREVIOUS_BUILTIN_PASSWORD) {
-      errors.push('🔒 보안 규칙 위반: 직전에 사용하셨던 비밀번호("password123")와 완전히 동일한 비밀번호로는 변경할 수 없습니다.');
-    }
-
-    if (errors.length > 0) {
-      setValidationErrors(errors);
-      return;
-    }
-
-    if (activeToken) {
-      setRedisTokens(prev => ({
-        ...prev,
-        [activeToken]: {
-          ...prev[activeToken],
-          used: true
-        }
-      }));
-    }
-
-    setStage('finished_success');
-  };
+  const { hasLetter, hasNumber, hasSpecial, isMinLength } = passwordStrength;
 
   return (
     <div id="password-reset-container" className="min-h-screen bg-neutral-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative font-sans text-neutral-900">
@@ -171,12 +71,19 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full flex justify-center py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all active:scale-98"
+                    disabled={isSubmitting}
+                    className="w-full flex justify-center py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all active:scale-98 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    비밀번호 재설정 인증 메일 발송
+                    {isSubmitting ? '발송 중...' : '비밀번호 재설정 인증 메일 발송'}
                   </button>
                 </div>
               </form>
+
+              {serverError && (
+                <div className="p-3 bg-neutral-50 text-neutral-900 border border-neutral-300/80 rounded-xl text-xs leading-relaxed text-left font-sans">
+                  {serverError}
+                </div>
+              )}
 
               <div className="text-center pt-2">
                 <button
@@ -195,66 +102,43 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
               <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-200 flex items-start space-x-3">
                 <span className="material-symbols-outlined text-emerald-600 text-2xl mt-0.5">check_circle</span>
                 <div className="space-y-1 text-xs">
-                  <p className="font-bold text-neutral-900">비밀번호 재설정 메일이 안전하게 전송되었습니다</p>
+                  <p className="font-bold text-neutral-900">비밀번호 재설정 메일이 전송되었습니다</p>
                   <p className="text-neutral-500 leading-normal">
-                    입력하신 <strong className="text-neutral-800 font-semibold">{email}</strong> 수신함으로 비밀번호 인증 링크가 전달되었습니다. 아래 메일 보관함 시뮬레이션을 통해 발송된 메일을 확인하실 수 있습니다.
+                    입력하신 <strong className="text-neutral-800 font-semibold">{email}</strong> 메일함을 확인해 주세요. 메일에 안내된 인증 토큰을 아래에 입력하면 다음 단계로 진행할 수 있습니다.
                   </p>
                 </div>
               </div>
 
-              <div className="border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
-                <div className="bg-neutral-900 text-white px-4 py-2 flex justify-between items-center text-[10px] uppercase font-bold font-sans tracking-wide">
-                  <span className="flex items-center">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
-                    <span>상상서가 임시 메일 수신함 (체험 도우미)</span>
-                  </span>
-                  <span>메일 수신 확인</span>
+              <form onSubmit={handleTokenSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-sans">
+                    인증 토큰 입력
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={resetToken}
+                    onChange={(e) => setResetToken(e.target.value)}
+                    className="w-full px-4 py-3 bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white text-sm text-neutral-900 placeholder-neutral-400 rounded-2xl border border-neutral-200 focus:border-black focus:outline-none transition-all duration-200"
+                    placeholder="메일로 받은 토큰을 붙여넣어 주세요"
+                  />
                 </div>
 
-                <div className="p-4 bg-neutral-50 space-y-3 max-h-72 overflow-y-auto">
-                  {simulatedInbox.length === 0 ? (
-                    <p className="text-center py-6 text-xs text-neutral-400">수신된 메일이 없습니다.</p>
-                  ) : (
-                    simulatedInbox.map(mail => (
-                      <div key={mail.id} className="bg-white p-4 rounded-xl border border-neutral-200 space-y-3 shadow-xs">
-                        <div className="flex justify-between items-start text-[11px] text-neutral-400 border-b border-neutral-100 pb-2">
-                          <div className="space-y-0.5 text-left">
-                            <p><span className="font-bold text-neutral-700">보낸이:</span> {mail.sender}</p>
-                            <p><span className="font-bold text-neutral-700">제목:</span> {mail.title}</p>
-                          </div>
-                          <span>{mail.sentAt}</span>
-                        </div>
-                        <div className="text-xs text-neutral-600 leading-relaxed font-sans py-1">
-                          안녕하세요. 상상서가 고객지원팀입니다.<br />
-                          귀하의 계정 비밀번호 변경 요청에 따라 안전하게 아래와 같이 비밀번호 재설정 확인 링크를 제공해 드립니다.<br />
-                          이 링크는 <span className="font-bold text-neutral-800 underline decoration-rose-300">발송시각으로부터 30분간 유효</span>하며, 회원 정보 보호를 위해 <span className="font-bold text-rose-600">단 1회만 클릭하여 사용</span>이 가능합니다.
-                        </div>
+                {serverError && (
+                  <div className="p-3 bg-neutral-50 text-neutral-900 border border-neutral-300/80 rounded-xl text-xs leading-relaxed text-left font-sans">
+                    {serverError}
+                  </div>
+                )}
 
-                        <div className="bg-neutral-50 p-2.5 rounded-lg border border-neutral-200 font-sans text-xs space-y-1 text-neutral-500">
-                          <p><strong className="text-neutral-700">보안 통질:</strong> 개인 비밀번호 찾기 안전 본인 확인 필터링 동의</p>
-                          <p><strong className="text-neutral-700">유효 시간:</strong> 30분 후 링크 소거</p>
-                        </div>
-
-                        <div className="pt-2 text-center">
-                          <button
-                            onClick={() => handleLinkClick(mail.token)}
-                            className="inline-flex items-center space-x-1 px-4 py-2 bg-neutral-900 hover:bg-black text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs active:scale-98"
-                          >
-                            <span className="material-symbols-outlined text-[14px]">verified_user</span>
-                            <span>인증 링크 클릭하기</span>
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="w-full flex justify-center py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all"
+                  >
+                    다음 단계로
+                  </button>
                 </div>
-              </div>
-
-              {serverError && (
-                <div className="p-3 bg-neutral-50 text-neutral-900 border border-neutral-300/80 rounded-xl text-xs leading-relaxed text-left font-sans">
-                  {serverError}
-                </div>
-              )}
+              </form>
 
               <div className="flex items-center justify-between pt-1 font-sans">
                 <button
@@ -278,9 +162,9 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
               <div className="bg-emerald-50 text-emerald-800 p-3.5 rounded-xl border border-emerald-200/50 flex items-start space-x-2.5 text-xs font-sans">
                 <span className="material-symbols-outlined text-emerald-600 text-lg">verified</span>
                 <div>
-                  <p className="font-bold">비밀번호 찾기 인증 링크 확인 완료</p>
+                  <p className="font-bold">인증 토큰 확인 완료</p>
                   <p className="text-emerald-700 mt-0.5">
-                    본인 확인 인증이 성공적으로 완료되었습니다. 회원님의 계정을 보호할 수 있는 새로운 비밀번호를 설정해 주세요.
+                    새로운 비밀번호를 설정해 주세요. 토큰이 만료되었거나 이미 사용된 경우 제출 시 오류가 표시됩니다.
                   </p>
                 </div>
               </div>
@@ -297,16 +181,6 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
               )}
 
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                
-                <div>
-                  <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest font-sans">
-                    검증 통과 사용자
-                  </label>
-                  <p className="text-sm font-sans font-bold text-slate-800 mt-0.5">
-                    {email} <span className="text-xs font-normal text-slate-400">(상상서가 대표작가 계정)</span>
-                  </p>
-                </div>
-
                 <div>
                   <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-sans">
                     새 비밀번호 입력
@@ -375,12 +249,19 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                   </div>
                 </div>
 
+                {serverError && (
+                  <div className="p-3 bg-neutral-50 text-neutral-900 border border-neutral-300/80 rounded-xl text-xs leading-relaxed text-left font-sans">
+                    {serverError}
+                  </div>
+                )}
+
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full flex justify-center py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all"
+                    disabled={isSubmitting}
+                    className="w-full flex justify-center py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    🔒 안전하게 비밀번호 변경 적용하기
+                    {isSubmitting ? '변경 중...' : '🔒 안전하게 비밀번호 변경 적용하기'}
                   </button>
                 </div>
               </form>

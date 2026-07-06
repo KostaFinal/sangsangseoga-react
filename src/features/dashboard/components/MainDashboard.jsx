@@ -1,8 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { 
-  rankingBooksList, 
-  newBooksList, 
-  aiReviewList, 
+import React from 'react';
+import {
   HERO_BG_IMAGE,
   CURRENT_USER_PROFILE,
   ILLUSTRATION_BOOKS
@@ -41,206 +38,45 @@ import {
   Coffee,
   Lightbulb
 } from 'lucide-react';
+import { useDashboardState } from '../hooks/useDashboardState';
 
-export const MainDashboard = ({ 
-  onNavigate, 
-  onLogout, 
-  setActiveTab,
-  isPremium,
-  freeTrialRemaining,
-  setFreeTrialRemaining,
-  freeTrialTextTokens,
-  setFreeTrialTextTokens,
-  freeTrialImageCount,
-  setFreeTrialImageCount,
-  extraCreditsRemaining,
-  setExtraCreditsRemaining,
-  dailyScore,
-  setDailyScore,
-  dailyTextTokens,
-  setDailyTextTokens,
-  dailyImageCount,
-  setDailyImageCount,
-  isSubscriptionCanceled
-}) => {
-  // Local state for genre filter in "내 서재"
-  const [libraryGenreFilter, setLibraryGenreFilter] = useState('전체');
-  
-  // Local state for searching & sorting in "내 서재"
-  const [librarySearchQuery, setLibrarySearchQuery] = useState('');
-  const [librarySort, setLibrarySort] = useState('최신 수정순');
+export const MainDashboard = (props) => {
+  const { onNavigate, setActiveTab } = props;
 
-  // Local state for following "별하나" in "친구의 서재"
-  const [isFollowing, setIsFollowing] = useState(false);
+  const {
+    isPremium,
+    freeTrialRemaining,
+    freeTrialTextTokens,
+    freeTrialImageCount,
+    extraCreditsRemaining,
+    dailyScore,
 
-  // Filter lists for admin blocks
-  const filteredRankingBooks = useMemo(() => {
-    const blockedBooks = JSON.parse(localStorage.getItem('blocked_books') || '[]');
-    const blockedAuthors = JSON.parse(localStorage.getItem('blocked_authors') || '[]');
-    return rankingBooksList.filter(book => 
-      !blockedBooks.includes(book.id) && 
-      !blockedAuthors.includes(book.authorEmail) &&
-      !blockedAuthors.some(authorId => book.author === authorId || book.authorEmail === authorId)
-    );
-  }, []);
+    libraryGenreFilter, setLibraryGenreFilter,
+    librarySearchQuery, setLibrarySearchQuery,
+    librarySort, setLibrarySort,
+    isFollowing, setIsFollowing,
 
-  const filteredNewBooks = useMemo(() => {
-    const blockedBooks = JSON.parse(localStorage.getItem('blocked_books') || '[]');
-    const blockedAuthors = JSON.parse(localStorage.getItem('blocked_authors') || '[]');
-    return newBooksList.filter(book => 
-      !blockedBooks.includes(book.id) && 
-      !blockedAuthors.includes(book.authorEmail) &&
-      !blockedAuthors.some(authorId => book.author === authorId || book.authorEmail === authorId)
-    );
-  }, []);
+    filteredRankingBooks,
+    filteredNewBooks,
+    filteredReviews,
 
-  const filteredReviews = useMemo(() => {
-    const blockedBooks = JSON.parse(localStorage.getItem('blocked_books') || '[]');
-    const blockedAuthors = JSON.parse(localStorage.getItem('blocked_authors') || '[]');
-    
-    const blockedBookTitles = rankingBooksList
-      .concat(newBooksList)
-      .filter(b => blockedBooks.includes(b.id) || blockedAuthors.includes(b.authorEmail))
-      .map(b => b.title);
+    genre, setGenre,
+    prompt, setPrompt,
+    generateImage, setGenerateImage,
+    isGenerating,
+    generatedResult,
+    showAtelierSection, setShowAtelierSection,
 
-    return aiReviewList.filter(rev => 
-      !blockedBookTitles.includes(rev.bookTitle)
-    );
-  }, []);
-  
-  // Composer simulation state
-  const [genre, setGenre] = useState('fantasy');
-  const [prompt, setPrompt] = useState('시간 수집가가 가득 들어있는 고장 난 무라카미 시계점');
-  const [generateImage, setGenerateImage] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedResult, setGeneratedResult] = useState(null);
-  const [showAtelierSection, setShowAtelierSection] = useState(false);
-  
-  // Modals for token limits
-  const [showFreeTrialCapModal, setShowFreeTrialCapModal] = useState(false);
-  const [showPremiumSoftCapModal, setShowPremiumSoftCapModal] = useState(false);
-  const [showExhaustedCreditsModal, setShowExhaustedCreditsModal] = useState(false);
+    showFreeTrialCapModal, setShowFreeTrialCapModal,
+    showPremiumSoftCapModal, setShowPremiumSoftCapModal,
+    showExhaustedCreditsModal, setShowExhaustedCreditsModal,
 
-  const handleGenerate = (e) => {
-    e.preventDefault();
-    if (!prompt.trim()) return;
+    handleGenerate,
 
-    if (isPremium) {
-      const estimatedPrice = 250;
-      const imagePrice = generateImage ? 1200 : 0;
-      const nextScore = dailyScore + estimatedPrice + imagePrice;
-
-      if (dailyScore >= 5000 || nextScore > 5000) {
-        setIsGenerating(false);
-        setShowPremiumSoftCapModal(true);
-        return;
-      }
-
-      setIsGenerating(true);
-      setGeneratedResult(null);
-
-      setTimeout(() => {
-        setIsGenerating(false);
-        setDailyScore(prev => prev + estimatedPrice + imagePrice);
-        setDailyTextTokens(prev => prev + estimatedPrice);
-        if (generateImage) {
-          setDailyImageCount(prev => prev + 1);
-        }
-
-        setGeneratedResult({
-          title: genre === 'fantasy' ? '시간을 녹이는 시계방 (Premium)' : genre === 'mystery' ? '어스름 저녁의 거짓말 (Premium)' : '유성우 내리는 밤의 기억 (Premium)',
-          content: `천천히 흔들리며 돌아가는 톱니바퀴 너머로, 수집가는 먼지 낀 렌즈를 만지작거렸다. "${prompt}" 이라니, 상상했던 것보다 훨씬 더 따뜻한 발상이었다.\n\n"모든 흘러간 순간들은 결국 어딘가에 머무는 법이지. 당신이 문을 연 순간, 소중한 이야기가 새로이 피어나기 시작했다네..."`
-        });
-      }, 2000);
-
-    } else {
-      if (freeTrialRemaining > 0) {
-        const nextTrialText = freeTrialTextTokens + 250;
-        const nextTrialImage = freeTrialImageCount + (generateImage ? 1 : 0);
-
-        if (freeTrialTextTokens >= 1000 || freeTrialImageCount >= 3 || nextTrialText > 1000 || nextTrialImage > 3) {
-          setShowFreeTrialCapModal(true);
-          return;
-        }
-
-        setIsGenerating(true);
-        setGeneratedResult(null);
-
-        setTimeout(() => {
-          setIsGenerating(false);
-          const textAdd = 250;
-          const imgAdd = generateImage ? 1 : 0;
-
-          setFreeTrialTextTokens(t => {
-            const finalT = t + textAdd;
-            if (finalT >= 1000) setFreeTrialRemaining(0);
-            return finalT;
-          });
-
-          setFreeTrialImageCount(c => {
-            const finalC = c + imgAdd;
-            if (finalC >= 3) setFreeTrialRemaining(0);
-            return finalC;
-          });
-
-          setGeneratedResult({
-            title: genre === 'fantasy' ? '시간을 녹이는 시계방 (체험판)' : genre === 'mystery' ? '어스름 저녁의 거짓말 (체험판)' : '유성우 내리는 밤의 기억 (체험판)',
-            content: `수집가는 먼지 낀 렌즈를 흔들며 엷은 미소를 지었다. "${prompt}" 의 이야기가 알록달록한 글귀가 되어 피어난다. \n\n"상상했던 그림책 속 이야기가 아주 아름답게 쓰였네. 책방에 하나씩 차곡차곡 채우다 보면 아주 훌륭한 작가가 될 거야."`
-          });
-        }, 2000);
-
-      } else {
-        if (extraCreditsRemaining > 0) {
-          setIsGenerating(true);
-          setGeneratedResult(null);
-
-          setTimeout(() => {
-            setIsGenerating(false);
-            setExtraCreditsRemaining(c => c - 1);
-
-            setGeneratedResult({
-              title: genre === 'fantasy' ? '시간을 녹이는 시계방 (생성권 사용)' : genre === 'mystery' ? '어스름 저녁의 거짓말 (생성권 사용)' : '유성우 내리는 밤의 기억 (생성권 사용)',
-              content: `금빛 생성권이 반짝이며 이야기 장치에 따뜻한 빛을 불어넣는다. "${prompt}" 에 담긴 멋진 이야기들이 가득 채워져 내린다.\n\n"새로운 원고가 책방에 추가되어 언제든 꺼내볼 수 있게 되었습니다."`
-            });
-          }, 2000);
-
-        } else {
-          setShowExhaustedCreditsModal(true);
-          return;
-        }
-      }
-    }
-  };
-
-  // Static items for "내 서재" view
-  const myCabinetBooks = [
-    { id: 301, title: '별빛이 된 고래', category: '동화', coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB4qbLMXrDeSvtACQrqxaabRXhUcLWI6ISEPbVCL4zP57a5y85IerCnkSy5pgzsSQmnNvDc1q2s-ibxVkN7ZqJ31_b8pC4F9l3lfBrQYbyPWPxUbP86iX2oTav5lZ0ev4-koEU62F0a8awUxxeRhuKpbx11aiJCLL1Ac5DNjJFB_E6OqjY7OCfsrzj9vnGnBx1ksipJacKjVdyp8736LnR-kx6bUc_klYIKrF7BlzGIXFzpeSpGXPTsZHSfJlVMQOc3tUYU5ecEPPc', date: '2024.05.28 14:30' },
-    { id: 302, title: '초록의 계절', category: '소설', coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAQHaZbTIh-qZz2zWXqdVpVBhMMmTyM82fnx_hh17ZiHkj27S_HTNBgEow5mw54n8enyKHv0aPXoZbHoIIXHQmmXPYyRAtWlG3basGWcjJDb2OGTNsSjQRphauo8WObivk8sXjpu1J1CjKEOqGmfZ3pHaollH6-uGl4Z_VNgSwPD_VrGTnOK5yRUg1QsaQIefQG1oXxyMmfjWGkX2FLRL5jfOanTv7SGBdqwgeB-adv_ra9SHzaImv3uqDJp5GDI4pKZeRAApklAaA', date: '2024.05.27 09:15' },
-    { id: 303, title: '너에게 가는 가장 느린 길', category: '시', coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCGreyv2VCoj1SJwbqdcjhrdvT4ozFoylrIcpjpy1mnc9dUMrk8t640Dx27FQffZMJWaK8o3IlvcqUizLvPBZHI9sbXmvrjwfCe3xg-3-a04c1kSYuQmO-_202kNkpSd0ISkWhbB6C0zZ-FzbO6aSER03Dt29sbdp73dOr1OzyQgsGUuZK1ov1P5THT8VHZ2SQQvRnIEdekIqTY0rrFecEtEv71DSQV8Qgbt0n79jVeDPUakxCXSB9I-aheu67K5DvPSMUiCZUaRV8', date: '2024.05.26 21:40' },
-    { id: 304, title: '작은 하루의 기록', category: '에세이', coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBL9C026912DWIR1LG1aQKUHDO0L5tB1PxdJVonj8bxfKQ75IV6uR99DoLyUg5iNVqKW4ev8bK2aL2BlTbVxn229HmaAO9sRDdAPkLWiWlcE1gawXlfOmeRX8WJCPiDsttSWRVJOOhgVWLBXWfS6LVxJ9kjDI9wPvEkD851Ok7e_hSpVr0cTBTFVYvIJLm8XNQzQx_ESFnx3tM27mBrOsK16EdHSGfyOc0zpOhyvCEZWSpb7Y7A8kZ3Gl2NKGhuOZgXcTEJ_E7Pgf0', date: '2024.05.25 16:10' },
-    { id: 305, title: '등대가 건네는 말', category: '교육/지식', coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDaDaaVKQXJiSQ-D3L1F02zwhZ2prTvtAzSMhZjbbYH_cK2GWQhB7AQsuEZeUbdEi8l5QoglpYbdXwhGKJaQiOdO76asNfdM1c0o4uqu_5NmypZk44uuOzQj3JQJtMqHZMcNTKB1keJ3Tv5r3AP1EINS9skP6DzsFzORmTdSA67hSZHoo-RUlel0KgvAof3zq2I4BfTwIv-6BUEj7qGsnb6L9Z5awI2d6ImWdfF2GMx4ET2zXRLJLFo7qeehBzKVTfs5gpDrXWAxwM', date: '2024.05.24 10:05' },
-    { id: 306, title: '겨울, 그리고 우리', category: '소설', coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA6zPpuADYLE4UddvrL9_GPFaghMkihFhNSA5Q0uEmPX03CLHNK55MvdOPdKqz6C6Tw-KY7ZjA4YHpLOqiKayz5rdxk9MKC-S6L_iTf9VFgvtriHMKWrW-Bx028hoUurbMFFwpCtp2JHXPkngAFI_h-0Niar3MYpfvUWfeQk2dfAlRU57abyGrYzPxWkYXY-EhQE1gmx2voruHMq_4jXGHWVo6KyfbBFgwIZbR_EmjG5mPH0036MoFnzchL12D6YIHAN5mTEAK-G6w', date: '2024.05.23 22:18' }
-  ];
-
-  const filteredCabinetBooks = useMemo(() => {
-    return myCabinetBooks.filter(b => {
-      const matchGenre = libraryGenreFilter === '전체' || b.category === libraryGenreFilter;
-      const matchSearch = b.title.toLowerCase().includes(librarySearchQuery.toLowerCase());
-      return matchGenre && matchSearch;
-    });
-  }, [libraryGenreFilter, librarySearchQuery]);
-
-  // Friend's books list (8 items)
-  const friendBooks = [
-    { id: 401, title: '여름의 조각들', category: '에세이', coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBAlgov4Ndwbkqsdj-Wy320A6sm5eIrOAh0fJ9iql5uxYkUWODJzuvxDJGOarbrHyWZpKki_6W--5-y1C2PHZRmzdsgBb7BLEc8IxTCMXTW9R0hfy7uqjy5U1X7Aihqk1llWQjtgmHQkRnbckz8nBMYbpe4r_WXrVQNutTxX7SutNuluLR0MbYoKoVS6SETBbzSXShKPS2VAUTzYyUUYyHFcm5k7kpBLau2Lk4MiFNQyio7tD96chDlTfKp3NSSvNmq4rM8O8j0oGM', date: '2024.05.28', likes: '321', views: '1.1k' },
-    { id: 402, title: '밤하늘 산책', category: '시', coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB4qbLMXrDeSvtACQrqxaabRXhUcLWI6ISEPbVCL4zP57a5y85IerCnkSy5pgzsSQmnNvDc1q2s-ibxVkN7ZqJ31_b8pC4F9l3lfBrQYbyPWPxUbP86iX2oTav5lZ0ev4-koEU62F0a8awUxxeRhuKpbx11aiJCLL1Ac5DNjJFB_E6OqjY7OCfsrzj9vnGnBx1ksipJacKjVdyp8736LnR-kx6bUc_klYIKrF7BlzGIXFzpeSpGXPTsZHSfJlVMQOc3tUYU5ecEPPc', date: '2024.05.27', likes: '289', views: '972' },
-    { id: 403, title: '고양이 탐정 나비의 비밀', category: '동화', coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCznlvT7W-W0NUxinTfAkyigdk2z3I-k-uZK5biSPoGv-2D69bAp-MLEgeUx5_bmFFebrWpllo42X0LF3ihgtEq_p51DrgtnqEOxsjsT2H7Q-4z9A8CHXtLdWGVPongYJImv13zsDsLze4Y5uqVGkpuCACb2TG-2iz1K-vbt4oS_rN6GRYPOtDCaDeTYNF5cOuMY590pmj3N-GlXuNg4x60NRJiF503Y7d0x4f_0J72onLQeH8GK5y5bHOU6vlUE5fnCZo9xc1SEig', date: '2024.05.26', likes: '445', views: '1.6k' },
-    { id: 404, title: '커피 한 잔의 인문학', category: '교육/지식', coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC2O_PD7xdQCc_iGfXoKwNrVIurVlo0ugo_weeYOYZOG-Wh7f6vj3_DVFNiSln1HzMbFHhwypEYn9qPXQRQ2x8rytzojL6ot4tX_9mXRZB-OO0IANHl_DZM9OrB17ajZemU93sWq3W66bOlFJdjmkeDtvqCmbG_BQln7wrzg4vFRQrmn0Mqlbt4NOhAIZX_FDgxT1X3R9q6wVpNMIjLbN0ioReZ88c5QTD0GfjDeChjMbk1UZw-N3JIAVoL1fzcD4ansUKeIZxSdXk', date: '2024.05.24', likes: '233', views: '801' },
-    { id: 405, title: '기억의 온도', category: '소설', coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDaDaaVKQXJiSQ-D3L1F02zwhZ2prTvtAzSMhZjbbYH_cK2GWQhB7AQsuEZeUbdEi8l5QoglpYbdXwhGKJaQiOdO76asNfdM1c0o4uqu_5NmypZk44uuOzQj3JQJtMqHZMcNTKB1keJ3Tv5r3AP1EINS9skP6DzsFzORmTdSA67hSZHoo-RUlel0KgvAof3zq2I4BfTwIv-6BUEj7qGsnb6L9Z5awI2d6ImWdfF2GMx4ET2zXRLJLFo7qeehBzKVTfs5gpDrXWAxwM', date: '2024.05.23', likes: '512', views: '1.7k' },
-    { id: 406, title: '단단한 마음 연습', category: '에세이', coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDra40jzJO5MIslf39NjFPm_5AXP_36tnCR4qTZi0w_TzI4IyrIrsf7PJqxFo0B0eB0-tQ3e20wCkpgRDwIKgdDijHMYDkSLqnh26rOPVh0axoRcKGTkG2Y7h7ZCi6FKxfXfkU6mCrxG8tdffOx6ED-ivJN-UfC9wj686_sFEB3BWH-2TpoZSR6qtNOLl0oKp7MhNEI04ejrg5VpxxyWioZ_ez-099qQu-7U_eeV4CdJfnv3w8LJ5ozVnexb14fO80dJFduGSbOZ6E', date: '2024.05.22', likes: '276', views: '934' },
-    { id: 407, title: '봄을 기다리는 사람에게', category: '시', coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCGreyv2VCoj1SJwbqdcjhrdvT4ozFoylrIcpjpy1mnc9dUMrk8t640Dx27FQffZMJWaK8o3IlvcqUizLvPBZHI9sbXmvrjwfCe3xg-3-a04c1kSYuQmO-_202kNkpSd0ISkWhbB6C0zZ-FzbO6aSER03Dt29sbdp73dOr1OzyQgsGUuZK1ov1P5THT8VHZ2SQQvRnIEdekIqTY0rrFecEtEv71DSQV8Qgbt0n79jVeDPUakxCXSB9I-aheu67K5DvPSMUiCZUaRV8', date: '2024.05.21', likes: '198', views: '668' },
-    { id: 408, title: '바다를 건너는 법', category: '교육/지식', coverUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAQHaZbTIh-qZz2zWXqdVpVBhMMmTyM82fnx_hh17ZiHkj27S_HTNBgEow5mw54n8enyKHv0aPXoZbHoIIXHQmmXPYyRAtWlG3basGWcjJDb2OGTNsSjQRphauo8WObivk8sXjpu1J1CjKEOqGmfZ3pHaollH6-uGl4Z_VNgSwPD_VrGTnOK5yRUg1QsaQIefQG1oXxyMmfjWGkX2FLRL5jfOanTv7SGBdqwgeB-adv_ra9SHzaImv3uqDJp5GDI4pKZeRAApklAaA', date: '2024.05.20', likes: '221', views: '723' }
-  ];
+    myCabinetBooks,
+    friendBooks,
+    filteredCabinetBooks,
+  } = useDashboardState(props);
 
   return (
     <div className="min-h-screen bg-[#FAF9FF] text-[#2F2D59] font-sans pb-24">

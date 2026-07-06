@@ -1,89 +1,27 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useSignupState } from '../hooks/useSignupState';
 
 export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [birthdate, setBirthdate] = useState('2015-05-15'); 
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [agreeMarketing, setAgreeMarketing] = useState(false);
-  
-  const [step, setStep] = useState('info');
-  const [guardianEmail, setGuardianEmail] = useState('');
-  const [guardianName, setGuardianName] = useState('');
-
-  const [error, setError] = useState('');
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [isMinorUnder14, setIsMinorUnder14] = useState(false);
-  const [showTermsModal, setShowTermsModal] = useState(null);
-
-  const checkIsMinorUnder14 = (dateString) => {
-    if (!dateString) return false;
-    const birthDate = new Date(dateString);
-    const today = new Date();
-    
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    const dayDiff = today.getDate() - birthDate.getDate();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
-      age--;
-    }
-    return age < 14;
-  };
-
-  const handleNextOrSubmit = (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (!email) {
-      setError('이메일을 입력해 주세요.');
-      return;
-    }
-    
-    if (password.length < 6) {
-      setError('보안을 위해 비밀번호는 6자리 이상으로 등록해 주세요.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('입력하신 두 비밀번호가 서로 일치하지 않습니다.');
-      return;
-    }
-    if (!agreeTerms) {
-      setError('이용약관 및 개인정보 수집 이용 동의는 필수 사항입니다.');
-      return;
-    }
-
-    const under14 = checkIsMinorUnder14(birthdate);
-    setIsMinorUnder14(under14);
-
-    if (under14) {
-      setStep('guardian_consent');
-    } else {
-      setShowSuccessModal(true);
-    }
-  };
-
-  const handleGuardianSubmit = (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (!guardianName.trim()) {
-      setError('법정대리인의 실명을 정확하게 입력해 주세요.');
-      return;
-    }
-    if (!guardianEmail.includes('@')) {
-      setError('올바른 법정대리인 이메일 형식으로 기재해 주세요.');
-      return;
-    }
-
-    setShowSuccessModal(true);
-  };
-
-  const handleModalClose = () => {
-    setShowSuccessModal(false);
-    onSuccess();
-  };
+  const {
+    email, setEmail,
+    password, setPassword,
+    confirmPassword, setConfirmPassword,
+    nickname, setNickname,
+    birthdate, setBirthdate,
+    agreeTerms, setAgreeTerms,
+    agreeMarketing, setAgreeMarketing,
+    step, setStep,
+    guardianEmail, setGuardianEmail,
+    guardianName, setGuardianName,
+    error,
+    isSubmitting,
+    showSuccessModal,
+    isMinorUnder14,
+    showTermsModal, setShowTermsModal,
+    handleNextOrSubmit,
+    handleGuardianSubmit,
+    handleModalClose,
+  } = useSignupState({ onSuccess });
 
   return (
     <div id="signup-container" className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative bg-neutral-50 overflow-hidden font-sans">
@@ -127,6 +65,21 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-neutral-600 mb-1">
+                  닉네임 <span className="text-neutral-900">*</span>
+                </label>
+                <input
+                  id="signup-nickname"
+                  type="text"
+                  required
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white text-sm text-neutral-900 rounded-xl border border-neutral-200 focus:border-black focus:outline-none transition-all duration-200"
+                  placeholder="한글/영문/숫자 2~10자"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-neutral-600 mb-1">
@@ -139,7 +92,7 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full px-4 py-2.5 bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white text-sm text-neutral-900 rounded-xl border border-neutral-200 focus:border-black focus:outline-none transition-all duration-200"
-                    placeholder="6자 이상 필수"
+                    placeholder="영문+숫자+특수문자 8자 이상"
                   />
                 </div>
 
@@ -230,9 +183,10 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
               <button
                 id="signup-submit-btn"
                 type="submit"
-                className="w-full py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-900 rounded-xl text-sm shadow-md transition-all duration-200 cursor-pointer"
+                disabled={isSubmitting}
+                className="w-full py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-900 rounded-xl text-sm shadow-md transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                다음 단계로 진행
+                {isSubmitting ? '처리 중...' : '다음 단계로 진행'}
               </button>
             </div>
           </form>
@@ -288,9 +242,10 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
               </button>
               <button
                 type="submit"
-                className="col-span-8 py-3 px-4 font-bold text-white bg-black hover:bg-neutral-900 rounded-xl text-xs shadow-md transition-all cursor-pointer"
+                disabled={isSubmitting}
+                className="col-span-8 py-3 px-4 font-bold text-white bg-black hover:bg-neutral-900 rounded-xl text-xs shadow-md transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                동의 이메일 발송 & 가입요청
+                {isSubmitting ? '처리 중...' : '동의 이메일 발송 & 가입요청'}
               </button>
             </div>
           </form>

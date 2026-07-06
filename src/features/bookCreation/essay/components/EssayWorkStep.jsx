@@ -1,6 +1,7 @@
 import React from "react";
 import EssayFlowStepper from "./EssayFlowStepper.jsx";
-import { QUESTIONS, PAGE_LIMIT, hasText, splitPages } from "../essayShared.js";
+import { QUESTIONS, ESSAY_EDIT_DIRECTION_CHOICES } from "../data/essayQuestions.js";
+import { hasText, splitPages } from "../utils/essayTextUtils.js";
 
 export default function EssayWorkStep(props) {
   const {
@@ -15,7 +16,6 @@ export default function EssayWorkStep(props) {
     title,
     workInput,
     setWorkInput,
-    startEssay,
     writeGuidedStep,
     recommendGuidedAnswer,
     appendRaw,
@@ -50,12 +50,59 @@ export default function EssayWorkStep(props) {
     (item) => item.optional || hasText(answers[item.key]),
   );
   const hasContent = hasText(content);
-  const showQuestions = isGuided && !guidedComplete;
+  const [hideGuidedAfterCreate, setHideGuidedAfterCreate] = React.useState(false);
+  const [answerChoiceOpen, setAnswerChoiceOpen] = React.useState(false);
+  const [editChoiceOpen, setEditChoiceOpen] = React.useState(false);
+  const showQuestions = isGuided && (!guidedComplete || hideGuidedAfterCreate);
   const canStartGuided = isLastQuestion && allRequiredReady;
+  const currentAnswerChoices = currentQuestion.choices || [];
+
+  React.useEffect(() => {
+    setAnswerChoiceOpen(false);
+  }, [questionIndex]);
+
+  React.useEffect(() => {
+    if (!guidedEditMode && !freeEditMode) {
+      setEditChoiceOpen(false);
+    }
+  }, [guidedEditMode, freeEditMode]);
+
+  const applyAnswerChoice = (choice) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [currentQuestion.key]: choice,
+    }));
+    setAnswerChoiceOpen(false);
+  };
+
+  const applyEditChoice = (choice) => {
+    setRevisionRequest(choice.request);
+    setEditChoiceOpen(false);
+  };
 
   const goNextQuestion = () => {
     if (!currentAnswerReady) return;
-    writeGuidedStep();
+    setQuestionIndex((prev) => Math.min(QUESTIONS.length - 1, prev + 1));
+  };
+
+  const confirmResetEssay = () => {
+    const ok = window.confirm("현재 작성 중인 에세이와 입력 내용을 초기화할까요?");
+    if (!ok) return;
+    resetEssay();
+    setAnswerChoiceOpen(false);
+    setEditChoiceOpen(false);
+    setHideGuidedAfterCreate(false);
+  };
+
+  const closeGuidedAfterCreate = () => {
+    setQuestionIndex(0);
+    setWorkInput("");
+    setSelectedText("");
+    setRevisionRequest("");
+    setAnswerChoiceOpen(false);
+    setEditChoiceOpen(false);
+    setGuidedEditMode(false);
+    setHideGuidedAfterCreate(true);
   };
 
   const summaryMemo = (
@@ -63,7 +110,7 @@ export default function EssayWorkStep(props) {
       <h2>작성 요약</h2>
       <p>
         {isGuided
-          ? "질문에 답할 때마다 에세이 본문이 한 문단씩 이어져요."
+          ? "질문 답변을 모아 AI가 에세이 초안을 완성해요."
           : "현재 에세이 작성에 참고되는 정보예요."}
       </p>
       <div className="essay-source-box">
@@ -102,10 +149,6 @@ export default function EssayWorkStep(props) {
               <dd>{settings.authorAge || "-"}</dd>
             </div>
             <div>
-              <dt>독자</dt>
-              <dd>{settings.readerAge || "미지정"}</dd>
-            </div>
-            <div>
               <dt>본문</dt>
               <dd>
                 {hasContent
@@ -122,7 +165,7 @@ export default function EssayWorkStep(props) {
   return (
     <section className="essay-studio-page">
       <div className="essay-studio-top">
-        <EssayFlowStepper active={3} />
+        <EssayFlowStepper active={2} />
       </div>
 
       <div
@@ -192,6 +235,35 @@ export default function EssayWorkStep(props) {
                 }
                 placeholder={currentQuestion.placeholder}
               />
+              {currentAnswerChoices.length > 0 && (
+                <div className="essay-answer-choice-helper">
+                  <button
+                    type="button"
+                    className="essay-choice-toggle"
+                    aria-expanded={answerChoiceOpen}
+                    onClick={() => setAnswerChoiceOpen((open) => !open)}
+                  >
+                    선택지로 답변하기 ▼
+                  </button>
+                  {answerChoiceOpen && (
+                    <div
+                      className="essay-choice-options"
+                      aria-label={`${currentQuestion.label} 선택지`}
+                    >
+                      {currentAnswerChoices.map((choice) => (
+                        <button
+                          key={choice}
+                          type="button"
+                          className={answers[currentQuestion.key] === choice ? "selected" : ""}
+                          onClick={() => applyAnswerChoice(choice)}
+                        >
+                          {choice}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="essay-panel-actions essay-guided-nav-actions">
                 <button
                   type="button"
@@ -218,16 +290,19 @@ export default function EssayWorkStep(props) {
                     type="button"
                     className="essay-primary"
                     disabled={!canStartGuided}
-                    onClick={writeGuidedStep}
+                    onClick={() => {
+                      writeGuidedStep();
+                      setHideGuidedAfterCreate(false);
+                    }}
                   >
-                    에세이 작성
+                    에세이 만들기
                   </button>
                 )}
-                <button
-                  type="button"
-                  className="essay-ghost danger"
-                  onClick={resetEssay}
-                >
+                  <button
+                    type="button"
+                    className="essay-ghost danger"
+                    onClick={confirmResetEssay}
+                  >
                   초기화
                 </button>
                 <button
@@ -265,8 +340,38 @@ export default function EssayWorkStep(props) {
                   <textarea
                     value={revisionRequest}
                     onChange={(event) => setRevisionRequest(event.target.value)}
-                    placeholder="예: 이 부분을 더 따뜻하게 바꿔 주세요. / 문장을 조금 더 자연스럽게 다듬어 주세요."
+                    placeholder={
+                      isGuided
+                        ? "예: 어색한 표현을 자연스럽게 다듬어줘 / 경험과 생각이 더 풍성하게 드러나도록 늘려줘"
+                        : "예: 이 부분을 더 따뜻하게 바꿔 주세요. / 문장을 조금 더 자연스럽게 다듬어 주세요."
+                    }
                   />
+                  {isGuided && (
+                    <div className="essay-answer-choice-helper essay-edit-choice-helper">
+                      <button
+                        type="button"
+                        className="essay-choice-toggle"
+                        aria-expanded={editChoiceOpen}
+                        onClick={() => setEditChoiceOpen((open) => !open)}
+                      >
+                        수정 방향 선택하기 ▼
+                      </button>
+                      {editChoiceOpen && (
+                        <div className="essay-choice-options essay-edit-choice-options" aria-label="수정 방향 선택지">
+                          {ESSAY_EDIT_DIRECTION_CHOICES.map((choice) => (
+                            <button
+                              key={choice.label}
+                              type="button"
+                              className={revisionRequest === choice.request ? "selected" : ""}
+                              onClick={() => applyEditChoice(choice)}
+                            >
+                              {choice.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="essay-panel-actions essay-edit-actions">
                     <button
                       type="button"
@@ -285,6 +390,7 @@ export default function EssayWorkStep(props) {
                           setGuidedEditMode(false);
                           setSelectedText("");
                           setRevisionRequest("");
+                          setEditChoiceOpen(false);
                         }
                       }}
                     >
@@ -294,7 +400,7 @@ export default function EssayWorkStep(props) {
                 </div>
               ) : (
                 <>
-                  {isGuided && hasContent ? (
+                  {isGuided && hasContent && !hideGuidedAfterCreate ? (
                     <div className="essay-guided-after-create">
                       <h2>에세이가 작성되었어요.</h2>
                       <p>
@@ -307,6 +413,7 @@ export default function EssayWorkStep(props) {
                         onClick={() => {
                           setGuidedEditMode(true);
                           setRevisionRequest("");
+                          setEditChoiceOpen(false);
                         }}
                       >
                         수정하기
@@ -314,7 +421,7 @@ export default function EssayWorkStep(props) {
                       <button
                         type="button"
                         className="essay-soft"
-                        onClick={resetEssay}
+                        onClick={closeGuidedAfterCreate}
                       >
                         다시 만들기
                       </button>
@@ -400,7 +507,7 @@ export default function EssayWorkStep(props) {
                           <button
                             type="button"
                             className="essay-ghost danger"
-                            onClick={resetEssay}
+                            onClick={confirmResetEssay}
                           >
                             초기화
                           </button>
@@ -420,7 +527,7 @@ export default function EssayWorkStep(props) {
         <button
           type="button"
           className="essay-ghost"
-          onClick={() => goStep("step2")}
+          onClick={() => goStep("step1")}
         >
           이전
         </button>
@@ -428,7 +535,7 @@ export default function EssayWorkStep(props) {
           type="button"
           className="essay-primary"
           disabled={!hasContent}
-          onClick={() => goStep("step4")}
+          onClick={() => goStep("step3")}
         >
           미리보기로 이동
         </button>

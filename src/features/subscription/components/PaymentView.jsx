@@ -1,99 +1,32 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ILLUSTRATION_BOOKS } from '../../../shared/data';
 import { AlertTriangle, ShieldCheck } from 'lucide-react';
+import { usePaymentState } from '../hooks/usePaymentState';
 
 export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack }) => {
-  const [cardNumber, setCardNumber] = useState('4571 8820 4400 9715');
-  const [expiry, setExpiry] = useState('11/29');
-  const [cvc, setCvc] = useState('389');
-  const [passwordPrefix, setPasswordPrefix] = useState('12');
-  const [birth, setBirth] = useState('951215');
-  
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
-
-  // 2026-06-19 추가: 토스페이먼츠 승인 결과 모의 시뮬레이터 옵션
-  const [simulatedStatus, setSimulatedStatus] = useState('SUCCESS'); // 'SUCCESS' | 'EXCEEDED_LIMIT' | 'INSUFFICIENT_BALANCE' | 'LOST_CARD'
-  const [paymentPhase, setPaymentPhase] = useState('FORM'); // 'FORM' | 'PROCESSING' | 'FAILURE_SCREEN'
-  const [failureReason, setFailureReason] = useState('');
-
-  // Fallback defaults if paymentParams is empty
-  const isSubscriptionType = paymentParams?.type === 'subscription';
-  const displayPrice = paymentParams?.price || 9900;
-  const creditsAmount = paymentParams?.creditsCount || 50;
-  const subPeriod = paymentParams?.subType === 'yearly' ? '연간' : '월간';
-
-  const handleCardFormat = (value) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = (matches && matches[0]) || '';
-    const parts = [];
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-
-    if (parts.length > 0) {
-      return parts.join(' ');
-    } else {
-      return v;
-    }
-  };
-
-  const handleExpiryFormat = (value) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      return `${v.slice(0, 2)}/${v.slice(2, 4)}`;
-    }
-    return v;
-  };
-
-  const handlePayment = (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (cardNumber.length < 15) {
-      setError('올바른 신용카드 번호 16자리를 기재해 주세요.');
-      return;
-    }
-    if (expiry.length < 4) {
-      setError('유효기간 MM/YY 포맷을 확인해 주세요.');
-      return;
-    }
-    if (cvc.length < 3) {
-      setError('올바른 CVC 번호 3자리를 입력해 주세요.');
-      return;
-    }
-
-    setIsProcessing(true);
-    setPaymentPhase('PROCESSING');
-
-    // PG사 테스트 결제 (토스페이먼츠 모사 페이지)
-    setTimeout(() => {
-      setIsProcessing(false);
-
-      if (simulatedStatus === 'SUCCESS') {
-        setSuccess(true);
-        setTimeout(() => {
-          onPaymentSuccess();
-        }, 1200);
-      } else {
-        // 결제 실패 처리 단계 진입
-        let details = '';
-        if (simulatedStatus === 'EXCEEDED_LIMIT') {
-          details = '한도 초과 (오류 코드: EXCEEDED_LIMIT) - 등록하신 신용카드의 1회 혹은 월간 한도가 초과되어 금융사 대행 승인이 반려되었습니다.';
-        } else if (simulatedStatus === 'INSUFFICIENT_BALANCE') {
-          details = '잔액 부족 (오류 코드: INSUFFICIENT_BALANCE) - 계좌 또는 카드 한도 잔액이 부족하여 결제 승인을 완수하지 못하였습니다.';
-        } else if (simulatedStatus === 'LOST_CARD') {
-          details = '정지된 카드 (오류 코드: LOST_OR_STOLEN_CARD) - 요청하신 신용카드가 분실 또는 유효 정지된 상태로 대행 금융사에 의해 폐기 조회되었습니다.';
-        }
-        
-        setFailureReason(details);
-        setPaymentPhase('FAILURE_SCREEN');
-      }
-    }, 1500);
-  };
+  const {
+    cardNumber,
+    expiry,
+    cvc,
+    passwordPrefix,
+    birth,
+    isProcessing,
+    success,
+    error,
+    paymentPhase,
+    failureReason,
+    isSubscriptionType,
+    displayPrice,
+    creditsAmount,
+    subPeriod,
+    handleCardNumberChange,
+    handleExpiryChange,
+    handleCvcChange,
+    handlePasswordPrefixChange,
+    handleBirthChange,
+    handlePayment,
+    retryPayment,
+  } = usePaymentState({ paymentParams, onPaymentSuccess });
 
   // 1단계: 결제 실패 전용 화면 렌더링 분기
   if (paymentPhase === 'FAILURE_SCREEN') {
@@ -128,10 +61,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4 text-xs">
             <button
-              onClick={() => {
-                setPaymentPhase('FORM');
-                setError('');
-              }}
+              onClick={retryPayment}
               className="flex-1 py-3.5 bg-[#6B54E7] hover:bg-[#5b45d6] text-white font-extrabold rounded-2xl tracking-wide shadow-md transition-all cursor-pointer"
             >
               다시 시도해주세요 (재시도)
@@ -209,7 +139,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
                 required
                 value={cardNumber}
                 maxLength={19}
-                onChange={(e) => setCardNumber(handleCardFormat(e.target.value))}
+                onChange={handleCardNumberChange}
                 className="w-full px-4 py-2.5 bg-[#FAF9FF] hover:bg-neutral-50 font-mono text-sm tracking-wider text-[#2F2D59] rounded-xl border border-[#E6E2FC] focus:border-[#6B54E7] focus:outline-none focus:bg-white transition-all duration-200"
                 placeholder="4571 0000 0000 0000"
               />
@@ -225,7 +155,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
                   required
                   value={expiry}
                   maxLength={5}
-                  onChange={(e) => setExpiry(handleExpiryFormat(e.target.value))}
+                  onChange={handleExpiryChange}
                   className="w-full px-4 py-2.5 bg-[#FAF9FF] hover:bg-neutral-50 font-mono text-sm text-[#2F2D59] rounded-xl border border-[#E6E2FC] focus:border-[#6B54E7] focus:outline-none focus:bg-white transition-all duration-200"
                   placeholder="12/29"
                 />
@@ -240,7 +170,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
                   required
                   maxLength={3}
                   value={cvc}
-                  onChange={(e) => setCvc(e.target.value.replace(/[^0-9]/g, ''))}
+                  onChange={handleCvcChange}
                   className="w-full px-4 py-2.5 bg-[#FAF9FF] hover:bg-neutral-50 font-mono text-sm text-[#ea580c] rounded-xl border border-[#E6E2FC] focus:border-[#6B54E7] focus:outline-none focus:bg-white transition-all duration-200"
                   placeholder="카드의 CVC 번호"
                 />
@@ -257,7 +187,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
                   required
                   maxLength={2}
                   value={passwordPrefix}
-                  onChange={(e) => setPasswordPrefix(e.target.value.replace(/[^0-9]/g, ''))}
+                  onChange={handlePasswordPrefixChange}
                   className="w-full px-4 py-2.5 bg-[#FAF9FF] hover:bg-neutral-50 font-mono text-sm text-[#2F2D59] rounded-xl border border-[#E6E2FC] focus:border-[#6B54E7] focus:outline-none focus:bg-white transition-all duration-200"
                   placeholder="앞 2글자 번호"
                 />
@@ -272,7 +202,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
                   required
                   maxLength={6}
                   value={birth}
-                  onChange={(e) => setBirth(e.target.value.replace(/[^0-9]/g, ''))}
+                  onChange={handleBirthChange}
                   placeholder="예: 951215"
                   className="w-full px-4 py-2.5 bg-[#FAF9FF] hover:bg-neutral-50 text-sm text-[#2F2D59] rounded-xl border border-[#E6E2FC] focus:border-[#6B54E7] focus:outline-none focus:bg-white transition-all duration-200"
                 />
