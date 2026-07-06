@@ -1,32 +1,30 @@
 import React from 'react';
 import { useSubscriptionState } from '../hooks/useSubscriptionState';
 import {
-  Award, 
-  Star, 
-  Crown, 
-  Sparkles, 
-  Zap, 
-  Clock, 
-  Coins, 
-  HelpCircle, 
-  ChevronDown, 
-  ChevronUp, 
-  FileText, 
-  TrendingUp, 
-  Check, 
-  X, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Printer, 
-  Receipt, 
+  Award,
+  Star,
+  Crown,
+  Sparkles,
+  Zap,
+  Clock,
+  HelpCircle,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  TrendingUp,
+  Check,
+  X,
+  CheckCircle2,
+  AlertTriangle,
+  Printer,
+  Receipt,
   ArrowLeft,
   Activity,
-  CreditCard,
-  Plus
+  CreditCard
 } from 'lucide-react';
 
-export const SubscriptionView = ({ 
-  onNavigateHome, 
+export const SubscriptionView = ({
+  onNavigateHome,
   onNavigate,
   onCancelSubscription,
   onSelectPlan,
@@ -34,31 +32,22 @@ export const SubscriptionView = ({
   freeTrialRemaining,
   freeTrialTextTokens,
   freeTrialImageCount,
-  extraCreditsRemaining,
-  setExtraCreditsRemaining,
   dailyScore,
   dailyTextTokens,
   dailyImageCount,
   isSubscriptionCanceled,
   benefitEndDate,
-  onInitiateCreditsPayment
 }) => {
   const {
     records,
-    extraCreditsCount, setExtraCreditsCount,
     selectedInvoice,
-    purchaseSuccess, setPurchaseSuccess,
     showCancelConfirm,
     showCancelSuccess, setShowCancelSuccess,
     printSuccess, setPrintSuccess,
     selectedPlanType, setSelectedPlanType,
     openFaqId,
     faqs,
-    creditPackages,
-    pricePerCredit,
-    calculatedCost,
     toggleFaq,
-    handleBuyCredits,
     openCancelConfirm,
     closeCancelConfirm,
     confirmCancelSubscription,
@@ -66,7 +55,7 @@ export const SubscriptionView = ({
     viewInvoice,
     closeInvoiceModal,
     printInvoice,
-  } = useSubscriptionState({ onCancelSubscription, onSelectPlan, setExtraCreditsRemaining, onInitiateCreditsPayment });
+  } = useSubscriptionState({ onCancelSubscription, onSelectPlan });
 
   return (
     <div className="bg-[#FAF9FF] min-h-screen font-sans text-[#2F2D59] w-full px-0 py-0 pb-16 relative">
@@ -105,7 +94,7 @@ export const SubscriptionView = ({
                 <span>나의 구독 및 아틀리에 관리 대시보드</span>
               </h2>
               <p className="text-xs sm:text-sm text-[#B9B0DC] leading-relaxed">
-                현재 이용 현황, 실시간 소모량 통계 확인은 물론 정기 결제 플랜 변경 및 추가 생성권 개별 보충까지, 작가님만의 풍요롭고 편리한 집필 전산망을 원스톱으로 관리합니다.
+                현재 이용 현황, 실시간 소모량 통계 확인은 물론 정기 결제 플랜 변경까지, 작가님만의 풍요롭고 편리한 집필 전산망을 원스톱으로 관리합니다.
               </p>
             </div>
 
@@ -129,15 +118,7 @@ export const SubscriptionView = ({
                   )}
                 </span>
               </div>
-              
-              <div className="h-10 w-[1px] bg-white/10"></div>
-              
-              <div className="space-y-1">
-                <span className="text-[10px] text-[#B9B0DC] block tracking-wider font-bold uppercase">내 잔여 단편 크레딧</span>
-                <span className="text-sm sm:text-base font-extrabold text-white block">
-                  {isPremium ? '무제한 (∞)' : `${extraCreditsRemaining || 0}매`}
-                </span>
-              </div>
+
             </div>
 
           </div>
@@ -541,97 +522,10 @@ export const SubscriptionView = ({
 
           </div>
 
-          {/* ==================== RIGHT SIDE: Add-on Purchases + Bill Receipts (Colspan 4) ==================== */}
+          {/* ==================== RIGHT SIDE: Bill Receipts (Colspan 4) ==================== */}
           <div className="lg:col-span-4 space-y-8">
-            
-            {/* Right Card 1: Single item credit charging block */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E6E2FC]/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-6">
-              
-              <div className="space-y-1.5 text-left">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-black tracking-wider uppercase rounded-md">
-                  <Coins className="w-3.5 h-3.5 text-amber-600" />
-                  <span>단발 보강 충전소</span>
-                </span>
-                <h3 className="text-base font-black text-[#2F2D59]">
-                  단편 생성권 개별 즉시 구매
-                </h3>
-                <p className="text-xs text-[#7C769D] leading-relaxed">
-                  정기 구독 갱신일과 관계없이 소설 책 삽화와 긴 소설 영감이 갑자기 소진되었을 때, 긴급하게 가용 단편을 추가 충전합니다.
-                </p>
-              </div>
 
-              {/* Direct Package Selection list */}
-              <div className="space-y-3 pt-1">
-                {creditPackages.map((pkg) => (
-                  <button
-                    key={pkg.count}
-                    type="button"
-                    onClick={() => setExtraCreditsCount(pkg.count)}
-                    className={`relative w-full p-4 rounded-2xl border text-left transition-all duration-200 flex justify-between items-center cursor-pointer ${
-                      extraCreditsCount === pkg.count
-                        ? 'border-[#6B54E7] bg-[#E6E2FC]/20 shadow-xs ring-1 ring-[#6B54E7]'
-                        : 'border-[#E6E2FC]/60 hover:border-[#6B54E7]/40 bg-white'
-                    }`}
-                  >
-                    {pkg.isPopular && (
-                      <span className="absolute -top-2 right-4 bg-[#6B54E7] text-white text-[8px] font-black tracking-wider px-2 py-0.5 rounded-full uppercase shadow-xs">
-                        BEST
-                      </span>
-                    )}
-                    <div className="space-y-0.5">
-                      <h4 className="text-xs font-bold text-[#2F2D59]">{pkg.label}</h4>
-                      <p className="text-[10px] text-[#7C769D]">{pkg.desc}</p>
-                    </div>
-                    <span className="text-xs font-black text-[#6B54E7] font-mono">
-                      ₩{pkg.price.toLocaleString()}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Interactive slider */}
-              <div className="space-y-4 pt-4 border-t border-[#E6E2FC]/40 text-left">
-                <div className="flex justify-between items-center text-[11px] text-[#7C769D] font-semibold">
-                  <span>원하는 장수 직접 조절 (10~200매)</span>
-                  <span className="text-[#6B54E7]">장당 ₩98 won</span>
-                </div>
-
-                <div className="flex items-center gap-4 bg-[#FAF9FF] p-3 rounded-2xl border border-[#E6E2FC]/40">
-                  <input
-                    type="range"
-                    min="10"
-                    max="200"
-                    step="10"
-                    value={extraCreditsCount < 10 ? 10 : extraCreditsCount}
-                    onChange={(e) => setExtraCreditsCount(Number(e.target.value))}
-                    className="flex-grow h-1.5 bg-[#E6E2FC] rounded-lg appearance-none cursor-pointer accent-[#6B54E7]"
-                  />
-                  <span className="text-xs font-extrabold text-[#2F2D59] shrink-0 bg-white px-3 py-1 rounded-xl border border-[#E6E2FC]/50 font-mono shadow-xs">
-                    {extraCreditsCount}매
-                  </span>
-                </div>
-
-                {/* Confirm pricing box */}
-                <div className="flex justify-between items-center pt-4 border-t border-[#E6E2FC]/40">
-                  <div className="space-y-0.5">
-                    <span className="text-[#7C769D] text-[10px] font-bold block">총 결제 금액</span>
-                    <span className="text-base font-black text-[#2F2D59] font-mono">
-                      ₩{calculatedCost.toLocaleString()}원
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={handleBuyCredits}
-                    className="px-4 py-2.5 bg-[#6B54E7] hover:bg-[#5b45d6] text-white text-xs font-black rounded-xl transition-all shadow-md shadow-[#6B54E7]/15 cursor-pointer hover:scale-[1.02] active:scale-95"
-                  >
-                    충전하기
-                  </button>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Right Card 2: Payment logs timeline */}
+            {/* Payment logs timeline */}
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E6E2FC]/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-4">
               
               <div className="border-b border-[#E6E2FC]/40 pb-3 flex justify-between items-center text-left">
@@ -743,32 +637,7 @@ export const SubscriptionView = ({
         </div>
       )}
 
-      {/* 4. DIALOG MODAL: Credit Charge Success */}
-      {purchaseSuccess && (
-        <div className="fixed inset-0 bg-[#110F24]/50 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-xs w-full p-6 text-center border border-[#E6E2FC]/50 shadow-2xl relative animate-in zoom-in-95 duration-200">
-            <div className="mx-auto w-12 h-12 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-center text-emerald-600 mb-4">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-            <h3 className="text-base font-black text-[#2F2D59]">생성권 개별 보완 충전 완료</h3>
-            
-            <div className="text-xs text-[#7C769D] mt-3.5 space-y-1.5 text-left bg-[#FAF9FF] p-4 rounded-2xl border border-[#E6E2FC]/60 font-mono">
-              <p>📦 <strong>물품:</strong> 아틀리에 생성권 {extraCreditsCount}장</p>
-              <p>💳 <strong>정산금액:</strong> ₩{calculatedCost.toLocaleString()} 원</p>
-              <p>✓ 안전하게 충전이 완료되었습니다.</p>
-            </div>
-
-            <button
-              onClick={() => setPurchaseSuccess(false)}
-              className="mt-5 w-full py-3 bg-[#6B54E7] hover:bg-[#5b45d6] text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-md shadow-[#6B54E7]/15"
-            >
-              확인
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 5. DIALOG MODAL: Subscription Cancel Confirm */}
+      {/* 4. DIALOG MODAL: Subscription Cancel Confirm */}
       {showCancelConfirm && (
         <div className="fixed inset-0 bg-[#110F24]/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 text-center border border-[#E6E2FC]/50 shadow-2xl relative animate-in zoom-in-95 duration-200">
@@ -799,7 +668,7 @@ export const SubscriptionView = ({
         </div>
       )}
 
-      {/* 6. DIALOG MODAL: Subscription Cancel Success */}
+      {/* 5. DIALOG MODAL: Subscription Cancel Success */}
       {showCancelSuccess && (
         <div className="fixed inset-0 bg-[#110F24]/50 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in duration-200">
           <div className="bg-white rounded-3xl max-w-xs w-full p-6 text-center border border-[#E6E2FC]/50 shadow-2xl relative animate-in zoom-in-95 duration-200">
@@ -820,7 +689,7 @@ export const SubscriptionView = ({
         </div>
       )}
 
-      {/* 7. DIALOG MODAL: Printer Simulation */}
+      {/* 6. DIALOG MODAL: Printer Simulation */}
       {printSuccess && (
         <div className="fixed inset-0 bg-[#110F24]/50 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in duration-200">
           <div className="bg-white rounded-3xl max-w-xs w-full p-6 text-center border border-[#E6E2FC]/50 shadow-2xl relative animate-in zoom-in-95 duration-200">

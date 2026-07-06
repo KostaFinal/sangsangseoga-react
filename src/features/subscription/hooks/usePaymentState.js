@@ -23,9 +23,7 @@ export const usePaymentState = ({ paymentParams, onPaymentSuccess }) => {
   const [failureReason, setFailureReason] = useState('');
 
   // Fallback defaults if paymentParams is empty
-  const isSubscriptionType = paymentParams?.type === 'subscription';
   const displayPrice = paymentParams?.price || 9900;
-  const creditsAmount = paymentParams?.creditsCount || 50;
   const subPeriod = paymentParams?.subType === 'yearly' ? '연간' : '월간';
 
   const handleCardNumberChange = (e) => {
@@ -92,9 +90,7 @@ export const usePaymentState = ({ paymentParams, onPaymentSuccess }) => {
     simulatedStatus, setSimulatedStatus,
     paymentPhase,
     failureReason,
-    isSubscriptionType,
     displayPrice,
-    creditsAmount,
     subPeriod,
     handleCardNumberChange,
     handleExpiryChange,

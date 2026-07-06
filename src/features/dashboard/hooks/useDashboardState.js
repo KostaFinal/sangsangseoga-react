@@ -19,8 +19,6 @@ export const useDashboardState = ({
   setFreeTrialTextTokens,
   freeTrialImageCount,
   setFreeTrialImageCount,
-  extraCreditsRemaining,
-  setExtraCreditsRemaining,
   dailyScore,
   setDailyScore,
   dailyTextTokens,
@@ -63,7 +61,6 @@ export const useDashboardState = ({
   // 사용량 한도 초과 안내 모달
   const [showFreeTrialCapModal, setShowFreeTrialCapModal] = useState(false);
   const [showPremiumSoftCapModal, setShowPremiumSoftCapModal] = useState(false);
-  const [showExhaustedCreditsModal, setShowExhaustedCreditsModal] = useState(false);
 
   const handleGenerate = async (e) => {
     e.preventDefault();
@@ -125,19 +122,8 @@ export const useDashboardState = ({
         setGeneratedResult(result);
 
       } else {
-        if (extraCreditsRemaining > 0) {
-          setIsGenerating(true);
-          setGeneratedResult(null);
-
-          const result = await dashboardService.generateStoryContent({ genre, prompt, tier: 'credit' });
-          setIsGenerating(false);
-          setExtraCreditsRemaining(c => c - 1);
-          setGeneratedResult(result);
-
-        } else {
-          setShowExhaustedCreditsModal(true);
-          return;
-        }
+        setShowFreeTrialCapModal(true);
+        return;
       }
     }
   };
@@ -175,7 +161,6 @@ export const useDashboardState = ({
 
     showFreeTrialCapModal, setShowFreeTrialCapModal,
     showPremiumSoftCapModal, setShowPremiumSoftCapModal,
-    showExhaustedCreditsModal, setShowExhaustedCreditsModal,
 
     handleGenerate,
 
@@ -187,7 +172,6 @@ export const useDashboardState = ({
     freeTrialRemaining,
     freeTrialTextTokens,
     freeTrialImageCount,
-    extraCreditsRemaining,
     isPremium,
   };
 };

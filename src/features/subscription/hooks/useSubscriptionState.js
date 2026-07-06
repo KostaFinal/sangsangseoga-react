@@ -10,13 +10,9 @@ import { subscriptionService } from '../services/subscriptionService';
 export const useSubscriptionState = ({
   onCancelSubscription,
   onSelectPlan,
-  setExtraCreditsRemaining,
-  onInitiateCreditsPayment,
 }) => {
   const [records, setRecords] = useState(initialPaymentRecords);
-  const [extraCreditsCount, setExtraCreditsCount] = useState(50);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [purchaseSuccess, setPurchaseSuccess] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showCancelSuccess, setShowCancelSuccess] = useState(false);
   const [printSuccess, setPrintSuccess] = useState(false);
@@ -24,26 +20,9 @@ export const useSubscriptionState = ({
   const [openFaqId, setOpenFaqId] = useState(1);
 
   const faqs = subscriptionService.getFaqs();
-  const creditPackages = subscriptionService.getCreditPackages();
-  const pricePerCredit = subscriptionService.creditPricePerUnit;
-  const calculatedCost = subscriptionService.calculateCreditsCost(extraCreditsCount);
 
   const toggleFaq = (id) => {
     setOpenFaqId(openFaqId === id ? null : id);
-  };
-
-  const handleBuyCredits = async () => {
-    if (onInitiateCreditsPayment) {
-      onInitiateCreditsPayment(extraCreditsCount, calculatedCost);
-      return;
-    }
-
-    const newRecord = await subscriptionService.purchaseCredits(extraCreditsCount, calculatedCost);
-    setPurchaseSuccess(true);
-    if (setExtraCreditsRemaining) {
-      setExtraCreditsRemaining(prev => prev + extraCreditsCount);
-    }
-    setRecords([newRecord, ...records]);
   };
 
   const openCancelConfirm = () => setShowCancelConfirm(true);
@@ -72,20 +51,14 @@ export const useSubscriptionState = ({
 
   return {
     records,
-    extraCreditsCount, setExtraCreditsCount,
     selectedInvoice,
-    purchaseSuccess, setPurchaseSuccess,
     showCancelConfirm,
     showCancelSuccess, setShowCancelSuccess,
     printSuccess, setPrintSuccess,
     selectedPlanType, setSelectedPlanType,
     openFaqId,
     faqs,
-    creditPackages,
-    pricePerCredit,
-    calculatedCost,
     toggleFaq,
-    handleBuyCredits,
     openCancelConfirm,
     closeCancelConfirm,
     confirmCancelSubscription,

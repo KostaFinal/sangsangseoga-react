@@ -15,9 +15,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
     error,
     paymentPhase,
     failureReason,
-    isSubscriptionType,
     displayPrice,
-    creditsAmount,
     subPeriod,
     handleCardNumberChange,
     handleExpiryChange,
@@ -55,7 +53,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
           </div>
 
           <p className="text-xs text-[#7C769D] leading-relaxed">
-             실패 상태에서는 기존 구독 등급이 변동되지 않으며, 단건 생성권 역시 충전 지급되지 않습니다. <br />
+             실패 상태에서는 기존 구독 등급이 변동되지 않습니다. <br />
              카드를 다시 확인하신 후 재시도 버튼을 눌러 결제 정보 입력 화면으로 복구할 수 있습니다.
           </p>
 
@@ -101,7 +99,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
             <div className="text-left">
               <h3 id="payment-form-title" className="text-base font-bold text-[#2F2D59]">결제 신용카드 정보 등록</h3>
               <p className="text-[11px] text-[#7C769D] mt-0.5">
-                {isSubscriptionType ? '정기 아틀리에 구독 가입에 연동할 카드 정보를 등록합니다.' : '추가 생성권 충전에 필요한 카드 정보를 등록합니다.'}
+                정기 아틀리에 구독 가입에 연동할 카드 정보를 등록합니다.
               </p>
             </div>
             <button
@@ -221,7 +219,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
                     결제 승인 및 처리 완료!
                   </span>
                 ) : (
-                  `신용카드 등록 및 ${isSubscriptionType ? '구독 시작' : '단건 즉시결제'}`
+                  '신용카드 등록 및 구독 시작'
                 )}
               </button>
             </div>
@@ -237,43 +235,28 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
               Selected Item
             </span>
             <h4 className="text-lg font-bold">
-              {isSubscriptionType ? `상상서가 프리미엄 ${subPeriod} 구독` : `추가 창작 생성권 구매`}
+              상상서가 프리미엄 {subPeriod} 구독
             </h4>
           </div>
 
           <div className="border-t border-white/10 pt-4 space-y-3 text-xs text-neutral-300">
             <div className="flex justify-between">
               <span>상품 유형</span>
-              <span className="text-white font-bold">{isSubscriptionType ? `정기 충전 플랜 (${subPeriod})` : `단편 집필 충전 패키지`}</span>
+              <span className="text-white font-bold">정기 충전 플랜 ({subPeriod})</span>
             </div>
-            
-            {isSubscriptionType ? (
-              <>
-                <div className="flex justify-between">
-                  <span>프리미엄 정기 요금</span>
-                  <span className="font-bold text-white">₩{displayPrice?.toLocaleString()} / 월</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>제공 혜택</span>
-                  <span className="text-neutral-100 font-bold">AI 아틀리에 무제한 구동</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex justify-between">
-                  <span>추가 생성권 수량</span>
-                  <span className="font-bold text-white">{creditsAmount} 매</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>충전 결제액</span>
-                  <span className="font-semibold text-white">₩{displayPrice?.toLocaleString()}</span>
-                </div>
-              </>
-            )}
-            
+
+            <div className="flex justify-between">
+              <span>프리미엄 정기 요금</span>
+              <span className="font-bold text-white">₩{displayPrice?.toLocaleString()} / 월</span>
+            </div>
+            <div className="flex justify-between">
+              <span>제공 혜택</span>
+              <span className="text-neutral-100 font-bold">AI 아틀리에 무제한 구동</span>
+            </div>
+
             <div className="flex justify-between">
               <span>결제 주기</span>
-              <span>{isSubscriptionType ? '매월 자동결제 (토스 수납대행)' : '일회적 즉시 구매'}</span>
+              <span>매월 자동결제 (토스 수납대행)</span>
             </div>
           </div>
 
@@ -285,7 +268,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
           </div>
 
           <p className="text-[10px] text-neutral-400 leading-relaxed pt-2">
-            * 카드 등록 및 결제가 완료되면 프리미엄 혜택과 생성권 제한이 즉시 적용됩니다.
+            * 카드 등록 및 결제가 완료되면 프리미엄 혜택이 즉시 적용됩니다.
           </p>
         </div>
 

@@ -6,8 +6,6 @@
  * 실 배포 시 axios 또는 fetch를 이용한 비동기 통신 코드로 간편하게 대체할 수 있도록 설계되었습니다.
  */
 
-const CREDIT_PRICE_PER_UNIT = 98; // ₩98 / 1매
-
 export const subscriptionService = {
   /** 요금제 안내 화면(PricingView) 및 구독 대시보드(SubscriptionView)가 공유하는 FAQ 목록 */
   getFaqs: () => [
@@ -27,21 +25,6 @@ export const subscriptionService = {
       a: '프리미엄 요금제는 더욱 고도화된 고매개변수 LLM 모델인 Gemini Pro 계열을 사용하며, 다채로운 가구와 묘사, 소설 맥락 및 캐릭터 일관성 제어 가이드 템플릿(여름의 소나기 에디션 등)이 추가 제공됩니다.'
     }
   ],
-
-  /** 단발 생성권 패키지 프리셋 목록 */
-  getCreditPackages: () => [
-    { count: 3, label: '🥉 3회 단편 이용권', price: 2900, desc: '가벼운 체험 및 습작' },
-    { count: 5, label: '🥈 5회 실속 이용권', price: 4500, desc: '중장편 소설 1권 완벽 제본' },
-    { count: 10, label: '👑 10회 스페셜 패키지', price: 8000, desc: '정가 대비 10% 즉시 보정 할인', isPopular: true }
-  ],
-
-  /** 선택된 생성권 매수에 대한 결제 예정 금액 산정 (프리셋 매칭 우선, 그 외엔 매당 단가 적용) */
-  calculateCreditsCost: (count) => {
-    const preset = subscriptionService.getCreditPackages().find(pkg => pkg.count === count);
-    return preset ? preset.price : count * CREDIT_PRICE_PER_UNIT;
-  },
-
-  creditPricePerUnit: CREDIT_PRICE_PER_UNIT,
 
   /** 신용카드 번호 입력 포맷팅 (4자리 단위 구분) */
   formatCardNumber: (value) => {
@@ -98,21 +81,6 @@ export const subscriptionService = {
         resolve({ success: false, failureReason: details });
       }, 1500);
     });
-  },
-
-  /**
-   * 단발 생성권 구매 처리 및 결제 내역 레코드 생성
-   * TODO: API 연동 필요 (POST /api/subscription/credits/purchase)
-   */
-  purchaseCredits: async (count, cost) => {
-    return {
-      id: `pay_${Date.now().toString().slice(-4)}`,
-      title: `추가 생성권 (${count}매)`,
-      date: '방금 전 • 결제 완료',
-      amount: cost,
-      status: '완료',
-      icon: 'add_circle'
-    };
   },
 
   /**

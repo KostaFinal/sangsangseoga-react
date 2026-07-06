@@ -10,6 +10,7 @@ import { BookDetailView, BookReaderView } from "./features/library";
 import { AuthorProfileView, SearchAuthorView } from "./features/authors";
 import { LoginView } from './features/auth/components/LoginView';
 import { SignupView } from './features/auth/components/SignupView';
+import { authService } from './features/auth/services/authService';
 import { MainDashboard } from './features/dashboard/components/MainDashboard';
 import { PricingView } from './features/subscription/components/PricingView';
 import { PaymentView } from './features/subscription/components/PaymentView';
@@ -59,8 +60,6 @@ export default function App() {
   const [freeTrialTextTokens, setFreeTrialTextTokens] = useState(250);     // 텍스트 호출 누적 토큰 점수 (절대캡: 1000)
   const [freeTrialImageCount, setFreeTrialImageCount] = useState(1);      // 이미지 생성 누적 장수 (절대캡: 3장)
 
-  const [extraCreditsRemaining, setExtraCreditsRemaining] = useState(0);  // 유료 추가 생성권 잔여 개수 (단건 결제 상품)
-
   const [dailyScore, setDailyScore] = useState(2400);                     // 오늘 사용한 환산 토큰 점수 (소프트캡: 5000)
   const [dailyTextTokens, setDailyTextTokens] = useState(1200);           // 오늘 실제 사용 텍스트 토큰수
   const [dailyImageCount, setDailyImageCount] = useState(1);              // 오늘 실제 생성 이미지수
@@ -68,10 +67,8 @@ export default function App() {
   const [benefitEndDate, setBenefitEndDate] = useState('2026.07.15');     // 해지 시 혜택 유지 종료 예정일
 
   const [paymentParams, setPaymentParams] = useState({
-    type: 'subscription',    // 'subscription' (정기 결제) 또는 'credits' (단건 추가 생성권)
     subType: 'monthly',      // 'monthly' 또는 'yearly'
     price: 9900,
-    creditsCount: 50
   });
 
   // --- Friends' Library & Authors State Management ---
@@ -230,6 +227,22 @@ export default function App() {
     }
   };
 
+  // 로그아웃: 백엔드 세션 종료(POST /api/auth/logout) 및 토큰 폐기 후 로컬 상태 초기화
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (err) {
+      console.error("로그아웃 처리 실패", err);
+    }
+    setIsPremium(false);
+    setCurrentUser({
+      email: 'writer@sangsang.com',
+      role: 'USER',
+      nickname: '상상의작가'
+    });
+    setCurrentScreen('login');
+  };
+
   // Router dispatcher
   const renderScreen = () => {
     switch (currentScreen) {
@@ -306,10 +319,7 @@ export default function App() {
         return (
           <MainDashboard
             onNavigate={(view) => setCurrentScreen(view)}
-            onLogout={() => {
-              setIsPremium(false);
-              setCurrentScreen('login');
-            }}
+            onLogout={handleLogout}
             setActiveTab={(tab) => {
               if (tab === 'friends') {
                 setViewingBook(null);
@@ -326,8 +336,6 @@ export default function App() {
             setFreeTrialTextTokens={setFreeTrialTextTokens}
             freeTrialImageCount={freeTrialImageCount}
             setFreeTrialImageCount={setFreeTrialImageCount}
-            extraCreditsRemaining={extraCreditsRemaining}
-            setExtraCreditsRemaining={setExtraCreditsRemaining}
             dailyScore={dailyScore}
             setDailyScore={setDailyScore}
             dailyTextTokens={dailyTextTokens}
@@ -393,10 +401,8 @@ export default function App() {
               // planType에 따라 다르게 설정 (yearly = 7900, monthly = 9900)
               const selectedPrice = planType === 'yearly' ? 7900 : 9900;
               setPaymentParams({
-                type: 'subscription',
                 subType: planType === 'yearly' ? 'yearly' : 'monthly',
                 price: selectedPrice,
-                creditsCount: 0
               });
               setCurrentScreen('payment');
             }}
@@ -408,22 +414,11 @@ export default function App() {
           <PaymentView
             paymentParams={paymentParams}
             onPaymentSuccess={() => {
-              if (paymentParams.type === 'subscription') {
-                setIsPremium(true);
-                setIsSubscriptionCanceled(false); // 재가입 시 취소상태 해제
-              } else {
-                // 추가 생성권 구매 완료 처리
-                setExtraCreditsRemaining(prev => prev + paymentParams.creditsCount);
-              }
+              setIsPremium(true);
+              setIsSubscriptionCanceled(false); // 재가입 시 취소상태 해제
               setCurrentScreen('subscription');
             }}
-            onNavigateBack={() => {
-              if (paymentParams.type === 'subscription') {
-                setCurrentScreen('pricing');
-              } else {
-                setCurrentScreen('subscription');
-              }
-            }}
+            onNavigateBack={() => setCurrentScreen('pricing')}
           />
         );
       case 'subscription':
@@ -432,10 +427,8 @@ export default function App() {
             onSelectPlan={(planType) => {
               const selectedPrice = planType === 'yearly' ? 7900 : 9900;
               setPaymentParams({
-                type: 'subscription',
                 subType: planType === 'yearly' ? 'yearly' : 'monthly',
                 price: selectedPrice,
-                creditsCount: 0
               });
               setCurrentScreen('payment');
             }}
@@ -450,22 +443,11 @@ export default function App() {
             freeTrialRemaining={freeTrialRemaining}
             freeTrialTextTokens={freeTrialTextTokens}
             freeTrialImageCount={freeTrialImageCount}
-            extraCreditsRemaining={extraCreditsRemaining}
-            setExtraCreditsRemaining={setExtraCreditsRemaining}
             dailyScore={dailyScore}
             dailyTextTokens={dailyTextTokens}
             dailyImageCount={dailyImageCount}
             isSubscriptionCanceled={isSubscriptionCanceled}
             benefitEndDate={benefitEndDate}
-            onInitiateCreditsPayment={(credits, cost) => {
-              setPaymentParams({
-                type: 'credits',
-                subType: '',
-                price: cost,
-                creditsCount: credits
-              });
-              setCurrentScreen('payment');
-            }}
           />
         );
       case 'admin':
@@ -515,6 +497,7 @@ export default function App() {
             currentUser={{ ...currentUser, isSubscribed: isPremium }}
             onNavigateHome={() => setCurrentScreen('home')}
             onUpdateProfile={(updates) => setCurrentUser(prev => ({ ...prev, ...updates }))}
+            onLogout={handleLogout}
           />
         );
       case 'common-showcase':
@@ -561,15 +544,7 @@ export default function App() {
       dailyTextTokens,
       dailyImageCount,
       onNavigate: (screen) => setCurrentScreen(screen),
-      onLogout: () => {
-        setIsPremium(false);
-        setCurrentUser({
-          email: 'writer@sangsang.com',
-          role: 'USER',
-          nickname: '상상의작가'
-        });
-        setCurrentScreen('login');
-      }
+      onLogout: handleLogout
     }}>
       <div className="relative min-h-screen selection:bg-black selection:text-white">
 
@@ -598,15 +573,7 @@ export default function App() {
             setCurrentScreen(screen)
           }
           }
-          onLogout={() => {
-            setIsPremium(false);
-            setCurrentUser({
-              email: 'writer@sangsang.com',
-              role: 'USER',
-              nickname: '상상의작가'
-            });
-            setCurrentScreen('login');
-          }}
+          onLogout={handleLogout}
         />
 
         {/* Route Switch container with smooth fade effects */}
