@@ -137,8 +137,8 @@ export default function AuthorProfileView({
       
       {/* 1. 상단 내비게이션 (요청하신 프로필 왼쪽 위 배치) */}
       <div className="flex items-center gap-4 mb-6">
-        <button onClick={onBackToLibrary} className="inline-flex items-center gap-1.5 text-sm text-[#4d4671] hover:text-[#6b54e7] font-bold transition">
-          <ArrowLeft className="w-4 h-4" /> 전체 서재로 돌아가기
+        <button onClick={onBackToDirectory} className="inline-flex items-center gap-1.5 text-sm text-[#4d4671] hover:text-[#6b54e7] font-bold transition">
+          <ArrowLeft className="w-4 h-4" /> 작가 목록으로 돌아가기
         </button>
       </div>
 
@@ -161,7 +161,7 @@ export default function AuthorProfileView({
               </h2>
               {mode !== "owner" && (
                 <div className="flex gap-2 justify-center sm:justify-start">
-                  <button onClick={() => setIsFollowing(!isFollowing)} className={`px-5 py-1.5 rounded-full text-xs font-bold transition duration-300 shadow-xs cursor-pointer ${isFollowing ? "bg-gray-200 text-[#4d4671]" : `${authorProfile.themeColor} text-white`}`}>
+                  <button onClick={() => setIsFollowing(!isFollowing)} className={`px-5 py-1.5 rounded-full text-xs font-bold transition duration-300 shadow-xs cursor-pointer border ${isFollowing ? `${authorProfile.themeColor} text-white border-transparent` : "bg-white text-[#69619a] border-gray-200 hover:text-[#6b54e7] hover:border-[#d4cdf2]"}`}>
                     {isFollowing ? "팔로잉" : "팔로우"}
                   </button>
                   <button
@@ -207,11 +207,6 @@ export default function AuthorProfileView({
               {authorProfile.name} 작가의 따스한 문학적 여정을 함께 거닐어 보세요.
             </p>
           </div>
-          {onBackToDirectory && (
-            <button onClick={onBackToDirectory} className="text-sm text-[#69619a] hover:text-[#6b54e7] font-bold transition">
-              작가 목록
-            </button>
-          )}
         </div>
 
         {realAuthorBooks.length === 0 ? (
@@ -250,9 +245,6 @@ export default function AuthorProfileView({
                   <div className="mt-2.5 px-0.5">
                     <p className="text-[14px] font-bold text-[#110f24] leading-tight line-clamp-1 group-hover:text-[#6b54e7] transition-colors">
                       {book.title}
-                    </p>
-                    <p className="text-[11px] text-[#69619a] font-bold mt-0.5 group-hover:text-[#6b54e7] transition-colors">
-                      읽으러 가기 →
                     </p>
                   </div>
                 </div>

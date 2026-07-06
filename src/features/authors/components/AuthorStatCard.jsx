@@ -40,7 +40,7 @@ export default function AuthorStatCard({ author, onSelect }) {
           {/* [수정 - 더 진하게] 라벨도 흐려 보이지 않게 톤 다운 */}
           <span className="text-[#69619a] font-semibold flex-shrink-0">대표작품:</span>
           <p className="truncate">
-            「{author.representativeWork.title}」
+            {author.representativeWork ? `「${author.representativeWork.title}」` : "작품 없음"}
           </p>
         </div>
       </div>

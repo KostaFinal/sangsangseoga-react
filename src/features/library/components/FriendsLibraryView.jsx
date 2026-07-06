@@ -1,25 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Search, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, X, Trash2, SlidersHorizontal, Eye } from "lucide-react";
 import BookDetailView from "./BookDetailView";
+import { getBooks, likeBook, unlikeBook } from "../../../api/bookApi";
+import { addComment, addReply } from "../../../api/commentApi";
 
-const genres = ["전체", "소설", "시", "에세이", "동화", "지식정보"];
-const sortOptions = ["최신순", "인기순", "좋아요순"];
-const itemsPerPage = 12;
+const bookTypeOptions = [
+  { label: "전체", value: null },
+  { label: "소설", value: "NOVEL" },
+  { label: "시", value: "POEM" },
+  { label: "에세이", value: "ESSAY" },
+  { label: "동화", value: "FAIRY_TALE" },
+];
+
+const sortOptions = [
+  { label: "최신순", value: "latest" },
+  { label: "인기순", value: "popular" },
+  { label: "좋아요순", value: "likes" },
+];
+
+const bookTypeToGenre = {
+  "NOVEL": "소설", "POEM": "시", "ESSAY": "에세이",
+  "FAIRY_TALE": "동화", };
+
+const mapBookForDetail = (book, currentUser) => {
+  console.log("authorId:", book.authorId, "memberId:", currentUser?.memberId);
+  return {
+    ...book,
+    coverImage: book.coverImageUrl,
+    likes: book.likeCount,
+    commentsCount: book.commentCount,
+    genre: bookTypeToGenre[book.genre] || book.genre,
+    comments: book.comments || [],
+    pages: book.pages || [],
+    mode: currentUser?.memberId && book.authorId && String(currentUser.memberId) === String(book.authorId) ? "owner" : "viewer",
+  };
+};
+
 
 const genreBadge = (genre) => {
   const map = {
-    "소설": { cls: "bg-[#ddd6fe] text-[#5b21b6] border-[#c4b5fd]", label: "소설" },
-    "시": { cls: "bg-[#e9d5ff] text-[#7e22ce] border-[#d8b4fe]", label: "시" },
-    "에세이": { cls: "bg-[#ede9ff] text-[#6b54e7] border-[#d4cdf2]", label: "에세이" },
-    "동화": { cls: "bg-[#f3e8ff] text-[#9333ea] border-[#e9d5ff]", label: "동화" },
-    "지식정보": { cls: "bg-[#faf5ff] text-[#a855f7] border-[#f3e8ff]", label: "지식정보" },
+    "NOVEL": { cls: "bg-[#ddd6fe] text-[#5b21b6] border-[#c4b5fd]", label: "소설" },
+    "POEM": { cls: "bg-[#e9d5ff] text-[#7e22ce] border-[#d8b4fe]", label: "시" },
+    "ESSAY": { cls: "bg-[#ede9ff] text-[#6b54e7] border-[#d4cdf2]", label: "에세이" },
+    "FAIRY_TALE": { cls: "bg-[#f3e8ff] text-[#9333ea] border-[#e9d5ff]", label: "동화" },
   };
   return map[genre] || { cls: "bg-[#e6e2fc] text-[#6b54e7] border-[#d4cdf2]", label: genre };
 };
 
 export default function FriendsLibraryView({
-  books,
   viewingBook,
   setViewingBook,
   setSelectedBook,
@@ -28,42 +57,107 @@ export default function FriendsLibraryView({
   setPreviousScreen,
   setSelectedAuthor,
   setAuthorProfileMode,
-  handleToggleLike,
-  handleToggleBookmark,
-  handleDeleteBook,
-  handleDetailAddComment,
-  handleAddReply,
-  saveBooksToStorage,
-  setBooks,
+  currentUser,
 }) {
-  const [selectedGenre, setSelectedGenre] = useState("전체");
-  const [sortBy, setSortBy] = useState("최신순");
-  const [actualQuery, setActualQuery] = useState("");
+  const [selectedBookType, setSelectedBookType] = useState(null);
+  const [sortBy, setSortBy] = useState("latest");
+  const [keyword, setKeyword] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const filteredBooks = books.filter(book => {
-    if (selectedGenre !== "전체" && book.genre !== selectedGenre) return false;
-    if (actualQuery.trim()) {
-      const q = actualQuery.toLowerCase();
-      return book.title.toLowerCase().includes(q) || book.author.toLowerCase().includes(q) || book.genre.toLowerCase().includes(q) || book.summary.toLowerCase().includes(q);
+  const [books, setBooks] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  const fetchBooks = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await getBooks({
+        bookType: selectedBookType,
+        sort: sortBy,
+        keyword: keyword.trim() || undefined,
+        page: currentPage,
+        size: 12,
+      });
+      const data = res.data.data;
+      setBooks(data.items);
+      setTotalCount(data.totalCount);
+      setHasNext(data.hasNext);
+      setTotalPages(Math.ceil(data.totalCount / 12) || 1);
+    } catch (err) {
+      console.error("책 목록 조회 실패", err);
+    } finally {
+      setLoading(false);
     }
-    return true;
-  });
+  }, [selectedBookType, sortBy, keyword, currentPage]);
 
-  const sortedBooks = [...filteredBooks].sort((a, b) => {
-    if (sortBy === "최신순") return b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id);
-    if (sortBy === "인기순") return (b.likes + b.commentsCount * 2) - (a.likes + a.commentsCount * 2);
-    if (sortBy === "좋아요순") return b.likes - a.likes;
-    return 0;
-  });
+  useEffect(() => {
+    fetchBooks();
+  }, [fetchBooks]);
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const paginatedBooks = sortedBooks.slice(indexOfLastItem - itemsPerPage, indexOfLastItem);
-  const totalPages = Math.ceil(sortedBooks.length / itemsPerPage) || 1;
-
-  const handlePageChange = pageNum => {
+  const handlePageChange = (pageNum) => {
     setCurrentPage(pageNum);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleToggleLike = async (e, bookId) => {
+    e.stopPropagation();
+    const book = books.find(b => String(b.id) === String(bookId));
+    console.log("before:", book.isLikedByMe, "bookId:", bookId, "books:", books.map(b => b.id));
+    if (!book) return;
+
+    // 낙관적 업데이트 - API 응답 전에 UI 먼저 반영
+    const wasLiked = book.isLikedByMe;
+    const updater = b => String(b.id) === String(bookId)
+      ? { ...b, isLikedByMe: !wasLiked, likeCount: wasLiked ? b.likeCount - 1 : b.likeCount + 1, likes: wasLiked ? b.likeCount - 1 : b.likeCount + 1 }
+      : b;
+    setBooks(prev => prev.map(updater));
+    // viewingBook도 같이 업데이트
+    if (viewingBook && String(viewingBook.id) === String(bookId)) {
+      setViewingBook(prev => prev ? updater(prev) : prev);
+    }
+
+    try {
+      if (wasLiked) {
+        await unlikeBook(bookId);
+      } else {
+        await likeBook(bookId);
+      }
+    } catch (err) {
+      // 실패 시 원복
+      const revert = b => String(b.id) === String(bookId)
+        ? { ...b, isLikedByMe: wasLiked, likeCount: wasLiked ? b.likeCount + 1 : b.likeCount - 1, likes: wasLiked ? b.likeCount + 1 : b.likeCount - 1 }
+        : b;
+      setBooks(prev => prev.map(revert));
+      if (viewingBook && String(viewingBook.id) === String(bookId)) {
+        setViewingBook(prev => prev ? revert(prev) : prev);
+      }
+      console.error("좋아요 처리 실패", err);
+    }
+  };
+
+  const handleDetailAddComment = async (bookId, authorName, textContent) => {
+    try {
+      await addComment(bookId, textContent);
+      if (viewingBook?.id === bookId) {
+        setViewingBook(prev => ({
+          ...prev,
+          comments: [{ id: `c-${Date.now()}`, user: authorName, text: textContent, date: new Date().toLocaleDateString("ko-KR") }, ...(prev.comments || [])],
+          commentCount: (prev.commentCount || 0) + 1,
+        }));
+      }
+    } catch (err) {
+      console.error("댓글 작성 실패", err);
+    }
+  };
+
+  const handleAddReply = async (bookId, parentCommentId, authorName, textContent) => {
+    try {
+      await addReply(parentCommentId, textContent);
+    } catch (err) {
+      console.error("답글 작성 실패", err);
+    }
   };
 
   return (
@@ -86,8 +180,8 @@ export default function FriendsLibraryView({
             setPreviousScreen(null);
           }}
           onStartReading={() => { setSelectedBook(viewingBook); document.body.style.overflow = "hidden"; }}
-          onToggleLike={e => { handleToggleLike(e, viewingBook.id); setTimeout(() => { setBooks(prev => { const f = prev.find(b => b.id === viewingBook.id); if (f) setViewingBook(f); return prev; }); }, 50); }}
-          onToggleBookmark={e => { handleToggleBookmark(e, viewingBook.id); setTimeout(() => { setBooks(prev => { const f = prev.find(b => b.id === viewingBook.id); if (f) setViewingBook(f); return prev; }); }, 50); }}
+          onToggleLike={e => handleToggleLike(e, viewingBook.id)}
+          onToggleBookmark={() => {}}
           allBooks={books}
           onSelectRecommended={b => setViewingBook(b)}
           onSaveComment={(user, text) => handleDetailAddComment(viewingBook.id, user, text)}
@@ -107,13 +201,13 @@ export default function FriendsLibraryView({
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#b9b0dc]" />
               <input
                 className="w-full bg-[#f8f7ff] border border-[#e6e2fc] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#2f2d59] placeholder:text-[#b9b0dc] focus:outline-none focus:border-[#6b54e7] focus:bg-white transition-all"
-                placeholder="제목, 작가, 장르 검색"
+                placeholder="제목, 작가 검색"
                 type="text"
-                value={actualQuery}
-                onChange={e => { setActualQuery(e.target.value); setCurrentPage(1); }}
+                value={keyword}
+                onChange={e => { setKeyword(e.target.value); setCurrentPage(1); }}
               />
-              {actualQuery && (
-                <button onClick={() => setActualQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#b9b0dc] hover:text-[#7c769d]">
+              {keyword && (
+                <button onClick={() => { setKeyword(""); setCurrentPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#b9b0dc] hover:text-[#7c769d]">
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
@@ -122,10 +216,10 @@ export default function FriendsLibraryView({
             <div className="relative">
               <select
                 value={sortBy}
-                onChange={e => setSortBy(e.target.value)}
+                onChange={e => { setSortBy(e.target.value); setCurrentPage(1); }}
                 className="appearance-none bg-[#f8f7ff] border border-[#e6e2fc] rounded-xl pl-4 pr-8 py-2.5 text-sm text-[#2f2d59] focus:outline-none focus:border-[#6b54e7] cursor-pointer transition-all"
               >
-                {sortOptions.map(o => <option key={o}>{o}</option>)}
+                {sortOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
               <SlidersHorizontal className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#b9b0dc] pointer-events-none" />
             </div>
@@ -133,25 +227,29 @@ export default function FriendsLibraryView({
 
           {/* ── 장르 탭 ── */}
           <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
-            {genres.map(genre => (
+            {bookTypeOptions.map(opt => (
               <button
-                key={genre}
-                onClick={() => { setSelectedGenre(genre); setCurrentPage(1); }}
-                className={`shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all duration-200 cursor-pointer ${selectedGenre === genre
+                key={opt.label}
+                onClick={() => { setSelectedBookType(opt.value); setCurrentPage(1); }}
+                className={`shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all duration-200 cursor-pointer ${selectedBookType === opt.value
                   ? "bg-[#6b54e7] text-white border-[#6b54e7] shadow-sm shadow-[#6b54e7]/20"
                   : "bg-white text-[#7c769d] border-[#e6e2fc] hover:border-[#6b54e7]/40 hover:text-[#6b54e7]"
                   }`}
               >
-                {genre}
+                {opt.label}
               </button>
             ))}
             <span className="shrink-0 ml-auto text-xs text-[#b9b0dc] whitespace-nowrap">
-              총 {sortedBooks.length}권
+              총 {totalCount}권
             </span>
           </div>
 
           {/* ── 책 그리드 ── */}
-          {sortedBooks.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center py-24">
+              <div className="w-8 h-8 border-4 border-[#6b54e7] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : books.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
               <BookOpen className="w-10 h-10 text-[#d4cdf2] mb-3" />
               <p className="text-[#7c769d] text-sm font-medium">검색 결과가 없습니다</p>
@@ -159,18 +257,18 @@ export default function FriendsLibraryView({
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-5">
-              {paginatedBooks.map(book => {
+              {books.map(book => {
                 const badge = genreBadge(book.genre);
                 return (
-                  <div key={book.id} onClick={() => setViewingBook(book)} className="group cursor-pointer">
+                  <div key={book.id} onClick={() => setViewingBook(mapBookForDetail(book, currentUser))} className="group cursor-pointer">
                     <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-gray-200 group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-white">
                       <img
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        src={book.coverImage}
+                        src={book.coverImageUrl}
                         alt={book.title}
                         referrerPolicy="no-referrer"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/60 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                       <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold border backdrop-blur-sm ${badge.cls}`}>
                         {badge.label}
                       </div>
@@ -179,21 +277,16 @@ export default function FriendsLibraryView({
                         <div className="flex items-center gap-2.5 text-white/80 text-[10px]">
                           <button onClick={e => handleToggleLike(e, book.id)} className="flex items-center gap-1 hover:text-white transition cursor-pointer">
                             <Heart className={`w-3.5 h-3.5 ${book.isLikedByMe ? "fill-red-400 stroke-red-400" : ""}`} />
-                            {book.likes >= 1000 ? `${(book.likes / 1000).toFixed(1)}k` : book.likes}
+                            {book.likeCount >= 1000 ? `${(book.likeCount / 1000).toFixed(1)}k` : book.likeCount}
                           </button>
                           <span className="flex items-center gap-1">
                             <MessageSquare className="w-3.5 h-3.5" />
-                            {book.commentsCount}
+                            {book.commentCount}
                           </span>
                           <span className="flex items-center gap-1">
                             <Eye className="w-3.5 h-3.5" />
                             {book.viewCount ?? 0}
                           </span>
-                          {book.isUserCreated && (
-                            <button onClick={e => handleDeleteBook(e, book.id)} className="ml-auto hover:text-red-400 transition cursor-pointer">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
                         </div>
                       </div>
                     </div>
