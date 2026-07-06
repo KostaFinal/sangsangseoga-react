@@ -1,63 +1,33 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ShieldAlert, User, Key, ArrowRight, CornerDownRight } from 'lucide-react';
+import { useLoginState } from '../hooks/useLoginState';
 
-export const LoginView = ({ 
-  onSuccess, 
+export const LoginView = ({
+  onSuccess,
   onNavigateToSignup,
   onQuickNavigate,
   onNavigateToPasswordReset,
   onNavigateToSocial
 }) => {
-  const [isAdminMode, setIsAdminMode] = useState(false);
-  const [email, setEmail] = useState('writer@sangsang.com');
-  const [password, setPassword] = useState('password123');
-  const [adminEmail, setAdminEmail] = useState('admin@sangsang.com');
-  const [adminPassword, setAdminPassword] = useState('admin123');
-  const [rememberMe, setRememberMe] = useState(true);
-  const [error, setError] = useState('');
-  const [isPendingMinor, setIsPendingMinor] = useState(false);
-  const [showResendToast, setShowResendToast] = useState(false);
-
-  const handleUserSubmit = (e) => {
-    e.preventDefault();
-    if (!email || !password) {
-      setError('이메일 주소와 비밀번호를 모두 입력해 주세요.');
-      return;
-    }
-    setError('');
-    
-    if (email.includes('child') || email.includes('pending') || email === 'minor@sangsang.com') {
-      setIsPendingMinor(true);
-      return;
-    }
-
-    onSuccess({
-      email,
-      role: 'USER',
-      nickname: '상상의작가'
-    });
-  };
-
-  const handleAdminSubmit = (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (adminEmail !== 'admin@sangsang.com') {
-      setError('이메일 또는 비밀번호가 잘못되었거나, 관리자 권한이 없는 계정입니다.');
-      return;
-    }
-
-    if (adminPassword !== 'admin123') {
-      setError('어드민 패스위드가 알맞지 않습니다. 다시 입력해 주세요.');
-      return;
-    }
-
-    onSuccess({
-      email: adminEmail,
-      role: 'ADMIN',
-      nickname: '상상관리팀장'
-    });
-  };
+  const {
+    isAdminMode,
+    enterAdminMode,
+    exitAdminMode,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    adminEmail,
+    setAdminEmail,
+    adminPassword,
+    setAdminPassword,
+    rememberMe,
+    setRememberMe,
+    error,
+    handleUserSubmit,
+    handleAdminSubmit,
+    handleDevQuickLogin,
+  } = useLoginState({ onSuccess });
 
   return (
     <div id="login-container" className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative bg-neutral-50 overflow-hidden font-sans">
@@ -144,10 +114,7 @@ export const LoginView = ({
           <div className="text-center pt-2">
             <button
               type="button"
-              onClick={() => {
-                setIsAdminMode(false);
-                setError('');
-              }}
+              onClick={exitAdminMode}
               className="font-bold text-xs text-[#7C769D] hover:text-[#6B54E7] hover:underline tracking-tight flex items-center justify-center gap-1.5 mx-auto transition-colors"
             >
               <CornerDownRight className="w-3.5 h-3.5" /> 일반 작가 로그인으로 돌아가기
@@ -156,91 +123,9 @@ export const LoginView = ({
         </div>
       ) : (
         <div id="login-card" className="max-w-md w-full space-y-8 bg-white rounded-3xl p-8 sm:p-10 z-10 relative border border-neutral-200/80 shadow-2xl shadow-neutral-950/[0.03]">
-          {isPendingMinor ? (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="text-center font-sans">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-neutral-100 text-neutral-800 mb-3 font-bold border border-neutral-200">
-                  <span className="material-symbols-outlined text-3xl text-neutral-900">family_restroom</span>
-                </div>
-                <h3 className="text-xl font-bold font-literata text-neutral-900">보호자 동의가 필요해요</h3>
-                <p className="text-xs text-neutral-500 mt-2 font-sans font-medium">
-                  만 14세 미만의 어린이 작가는 부모님(보호자)의 승인 후에 서비스를 이용할 수 있습니다.
-                </p>
-              </div>
-
-              <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 text-xs text-left space-y-2 font-sans font-medium">
-                <p className="font-bold text-neutral-900 border-b border-neutral-200 pb-1.5 flex items-center justify-between">
-                  <span>신청 정보</span>
-                  <span className="px-1.5 py-0.5 bg-neutral-200 text-neutral-700 text-[9px] font-bold rounded">확인 중</span>
-                </p>
-                <p>· <strong>신청 이메일:</strong> {email}</p>
-                <p>· <strong>보호자 이메일:</strong> <span className="underline text-black font-bold">parent.guardian@sangsang.com</span></p>
-                <p className="text-[10px] text-neutral-400 mt-2 leading-relaxed">
-                  * 보호자님의 이메일로 승인 확인 메일이 전송되었습니다.
-                </p>
-              </div>
-
-              {showResendToast && (
-                <div className="p-3 bg-neutral-900 text-white text-[11px] rounded-xl text-center leading-normal font-sans animate-in fade-in transition-all">
-                  📨 보호자님의 이메일로 확인 메일을 다시 보내드렸습니다!
-                </div>
-              )}
-
-              <div className="space-y-2 font-sans">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowResendToast(true);
-                    setTimeout(() => setShowResendToast(false), 3000);
-                  }}
-                  className="w-full py-3 bg-black hover:bg-neutral-900 text-white text-xs font-bold rounded-xl transition-all shadow-sm"
-                >
-                  보호자 메일로 확인 요청 다시 보내기
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsPendingMinor(false);
-                    onSuccess({
-                      email,
-                      role: 'USER',
-                      nickname: '새싹작가_이채민',
-                      ageGroup: 'MINOR_U14',
-                      guardianEmail: 'parent.guardian@sangsang.com'
-                    });
-                  }}
-                  className="w-full py-3 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-neutral-800 text-xs font-bold rounded-xl transition-all"
-                >
-                  보호자 수락 완료 처리하고 즉시 입장하기 (체험용)
-                </button>
-
-                <p className="text-[9.5px] text-neutral-400 text-center leading-normal">
-                  * 보호자가 동의하면 가입이 최종 완료됩니다.
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-neutral-200 text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsPendingMinor(false);
-                    setError('');
-                  }}
-                  className="text-xs text-neutral-600 font-extrabold hover:text-black hover:underline"
-                >
-                  로그인 폼 화면으로 돌아가기
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
               <div className="text-right">
                 <button
-                  onClick={() => {
-                    setIsAdminMode(true);
-                    setError('');
-                  }}
+                  onClick={enterAdminMode}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-black hover:text-white text-neutral-600 text-[10px] font-sans font-bold transition-all border border-neutral-200"
                 >
                   <ShieldAlert className="w-3 h-3" /> 관리자 로그인
@@ -386,10 +271,19 @@ export const LoginView = ({
                   </button>
                 </p>
               </div>
-            </>
-          )}
 
-
+              {import.meta.env.DEV && (
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    id="dev-quick-login-btn"
+                    onClick={handleDevQuickLogin}
+                    className="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-dashed border-amber-300 rounded-xl text-xs font-bold tracking-wide transition-all cursor-pointer"
+                  >
+                    🛠 개발용 원클릭 로그인 (writer@sangsang.com)
+                  </button>
+                </div>
+              )}
         </div>
       )}
     </div>

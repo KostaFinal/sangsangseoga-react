@@ -1,6 +1,5 @@
 import React from 'react';
-import PoemModeStep from './PoemModeStep.jsx';
-import PoemSettingStep from './PoemSettingStep.jsx';
+import PoemSetupStep from './PoemSetupStep.jsx';
 import PoemWorkStep from './PoemWorkStep.jsx';
 import PoemPreviewStep from './PoemPreviewStep.jsx';
 import { ConfirmModal } from '../../../../shared/components';
@@ -25,8 +24,8 @@ export default function PoemApp({ onSwitchGenre, initialView = 'step1', onGoToMy
     showCompleteModal,
     setShowCompleteModal,
     poem,
-    selections,
     answers,
+    initialPoemBody,
     previewPages,
     titleIdeas,
     updatePoem,
@@ -39,7 +38,6 @@ export default function PoemApp({ onSwitchGenre, initialView = 'step1', onGoToMy
     cancelBack,
     addPoem,
     deletePoem,
-    selectChoice,
     updateCurrentPoemAnswers,
     updateCurrentPoemFreeRequest,
     completeAndMove,
@@ -49,29 +47,24 @@ export default function PoemApp({ onSwitchGenre, initialView = 'step1', onGoToMy
     <div className="app-frame pt-4">
       <main className="workspace">
         {currentView === 'step1' && (
-          <PoemModeStep settings={settings} setSettings={setSettings} setCurrentView={setCurrentView} />
-        )}
-        {currentView === 'step2' && (
-          <PoemSettingStep
+          <PoemSetupStep
             settings={settings}
             setSettings={setSettings}
             setCurrentView={setCurrentView}
-            requestViewChange={requestViewChange}
           />
         )}
-        {currentView === 'step3' && (
+        {currentView === 'step2' && (
           <PoemWorkStep
             settings={settings}
-            selections={selections}
             answers={answers}
             poem={poem}
             poems={poems}
+            initialPoemBody={initialPoemBody}
             activePoem={activePoem}
             setActivePoem={setActivePoem}
             updatePoem={updatePoem}
             questionIndex={questionIndex}
             setQuestionIndex={setQuestionIndex}
-            selectChoice={selectChoice}
             updateCurrentPoemAnswers={updateCurrentPoemAnswers}
             updateCurrentPoemFreeRequest={updateCurrentPoemFreeRequest}
             makePoem={makePoem}
@@ -86,7 +79,7 @@ export default function PoemApp({ onSwitchGenre, initialView = 'step1', onGoToMy
             requestViewChange={requestViewChange}
           />
         )}
-        {currentView === 'step4' && (
+        {currentView === 'step3' && (
           <PoemPreviewStep
             previewPages={previewPages}
             activePreviewPage={activePreviewPage}

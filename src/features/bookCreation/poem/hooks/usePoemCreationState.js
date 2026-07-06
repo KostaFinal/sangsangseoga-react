@@ -1,15 +1,41 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  defaultSettings,
-  defaultSelections,
-  defaultAnswers,
-  choiceQuestions,
-  createPoem,
   createPreviewPages,
-  getAiChoiceRecommendation,
   getGeneratedPoemText,
   getTitleIdeas,
-} from '../poemShared.js';
+} from '../utils/poemTextUtils.js';
+
+const defaultSettings = {
+  mode: '',
+  authorAge: '',
+  topic: '',
+  style: '',
+  length: '',
+  mood: '',
+};
+
+const defaultAnswers = {
+  speaker: '',
+  subject: '',
+  firstScene: '',
+  emotionChange: '',
+  ending: '',
+  requiredPhrase: '',
+};
+
+const initialPoemBody = '아직 시가 없어요.\n오른쪽에서 내용을 입력하거나 AI에게 요청해 본문을 추가해 주세요.';
+
+const createPoem = (order = 1) => ({
+  id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+  title: '아직 제목이 없어요',
+  content: initialPoemBody,
+  order,
+  answers: { ...defaultAnswers },
+  freeRequest: '',
+  generationSource: '',
+  coverReady: false,
+  illustrationReady: false,
+});
 
 export default function usePoemCreationState({ initialView = 'step1', onGoToMyBooks, onBookComplete }) {
   const [currentView, setCurrentView] = useState(initialView);
@@ -26,11 +52,10 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
   const isPopNavigationRef = useRef(false);
 
   const poem = poems[activePoem] || poems[0];
-  const selections = poem?.selections || defaultSelections;
   const answers = poem?.answers || defaultAnswers;
   const previewPages = useMemo(() => createPreviewPages(poems), [poems]);
   const titleIdeas = useMemo(() => getTitleIdeas(settings, poem), [settings, poem]);
-  const guardedSteps = ['step2', 'step3', 'step4'];
+  const guardedSteps = ['step2', 'step3'];
   const shouldGuardNavigation = guardedSteps.includes(currentView);
 
   useEffect(() => {
@@ -84,13 +109,13 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
 
   const makePoem = (nextPatch = {}, options = {}) => {
     const nextPoem = { ...poem, ...nextPatch };
-    const text = getGeneratedPoemText(settings, nextPoem, settings.mode || 'choice', variant);
+    const text = getGeneratedPoemText(settings, nextPoem, settings.mode || 'answer', variant);
     const title = poem.title === '아직 제목이 없어요' ? getTitleIdeas(settings, nextPoem)[0] : poem.title;
     updatePoem({
       ...nextPatch,
       title,
       content: text,
-      generationSource: options.generationSource || settings.mode || 'choice',
+      generationSource: options.generationSource || settings.mode || 'answer',
     });
     setVariant((v) => v + 1);
   };
@@ -98,18 +123,13 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
   const makeBasicOnlyPoem = () => {
     const basePoem = {
       ...poem,
-      selections: { ...defaultSelections },
       answers: { ...defaultAnswers },
       freeRequest: '',
     };
-    const text = getGeneratedPoemText(settings, basePoem, settings.mode || 'choice', variant);
+    const text = getGeneratedPoemText(settings, basePoem, settings.mode || 'answer', variant);
     const title = poem.title === '아직 제목이 없어요' ? getTitleIdeas(settings, basePoem)[0] : poem.title;
     updatePoem({ title, content: text, generationSource: 'basic' });
     setVariant((v) => v + 1);
-  };
-
-  const updateCurrentPoemSelections = (nextSelections) => {
-    updatePoem({ selections: nextSelections });
   };
 
   const updateCurrentPoemAnswers = (nextAnswers) => {
@@ -118,16 +138,6 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
 
   const updateCurrentPoemFreeRequest = (freeRequest) => {
     updatePoem({ freeRequest });
-  };
-
-  const selectChoice = (value) => {
-    const key = choiceQuestions[questionIndex].key;
-    const nextValue = value === 'AI 추천' ? getAiChoiceRecommendation(key, settings) : value;
-    const nextSelections = { ...selections, [key]: nextValue };
-    updateCurrentPoemSelections(nextSelections);
-    if (questionIndex < choiceQuestions.length - 1) {
-      setQuestionIndex((prev) => prev + 1);
-    }
   };
 
   const makeAll = () => {
@@ -144,7 +154,7 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
   const requestViewChange = (nextView) => {
     if (nextView === currentView) return;
 
-    if (currentView === 'step4' && nextView === 'step3') {
+    if (currentView === 'step3' && nextView === 'step2') {
       setCurrentView(nextView);
       return;
     }
@@ -260,8 +270,8 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
     showCompleteModal,
     setShowCompleteModal,
     poem,
-    selections,
     answers,
+    initialPoemBody,
     previewPages,
     titleIdeas,
     updatePoem,
@@ -274,7 +284,6 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
     cancelBack,
     addPoem,
     deletePoem,
-    selectChoice,
     updateCurrentPoemAnswers,
     updateCurrentPoemFreeRequest,
     completeAndMove,

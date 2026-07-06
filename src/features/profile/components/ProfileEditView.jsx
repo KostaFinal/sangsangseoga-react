@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { 
-  User, 
-  Shield, 
-  Trash2, 
+import React from 'react';
+import {
+  User,
+  Shield,
+  Trash2,
   CheckCircle,
   AlertTriangle,
   Mail,
@@ -23,184 +23,54 @@ import {
   LockKeyhole,
   FileText
 } from 'lucide-react';
-import { CURRENT_USER_PROFILE } from '../../../shared/data';
+import { useProfileState } from '../hooks/useProfileState';
 
 export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, onLogout }) => {
-  // Navigation tabs: 'basic' (기본 정보 설정) | 'guardian' (학부모 안심 동의) 
-  const [activeTab, setActiveTab] = useState('basic');
+  const {
+    activeTab, setActiveTab,
 
-  // Basic Profile States
-  const [nickname, setNickname] = useState(currentUser?.nickname || '상상의작가');
-  const [originalNickname, setOriginalNickname] = useState(currentUser?.nickname || '상상의작가');
-  const [isNicknameChecked, setIsNicknameChecked] = useState(true);
-  const [nicknameCheckMsg, setNicknameCheckMsg] = useState({ text: '현재 적용된 중복 없는 안전한 필명입니다.', isError: false });
-  const [profileImage, setProfileImage] = useState(currentUser?.profileImage || currentUser?.profile || CURRENT_USER_PROFILE);
+    nickname,
+    isNicknameChecked,
+    nicknameCheckMsg,
+    profileImage, setProfileImage,
+    handleNicknameChange,
+    handleCheckNicknameDuplicate,
+    handleProfileImageFileChange,
 
-  // Password Modification States
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  const [showPwText, setShowPwText] = useState(false);
+    currentPassword, setCurrentPassword,
+    newPassword, setNewPassword,
+    confirmNewPassword, setConfirmNewPassword,
+    showPwText, setShowPwText,
 
-  // Minor Under 14 specific Parent Email
-  const [isMinor, setIsMinor] = useState(currentUser?.ageGroup === 'MINOR_U14' || currentUser?.birthdate === '2015-05-15' || true); // Default true for simulation
-  const [guardianEmail, setGuardianEmail] = useState(currentUser?.guardianEmail || 'parent@guardian.com');
-  const [originalGuardianEmail, setOriginalGuardianEmail] = useState('parent@guardian.com');
-  const [guardianEmailEditMode, setGuardianEmailEditMode] = useState(false);
+    isMinor,
+    guardianEmail, setGuardianEmail,
+    guardianEmailEditMode, setGuardianEmailEditMode,
 
-  // Connected Minor account stats (for Guardian view)
-  const [connectedMinors, setConnectedMinors] = useState([
-    {
-      id: 'minor_781',
-      name: '김상상 (자녀)',
-      email: 'child.sangsang@gmail.com',
-      birthdate: '2015-05-15',
-      booksCount: 5,
-      subscription: '프리미엄 정기 요금제',
-      status: 'ACTIVE', // ACTIVE | SUSPENDED
-      joinedDate: '2026-03-12'
-    },
-    {
-      id: 'minor_920',
-      name: '박상상 (자녀)',
-      email: 'kid.sangsang@daum.net',
-      birthdate: '2017-08-25',
-      booksCount: 1,
-      subscription: '무료 새싹 작가회',
-      status: 'ACTIVE',
-      joinedDate: '2026-05-19'
-    }
-  ]);
-  const [showWithdrawConsentModal, setShowWithdrawConsentModal] = useState(false);
-  const [selectedMinorToWithdraw, setSelectedMinorToWithdraw] = useState(null);
-  const [withdrawPasswordConfirm, setWithdrawPasswordConfirm] = useState('');
-  const [withdrawError, setWithdrawError] = useState('');
+    connectedMinors,
+    showWithdrawConsentModal, setShowWithdrawConsentModal,
+    selectedMinorToWithdraw,
+    withdrawPasswordConfirm, setWithdrawPasswordConfirm,
+    withdrawError,
+    openWithdrawConsentModal,
+    handleWithdrawConsentSubmit,
 
-  // Account Withdrawal States
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [withdrawConfirmPw, setWithdrawConfirmPw] = useState('');
-  const [bookDisposalMethod, setBookDisposalMethod] = useState('PRIVATE'); // 'PRIVATE' (비공개 전환) | 'DELETE' (즉각 완전 삭제)
-  const [agreeWithdrawTerms, setAgreeWithdrawTerms] = useState(false);
-  const [withdrawErrorMsg, setWithdrawErrorMsg] = useState('');
+    showWithdrawModal, setShowWithdrawModal,
+    withdrawConfirmPw, setWithdrawConfirmPw,
+    bookDisposalMethod, setBookDisposalMethod,
+    agreeWithdrawTerms, setAgreeWithdrawTerms,
+    withdrawErrorMsg,
+    isWithdrawing,
+    openWithdrawModal,
+    handleWithdrawMembershipSubmit,
 
-  // UI Toast Feedbacks
-  const [toastMessage, setToastMessage] = useState('');
+    handleRejectGuardianRequest,
+    handleApproveGuardianRequest,
 
-  const triggerToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage('');
-    }, 3000);
-  };
+    toastMessage,
+    handleSaveProfile,
 
-  // Real-time Nickname Duplicate Check
-  const handleCheckNicknameDuplicate = () => {
-    if (!nickname.trim()) {
-      setNicknameCheckMsg({ text: '필명을 정확히 입력해 주세요.', isError: true });
-      setIsNicknameChecked(false);
-      return;
-    }
-    
-    // Simulate API database match check
-    if (nickname === '관리자' || nickname === '상상서가' || nickname === '어린왕자') {
-      setNicknameCheckMsg({ text: '이미 사용 중이거나 시스템 예약어로 분류된 필명입니다.', isError: true });
-      setIsNicknameChecked(false);
-      triggerToast('이미 등록된 필명입니다. 다른 닉네임을 설정하십시오.');
-    } else {
-      setNicknameCheckMsg({ text: '사용할 수 있는 멋진 필명입니다.', isError: false });
-      setIsNicknameChecked(true);
-      triggerToast('필명 중복 확인이 완료되었습니다!');
-    }
-  };
-
-  // Handles updating basic profile details
-  const handleSaveProfile = (e) => {
-    e.preventDefault();
-
-    if (!isNicknameChecked) {
-      triggerToast('닉네임 중복 체크를 먼저 진행해 주세요.');
-      return;
-    }
-
-    if (newPassword) {
-      if (!currentPassword) {
-        triggerToast('비밀번호를 변경하려면 현재 비밀번호 확인이 필수입니다.');
-        return;
-      }
-      if (newPassword !== confirmNewPassword) {
-        triggerToast('신규 비밀번호 확인 불일치!');
-        return;
-      }
-      if (newPassword === 'password123') {
-        triggerToast('🔒 보안 정책 위반: 이전 비밀번호와 동일한 패스워드는 재사용할 수 없습니다.');
-        return;
-      }
-    }
-
-    triggerToast('내 소중한 가입 정보 및 알림 수신 상태를 성공적으로 개정하였습니다.');
-    setOriginalNickname(nickname);
-    setOriginalGuardianEmail(guardianEmail);
-    setGuardianEmailEditMode(false);
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmNewPassword('');
-    if (onUpdateProfile) {
-      onUpdateProfile({ nickname, profileImage });
-    }
-  };
-
-  // Handle Parent Consent Withdrawal for Child
-  const handleWithdrawConsentSubmit = (e) => {
-    e.preventDefault();
-    setWithdrawError('');
-
-    if (withdrawPasswordConfirm !== 'password123' && withdrawPasswordConfirm !== 'admin123') {
-      setWithdrawError('비밀번호 검증에 실패했습니다. 올바른 학부모 계정 암호를 입력해 주세요.');
-      return;
-    }
-
-    if (selectedMinorToWithdraw) {
-      setConnectedMinors(prev => 
-        prev.map(minor => 
-          minor.id === selectedMinorToWithdraw.id 
-            ? { ...minor, status: 'SUSPENDED', booksCount: 0, subscription: '동의 철회됨 / 계정 정지' } 
-            : minor
-        )
-      );
-      setShowWithdrawConsentModal(false);
-      setWithdrawPasswordConfirm('');
-      triggerToast(`${selectedMinorToWithdraw.name} 자녀 계정의 서비스 동의가 철회 및 비활성화 처리되었습니다.`);
-    }
-  };
-
-  // Handle Membership Withdrawal Action (회원 탈퇴)
-  const handleWithdrawMembershipSubmit = (e) => {
-    e.preventDefault();
-    setWithdrawErrorMsg('');
-
-    if (!agreeWithdrawTerms) {
-      setWithdrawErrorMsg('탈퇴 약관 유의사항 및 연관 유실 데이터 인지 동의란에 체크가 필요합니다.');
-      return;
-    }
-
-    if (!withdrawConfirmPw) {
-      setWithdrawErrorMsg('본인 계정의 비밀번호를 기재해 주십시오.');
-      return;
-    }
-
-    // Verify Password Simulation
-    if (withdrawConfirmPw !== 'password123' && withdrawConfirmPw !== 'admin123') {
-      setWithdrawErrorMsg('입력하신 본인 확인 패스워드가 장부 기록과 일치하지 않습니다.');
-      return;
-    }
-
-    triggerToast('상상서가 회원 탈퇴가 최종 접수되었습니다. 30일 보관 유예 절차가 진행되며, 즉각 세션을 로그아웃 처리합니다.');
-    
-    setTimeout(() => {
-      setShowWithdrawModal(false);
-      onLogout(); // Safe session destroy
-    }, 2500);
-  };
+    avatarPresets,
+  } = useProfileState({ currentUser, onUpdateProfile, onLogout });
 
   return (
     <div id="profile-edit-container" className="bg-[#FAF9FF] min-h-screen font-sans text-[#2F2D59] w-full px-0 py-0 pb-16 relative leading-relaxed overflow-x-hidden">
@@ -342,11 +212,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                         <input
                           type="text"
                           value={nickname}
-                          onChange={(e) => {
-                            setNickname(e.target.value);
-                            setIsNicknameChecked(false);
-                            setNicknameCheckMsg({ text: '필명이 바뀌었습니다. 우측 중복 확인을 다시 이행해 주세요.', isError: true });
-                          }}
+                          onChange={(e) => handleNicknameChange(e.target.value)}
                           className="w-full pl-11 pr-4 py-3 bg-[#FAF9FF] hover:bg-neutral-100/50 focus:bg-white text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
                           placeholder="활동하실 공식 작가명을 적어주세요"
                         />
@@ -505,12 +371,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                 <div className="pt-8 border-t border-[#E6E2FC]/40 flex flex-col sm:flex-row justify-between items-center gap-4">
                   <button
                     type="button"
-                    onClick={() => {
-                      setWithdrawErrorMsg('');
-                      setWithdrawConfirmPw('');
-                      setAgreeWithdrawTerms(false);
-                      setShowWithdrawModal(true);
-                    }}
+                    onClick={openWithdrawModal}
                     className="inline-flex items-center gap-1.5 text-xs text-[#7C769D] hover:text-rose-600 font-extrabold transition-colors cursor-pointer hover:underline"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -563,16 +424,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                           type="file" 
                           accept="image/*" 
                           className="hidden" 
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onload = (e) => {
-                                setProfileImage(e.target.result);
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
+                          onChange={handleProfileImageFileChange}
                         />
                         <Camera className="w-3.5 h-3.5" />
                       </label>
@@ -587,12 +439,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
 
                     {/* Predefined Beautiful Presets */}
                     <div className="flex justify-center gap-2 pt-1 border-t border-[#E6E2FC]/40 w-full pt-3">
-                      {[
-                        CURRENT_USER_PROFILE,
-                        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
-                        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
-                        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150'
-                      ].map((imgUrl, i) => (
+                      {avatarPresets.map((imgUrl, i) => (
                         <button
                           key={i}
                           type="button"
@@ -706,12 +553,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                         <div className="pt-4 border-t border-[#E6E2FC]/30 mt-4 flex justify-end font-sans">
                           <button
                             type="button"
-                            onClick={() => {
-                              setSelectedMinorToWithdraw(minor);
-                              setWithdrawPasswordConfirm('');
-                              setWithdrawError('');
-                              setShowWithdrawConsentModal(true);
-                            }}
+                            onClick={() => openWithdrawConsentModal(minor)}
                             className="px-3.5 py-2 bg-neutral-900 hover:bg-black text-white text-[10px] font-black rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95"
                           >
                             <Trash2 className="w-3.5 h-3.5 text-rose-400" />
@@ -757,29 +599,14 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                   <div className="pt-4 border-t border-[#E6E2FC] flex justify-end gap-3.5 text-xs font-sans">
                     <button
                       type="button"
-                      onClick={() => {
-                        triggerToast('자녀의 가입 동의를 반려 처리하여, 이채민 어린이의 가입 요청은 중단 처리되었습니다.');
-                      }}
+                      onClick={handleRejectGuardianRequest}
                       className="px-4 py-2 bg-neutral-150 hover:bg-neutral-200 text-[#7C769D] font-bold rounded-xl cursor-pointer transition-all active:scale-95"
                     >
                       동의 반려
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        const childApproved = {
-                          id: `minor_gen_${Date.now().toString().slice(-3)}`,
-                          name: '이채민 (자녀)',
-                          email: 'chaemin@sangsang.com',
-                          birthdate: '2015-11-20',
-                          booksCount: 0,
-                          subscription: '무료 새싹 작가 플랜 (기본 무료체험 1회 지급)',
-                          status: 'ACTIVE',
-                          joinedDate: '방금 전 동의함'
-                        };
-                        setConnectedMinors([childApproved, ...connectedMinors]);
-                        triggerToast('🎉 동의 확인 성공! 이채민 어린이의 가입이 체결되어 책방 창작 활동이 승인되었습니다.');
-                      }}
+                      onClick={handleApproveGuardianRequest}
                       className="px-5 py-2 bg-[#6B54E7] text-white hover:bg-[#5b45d6] font-black rounded-xl cursor-pointer shadow-md shadow-[#6B54E7]/15 transition-all hover:scale-[1.02] active:scale-95"
                     >
                       안심 동의 수락 승인
@@ -1000,9 +827,10 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
               </button>
               <button
                 type="submit"
-                className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl transition-all shadow-md shadow-rose-600/15 text-center cursor-pointer"
+                disabled={isWithdrawing}
+                className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl transition-all shadow-md shadow-rose-600/15 text-center cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                회원 탈퇴 완료 승인
+                {isWithdrawing ? '처리 중...' : '회원 탈퇴 완료 승인'}
               </button>
             </div>
           </form>

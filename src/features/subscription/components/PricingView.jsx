@@ -1,32 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ILLUSTRATION_BOOKS } from '../../../shared/data';
 import { ArrowLeft, Sparkles, HelpCircle, ChevronUp, ChevronDown, CheckCircle2, XCircle } from 'lucide-react';
+import { usePricingState } from '../hooks/usePricingState';
 
 export const PricingView = ({ onSelectPlan, onNavigateHome }) => {
-  const [selectedPlanType, setSelectedPlanType] = useState('monthly');
-  const [openFaqId, setOpenFaqId] = useState(1);
-
-  const faqs = [
-    {
-      id: 1,
-      q: 'AI가 작성하는 소설 단락의 저작권은 누구에게 있나요?',
-      a: '상상서가에서 가공해 드린 모든 소설 텍스트 및 완성된 책의 저작권은 온전히 작가(사용자) 본인에게 귀속됩니다. 상업적 출판 및 판매도 전적으로 자유롭게 진행이 가능합니다.'
-    },
-    {
-      id: 2,
-      q: '프리미엄 요금제의 자동 결제는 언제든 취소가 가능한가요?',
-      a: '네, 마이페이지 결제 및 구독 관리 대시보드에서 단 한 번의 클릭만으로 자동 정기 구독 해지가 가능하며, 취소 시 해당 결제 주기 마지막 날까지는 모든 프리미엄 기능을 제약 없이 그대로 누리실 수 있습니다.'
-    },
-    {
-      id: 3,
-      q: '무료 요금제와 프리미엄 요금제의 구체적인 AI 퀄리티 차이가 있나요?',
-      a: '프리미엄 요금제는 더욱 고도화된 고매개변수 LLM 모델인 Gemini Pro 계열을 사용하며, 다채로운 가구와 묘사, 소설 맥락 및 캐릭터 일관성 제어 가이드 템플릿(여름의 소나기 에디션 등)이 추가 제공됩니다.'
-    }
-  ];
-
-  const toggleFaq = (id) => {
-    setOpenFaqId(openFaqId === id ? null : id);
-  };
+  const {
+    selectedPlanType, setSelectedPlanType,
+    openFaqId,
+    faqs,
+    toggleFaq,
+    handleSelectPremium,
+  } = usePricingState({ onSelectPlan });
 
   return (
     <div className="py-12 bg-[#FAF9FF] min-h-screen px-4 sm:px-6 lg:px-8 relative font-sans text-[#2F2D59]">
@@ -186,7 +170,7 @@ export const PricingView = ({ onSelectPlan, onNavigateHome }) => {
             <div className="pt-8">
               <button
                 id="pricing-premium-select"
-                onClick={() => onSelectPlan(selectedPlanType)}
+                onClick={handleSelectPremium}
                 className="w-full py-3.5 bg-white hover:bg-neutral-100 text-[#110F24] text-xs font-black rounded-2xl tracking-wide shadow-md transition-all duration-200 cursor-pointer text-center"
               >
                 프리미엄 창작 시작하기 (결제 이동)

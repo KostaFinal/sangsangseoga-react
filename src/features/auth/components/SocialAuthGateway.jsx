@@ -1,110 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useSocialAuthState } from '../hooks/useSocialAuthState';
 
 export const SocialAuthGateway = ({ selectedProvider, onNavigateToLogin, onSuccess }) => {
-  const [provider, setProvider] = useState(selectedProvider || 'google');
-  const [step, setStep] = useState('consent');
-  const [birthdate, setBirthdate] = useState('2002-11-20');
-  const [isMinorUnder14, setIsMinorUnder14] = useState(false);
-  
-  const [agreeAll, setAgreeAll] = useState(true);
-  const [agreeProfile, setAgreeProfile] = useState(true);
-  const [agreeEmail, setAgreeEmail] = useState(true);
-  const [agreeTerms, setAgreeTerms] = useState(true);
-  
-  const [guardianName, setGuardianName] = useState('');
-  const [guardianEmail, setGuardianEmail] = useState('');
-  const [guardianTokenSent, setGuardianTokenSent] = useState(false);
-  const [guardianApproved, setGuardianApproved] = useState(false);
-
-  const [exchangeState, setExchangeState] = useState([
-    { text: '소셜 로그인 인증 확인', status: 'pending' },
-    { text: '보안 전송 채널 검증', status: 'idle' },
-    { text: '이메일 및 프로필 연동 완료', status: 'idle' },
-    { text: '작가 정보 등록', status: 'idle' },
-    { text: '개인 서재 설정', status: 'idle' },
-    { text: '로그인 완료', status: 'idle' }
-  ]);
-
-  useEffect(() => {
-    if (selectedProvider) {
-      setProvider(selectedProvider);
-    }
-  }, [selectedProvider]);
-
-  useEffect(() => {
-    if (!birthdate) return;
-    const bday = new Date(birthdate);
-    const today = new Date();
-    let calculatedAge = today.getFullYear() - bday.getFullYear();
-    const monthDiff = today.getMonth() - bday.getMonth();
-    const dayDiff = today.getDate() - bday.getDate();
-    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
-      calculatedAge--;
-    }
-    setIsMinorUnder14(calculatedAge < 14);
-  }, [birthdate]);
-
-  const handleConsentSubmit = (e) => {
-    e.preventDefault();
-    if (!agreeProfile || !agreeEmail || !agreeTerms) {
-      alert('필수 동의 항목을 선택해 주세요.');
-      return;
-    }
-
-    setStep('callback_exchange');
-    runTokenExchangeLogs();
-  };
-
-  const runTokenExchangeLogs = () => {
-    setTimeout(() => {
-      setExchangeState(prev => prev.map((item, idx) => idx === 0 ? { ...item, status: 'success' } : idx === 1 ? { ...item, status: 'pending' } : item));
-    }, 600);
-
-    setTimeout(() => {
-      setExchangeState(prev => prev.map((item, idx) => idx === 1 ? { ...item, status: 'success' } : idx === 2 ? { ...item, status: 'pending' } : item));
-    }, 1200);
-
-    setTimeout(() => {
-      setExchangeState(prev => prev.map((item, idx) => idx === 2 ? { ...item, status: 'success' } : idx === 3 ? { ...item, status: 'pending' } : item));
-    }, 1800);
-
-    setTimeout(() => {
-      setExchangeState(prev => prev.map((item, idx) => idx === 3 ? { ...item, status: 'success' } : idx === 4 ? { ...item, status: 'pending' } : item));
-    }, 2400);
-
-    setTimeout(() => {
-      setExchangeState(prev => prev.map((item, idx) => idx === 4 ? { ...item, status: 'success' } : idx === 5 ? { ...item, status: 'pending' } : item));
-    }, 3000);
-
-    setTimeout(() => {
-      setExchangeState(prev => prev.map((item, idx) => idx === 5 ? { ...item, status: 'success' } : item));
-      
-      if (isMinorUnder14) {
-        setStep('guardian_gate');
-      } else {
-        setStep('on_success');
-      }
-    }, 3600);
-  };
-
-  const handleGuardianRequest = (e) => {
-    e.preventDefault();
-    if (!guardianName.trim() || !guardianEmail.trim()) {
-      alert('법정대리인(보호자)의 성명과 이메일을 정직하게 채워주세요.');
-      return;
-    }
-    setGuardianTokenSent(true);
-  };
-
-  const simulateGuardianApprove = () => {
-    setGuardianApproved(true);
-  };
-
-  const handleFinalSuccess = () => {
-    if (onSuccess) {
-      onSuccess();
-    }
-  };
+  const {
+    provider,
+    selectProvider,
+    step, setStep,
+    birthdate, setBirthdate,
+    isMinorUnder14,
+    agreeAll,
+    agreeProfile, setAgreeProfile,
+    agreeEmail, setAgreeEmail,
+    agreeTerms, setAgreeTerms,
+    toggleAgreeAll,
+    guardianName, setGuardianName,
+    guardianEmail, setGuardianEmail,
+    guardianTokenSent,
+    guardianApproved,
+    exchangeState,
+    handleConsentSubmit,
+    handleGuardianRequest,
+    simulateGuardianApprove,
+    proceedToSuccess,
+    handleFinalSuccess,
+  } = useSocialAuthState({ selectedProvider, onSuccess });
 
   return (
     <div id="social-auth-container" className="min-h-screen bg-neutral-100 flex items-center justify-center py-10 px-4 sm:px-6 relative font-sans text-neutral-900 overflow-hidden">
@@ -123,19 +42,19 @@ export const SocialAuthGateway = ({ selectedProvider, onNavigateToLogin, onSucce
 
           <div className="flex space-x-1 bg-neutral-100 p-1 rounded-xl text-[11px] font-bold">
             <button
-              onClick={() => { setProvider('google'); setStep('consent'); }}
+              onClick={() => selectProvider('google')}
               className={`px-3 py-1.5 rounded-lg transition-colors duration-150 cursor-pointer ${provider === 'google' ? 'bg-white text-black shadow-xs' : 'text-neutral-400 hover:text-neutral-700'}`}
             >
               Google
             </button>
             <button
-              onClick={() => { setProvider('kakao'); setStep('consent'); }}
+              onClick={() => selectProvider('kakao')}
               className={`px-3 py-1.5 rounded-lg transition-colors duration-150 cursor-pointer ${provider === 'kakao' ? 'bg-[#FEE500] text-[#191919] shadow-xs' : 'text-neutral-400 hover:text-neutral-700'}`}
             >
               Kakao
             </button>
             <button
-              onClick={() => { setProvider('naver'); setStep('consent'); }}
+              onClick={() => selectProvider('naver')}
               className={`px-3 py-1.5 rounded-lg transition-colors duration-150 cursor-pointer ${provider === 'naver' ? 'bg-[#03C75A] text-white shadow-xs' : 'text-neutral-400 hover:text-neutral-700'}`}
             >
               Naver
@@ -184,14 +103,8 @@ export const SocialAuthGateway = ({ selectedProvider, onNavigateToLogin, onSucce
                     <label className="flex items-center space-x-2.5 font-bold text-sm cursor-pointer text-neutral-900">
                       <input 
                         type="checkbox" 
-                        checked={agreeAll} 
-                        onChange={(e) => {
-                          const val = e.target.checked;
-                          setAgreeAll(val);
-                          setAgreeProfile(val);
-                          setAgreeEmail(val);
-                          setAgreeTerms(val);
-                        }}
+                        checked={agreeAll}
+                        onChange={(e) => toggleAgreeAll(e.target.checked)}
                         className="w-4 h-4 text-neutral-900 border-neutral-300 focus:ring-black accent-black rounded"
                       />
                       <span>전체 동의하기 (선택 동의 포함)</span>
@@ -427,7 +340,7 @@ export const SocialAuthGateway = ({ selectedProvider, onNavigateToLogin, onSucce
                 </button>
                 {guardianApproved && (
                   <button
-                    onClick={() => setStep('on_success')}
+                    onClick={proceedToSuccess}
                     className="text-emerald-700 hover:text-emerald-800 hover:underline font-bold cursor-pointer"
                   >
                     소설 창작소로 진입하기 →

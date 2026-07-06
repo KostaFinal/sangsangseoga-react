@@ -1,5 +1,4 @@
-import { PAGE_LIMIT } from './essayOptions.js';
-import { QUESTIONS } from './essayQuestions.js';
+const PAGE_LIMIT = 620;
 
 export function createId() {
   return globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
@@ -55,76 +54,11 @@ export function makeOpeningEssay(settings, answers, variant = 0) {
     : `${scene}을 떠올리면, 그때의 마음이 아직도 천천히 되살아난다.`;
   const body = `${tone} 적어 보자면, 그 순간의 나는 ${emotion}을 가장 크게 느끼고 있었다. 겉으로는 별일 아닌 듯 지나갔지만, 마음속에서는 오래 접어 둔 종이가 다시 펼쳐지는 것처럼 여러 생각이 일어났다.`;
   const insight = `지금 돌아보면 그 경험은 내게 ${meaning}을 알려 주었다. 그래서 이 글은 거창한 결론보다, 한 사람이 자기 마음을 조금 더 선명하게 바라보는 기록에 가깝다.`;
-  const note = continueNote ? `\n\n앞으로 이어 쓴다면 ${continueNote}에 대해서도 더 천천히 적어 보고 싶다.` : '';
+  const note = continueNote ? `\n\n추가로 ${continueNote}에 대해서도 더 담아 보고 싶다.` : '';
   const reader = `이 글을 읽는 사람에게는 ${readerFeeling}이 남았으면 한다.`;
   return `${intro}\n\n${body}\n\n${insight}${note}\n\n${reader}`;
 }
 
-
-export function makeGuidedParagraph(settings, answers, stepIndex, variant = 0) {
-  const tone = settings.tone || '따뜻하게';
-  const theme = settings.theme || '나의 이야기';
-  const experience = clean(answers.experience) || theme;
-  const emotion = clean(answers.emotion) || '그때의 마음';
-  const meaning = clean(answers.meaning) || '그 경험이 내게 남긴 생각';
-  const scene = clean(answers.scene) || '그날의 장면';
-  const readerFeeling = clean(answers.readerFeeling) || '조용한 공감';
-
-  if (stepIndex === 0) {
-    return variant % 2 === 0
-      ? `처음에는 ${experience}이 내 마음에 이렇게 오래 남을 줄 몰랐다. 그 일은 아주 큰 사건처럼 시작된 것은 아니었지만, 시간이 지날수록 자꾸만 다시 떠오르는 기억이 되었다. 나는 그 순간을 떠올릴 때마다 그때의 나와 지금의 내가 조용히 마주 앉아 있는 것 같은 기분이 든다.`
-      : `${experience}에 대해 쓰려고 하니, 가장 먼저 그날의 공기와 마음이 함께 떠오른다. 지나고 보면 평범했던 순간도 글로 옮기면 전혀 다른 의미를 갖게 된다. 이 에세이는 그 기억을 다시 꺼내어 내가 왜 아직도 그 일을 붙잡고 있는지 천천히 살펴보는 글이다.`;
-  }
-
-  if (stepIndex === 1) {
-    return `그때 내 안에 가장 크게 남은 감정은 ${emotion}이었다. 그 마음은 한순간에 사라지지 않고, 며칠이 지나도 마음 한쪽에 작게 남아 있었다. 누군가에게는 별일 아닌 감정처럼 보일 수도 있지만, 나에게는 그 경험을 다시 생각하게 만드는 가장 선명한 흔적이었다.`;
-  }
-
-  if (stepIndex === 2) {
-    return `지금 돌아보면 나는 그 일을 통해 ${meaning}을 생각하게 되었다. 당시에는 미처 알지 못했던 마음도 시간이 지나고 나서야 조금씩 이해되었다. 그래서 이 경험은 단순히 지나간 일이 아니라, 내가 나를 더 잘 알게 되는 작은 계기가 되었다.`;
-  }
-
-  if (stepIndex === 3) {
-    return `특히 마음에 남아 있는 것은 ${scene}이다. 그 장면은 기억 속에서 아주 선명하게 남아, 글의 한가운데에 조용히 놓이고 싶어 한다. 나는 그 장면을 떠올릴 때마다 말로 다 설명하지 못했던 마음까지 함께 되살아나는 것을 느낀다.`;
-  }
-
-  if (stepIndex === 4) {
-    return `이 글을 읽는 사람에게는 ${readerFeeling}이 남았으면 한다. 내 이야기가 누군가에게 거창한 답이 되지는 않더라도, 자신의 마음을 다시 들여다보는 작은 계기가 되었으면 좋겠다. 결국 이 에세이는 한 가지 경험을 통해 지나간 마음을 이해하고, 그 마음을 조금 더 따뜻하게 보내 주려는 기록이다.`;
-  }
-
-  return '';
-}
-
-export function applyGuidedContinueNote(baseContent, continueNote, settings) {
-  const base = clean(baseContent);
-  const note = clean(continueNote);
-  if (!note) return base;
-
-  const wantsWholeRevision = /전체|수정|다듬|문체|분위기|톤|따뜻|담백|솔직|차분|밝|자연|짧|길|정리/gu.test(note);
-  if (wantsWholeRevision) {
-    const tone = settings.tone || '자연스럽게';
-    const paragraphs = base.split(/\n\s*\n/gu).filter(Boolean);
-    if (!paragraphs.length) return note;
-    const lastIndex = paragraphs.length - 1;
-    paragraphs[lastIndex] = `${paragraphs[lastIndex]} ${tone} 정리하면, 이 글은 ${note.replace(/해줘|해주세요|수정|다듬|전체|문체|분위기|톤/gu, '').trim() || '사용자가 더 담고 싶은 마음'}까지 자연스럽게 품는 방향으로 마무리된다.`;
-    return paragraphs.join('\n\n');
-  }
-
-  return joinText(base, `마지막으로 덧붙이고 싶은 이야기가 있다. ${note} 이 내용까지 더하고 나니, 이 경험은 단순히 지나간 일이 아니라 지금의 나에게도 이어지는 마음처럼 느껴진다.`);
-}
-
-export function makeGuidedEssayThrough(settings, answers, throughIndex, variant = 0) {
-  const lastRequiredIndex = Math.min(throughIndex, 4);
-  const paragraphs = [];
-  for (let index = 0; index <= lastRequiredIndex; index += 1) {
-    const question = QUESTIONS[index];
-    if (!question || !hasText(answers[question.key])) continue;
-    paragraphs.push(makeGuidedParagraph(settings, answers, index, variant));
-  }
-  const base = paragraphs.join('\n\n');
-  if (throughIndex >= 5) return applyGuidedContinueNote(base, answers.continueNote, settings);
-  return base;
-}
 
 export function getGuidedSuggestion(settings, answers, questionIndex) {
   const theme = clean(settings.theme) || '내가 겪은 일';
@@ -135,7 +69,7 @@ export function getGuidedSuggestion(settings, answers, questionIndex) {
     '지금 돌아보면 그 일은 저에게 작은 마음도 쉽게 지나치지 말아야 한다는 걸 알려 준 경험이었어요.',
     '그날의 표정, 주변의 분위기, 누군가가 건넨 짧은 말이 아직도 선명하게 기억나요.',
     '읽는 사람이 제 이야기를 통해 조용한 위로와 다시 시작할 수 있다는 마음을 느꼈으면 좋겠어요.',
-    `전체적으로 ${tone} 이어지면 좋겠고, 마지막에는 그 뒤로 조금 달라진 제 마음도 자연스럽게 담겼으면 좋겠어요.`,
+    `전체적으로 ${tone} 정리되면 좋겠고, 마지막에는 그 뒤로 조금 달라진 제 마음도 자연스럽게 담겼으면 좋겠어요.`,
   ];
   return suggestions[Math.min(questionIndex, suggestions.length - 1)];
 }
@@ -165,11 +99,15 @@ export function reviseSelection(selectedText, request) {
   if (!target) return '';
   if (!req) return target;
   if (/짧|간결/gu.test(req)) return target.split(/\n\n/gu).slice(0, 1).join('\n\n');
-  if (/구체|장면|자세/gu.test(req)) return `${target}\n\n그 순간의 공기, 표정, 작은 소리까지 떠올리자 기억은 훨씬 선명한 장면으로 되살아났다.`;
+  if (/솔직|진솔/gu.test(req)) return `${target}\n\n그때의 마음을 꾸미지 않고 바라보면, 나는 사실 조금 흔들리고 있었고 그 흔들림까지도 내 이야기의 일부였다.`;
+  if (/풍성|늘려/gu.test(req)) return `${target}\n\n그 순간을 조금 더 오래 들여다보면, 사건보다 마음의 결이 먼저 떠오른다. 지나간 시간 속에서 내가 붙잡고 있던 감정과 생각이 천천히 선명해진다.`;
+  if (/생각|깊/gu.test(req)) return `${target}\n\n돌아보면 그 일은 단순히 지나간 경험이 아니라, 내가 무엇을 소중하게 여기고 있었는지 알려 준 작은 기준이 되었다.`;
+  if (/구체|장면|자세|생생/gu.test(req)) return `${target}\n\n그 순간의 공기, 표정, 작은 소리까지 떠올리자 기억은 훨씬 선명한 장면으로 되살아났다.`;
   if (/따뜻/gu.test(req)) return `${target}\n\n그 기억은 시간이 지나도 차갑게 식지 않고, 오히려 나를 조용히 안아 주는 마음으로 남았다.`;
   if (/담백|자연|오타|어색/gu.test(req)) return target;
   return `${target}\n\n${req.replace(/해줘|바꿔줘|수정해줘/gu, '').trim()} 느낌이 자연스럽게 남도록 다듬었다.`;
 }
+
 
 export function splitPages(content) {
   const text = clean(content);
