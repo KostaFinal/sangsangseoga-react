@@ -26,6 +26,7 @@ export const LoginView = ({
     error,
     handleUserSubmit,
     handleAdminSubmit,
+    handleDevQuickLogin,
   } = useLoginState({ onSuccess });
 
   return (
@@ -270,6 +271,19 @@ export const LoginView = ({
                   </button>
                 </p>
               </div>
+
+              {import.meta.env.DEV && (
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    id="dev-quick-login-btn"
+                    onClick={handleDevQuickLogin}
+                    className="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-dashed border-amber-300 rounded-xl text-xs font-bold tracking-wide transition-all cursor-pointer"
+                  >
+                    🛠 개발용 원클릭 로그인 (writer@sangsang.com)
+                  </button>
+                </div>
+              )}
         </div>
       )}
     </div>
