@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { ChevronRight, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 
-export default function WishlistTab({ filteredBooks, onStartReading, onOpenDetail, onToggleFavorite }) {
+export default function WishlistTab({ filteredBooks,  onOpenDetail, onToggleFavorite }) {
   const [wishlistCategory, setWishlistCategory] = useState('all');
 
   return (
     <div className="space-y-4 bg-transparent text-navy-purple">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 select-none">
         <div>
-          <h3 className="font-plus text-xl font-black text-navy-purple">읽고 싶은 책 위시리스트</h3>
+          <h3 className="font-plus text-xl font-black text-navy-purple">읽고 싶은 책 리스트</h3>
         </div>
       </div>
 
@@ -61,16 +61,7 @@ export default function WishlistTab({ filteredBooks, onStartReading, onOpenDetai
                 >
                   <Heart className={`w-5 h-5 ${book.isFavorite ? 'fill-rose-500' : ''}`} />
                 </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onStartReading(book.id);
-                  }}
-                  id={`start-read-${book.id}`}
-                  className="text-[11px] font-bold text-white bg-brand-purple hover:bg-brand-dark px-3.5 py-1.5 rounded-full cursor-pointer transition-all flex items-center gap-0.5 shadow-sm"
-                >
-                  읽기 시작 <ChevronRight className="w-3 h-3" />
-                </button>
+                
               </div>
             </div>
           </div>

@@ -78,6 +78,8 @@ export default function App() {
   const [selectedBook, setSelectedBook] = useState(null);
   const [viewingBook, setViewingBook] = useState(null);
 
+
+
   useEffect(() => {
     const cachedBooks = localStorage.getItem("sangsang_books");
     if (cachedBooks) {
@@ -652,13 +654,81 @@ function MyLibraryApp({ setViewingBook,
   setAuthorProfileMode }) {
   const initialBooks = myLibraryInitialBooks;
   const [activeTab, setActiveTab] = useState('bookshelf');
-  const [books, setBooks] = useState(initialBooks.map(b => ({
-    ...b,
-    isFavorite: (b.progress === 0 && b.author !== '지우와 상상 AI'),
-    totalViews: Math.floor(Math.random() * 500),
-    totalLikes: Math.floor(Math.random() * 100),
-    reviews: []
-  })));
+  const [books, setBooks] = useState([]);
+
+  const loadMyLibraryBooks = async () => {
+    const [wishlistRes, readingRes, finishedRes] = await Promise.all([
+      fetch("http://localhost:8080/bookshelves/wishlist"),
+      fetch("http://localhost:8080/bookshelves/reading"),
+      fetch("http://localhost:8080/bookshelves/finished")
+    ]);
+
+    const wishlistData = await wishlistRes.json();
+    const readingData = await readingRes.json();
+    const finishedData = await finishedRes.json();
+
+    const wishlistBooks = Array.isArray(wishlistData) ? wishlistData.map(book => ({
+      id: book.bookId,
+      title: book.title,
+      coverUrl: book.coverImageUrl,
+      category: book.category,
+      description: book.description,
+      author: "상상서가",
+      progress: 0,
+      isFavorite: true,
+      totalViews: 0,
+      totalLikes: 0,
+      reviews: []
+    })) : [];
+
+    const readingBooks = Array.isArray(readingData) ? readingData.map(book => ({
+      id: book.bookId,
+      title: book.title,
+      coverUrl: book.coverImageUrl,
+      category: book.category,
+      description: book.description,
+      author: "상상서가",
+      progress: book.progress || 1,
+      currentPage: book.currentPage || 1,
+      pageCount: book.pageCount || 0,
+      pages: book.pageCount || 0,
+      isFavorite: false,
+      totalViews: 0,
+      totalLikes: 0,
+      reviews: []
+    })) : [];
+
+    const finishedBooks = Array.isArray(finishedData) ? finishedData.map(book => ({
+      id: book.bookId,
+      title: book.title,
+      coverUrl: book.coverImageUrl,
+      category: book.category,
+      description: book.description,
+      author: "상상서가",
+      progress: 100,
+
+      startedDate: book.startedAt,             // 나중에 DB에서 내려주면 변경
+      finishedDate: book.completedAt, // FinishedTab에서 사용하는 이름
+      completedAt: book.completedAt,
+      readingTime: book.readingTime || 0,
+
+      isFavorite: false,
+      totalViews: 0,
+      totalLikes: 0,
+      reviews: []
+    })) : [];
+
+    const mergedBooks = [...wishlistBooks, ...readingBooks, ...finishedBooks];
+
+    setBooks(mergedBooks);
+
+    return mergedBooks;
+  };
+
+  useEffect(() => {
+    loadMyLibraryBooks();
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState('');
 
   // Active Viewer state
@@ -697,10 +767,42 @@ function MyLibraryApp({ setViewingBook,
     setBooks(prev => [newBookObj, ...prev]);
   };
 
-  const handleOpenViewer = (bookId) => {
-    const book = books.find(b => b.id === bookId);
-
+  const handleOpenViewer = async (bookId, currentBooks = books) => {
+    const book = currentBooks.find(b => b.id === bookId);
     if (!book) return;
+
+    const res = await fetch(`http://localhost:8080/api/books/${bookId}/contents`);
+    const json = await res.json();
+
+    const pageItems = json.data.items || [];
+
+    const viewerPages = pageItems.map(page => ({
+      id: `page-${page.pageNo}`,
+      backgroundColor: "#ffffff",
+      elements: [
+        {
+          id: `text-${page.pageNo}`,
+          type: "text",
+          x: 60,
+          y: 80,
+          w: 360,
+          h: 260,
+          fontSize: 18,
+          lineHeight: 1.8,
+          html: page.contentTextKo || page.contentTextEn || ""
+        },
+        ...(page.imageUrl ? [{
+          id: `image-${page.pageNo}`,
+          type: "image",
+          x: 60,
+          y: 370,
+          w: 360,
+          h: 180,
+          src: page.imageUrl,
+          radius: 12
+        }] : [])
+      ]
+    }));
 
     setSelectedReaderBook({
       ...book,
@@ -708,25 +810,57 @@ function MyLibraryApp({ setViewingBook,
       summary: book.description,
       coverImage: book.coverUrl,
       likes: book.totalLikes || 0,
-      comments: book.reviews || []
+      comments: book.reviews || [],
+      pages: viewerPages.length > 0 ? viewerPages : [
+        {
+          id: "page-empty",
+          backgroundColor: "#ffffff",
+          elements: [
+            {
+              id: "text-empty",
+              type: "text",
+              x: 60,
+              y: 100,
+              w: 360,
+              h: 300,
+              html: "본문 준비 중입니다.",
+              fontSize: 18
+            }
+          ]
+        }
+      ]
     });
-
-    setBooks(prev =>
-      prev.map(b =>
-        b.id === bookId && b.progress === 0
-          ? { ...b, progress: 12 }
-          : b
-      )
-    );
   };
-  const handleStartWishReading = (bookId) => {
-    setBooks(prev => prev.map(b => {
-      if (b.id === bookId) {
-        return { ...b, progress: 8 };
+  const handleStartWishReading = async (bookId) => {
+    try {
+      const res = await fetch(
+        `http://localhost:8080/bookshelves/reading/${bookId}/progress`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            currentPage: 1,
+            progress: 1
+          })
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("읽기 시작 실패");
       }
-      return b;
-    }));
-    handleOpenViewer(bookId);
+
+      const updatedBooks = await loadMyLibraryBooks();
+
+      setActiveTab("reading");
+
+      await handleOpenViewer(bookId, updatedBooks);
+
+    } catch (err) {
+      console.error(err);
+      alert("읽기 시작 처리에 실패했습니다.");
+    }
   };
 
 
@@ -734,8 +868,26 @@ function MyLibraryApp({ setViewingBook,
     setBooks((prev) => prev.map((b) => (b.id === updatedBook.id ? { ...b, ...updatedBook } : b)));
   };
 
-  const handleToggleFavorite = (bookId) => {
-    setBooks(prev => prev.map(b => b.id === bookId ? { ...b, isFavorite: !b.isFavorite } : b));
+  const handleToggleFavorite = async (bookId) => {
+    try {
+      const res = await fetch(
+        `http://localhost:8080/bookshelves/wishlist/${bookId}`,
+        {
+          method: "DELETE"
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("삭제 실패");
+      }
+
+      // 삭제 성공하면 화면에서도 제거
+      setBooks(prev => prev.filter(b => b.id !== bookId));
+
+    } catch (err) {
+      console.error(err);
+      alert("삭제에 실패했습니다.");
+    }
   };
 
   const handleLikeBook = (bookId) => {
@@ -803,7 +955,6 @@ function MyLibraryApp({ setViewingBook,
               {activeTab === 'wishlist' && (
                 <WishlistTab
                   filteredBooks={filteredBooks}
-                  onStartReading={handleStartWishReading}
                   onOpenDetail={(book) => {
                     const convertedBook = {
                       ...book,
