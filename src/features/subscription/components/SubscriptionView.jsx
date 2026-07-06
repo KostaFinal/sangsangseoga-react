@@ -1,9 +1,9 @@
 import React from 'react';
 import { useSubscriptionState } from '../hooks/useSubscriptionState';
 import {
-  Award,
-  Star,
-  Crown,
+  Award, 
+  Star, 
+  Crown, 
   Sparkles,
   Zap,
   Clock,
@@ -40,6 +40,8 @@ export const SubscriptionView = ({
 }) => {
   const {
     records,
+    isRecordsLoading,
+    recordsError,
     selectedInvoice,
     showCancelConfirm,
     showCancelSuccess, setShowCancelSuccess,
@@ -533,11 +535,27 @@ export const SubscriptionView = ({
                   <Receipt className="w-4 h-4 text-[#6B54E7]" />
                   <span>최근 결제 영수 기록</span>
                 </h3>
-                <span className="text-[10px] text-[#7C769D] font-semibold">최근 4건</span>
+                <span className="text-[10px] text-[#7C769D] font-semibold">최근 {records.length}건</span>
               </div>
 
+              {isRecordsLoading && (
+                <div className="text-xs text-[#7C769D] font-semibold py-6 text-center">불러오는 중...</div>
+              )}
+
+              {!isRecordsLoading && recordsError && (
+                <div className="text-xs text-rose-600 font-bold p-3 bg-rose-50 border border-rose-200 rounded-xl">
+                  {recordsError}
+                </div>
+              )}
+
+              {!isRecordsLoading && !recordsError && records.length === 0 && (
+                <div className="text-xs text-[#7C769D] font-semibold py-6 text-center bg-[#FAF9FF] border border-dashed border-[#E6E2FC] rounded-xl">
+                  아직 결제 내역이 없습니다.
+                </div>
+              )}
+
               <div className="divide-y divide-[#E6E2FC]/30 max-h-64 overflow-y-auto pr-1">
-                {records.map((rec) => (
+                {!isRecordsLoading && !recordsError && records.map((rec) => (
                   <div key={rec.id} className="py-3 flex justify-between items-center text-xs text-left">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 bg-[#FAF9FF] rounded-xl flex items-center justify-center border border-[#E6E2FC]/50 text-[#6B54E7] shrink-0">

@@ -60,15 +60,27 @@ export const usePaymentState = ({ paymentParams, onPaymentSuccess }) => {
     setPaymentPhase('PROCESSING');
 
     const result = await subscriptionService.simulatePaymentApproval(simulatedStatus);
-    setIsProcessing(false);
 
-    if (result.success) {
+    if (!result.success) {
+      setIsProcessing(false);
+      setFailureReason(result.failureReason);
+      setPaymentPhase('FAILURE_SCREEN');
+      return;
+    }
+
+    try {
+      await subscriptionService.startSubscription({
+        subPeriod: paymentParams?.subType,
+        price: displayPrice,
+      });
+      setIsProcessing(false);
       setSuccess(true);
       setTimeout(() => {
         onPaymentSuccess();
       }, 1200);
-    } else {
-      setFailureReason(result.failureReason);
+    } catch (err) {
+      setIsProcessing(false);
+      setFailureReason(err.message || '구독 등록 처리 중 오류가 발생했습니다.');
       setPaymentPhase('FAILURE_SCREEN');
     }
   };

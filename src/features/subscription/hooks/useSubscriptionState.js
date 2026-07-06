@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { initialPaymentRecords } from '../../../shared/data';
+import { useState, useEffect, useCallback } from 'react';
 import { subscriptionService } from '../services/subscriptionService';
 
 /**
@@ -11,7 +10,9 @@ export const useSubscriptionState = ({
   onCancelSubscription,
   onSelectPlan,
 }) => {
-  const [records, setRecords] = useState(initialPaymentRecords);
+  const [records, setRecords] = useState([]);
+  const [isRecordsLoading, setIsRecordsLoading] = useState(false);
+  const [recordsError, setRecordsError] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showCancelSuccess, setShowCancelSuccess] = useState(false);
@@ -20,6 +21,23 @@ export const useSubscriptionState = ({
   const [openFaqId, setOpenFaqId] = useState(1);
 
   const faqs = subscriptionService.getFaqs();
+
+  const loadPayments = useCallback(async () => {
+    setIsRecordsLoading(true);
+    setRecordsError('');
+    try {
+      const list = await subscriptionService.getPayments();
+      setRecords(list);
+    } catch (err) {
+      setRecordsError(err.message);
+    } finally {
+      setIsRecordsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPayments();
+  }, [loadPayments]);
 
   const toggleFaq = (id) => {
     setOpenFaqId(openFaqId === id ? null : id);
@@ -30,9 +48,13 @@ export const useSubscriptionState = ({
 
   const confirmCancelSubscription = async () => {
     setShowCancelConfirm(false);
-    await subscriptionService.cancelSubscription();
-    onCancelSubscription();
-    setShowCancelSuccess(true);
+    try {
+      await subscriptionService.cancelSubscription();
+      onCancelSubscription();
+      setShowCancelSuccess(true);
+    } catch (err) {
+      console.error("구독 해지 처리 실패", err);
+    }
   };
 
   const handleSelectPremium = () => {
@@ -51,6 +73,8 @@ export const useSubscriptionState = ({
 
   return {
     records,
+    isRecordsLoading,
+    recordsError,
     selectedInvoice,
     showCancelConfirm,
     showCancelSuccess, setShowCancelSuccess,

@@ -15,6 +15,8 @@ import { MainDashboard } from './features/dashboard/components/MainDashboard';
 import { PricingView } from './features/subscription/components/PricingView';
 import { PaymentView } from './features/subscription/components/PaymentView';
 import { SubscriptionView } from './features/subscription/components/SubscriptionView';
+import { subscriptionService } from './features/subscription/services/subscriptionService';
+import { getAccessToken } from './api/tokenStorage';
 import { AdminView } from './features/admin/components/AdminView';
 import { ProfileEditView } from './features/profile/components/ProfileEditView';
 import { PasswordResetView } from './features/auth/components/PasswordResetView';
@@ -227,6 +229,23 @@ export default function App() {
     }
   };
 
+  // 내 구독 상태 조회 (GET /api/subscriptions/me) — 로그인 상태일 때만 호출
+  const refreshSubscriptionStatus = async () => {
+    if (!getAccessToken()) return;
+    try {
+      const sub = await subscriptionService.getMySubscription();
+      setIsPremium(sub.isPremium);
+      setIsSubscriptionCanceled(sub.isSubscriptionCanceled);
+      if (sub.benefitEndDate) setBenefitEndDate(sub.benefitEndDate);
+    } catch (err) {
+      console.error("구독 상태 조회 실패", err);
+    }
+  };
+
+  useEffect(() => {
+    refreshSubscriptionStatus();
+  }, []);
+
   // 로그아웃: 백엔드 세션 종료(POST /api/auth/logout) 및 토큰 폐기 후 로컬 상태 초기화
   const handleLogout = async () => {
     try {
@@ -251,6 +270,7 @@ export default function App() {
           <LoginView
             onSuccess={(userInfo) => {
               setCurrentUser(userInfo);
+              refreshSubscriptionStatus();
               setCurrentScreen('home');
             }}
             onNavigateToSignup={() => setCurrentScreen('signup')}
@@ -310,6 +330,7 @@ export default function App() {
               setFreeTrialRemaining(1);
               setFreeTrialTextTokens(0);
               setFreeTrialImageCount(0);
+              refreshSubscriptionStatus();
               setCurrentScreen('home');
             }}
             onNavigateToLogin={() => setCurrentScreen('login')}
@@ -414,8 +435,7 @@ export default function App() {
           <PaymentView
             paymentParams={paymentParams}
             onPaymentSuccess={() => {
-              setIsPremium(true);
-              setIsSubscriptionCanceled(false); // 재가입 시 취소상태 해제
+              refreshSubscriptionStatus(); // 서버에 등록된 실제 구독 상태로 갱신
               setCurrentScreen('subscription');
             }}
             onNavigateBack={() => setCurrentScreen('pricing')}
@@ -435,9 +455,8 @@ export default function App() {
             onNavigateHome={() => setCurrentScreen('home')}
             onNavigate={(screen) => setCurrentScreen(screen)}
             onCancelSubscription={() => {
-              // 구독 정지 시 예약 해지 처리 (혜택은 결제 주기 대기 말까지 보존)
-              setIsSubscriptionCanceled(true);
-              setBenefitEndDate('2026.07.15'); // 혜택 유지 종료 예정일 지정
+              // 서버에 반영된 실제 해지 상태(isCanceled/benefitEndDate)로 갱신
+              refreshSubscriptionStatus();
             }}
             isPremium={isPremium}
             freeTrialRemaining={freeTrialRemaining}

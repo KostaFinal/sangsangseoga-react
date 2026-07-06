@@ -5,8 +5,51 @@
  * 현재는 협업 및 페이지 병합을 고려하여 Mock 로직과 인터페이스가 먼저 설계되어 있으며,
  * 실 배포 시 axios 또는 fetch를 이용한 비동기 통신 코드로 간편하게 대체할 수 있도록 설계되었습니다.
  */
+import { getMySubscription, startSubscription, cancelSubscription, getPayments } from '../../../api/subscriptionApi';
+
+const PLAN_TYPE_BY_SUB_PERIOD = {
+  monthly: 'PREMIUM_MONTHLY',
+  yearly: 'PREMIUM_YEARLY',
+};
+
+const PLAN_TYPE_LABEL = {
+  PREMIUM_MONTHLY: '정기 결제 (월간)',
+  PREMIUM_YEARLY: '정기 결제 (연간)',
+};
+
+const PAYMENT_STATUS_LABEL = {
+  COMPLETED: '완료',
+  FAILED: '실패',
+};
+
+/** ISO 날짜 문자열을 "YYYY.MM.DD" 형식으로 변환 */
+const formatPaidDate = (isoString) => {
+  if (!isoString) return '';
+  return isoString.slice(0, 10).replace(/-/g, '.');
+};
+
+const unwrap = (res) => {
+  const body = res.data;
+  if (!body?.success) {
+    throw new Error(body?.message || '요청 처리 중 문제가 발생했습니다.');
+  }
+  return body.data;
+};
 
 export const subscriptionService = {
+  /** 내 구독 상태 조회 (GET /api/subscriptions/me) */
+  getMySubscription: async () => {
+    const data = unwrap(await getMySubscription());
+    return {
+      planType: data.planType,
+      isPremium: data.isPremium,
+      isSubscriptionCanceled: data.isCanceled,
+      benefitEndDate: data.benefitEndDate,
+      nextBillingDate: data.nextBillingDate,
+    };
+  },
+
+
   /** 요금제 안내 화면(PricingView) 및 구독 대시보드(SubscriptionView)가 공유하는 FAQ 목록 */
   getFaqs: () => [
     {
@@ -84,10 +127,37 @@ export const subscriptionService = {
   },
 
   /**
-   * 구독 해지 예약 처리
-   * TODO: API 연동 필요 (POST /api/subscription/cancel)
+   * 정기구독 시작 (POST /api/subscriptions)
+   * 실제 PG 위젯 없이 Mock 결제(simulatePaymentApproval) 통과 후 서버 등록만 수행 —
+   * paymentKey/orderId는 실제 토스페이먼츠 콜백이 없으므로 프론트에서 placeholder로 생성해 전달.
    */
+  startSubscription: async ({ subPeriod, price }) => {
+    const planType = PLAN_TYPE_BY_SUB_PERIOD[subPeriod] || PLAN_TYPE_BY_SUB_PERIOD.monthly;
+    const paymentKey = `mock_pay_${Date.now()}`;
+    const orderId = `mock_order_${Date.now()}`;
+    const data = unwrap(await startSubscription(planType, paymentKey, orderId, price));
+    return data;
+  },
+
+  /** 구독 해지 예약 처리 (POST /api/subscriptions/cancel) */
   cancelSubscription: async () => {
-    return { success: true };
+    const data = unwrap(await cancelSubscription());
+    return {
+      isSubscriptionCanceled: data.isCanceled,
+      benefitEndDate: data.benefitEndDate,
+    };
+  },
+
+  /** 결제/인보이스 내역 조회 (GET /api/payments) — 응답 형태 BE 미확정, 순배열로 가정 */
+  getPayments: async (page = 0, size = 20) => {
+    const data = unwrap(await getPayments(page, size));
+    return data.map((item) => ({
+      id: item.id,
+      title: PLAN_TYPE_LABEL[item.planType] || '정기 결제',
+      date: `${formatPaidDate(item.paidAt)} • 결제 ${PAYMENT_STATUS_LABEL[item.status] || item.status}`,
+      amount: item.amount,
+      status: PAYMENT_STATUS_LABEL[item.status] || item.status,
+      icon: 'receipt_long',
+    }));
   },
 };
