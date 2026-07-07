@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { Search, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, X, Trash2, SlidersHorizontal, Eye } from "lucide-react";
 import BookDetailView from "./BookDetailView";
-import { getBooks, likeBook, unlikeBook } from "../../../api/bookApi";
+import { getBooks, getBook, likeBook, unlikeBook } from "../../../api/bookApi";
 import { addComment, addReply } from "../../../api/commentApi";
+import { useAuth } from "../../../shared/context/AuthContext";
 
 const bookTypeOptions = [
   { label: "전체", value: null },
@@ -49,18 +51,12 @@ const genreBadge = (genre) => {
   return map[genre] || { cls: "bg-[#e6e2fc] text-[#6b54e7] border-[#d4cdf2]", label: genre };
 };
 
-export default function FriendsLibraryView({
-  viewingBook,
-  setViewingBook,
-  setSelectedBook,
-  previousScreen,
-  setCurrentScreen,
-  setPreviousScreen,
-  setSelectedAuthor,
-  setAuthorProfileMode,
-  currentUser,
-  handleToggleBookmark,
-}) {
+export default function FriendsLibraryView() {
+  const { bookId } = useParams();
+  const navigate = useNavigate();
+  const { handleToggleBookmark } = useOutletContext();
+  const { currentUser } = useAuth();
+
   const [selectedBookType, setSelectedBookType] = useState(null);
   const [sortBy, setSortBy] = useState("latest");
   const [keyword, setKeyword] = useState("");
@@ -71,6 +67,40 @@ export default function FriendsLibraryView({
   const [hasNext, setHasNext] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+
+  // :bookId가 있으면 상세 화면 — 목록에서 이미 불러온 항목이면 그대로 쓰고,
+  // 딥링크/새로고침 등으로 로컬 목록에 없으면 직접 조회. BookDetailView가 기대하는
+  // 형태(likes/coverImage/mode 등)로 항상 mapBookForDetail을 거쳐서 내려줌
+  const [fetchedBook, setFetchedBook] = useState(null);
+  const rawViewingBook = bookId
+    ? (books.find(b => String(b.id) === String(bookId)) || fetchedBook)
+    : null;
+  const viewingBook = rawViewingBook ? mapBookForDetail(rawViewingBook, currentUser) : null;
+
+  useEffect(() => {
+    if (!bookId) {
+      setFetchedBook(null);
+      return;
+    }
+    if (books.find(b => String(b.id) === String(bookId))) return;
+    (async () => {
+      try {
+        const res = await getBook(bookId);
+        setFetchedBook(res.data.data);
+      } catch (err) {
+        console.error("책 상세 조회 실패", err);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookId, books]);
+
+  const setViewingBook = (book) => {
+    if (!book) {
+      navigate("/friends");
+    } else {
+      navigate(`/friends/${book.id}`);
+    }
+  };
 
   const fetchBooks = useCallback(async () => {
     setLoading(true);
@@ -103,22 +133,21 @@ export default function FriendsLibraryView({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // books 목록에 있으면 그쪽을, 딥링크로 대신 조회해 둔 fetchedBook이면 그쪽을 갱신
+  const patchBookById = (bookId, updater) => {
+    setBooks(prev => prev.map(b => (String(b.id) === String(bookId) ? updater(b) : b)));
+    setFetchedBook(prev => (prev && String(prev.id) === String(bookId) ? updater(prev) : prev));
+  };
+
   const handleToggleLike = async (e, bookId) => {
     e.stopPropagation();
-    const book = books.find(b => String(b.id) === String(bookId));
-    console.log("before:", book.isLikedByMe, "bookId:", bookId, "books:", books.map(b => b.id));
+    const book = books.find(b => String(b.id) === String(bookId)) || fetchedBook;
     if (!book) return;
 
     // 낙관적 업데이트 - API 응답 전에 UI 먼저 반영
     const wasLiked = book.isLikedByMe;
-    const updater = b => String(b.id) === String(bookId)
-      ? { ...b, isLikedByMe: !wasLiked, likeCount: wasLiked ? b.likeCount - 1 : b.likeCount + 1, likes: wasLiked ? b.likeCount - 1 : b.likeCount + 1 }
-      : b;
-    setBooks(prev => prev.map(updater));
-    // viewingBook도 같이 업데이트
-    if (viewingBook && String(viewingBook.id) === String(bookId)) {
-      setViewingBook(prev => prev ? updater(prev) : prev);
-    }
+    const updater = b => ({ ...b, isLikedByMe: !wasLiked, likeCount: wasLiked ? b.likeCount - 1 : b.likeCount + 1, likes: wasLiked ? b.likeCount - 1 : b.likeCount + 1 });
+    patchBookById(bookId, updater);
 
     try {
       if (wasLiked) {
@@ -128,13 +157,8 @@ export default function FriendsLibraryView({
       }
     } catch (err) {
       // 실패 시 원복
-      const revert = b => String(b.id) === String(bookId)
-        ? { ...b, isLikedByMe: wasLiked, likeCount: wasLiked ? b.likeCount + 1 : b.likeCount - 1, likes: wasLiked ? b.likeCount + 1 : b.likeCount - 1 }
-        : b;
-      setBooks(prev => prev.map(revert));
-      if (viewingBook && String(viewingBook.id) === String(bookId)) {
-        setViewingBook(prev => prev ? revert(prev) : prev);
-      }
+      const revert = b => ({ ...b, isLikedByMe: wasLiked, likeCount: wasLiked ? b.likeCount + 1 : b.likeCount - 1, likes: wasLiked ? b.likeCount + 1 : b.likeCount - 1 });
+      patchBookById(bookId, revert);
       console.error("좋아요 처리 실패", err);
     }
   };
@@ -142,13 +166,11 @@ export default function FriendsLibraryView({
   const handleDetailAddComment = async (bookId, authorName, textContent) => {
     try {
       await addComment(bookId, textContent);
-      if (viewingBook?.id === bookId) {
-        setViewingBook(prev => ({
-          ...prev,
-          comments: [{ id: `c-${Date.now()}`, user: authorName, text: textContent, date: new Date().toLocaleDateString("ko-KR") }, ...(prev.comments || [])],
-          commentCount: (prev.commentCount || 0) + 1,
-        }));
-      }
+      patchBookById(bookId, (prev) => ({
+        ...prev,
+        comments: [{ id: `c-${Date.now()}`, user: authorName, text: textContent, date: new Date().toLocaleDateString("ko-KR") }, ...(prev.comments || [])],
+        commentCount: (prev.commentCount || 0) + 1,
+      }));
     } catch (err) {
       console.error("댓글 작성 실패", err);
     }
@@ -174,27 +196,19 @@ export default function FriendsLibraryView({
         <BookDetailView
           mode={viewingBook?.mode === "owner" ? "owner" : "viewer"}
           book={viewingBook}
-          onBack={() => {
-            setViewingBook(null);
-            if (previousScreen === 'my-library') {
-              setCurrentScreen('my-library');
-            }
-            setPreviousScreen(null);
-          }}
+          onBack={() => navigate(-1)}
 
-          onStartReading={(book) => { setSelectedBook(book); document.body.style.overflow = "hidden"; }}
-          onToggleLike={e => { handleToggleLike(e, viewingBook.id); setTimeout(() => { setBooks(prev => { const f = prev.find(b => b.id === viewingBook.id); if (f) setViewingBook(f); return prev; }); }, 50); }}
-          onToggleBookmark={e => { handleToggleBookmark(e, viewingBook.id); setTimeout(() => { setBooks(prev => { const f = prev.find(b => b.id === viewingBook.id); if (f) setViewingBook(f); return prev; }); }, 50); }}
+          onStartReading={(book) => navigate(`/books/${book.id}/read`)}
+          onToggleLike={e => handleToggleLike(e, viewingBook.id)}
+          onToggleBookmark={e => handleToggleBookmark(e, viewingBook.id)}
 
           allBooks={books}
           onSelectRecommended={b => setViewingBook(b)}
           onSaveComment={(user, text) => handleDetailAddComment(viewingBook.id, user, text)}
           onSaveReply={(parentId, user, text) => handleAddReply(viewingBook.id, parentId, user, text)}
           onSelectAuthor={(name) => {
-            setSelectedAuthor(name);
-            setAuthorProfileMode(viewingBook?.mode === "owner" ? "owner" : "viewer");
-            setCurrentScreen("author-search");
-            setViewingBook(null);
+            const mode = viewingBook?.mode === "owner" ? "owner" : "viewer";
+            navigate(`/authors/${encodeURIComponent(name)}${mode === "owner" ? "?mode=owner" : ""}`);
           }}
         />
       ) : (
@@ -296,7 +310,7 @@ export default function FriendsLibraryView({
                     </div>
                     <div className="mt-2 text-center">
                       <button
-                        onClick={e => { e.stopPropagation(); setSelectedAuthor(book.author); setCurrentScreen("author-search"); setViewingBook(null); }}
+                        onClick={e => { e.stopPropagation(); navigate(`/authors/${encodeURIComponent(book.author)}`); }}
                         className="text-[12px] font-medium text-[#2f2d59] hover:text-[#6b54e7] transition-colors cursor-pointer"
                       >
                         {book.author}

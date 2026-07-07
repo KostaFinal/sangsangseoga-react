@@ -1,9 +1,10 @@
-import React from 'react';
-import { 
-  Users, 
-  Flag, 
-  BarChart3, 
-  ChevronRight, 
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Users,
+  Flag,
+  BarChart3,
+  ChevronRight,
   Activity,
   ArrowLeft,
   LogOut,
@@ -16,7 +17,10 @@ import { ReportsTab } from './ReportsTab';
 import { ReportDetailModal } from './ReportDetailModal';
 import { TokensTab } from './TokensTab';
 
-export const AdminView = ({ onNavigateHome }) => {
+const TAB_TO_PATH = { member: 'members', reports: 'reports', tokens: 'tokens' };
+
+export const AdminView = ({ initialTab = 'member' }) => {
+  const navigate = useNavigate();
   const {
     activeTab,
     setActiveTab,
@@ -62,7 +66,13 @@ export const AdminView = ({ onNavigateHome }) => {
     currentTrends,
     searchedTokenUsages,
     memberTokenTimelineLogs,
-  } = useAdminState();
+  } = useAdminState(initialTab);
+
+  // 탭 클릭 시 주소창도 함께 갱신 (딥링크는 initialTab으로 진입 시 이미 반영됨)
+  useEffect(() => {
+    navigate(`/admin/${TAB_TO_PATH[activeTab] || 'members'}`, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   return (
     <div id="admin-main-view" className="min-h-screen bg-[#FAF9FF] flex flex-col font-sans text-[#2F2D59] selection:bg-[#6B54E7] selection:text-white pb-20 relative overflow-x-hidden">
@@ -76,7 +86,7 @@ export const AdminView = ({ onNavigateHome }) => {
           </div>
           <div className="flex items-center space-x-4">
             <button 
-              onClick={onNavigateHome}
+              onClick={() => navigate('/')}
               className="inline-flex items-center gap-1.5 text-xs font-black text-[#7C769D] hover:text-[#6B54E7] transition-all bg-[#FAF9FF] hover:bg-[#E6E2FC]/30 border border-[#E6E2FC] px-3.5 py-1.5 rounded-xl cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -99,7 +109,7 @@ export const AdminView = ({ onNavigateHome }) => {
           {/* Back button and Tag */}
           <div className="flex flex-wrap items-center justify-between gap-4">
             <button
-              onClick={onNavigateHome}
+              onClick={() => navigate('/')}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white/90 text-xs font-bold transition-all border border-white/5 active:scale-95 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />

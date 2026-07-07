@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   HERO_BG_IMAGE,
   CURRENT_USER_PROFILE,
@@ -41,7 +42,7 @@ import {
 import { useDashboardState } from '../hooks/useDashboardState';
 
 export const MainDashboard = (props) => {
-  const { onNavigate, setActiveTab } = props;
+  const navigate = useNavigate();
 
   const {
     isPremium,
@@ -165,11 +166,11 @@ export const MainDashboard = (props) => {
                     key={idx} 
                     onClick={() => {
                       if (item.name === '시') {
-                        onNavigate('create-poem');
+                        navigate('/create/poem');
                       } else if (item.name === '에세이') {
-                        onNavigate('create-essay');
+                        navigate('/create/essay');
                       } else if (item.name === '교육/지식') {
-                        onNavigate('create-nonfiction');
+                        navigate('/create/nonfiction');
                       } else {
                         setGenre(item.genreKey);
                         setPrompt(item.preset);
@@ -205,7 +206,7 @@ export const MainDashboard = (props) => {
 
             <div className="space-y-4 pt-4 z-10 relative">
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-1 cursor-pointer group" onClick={() => setActiveTab('mylibrary')}>
+                <div className="flex items-center gap-1 cursor-pointer group" onClick={() => navigate('/library')}>
                   <h2 className="text-base sm:text-lg font-extrabold text-[#2F2D59] hover:text-[#6B54E7] transition-colors flex items-center gap-1">
                     <span>최근 읽은 작품</span>
                     <ChevronRight className="w-4 h-4 text-[#2F2D59] group-hover:translate-x-0.5 transition-transform" />
@@ -349,7 +350,7 @@ export const MainDashboard = (props) => {
                   </h2>
                 </div>
                 <button 
-                  onClick={() => setActiveTab('friends')}
+                  onClick={() => navigate('/friends')}
                   className="text-xs sm:text-sm text-[#7C769D] hover:text-[#6B54E7] font-bold flex items-center gap-1 transition-colors"
                 >
                   <span>모두 보기</span>
@@ -500,7 +501,7 @@ export const MainDashboard = (props) => {
               <button
                 onClick={() => {
                   setShowFreeTrialCapModal(false);
-                  onNavigate('subscription');
+                  navigate('/subscription');
                 }}
                 className="w-full py-3 bg-[#6B54E7] hover:bg-[#6148E1] text-white font-extrabold rounded-xl transition-all shadow-md text-center cursor-pointer"
               >
@@ -535,7 +536,7 @@ export const MainDashboard = (props) => {
               <button
                 onClick={() => {
                   setShowPremiumSoftCapModal(false);
-                  onNavigate('subscription');
+                  navigate('/subscription');
                 }}
                 className="w-full py-3 bg-[#6B54E7] hover:bg-[#6148E1] text-white font-bold rounded-xl transition-all text-center cursor-pointer"
               >
@@ -616,7 +617,7 @@ export const MainDashboard = (props) => {
 
               <button
                 type="button"
-                onClick={() => { setShowAtelierSection(false); onNavigate('subscription'); }}
+                onClick={() => { setShowAtelierSection(false); navigate('/subscription'); }}
                 className="text-[#6B54E7] hover:underline font-extrabold text-[11px] flex items-center gap-0.5 cursor-pointer"
               >
                 한도 충전 및 관리하기 →
@@ -713,7 +714,7 @@ export const MainDashboard = (props) => {
                       </button>
                       <button 
                         type="button"
-                        onClick={() => { setShowAtelierSection(false); onNavigate('subscription'); }}
+                        onClick={() => { setShowAtelierSection(false); navigate('/subscription'); }}
                         className="px-3.5 py-1.5 bg-[#6B54E7] hover:bg-[#6148E1] text-white text-[11px] rounded-lg font-bold flex items-center gap-1 cursor-pointer"
                       >
                         <span>출판 및 소장 신청</span>

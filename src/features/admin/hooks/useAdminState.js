@@ -8,9 +8,9 @@ import { adminService } from '../services/adminService';
  * UI 관심사와 비즈니스 로직(데이터 패칭, 필터링, 상태 업데이트 등)을 완전히 분리하여 설계하였습니다.
  * 타 부서 및 팀원이 쉽게 페이지를 연동하고 상태를 주입할 수 있도록 인터페이스가 추상화되어 있습니다.
  */
-export const useAdminState = () => {
+export const useAdminState = (initialTab = 'member') => {
   // 메인 탭 전환 상태: 'member' | 'reports' | 'tokens'
-  const [activeTab, setActiveTab] = useState('member');
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   // ==========================================
   // [1] 작가 계정 관리 (Member Tab State)

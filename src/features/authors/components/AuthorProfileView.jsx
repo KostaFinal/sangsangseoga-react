@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useParams, useNavigate, useSearchParams, useOutletContext } from "react-router-dom";
 import { ArrowRight, Heart, MessageSquare, Flag, ArrowLeft } from "lucide-react";
 import ReportModal from "@/src/shared/components/ReportModal";
 import { submitReport, isReported } from "@/src/shared/utils/reports";
@@ -99,14 +100,16 @@ export const authorsRegistry = {
   }
 };
 
-export default function AuthorProfileView({
-  authorName,
-  allBooks,
-  onSelectBook,
-  onBackToLibrary,
-  onBackToDirectory,
-  mode = "viewer"
-}) {
+export default function AuthorProfileView() {
+  const { authorName: rawAuthorName } = useParams();
+  const authorName = decodeURIComponent(rawAuthorName);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get("mode") === "owner" ? "owner" : "viewer";
+  const { books: allBooks } = useOutletContext();
+  const onSelectBook = (book) => navigate(`/friends/${book.id}`);
+  const onBackToDirectory = () => navigate("/authors");
+
   const [isFollowing, setIsFollowing] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [hasReported, setHasReported] = useState(() => isReported("author", authorName));

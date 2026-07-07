@@ -14,7 +14,7 @@ const genreBadge = (genre) => {
   };
   return map[genre] || { cls: "bg-[#e6e2fc] text-[#6b54e7] border-[#d4cdf2]", label: bookTypeToGenre[genre] || genre };
 };
-import { getRecommendations } from "@/src/api/bookApi";
+import { getRecommendations, getBookContents } from "@/src/api/bookApi";
 
 
 import { Heart, ChevronLeft, UserPlus, Check, Flag } from "lucide-react";
@@ -233,10 +233,8 @@ export default function BookDetailView({
                 onClick={async () => {
                   const bookId = book.bookId || book.id;
 
-                  const res = await fetch(`http://localhost:8080/api/books/${bookId}/contents`);
-                  const json = await res.json();
-
-                  const pageItems = json.data?.items || [];
+                  const res = await getBookContents(bookId);
+                  const pageItems = res.data.data?.items || [];
 
                   const viewerPages = pageItems.map(page => ({
                     id: `page-${page.pageNo}`,
