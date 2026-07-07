@@ -1,12 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import ReviewModal from "./ReviewModal";
+import { getRecommendations } from "@/src/api/bookApi";
 
-export default function CompletionScreen({ book, books = [], onBack, onReread, onSelectRecommended }) {
+const genreBadge = (bookType) => {
+  const map = {
+    "NOVEL": { cls: "bg-[#ddd6fe] text-[#5b21b6] border-[#c4b5fd]", label: "소설" },
+    "POEM": { cls: "bg-[#e9d5ff] text-[#7e22ce] border-[#d8b4fe]", label: "시" },
+    "ESSAY": { cls: "bg-[#ede9ff] text-[#6b54e7] border-[#d4cdf2]", label: "에세이" },
+    "FAIRY_TALE": { cls: "bg-[#f3e8ff] text-[#9333ea] border-[#e9d5ff]", label: "동화" },
+  };
+  return map[bookType] || { cls: "bg-[#e6e2fc] text-[#6b54e7] border-[#d4cdf2]", label: bookType };
+};
+
+export default function CompletionScreen({ book, onBack, onReread, onSelectRecommended }) {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [selectedRecommend, setSelectedRecommend] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
 
-  const recommendations = books.filter(b => b.id !== book.id).slice(0, 3);
+  useEffect(() => {
+    if (!book?.id) return;
+    getRecommendations(book.id, 4)
+      .then(res => {
+        const items = res.data?.data?.items || [];
+        setRecommendations(items.map(item => ({ ...item, coverImage: item.coverImageUrl })));
+      })
+      .catch(() => setRecommendations([]));
+  }, [book?.id]);
 
   return (
     <div id="book-completion-root" className="w-full min-h-screen bg-[#f8f7f4] text-black flex flex-col font-sans select-none overflow-x-hidden relative">
@@ -70,16 +90,22 @@ export default function CompletionScreen({ book, books = [], onBack, onReread, o
           <div className="w-8 h-[2px] bg-amber-500/80 mx-auto mt-3" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-10 w-full max-w-4xl px-4">
-          {recommendations.map(rec => (
-            <div key={rec.id} onClick={() => setSelectedRecommend(rec)} className="flex flex-col items-center group cursor-pointer">
-              <div className="w-full aspect-[3/4] bg-neutral-100 rounded-xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] group-hover:shadow-[0_15px_40px_rgba(0,0,0,0.22)] transition-all duration-300 transform group-hover:-translate-y-1">
-                <img src={rec.coverImage} alt={rec.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 md:gap-10 w-full max-w-5xl px-4">
+          {recommendations.map(rec => {
+            const badge = genreBadge(rec.bookType);
+            return (
+              <div key={rec.id} onClick={() => setSelectedRecommend(rec)} className="flex flex-col items-center group cursor-pointer">
+                <div className="relative w-full aspect-[3/4] bg-neutral-100 rounded-xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] group-hover:shadow-[0_15px_40px_rgba(0,0,0,0.22)] transition-all duration-300 transform group-hover:-translate-y-1">
+                  <img src={rec.coverImage} alt={rec.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold border backdrop-blur-sm ${badge.cls}`}>
+                    {badge.label}
+                  </div>
+                </div>
+                <h3 className="font-sans text-[14px] font-bold text-neutral-800 mt-4 tracking-tight">{rec.title}</h3>
+                <p className="text-[11px] text-neutral-400 mt-1">{rec.author}</p>
               </div>
-              <h3 className="font-sans text-[14px] font-bold text-neutral-800 mt-4 tracking-tight">{rec.title}</h3>
-              <p className="text-[11px] text-neutral-400 mt-1">{rec.author}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </main>
 

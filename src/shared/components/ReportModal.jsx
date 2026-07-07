@@ -1,16 +1,22 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 
-const REASONS = ["스팸 / 광고", "욕설 / 혐오 표현", "저작권 침해", "음란물 / 불법 콘텐츠", "기타"];
+// value는 백엔드 ReportReason enum(SPAM/ABUSE/SEXUAL/OTHER)과 일치해야 함
+const REASONS = [
+  { value: "SPAM", label: "스팸 / 광고" },
+  { value: "ABUSE", label: "욕설 / 혐오 표현" },
+  { value: "SEXUAL", label: "음란물 / 불법 콘텐츠" },
+  { value: "OTHER", label: "기타" },
+];
 
 export default function ReportModal({ isOpen, onClose, targetLabel, onSubmit }) {
-  const [reason, setReason] = useState(REASONS[0]);
+  const [reason, setReason] = useState(REASONS[0].value);
   const [detail, setDetail] = useState("");
 
   const handleSubmit = e => {
     e.preventDefault();
     onSubmit({ reason, detail: detail.trim() });
-    setReason(REASONS[0]);
+    setReason(REASONS[0].value);
     setDetail("");
   };
 
@@ -47,9 +53,9 @@ export default function ReportModal({ isOpen, onClose, targetLabel, onSubmit }) 
                 <label className="block text-[11px] font-mono font-bold text-neutral-500 uppercase tracking-wider mb-2">신고 사유</label>
                 <div className="space-y-1.5">
                   {REASONS.map(r => (
-                    <label key={r} className="flex items-center gap-2 text-xs text-neutral-700 cursor-pointer">
-                      <input type="radio" name="report-reason" value={r} checked={reason === r} onChange={() => setReason(r)} className="accent-[#6b54e7]" />
-                      {r}
+                    <label key={r.value} className="flex items-center gap-2 text-xs text-neutral-700 cursor-pointer">
+                      <input type="radio" name="report-reason" value={r.value} checked={reason === r.value} onChange={() => setReason(r.value)} className="accent-[#6b54e7]" />
+                      {r.label}
                     </label>
                   ))}
                 </div>

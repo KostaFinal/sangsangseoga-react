@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Search, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, X, Trash2, SlidersHorizontal, Eye } from "lucide-react";
 import BookDetailView from "./BookDetailView";
-import { getBooks, likeBook, unlikeBook } from "../../../api/bookApi";
+import { getBooks, getBook, likeBook, unlikeBook } from "../../../api/bookApi";
 import { addComment, addReply } from "../../../api/commentApi";
 import { addWishlist } from "../../../api/myLibraryApi";
 
@@ -32,7 +32,7 @@ const mapBookForDetail = (book, currentUser) => {
     coverImage: book.coverImageUrl,
     likes: book.likeCount,
     commentsCount: book.commentCount,
-    genre: bookTypeToGenre[book.genre] || book.genre,
+    genre: bookTypeToGenre[book.bookType] || book.bookType,
     comments: book.comments || [],
     pages: book.pages || [],
     mode: currentUser?.memberId && book.authorId && String(currentUser.memberId) === String(book.authorId) ? "owner" : "viewer",
@@ -142,25 +142,23 @@ export default function FriendsLibraryView({
   };
 
   const handleDetailAddComment = async (bookId, authorName, textContent) => {
-    try {
-      await addComment(bookId, textContent);
-      if (viewingBook?.id === bookId) {
-        setViewingBook(prev => ({
-          ...prev,
-          comments: [{ id: `c-${Date.now()}`, user: authorName, text: textContent, date: new Date().toLocaleDateString("ko-KR") }, ...(prev.comments || [])],
-          commentCount: (prev.commentCount || 0) + 1,
-        }));
-      }
-    } catch (err) {
-      console.error("댓글 작성 실패", err);
+    const res = await addComment(bookId, textContent);
+    if (viewingBook?.id === bookId) {
+      setViewingBook(prev => ({
+        ...prev,
+        commentCount: (prev.commentCount || 0) + 1,
+      }));
     }
+    return res;
   };
 
   const handleAddReply = async (bookId, parentCommentId, authorName, textContent) => {
     try {
-      await addReply(parentCommentId, textContent);
+      const res = await addReply(parentCommentId, textContent);
+      return res;
     } catch (err) {
       console.error("답글 작성 실패", err);
+      throw err;
     }
   };
 
@@ -189,9 +187,18 @@ export default function FriendsLibraryView({
           onToggleBookmark={e => { handleToggleBookmark(e, viewingBook.id); setTimeout(() => { setBooks(prev => { const f = prev.find(b => b.id === viewingBook.id); if (f) setViewingBook(f); return prev; }); }, 50); }}
 
           allBooks={books}
-          onSelectRecommended={b => setViewingBook(b)}
+          onSelectRecommended={async (rec) => {
+            try {
+              const res = await getBook(rec.id);
+              const full = res.data?.data;
+              if (full) setViewingBook(mapBookForDetail(full, currentUser));
+            } catch (err) {
+              console.error("추천 도서 조회 실패", err);
+            }
+          }}
           onSaveComment={(user, text) => handleDetailAddComment(viewingBook.id, user, text)}
           onSaveReply={(parentId, user, text) => handleAddReply(viewingBook.id, parentId, user, text)}
+          currentUser={currentUser}
           onSelectAuthor={(name) => {
             setSelectedAuthor(name);
             setAuthorProfileMode(viewingBook?.mode === "owner" ? "owner" : "viewer");
@@ -264,7 +271,7 @@ export default function FriendsLibraryView({
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-5">
               {books.map(book => {
-                const badge = genreBadge(book.genre);
+                const badge = genreBadge(book.bookType);
                 return (
                   <div key={book.id} onClick={() => setViewingBook(mapBookForDetail(book, currentUser))} className="group cursor-pointer">
                     <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-gray-200 group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-white">
