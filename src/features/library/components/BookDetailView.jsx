@@ -296,7 +296,69 @@ export default function BookDetailView({
 
             {/* Thick Border Primary CTA button */}
             <div className="pt-2">
-              <button onClick={onStartReading} className={getCtaButtonStyle()}>
+              <button
+                onClick={async () => {
+                  const bookId = book.bookId || book.id;
+
+                  const res = await fetch(`http://localhost:8080/api/books/${bookId}/contents`);
+                  const json = await res.json();
+
+                  const pageItems = json.data?.items || [];
+
+                  const viewerPages = pageItems.map(page => ({
+                    id: `page-${page.pageNo}`,
+                    backgroundColor: "#ffffff",
+                    elements: [
+                      {
+                        id: `text-${page.pageNo}`,
+                        type: "text",
+                        x: 60,
+                        y: 80,
+                        w: 360,
+                        h: 260,
+                        fontSize: 18,
+                        lineHeight: 1.8,
+                        html: page.contentTextKo || page.contentTextEn || ""
+                      },
+                      ...(page.imageUrl ? [{
+                        id: `image-${page.pageNo}`,
+                        type: "image",
+                        x: 60,
+                        y: 370,
+                        w: 360,
+                        h: 180,
+                        src: page.imageUrl,
+                        radius: 12
+                      }] : [])
+                    ]
+                  }));
+
+                  onStartReading({
+                    ...book,
+                    id: bookId,
+                    bookId,
+                    pages: viewerPages.length > 0 ? viewerPages : [
+                      {
+                        id: "page-empty",
+                        backgroundColor: "#ffffff",
+                        elements: [
+                          {
+                            id: "text-empty",
+                            type: "text",
+                            x: 60,
+                            y: 100,
+                            w: 360,
+                            h: 300,
+                            html: "본문 준비 중입니다.",
+                            fontSize: 18
+                          }
+                        ]
+                      }
+                    ]
+                  });
+                }}
+                className={getCtaButtonStyle()}
+              >
                 책 펼치기 📖
               </button>
             </div>

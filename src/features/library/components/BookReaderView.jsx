@@ -25,7 +25,18 @@ const READER_COMPONENTS = {
   knowledge: KnowledgeReaderView,
 };
 
-export default function BookReaderView({ book, books = [], onBack, onToggleBookmark, onToggleLike, editable = false, onLayoutChange, onSelectRecommended }) {
+export default function BookReaderView({
+  book,
+  books = [],
+  onBack,
+  onToggleBookmark,
+  onToggleLike,
+  editable = false,
+  onLayoutChange,
+  onSelectRecommended,
+  onProgressSave,
+  onCompleteReading
+}) {
   const readerMode = getReaderMode(book.genre);
 
   const [isEnglish, setIsEnglish] = useState(false);
@@ -104,9 +115,22 @@ export default function BookReaderView({ book, books = [], onBack, onToggleBookm
             isEnglish={isEnglish}
             fontFamily={fontFamily}
             fontSize={fontSize}
-            onComplete={() => setIsCompleted(true)}
+            onComplete={async () => {
+              if (onCompleteReading) {
+                await onCompleteReading(book.bookId || book.id);
+              }
+              setIsCompleted(true);
+            }}
             onLastPageBlocked={() => setShowLastPageAlert(true)}
-            onPageChange={setCurrentPageKey}
+            onPageChange={async (pageKey) => {
+              setCurrentPageKey(pageKey);
+
+              if (onProgressSave) {
+                const currentPage = pageKey + 1;
+                const totalPages = book.pages?.length || book.pageCount || 1;
+                await onProgressSave(book.bookId || book.id, currentPage, totalPages);
+              }
+            }}
             editable={editable}
             onLayoutChange={onLayoutChange}
             viewType={viewType}

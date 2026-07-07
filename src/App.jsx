@@ -656,73 +656,155 @@ function MyLibraryApp({ setViewingBook,
   const [activeTab, setActiveTab] = useState('bookshelf');
   const [books, setBooks] = useState([]);
 
+  const handleProgressSave = async (bookId, currentPage, totalPages) => {
+    const progress = Math.floor((currentPage / totalPages) * 100);
+
+    try {
+      await fetch(
+        `http://localhost:8080/bookshelves/reading/${bookId}/progress`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            currentPage,
+            progress,
+          }),
+        }
+      );
+
+      setBooks(prev =>
+        prev.map(book =>
+          book.id === bookId
+            ? {
+              ...book,
+              currentPage,
+              progress,
+            }
+            : book
+        )
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleCompleteReading = async (bookId) => {
+    try {
+      await fetch(
+        `http://localhost:8080/bookshelves/reading/${bookId}/complete`,
+        {
+          method: "PATCH",
+        }
+      );
+
+      await loadMyLibraryBooks();
+
+      setSelectedReaderBook(null);
+
+      setActiveTab("finished");
+
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const loadMyLibraryBooks = async () => {
-    const [wishlistRes, readingRes, finishedRes] = await Promise.all([
-      fetch("http://localhost:8080/bookshelves/wishlist"),
-      fetch("http://localhost:8080/bookshelves/reading"),
-      fetch("http://localhost:8080/bookshelves/finished")
-    ]);
+    try {
+      const [wishlistRes, readingRes, finishedRes] = await Promise.all([
+        fetch("http://localhost:8080/bookshelves/wishlist"),
+        fetch("http://localhost:8080/bookshelves/reading"),
+        fetch("http://localhost:8080/bookshelves/finished")
+      ]);
 
-    const wishlistData = await wishlistRes.json();
-    const readingData = await readingRes.json();
-    const finishedData = await finishedRes.json();
+      if (!wishlistRes.ok || !readingRes.ok || !finishedRes.ok) {
+        throw new Error("내 서재 API 조회 실패");
+      }
 
-    const wishlistBooks = Array.isArray(wishlistData) ? wishlistData.map(book => ({
-      id: book.bookId,
-      title: book.title,
-      coverUrl: book.coverImageUrl,
-      category: book.category,
-      description: book.description,
-      author: "상상서가",
-      progress: 0,
-      isFavorite: true,
-      totalViews: 0,
-      totalLikes: 0,
-      reviews: []
-    })) : [];
+      const wishlistData = await wishlistRes.json();
+      const readingData = await readingRes.json();
+      const finishedData = await finishedRes.json();
 
-    const readingBooks = Array.isArray(readingData) ? readingData.map(book => ({
-      id: book.bookId,
-      title: book.title,
-      coverUrl: book.coverImageUrl,
-      category: book.category,
-      description: book.description,
-      author: "상상서가",
-      progress: book.progress || 1,
-      currentPage: book.currentPage || 1,
-      pageCount: book.pageCount || 0,
-      pages: book.pageCount || 0,
-      isFavorite: false,
-      totalViews: 0,
-      totalLikes: 0,
-      reviews: []
-    })) : [];
+      const wishlistBooks = Array.isArray(wishlistData)
+        ? wishlistData.map(book => ({
+          id: book.bookId,
+          bookId: book.bookId,
+          title: book.title,
+          coverUrl: book.coverImageUrl || "/default-book-cover.png",
+          category: book.category,
+          description: book.description,
+          author: "상상서가",
+          progress: 0,
+          currentPage: 1,
+          pageCount: book.pageCount || 1,
+          pages: book.pageCount || 1,
+          isFavorite: true,
+          totalViews: 0,
+          totalLikes: 0,
+          reviews: []
+        }))
+        : [];
 
-    const finishedBooks = Array.isArray(finishedData) ? finishedData.map(book => ({
-      id: book.bookId,
-      title: book.title,
-      coverUrl: book.coverImageUrl,
-      category: book.category,
-      description: book.description,
-      author: "상상서가",
-      progress: 100,
+      const readingBooks = Array.isArray(readingData)
+        ? readingData.map(book => ({
+          id: book.bookId,
+          bookId: book.bookId,
+          title: book.title,
+          coverUrl: book.coverImageUrl || "/default-book-cover.png",
+          category: book.category,
+          description: book.description,
+          author: "상상서가",
+          progress: book.progress || 1,
+          currentPage: book.currentPage || 1,
+          pageCount: book.pageCount || 1,
+          pages: book.pageCount || 1,
+          isFavorite: false,
+          totalViews: 0,
+          totalLikes: 0,
+          reviews: []
+        }))
+        : [];
 
-      startedDate: book.startedAt,             // 나중에 DB에서 내려주면 변경
-      finishedDate: book.completedAt, // FinishedTab에서 사용하는 이름
-      completedAt: book.completedAt,
-      readingTime: book.readingTime || 0,
+      const finishedBooks = Array.isArray(finishedData)
+        ? finishedData.map(book => ({
+          id: book.bookId,
+          bookId: book.bookId,
+          title: book.title,
+          coverUrl: book.coverImageUrl || "/default-book-cover.png",
+          category: book.category,
+          description: book.description,
+          author: "상상서가",
+          progress: 100,
+          currentPage: book.pageCount || 1,
+          pageCount: book.pageCount || 1,
+          pages: book.pageCount || 1,
+          startedDate: book.startedAt,
+          finishedDate: book.completedAt,
+          completedAt: book.completedAt,
+          readingTime: book.readingTime || 0,
+          isFavorite: false,
+          totalViews: 0,
+          totalLikes: 0,
+          reviews: [],
+          readingStatus: book.readingStatus,
+          rereadCount: book.rereadCount || 0
+        }))
+        : [];
 
-      isFavorite: false,
-      totalViews: 0,
-      totalLikes: 0,
-      reviews: []
-    })) : [];
+      const mergedBooks = [
+        ...wishlistBooks,
+        ...readingBooks,
+        ...finishedBooks
+      ];
 
-    const mergedBooks = [...wishlistBooks, ...readingBooks, ...finishedBooks];
-
-    setBooks(mergedBooks);
-
-    return mergedBooks;
+      setBooks(mergedBooks);
+      return mergedBooks;
+    } catch (error) {
+      console.error("내 서재 데이터 불러오기 실패:", error);
+      setBooks([]);
+      return [];
+    }
   };
 
   useEffect(() => {
@@ -804,6 +886,8 @@ function MyLibraryApp({ setViewingBook,
       ]
     }));
 
+
+
     setSelectedReaderBook({
       ...book,
       genre: book.category,
@@ -831,6 +915,29 @@ function MyLibraryApp({ setViewingBook,
       ]
     });
   };
+
+  const handleRereadBook = async (bookId) => {
+    try {
+      const res = await fetch(
+        `http://localhost:8080/bookshelves/finished/${bookId}/reread`,
+        {
+          method: "PATCH",
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("다시 읽기 처리 실패");
+      }
+
+      const updatedBooks = await loadMyLibraryBooks();
+
+      await handleOpenViewer(bookId, updatedBooks);
+    } catch (err) {
+      console.error(err);
+      alert("다시 읽기 처리에 실패했습니다.");
+    }
+  };
+
   const handleStartWishReading = async (bookId) => {
     try {
       const res = await fetch(
@@ -929,6 +1036,8 @@ function MyLibraryApp({ setViewingBook,
             book={selectedReaderBook}
             books={books}
             onBack={() => setSelectedReaderBook(null)}
+            onProgressSave={handleProgressSave}
+            onCompleteReading={handleCompleteReading}
             onToggleBookmark={() => handleToggleFavorite(selectedReaderBook.id)}
             onToggleLike={() => handleLikeBook(selectedReaderBook.id)}
             onSelectRecommended={(book) => {
@@ -1004,6 +1113,7 @@ function MyLibraryApp({ setViewingBook,
                 <FinishedTab
                   filteredBooks={filteredBooks}
                   onOpenViewer={handleOpenViewer}
+                  onReread={handleRereadBook}
                   setActiveTab={setActiveTab}
                   onOpenDetail={(book) => {
                     const convertedBook = {

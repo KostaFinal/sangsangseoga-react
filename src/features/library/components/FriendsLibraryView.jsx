@@ -85,7 +85,7 @@ export default function FriendsLibraryView({
             }
             setPreviousScreen(null);
           }}
-          onStartReading={() => { setSelectedBook(viewingBook); document.body.style.overflow = "hidden"; }}
+          onStartReading={(book) => { setSelectedBook(book); document.body.style.overflow = "hidden"; }}
           onToggleLike={e => { handleToggleLike(e, viewingBook.id); setTimeout(() => { setBooks(prev => { const f = prev.find(b => b.id === viewingBook.id); if (f) setViewingBook(f); return prev; }); }, 50); }}
           onToggleBookmark={e => { handleToggleBookmark(e, viewingBook.id); setTimeout(() => { setBooks(prev => { const f = prev.find(b => b.id === viewingBook.id); if (f) setViewingBook(f); return prev; }); }, 50); }}
           allBooks={books}

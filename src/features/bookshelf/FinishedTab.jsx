@@ -3,11 +3,13 @@ import { ThumbsUp, Eye } from 'lucide-react';
 
 const GENRES = ["전체", "소설", "시", "에세이", "동화", "지식정보"];
 
-export default function FinishedTab({ filteredBooks, onOpenViewer, setActiveTab, onOpenDetail }) {
+export default function FinishedTab({ filteredBooks, onOpenViewer, onReread, setActiveTab, onOpenDetail }) {
   const [selectedGenre, setSelectedGenre] = useState('전체');
 
   // Filter books by completed status and then by selected genre
-  const finishedBooks = filteredBooks.filter(b => b.progress === 100 && b.id !== 'stats_magic_book');
+  const finishedBooks = filteredBooks.filter(
+    b => (b.rereadCount > 0 || b.progress === 100) && b.id !== 'stats_magic_book'
+  );
   const genreFilteredBooks = selectedGenre === '전체'
     ? finishedBooks
     : finishedBooks.filter(b => b.category === selectedGenre);
@@ -15,13 +17,26 @@ export default function FinishedTab({ filteredBooks, onOpenViewer, setActiveTab,
   const getReadingPeriod = (startedDate, finishedDate) => {
     if (!startedDate || !finishedDate) return '-';
 
-    const start = new Date(startedDate.replaceAll('.', '-'));
-    const end = new Date(finishedDate.replaceAll('.', '-'));
+    const start = new Date(startedDate);
+    const end = new Date(finishedDate);
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return '-';
+    }
 
     const diffDays =
       Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
     return diffDays > 0 ? `${diffDays}일` : '-';
+  };
+
+  const formatDate = (dateValue) => {
+    if (!dateValue) return '-';
+
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return '-';
+
+    return date.toLocaleDateString('ko-KR');
   };
 
   return (
@@ -73,10 +88,10 @@ export default function FinishedTab({ filteredBooks, onOpenViewer, setActiveTab,
                   <span className="text-[9px] font-bold text-navy-purple bg-white border border-lavender-border px-2 py-0.5 rounded-full">{book.category}</span>
                   <h4 className="font-plus font-bold text-sm text-navy-purple mt-1 truncate tracking-tight">{book.title}</h4>
                   <p className="text-[10px] text-purple-gray-text mt-0.5">
-                    독서 시작일: {book.startedDate || '-'}
+                    독서 시작일: {formatDate(book.startedDate)}
                   </p>
                   <p className="text-[10px] text-purple-gray-text mt-0.5">
-                    완독일: {book.finishedDate || '-'}
+                    완독일: {formatDate(book.finishedDate)}
                   </p>
                   <p className="text-[10px] text-brand-purple font-bold mt-0.5">
                     독서 기간: {getReadingPeriod(book.startedDate, book.finishedDate)}
@@ -98,14 +113,18 @@ export default function FinishedTab({ filteredBooks, onOpenViewer, setActiveTab,
 
               <div className="flex gap-2 mt-2.5">
                 <button
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     e.stopPropagation();
-                    onOpenViewer(book.id);
+
+                    if (book.readingStatus === "READING") {
+                      onOpenViewer(book.id);
+                    } else {
+                      await onReread(book.id);
+                    }
                   }}
-                  id={`read-again-${book.id}`}
-                  className="flex-grow text-center py-2 bg-white hover:bg-lavender-bg text-brand-purple font-bold text-xs rounded-full cursor-pointer transition-all border border-lavender-border"
+                  className="flex-grow text-center py-2 bg-white hover:bg-lavender-bg text-brand-purple font-bold text-xs rounded-full border border-lavender-border transition-all"
                 >
-                  다시 읽기
+                  {book.readingStatus === "READING" ? "이어 읽기" : "다시 읽기"}
                 </button>
                 <button
                   onClick={(e) => {
