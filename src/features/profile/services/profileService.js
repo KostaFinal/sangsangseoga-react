@@ -7,6 +7,7 @@
  */
 import { withdrawMember } from '../../../api/memberApi';
 import { clearTokens } from '../../../api/tokenStorage';
+import { getPendingGuardianConsents, decideGuardianConsent } from '../../../api/authApi';
 
 const RESERVED_NICKNAMES = ['관리자', '상상서가', '어린왕자'];
 const PREVIOUS_BUILTIN_PASSWORD = 'password123';
@@ -74,15 +75,23 @@ export const profileService = {
     return true;
   },
 
-  /** 학부모 안심 동의 시뮬레이터 - 신규 승인 자녀 계정 목업 생성 */
-  createApprovedGuardianDemoChild: () => ({
-    id: `minor_gen_${Date.now().toString().slice(-3)}`,
-    name: '이채민 (자녀)',
-    email: 'chaemin@sangsang.com',
-    birthdate: '2015-11-20',
-    booksCount: 0,
-    subscription: '무료 새싹 작가 플랜 (기본 무료체험 1회 지급)',
-    status: 'ACTIVE',
-    joinedDate: '방금 전 동의함'
-  }),
+  /** 로그인한 보호자 기준 대기 중인 동의 요청 목록 조회 (GET /api/guardian-consents/pending) */
+  getPendingGuardianConsents: async () => {
+    const data = unwrap(await getPendingGuardianConsents());
+    return data.map((item) => ({
+      consentId: item.consentId,
+      memberId: item.memberId,
+      nickname: item.memberNickname,
+      email: item.memberEmail,
+      birthDate: item.memberBirthDate,
+      requestedAt: item.requestedAt,
+      expiresAt: item.expiresAt,
+    }));
+  },
+
+  /** 로그인 기반 보호자 동의 승인/거절 (PATCH /api/guardian-consents/{consentId}/decision) */
+  decideGuardianConsent: async (consentId, status) => {
+    unwrap(await decideGuardianConsent(consentId, status));
+    return true;
+  },
 };

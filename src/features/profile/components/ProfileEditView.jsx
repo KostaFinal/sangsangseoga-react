@@ -47,6 +47,11 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
     guardianEmailEditMode, setGuardianEmailEditMode,
 
     connectedMinors,
+
+    pendingConsents,
+    isPendingConsentsLoading,
+    pendingConsentsError,
+
     showWithdrawConsentModal, setShowWithdrawConsentModal,
     selectedMinorToWithdraw,
     withdrawPasswordConfirm, setWithdrawPasswordConfirm,
@@ -566,53 +571,71 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                 </div>
               </div>
 
-              {/* Sandbox Approval Portal for simulated interactive parent consent flow */}
+              {/* Pending Guardian Consent Requests (실시간 대기 목록) */}
               <div className="border-t border-[#E6E2FC]/40 pt-8 space-y-4 text-left">
                 <div className="border-b border-[#E6E2FC]/40 pb-4">
                   <h3 className="text-base font-black text-[#2F2D59] flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-                    <span>학부모 가입 수락 시뮬레이터 (Sandbox Portal)</span>
+                    <span>보호자 동의 대기 목록</span>
                   </h3>
                   <p className="text-xs text-[#7C769D] mt-1 text-left">
-                    상상서가 가입을 시도하여 법정 대리인의 우편 검증을 안전 대기 중인 자녀의 신청을 실시간 확인하고 모의 통과시킬 수 있습니다.
+                    내 계정으로 접수된, 법정 대리인 승인을 기다리고 있는 자녀 가입 신청을 확인하고 승인/반려할 수 있습니다.
                   </p>
                 </div>
 
-                <div className="bg-[#FAF9FF] p-5 border border-[#E6E2FC] rounded-2xl space-y-4 font-sans text-left relative overflow-hidden shadow-xs">
-                  <div className="absolute top-0 right-0 bg-[#6B54E7] text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl">
-                    가상 승인 편지 수신함
-                  </div>
+                {isPendingConsentsLoading && (
+                  <div className="text-xs text-[#7C769D] font-semibold p-4">불러오는 중...</div>
+                )}
 
-                  <div className="flex flex-wrap justify-between items-center text-xs border-b border-[#E6E2FC] pb-3 bg-white/50 p-3 rounded-xl gap-2">
-                    <span className="font-extrabold text-[#2F2D59]">📩 신규 연동 대기자: 이채민 (자녀, 만 11세)</span>
-                    <span className="text-[#7C769D] font-mono">가상 대기 기한: 7일 남음</span>
+                {!isPendingConsentsLoading && pendingConsentsError && (
+                  <div className="text-xs text-rose-600 font-bold p-4 bg-rose-50 border border-rose-200 rounded-xl">
+                    {pendingConsentsError}
                   </div>
+                )}
 
-                  <div className="text-xs text-[#2F2D59] space-y-1.5 pl-1 leading-relaxed">
-                    <p>· <strong>수신 시각:</strong> 방금 전</p>
-                    <p>· <strong>가입 요청 품목:</strong> 상상서가 아틀리에 청소년 독서실 입실 및 초안 체험 도서 보장권</p>
-                    <p className="text-[11px] text-[#7C769D] italic pt-1 text-left bg-white border border-[#E6E2FC]/40 p-3 rounded-xl leading-normal">
-                      "엄마, 아빠! 상상서가에서 직접 소설 단락을 창조해보고 예쁜 삽화 인공지능 명화를 엮어 제 이름으로 된 나만의 단편책을 출간해 보고 싶어요! 가입 동의 확인 단추를 눌러서 수락해 주세요!"
-                    </p>
+                {!isPendingConsentsLoading && !pendingConsentsError && pendingConsents.length === 0 && (
+                  <div className="text-xs text-[#7C769D] font-semibold p-4 bg-[#FAF9FF] border border-dashed border-[#E6E2FC] rounded-xl text-center">
+                    현재 대기 중인 동의 요청이 없습니다.
                   </div>
+                )}
 
-                  <div className="pt-4 border-t border-[#E6E2FC] flex justify-end gap-3.5 text-xs font-sans">
-                    <button
-                      type="button"
-                      onClick={handleRejectGuardianRequest}
-                      className="px-4 py-2 bg-neutral-150 hover:bg-neutral-200 text-[#7C769D] font-bold rounded-xl cursor-pointer transition-all active:scale-95"
-                    >
-                      동의 반려
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleApproveGuardianRequest}
-                      className="px-5 py-2 bg-[#6B54E7] text-white hover:bg-[#5b45d6] font-black rounded-xl cursor-pointer shadow-md shadow-[#6B54E7]/15 transition-all hover:scale-[1.02] active:scale-95"
-                    >
-                      안심 동의 수락 승인
-                    </button>
+                {pendingConsents.map((consent) => (
+                  <div
+                    key={consent.consentId}
+                    className="bg-[#FAF9FF] p-5 border border-[#E6E2FC] rounded-2xl space-y-4 font-sans text-left relative overflow-hidden shadow-xs"
+                  >
+                    <div className="absolute top-0 right-0 bg-[#6B54E7] text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl">
+                      승인 대기 중
+                    </div>
+
+                    <div className="flex flex-wrap justify-between items-center text-xs border-b border-[#E6E2FC] pb-3 bg-white/50 p-3 rounded-xl gap-2">
+                      <span className="font-extrabold text-[#2F2D59]">📩 신규 연동 대기자: {consent.nickname} ({consent.email})</span>
+                      <span className="text-[#7C769D] font-mono">만료: {consent.expiresAt}</span>
+                    </div>
+
+                    <div className="text-xs text-[#2F2D59] space-y-1.5 pl-1 leading-relaxed">
+                      <p>· <strong>요청 시각:</strong> {consent.requestedAt}</p>
+                      <p>· <strong>자녀 생년월일:</strong> {consent.birthDate}</p>
+                    </div>
+
+                    <div className="pt-4 border-t border-[#E6E2FC] flex justify-end gap-3.5 text-xs font-sans">
+                      <button
+                        type="button"
+                        onClick={() => handleRejectGuardianRequest(consent)}
+                        className="px-4 py-2 bg-neutral-150 hover:bg-neutral-200 text-[#7C769D] font-bold rounded-xl cursor-pointer transition-all active:scale-95"
+                      >
+                        동의 반려
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleApproveGuardianRequest(consent)}
+                        className="px-5 py-2 bg-[#6B54E7] text-white hover:bg-[#5b45d6] font-black rounded-xl cursor-pointer shadow-md shadow-[#6B54E7]/15 transition-all hover:scale-[1.02] active:scale-95"
+                      >
+                        안심 동의 수락 승인
+                      </button>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
 
             </div>

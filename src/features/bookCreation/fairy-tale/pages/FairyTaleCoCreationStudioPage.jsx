@@ -7,6 +7,7 @@ function FairyTaleCoCreationStudioPage() {
         outlineData,
         choices,
         choiceQuestion,
+        choiceGuide,
         selectedChoiceId,
         setSelectedChoiceId,
         customAnswer,
@@ -15,8 +16,12 @@ function FairyTaleCoCreationStudioPage() {
         pageCount,
         pageButtons,
         isLoadingChoiceStep,
+        isGeneratingPlan,
+        isRecommendingAgain,
         canCreateNextScene,
+        showFallbackNotice,
         handleNextScene,
+        handleRecommendAgain,
     } = useFairyTaleCoCreationStudio();
 
     return (
@@ -112,6 +117,25 @@ function FairyTaleCoCreationStudioPage() {
                         </div>
 
                         <h3>✨ {choiceQuestion}</h3>
+                        {choiceGuide && <p>{choiceGuide}</p>}
+
+                        {isGeneratingPlan && (
+                            <p style={{ fontWeight: 800, color: "#6d4dfc" }}>
+                                🤖 AI가 이야기 설계를 만드는 중...
+                            </p>
+                        )}
+
+                        {!isGeneratingPlan && isRecommendingAgain && (
+                            <p style={{ fontWeight: 800, color: "#6d4dfc" }}>
+                                🤖 AI가 다시 추천하는 중...
+                            </p>
+                        )}
+
+                        {!isLoadingChoiceStep && showFallbackNotice && (
+                            <p style={{ fontWeight: 700, color: "#a97c1f" }}>
+                                AI 추천을 불러오지 못해 기본 선택지를 보여드려요.
+                            </p>
+                        )}
 
                         <div className="friend-grid">
                             {choices.map((choice, index) => (
@@ -122,6 +146,7 @@ function FairyTaleCoCreationStudioPage() {
                                         selectedChoiceId === choice.id ? "selected" : ""
                                     }`}
                                     onClick={() => setSelectedChoiceId(choice.id)}
+                                    disabled={isLoadingChoiceStep}
                                 >
                                     <div className="friend-image choice-number-badge">
                                         {index + 1}
@@ -150,7 +175,17 @@ function FairyTaleCoCreationStudioPage() {
                         </div>
                     </div>
 
-                    <div className="bottom-actions">
+                    <div className="bottom-actions" style={{ display: "flex", gap: "12px" }}>
+                        <button
+                            type="button"
+                            className="next-scene-btn"
+                            style={{ background: "#ede6ff", color: "#6d4dfc" }}
+                            onClick={handleRecommendAgain}
+                            disabled={isLoadingChoiceStep}
+                        >
+                            {isRecommendingAgain ? "다시 추천하는 중..." : "↻ 다시 추천"}
+                        </button>
+
                         <button
                             type="button"
                             className="next-scene-btn"

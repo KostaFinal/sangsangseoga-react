@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { createSettingOptions, requestAiGenerateStream } from "../../services/aiGenerateService";
@@ -50,6 +50,7 @@ export function useFairyTaleSettingWizard() {
   const [isLoadingChoiceStep, setIsLoadingChoiceStep] = useState(false);
   const [fallbackNoticeByStep, setFallbackNoticeByStep] = useState({});
   const [loadingHint, setLoadingHint] = useState("");
+  const [recommendationVersion, setRecommendationVersion] = useState({});
 
   const currentStepInfo =
     aiSteps[currentStep] || makeFallbackStep(steps[currentStep], currentStep);
@@ -197,6 +198,58 @@ export function useFairyTaleSettingWizard() {
     };
   };
 
+  // 첫 단계(인덱스 0, seed)는 aiSteps 초기값이 fallback이라, 마운트 시 1회 AI를 호출해 채운다.
+  const initialFetchRef = useRef(false);
+  useEffect(() => {
+    if (initialFetchRef.current) return;
+    initialFetchRef.current = true;
+
+    (async () => {
+      setIsLoadingChoiceStep(true);
+      setLoadingHint("");
+
+      const { step: firstStep, usedFallback } = await requestChoiceStep(0, [], 0);
+
+      setAiSteps((prev) => prev.map((step, index) => (index === 0 ? firstStep : step)));
+      setFallbackNoticeByStep((prev) => ({ ...prev, [firstStep.key]: usedFallback }));
+      setIsLoadingChoiceStep(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const canRecommendAgain = currentStepInfo.key !== "pageCount";
+
+  const handleRecommendAgain = async () => {
+    if (requestGuardRef.current || !canRecommendAgain) return;
+
+    requestGuardRef.current = true;
+    setIsLoadingChoiceStep(true);
+    setLoadingHint("");
+
+    const nextVersion = (recommendationVersion[currentStepInfo.key] || 0) + 1;
+    const { step: newStep, usedFallback } = await requestChoiceStep(
+      currentStep,
+      previousAnswers,
+      nextVersion
+    );
+
+    setAiSteps((prev) =>
+      prev.map((step, index) => (index === currentStep ? newStep : step))
+    );
+    setFallbackNoticeByStep((prev) => ({ ...prev, [newStep.key]: usedFallback }));
+    setRecommendationVersion((prev) => ({ ...prev, [currentStepInfo.key]: nextVersion }));
+
+    // 새로 추천받았으니 이 단계에서 이전에 고르거나 입력한 값은 비운다.
+    if (currentStepInfo.key === "seed") {
+      setSelectedSeed("MAGIC_OBJECT");
+      setCustomSeed("");
+    }
+    setSettings((prev) => ({ ...prev, [currentStepInfo.key]: "" }));
+
+    setIsLoadingChoiceStep(false);
+    requestGuardRef.current = false;
+  };
+
   const handleNext = async () => {
     if (requestGuardRef.current) return;
 
@@ -269,6 +322,8 @@ export function useFairyTaleSettingWizard() {
     handleOptionSelect,
     handleCustomSeedChange,
     handleNext,
+    handleRecommendAgain,
+    canRecommendAgain,
     isSeedStep,
     isChoiceStep,
     isLoadingChoiceStep,

@@ -1,6 +1,7 @@
 export const REQUIRED_FIELDS = [
   "storySeed",
-  "protagonist",
+  "protagonistName",
+  "protagonistDesc",
   "backgroundPlace",
   "problem",
   "pageCount",
@@ -21,17 +22,24 @@ export const STEPS = [
     ],
   },
   {
-    key: "protagonist",
-    title: "주인공",
-    question: "주인공은 어떤 친구인가요?",
-    guide: "이름, 성격, 특징을 함께 적어주면 좋아요.",
-    placeholder:
-      "예: 루루, 호기심 많고 겁은 조금 있지만 친구를 잘 도와주는 양",
+    key: "protagonistName",
+    title: "주인공 이름",
+    question: "주인공의 이름은 무엇인가요?",
+    guide: "동화 속 주인공을 부를 이름을 적어주세요.",
+    placeholder: "예: 루루",
+    examples: ["루루", "모모", "초코", "별이"],
+  },
+  {
+    key: "protagonistDesc",
+    title: "주인공 설명",
+    question: "주인공은 어떤 성격이나 특징을 가졌나요?",
+    guide: "성격, 습관, 특징을 자유롭게 적어주면 좋아요.",
+    placeholder: "예: 호기심 많고 겁은 조금 있지만 친구를 잘 도와주는 성격",
     examples: [
-      "루루, 호기심 많은 마법 양",
-      "모모, 실수는 많지만 마음이 따뜻한 아이",
-      "초코, 겁이 많지만 친구를 지키고 싶은 강아지",
-      "별이, 밤하늘을 좋아하는 작은 마녀",
+      "호기심 많고 겁은 조금 있지만 친구를 잘 도와주는 성격",
+      "실수는 많지만 마음이 따뜻한 성격",
+      "겁이 많지만 친구를 지키고 싶어하는 성격",
+      "밤하늘을 좋아하는 조용한 성격",
     ],
   },
   {
@@ -116,7 +124,8 @@ export const STEPS = [
 
 export const EMPTY_SETTINGS = {
   storySeed: "",
-  protagonist: "",
+  protagonistName: "",
+  protagonistDesc: "",
   backgroundPlace: "",
   problem: "",
   pageCount: "",
@@ -132,8 +141,13 @@ export const SUMMARY_ITEMS = [
     required: true,
   },
   {
-    key: "protagonist",
-    label: "주인공",
+    key: "protagonistName",
+    label: "주인공 이름",
+    required: true,
+  },
+  {
+    key: "protagonistDesc",
+    label: "주인공 설명",
     required: true,
   },
   {

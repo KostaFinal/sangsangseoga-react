@@ -112,38 +112,3 @@ export const aiReviewList = [
     date: 'AI Review 26.06.10'
   }
 ];
-
-export const initialPaymentRecords = [
-  {
-    id: 'pay_01',
-    title: '정기 결제 (2월)',
-    date: '2026.02.15 • 결제 완료',
-    amount: 14900,
-    status: '완료',
-    icon: 'receipt_long'
-  },
-  {
-    id: 'pay_02',
-    title: '추가 생성권 (50매)',
-    date: '2026.02.10 • 결제 완료',
-    amount: 4900,
-    status: '완료',
-    icon: 'add_circle'
-  },
-  {
-    id: 'pay_03',
-    title: '정기 결제 (1월)',
-    date: '2026.01.15 • 결제 완료',
-    amount: 14900,
-    status: '완료',
-    icon: 'receipt_long'
-  },
-  {
-    id: 'pay_04',
-    title: '정기 결제 (12월)',
-    date: '2025.12.15 • 결제 완료',
-    amount: 14900,
-    status: '완료',
-    icon: 'receipt_long'
-  }
-];

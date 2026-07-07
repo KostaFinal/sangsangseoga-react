@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import {
+  buildRealPageRows,
   createPagePlans,
   LOADING_MESSAGES,
   styles,
@@ -24,7 +25,9 @@ export function useFairyTaleImageDesign() {
     12;
 
   const [selectedStyle, setSelectedStyle] = useState("CUTE_3D");
-  const [pageRows, setPageRows] = useState(() => createPagePlans(pageCount));
+  const [pageRows, setPageRows] = useState(
+    () => buildRealPageRows(previousData, pageCount) || createPagePlans(pageCount)
+  );
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -213,14 +216,22 @@ export function useFairyTaleImageDesign() {
       imageStyleLabel: selectedStyleInfo.label,
       pageCount,
       totalImageCount,
-      pageImages: pageRows.map((row) => ({
-        page: row.page,
-        color: row.color,
-        image: row.image,
-        sceneTitle: row.sceneTitle,
-        editText: row.editText,
-        isLocked: row.isLocked,
-      })),
+      pageImages: pageRows.map((row) => {
+        const isCover = row.page === "표지" || row.page === "cover";
+        const matchedPageNo = String(row.page || "").match(/\d+/);
+
+        return {
+          imageType: isCover ? "COVER" : "PAGE",
+          pageNo: isCover ? null : matchedPageNo ? Number(matchedPageNo[0]) : null,
+          imageStyle: selectedStyle,
+          page: row.page,
+          color: row.color,
+          image: row.image,
+          sceneTitle: row.sceneTitle,
+          editText: row.editText,
+          isLocked: row.isLocked,
+        };
+      }),
     };
 
     console.log("이미지 생성 요청 데이터:", payload);

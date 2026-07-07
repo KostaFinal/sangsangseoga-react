@@ -85,12 +85,19 @@ const getStoryPagesFromState = (state) => {
 };
 
 const getPageNoFromImageRow = (row, fallbackIndex) => {
+  if (row?.pageNo !== undefined && row?.pageNo !== null && !Number.isNaN(Number(row.pageNo))) {
+    return Number(row.pageNo);
+  }
+
   if (!row?.page) return fallbackIndex + 1;
 
   const matched = String(row.page).match(/\d+/);
 
   return matched ? Number(matched[0]) : fallbackIndex + 1;
 };
+
+const isCoverImageRow = (row) =>
+  row?.imageType === "COVER" || row?.page === "표지" || row?.page === "cover";
 
 const getBodyTextFromStoryPage = (storyPage, imageRow, pageNo) => {
   return (
@@ -113,13 +120,11 @@ const createEditorPagesFromCreationState = (state) => {
     return clone(SAMPLE_PAGES);
   }
 
-  const coverImageRow =
-    pageImages.find((row) => row.page === "표지" || row.page === "cover") ||
-    pageImages[0];
+  const coverImageRow = pageImages.find(isCoverImageRow) || pageImages[0];
 
-  const bodyImageRows = pageImages.filter(
-    (row) => row.page !== "표지" && row.page !== "cover"
-  );
+  const bodyImageRows = pageImages.filter((row) => !isCoverImageRow(row));
+
+  const imageStyle = state?.imageStyle || coverImageRow?.imageStyle || "";
 
   const pageCount =
     Number(state?.pageCount) ||
@@ -131,6 +136,8 @@ const createEditorPagesFromCreationState = (state) => {
     id: "cover",
     type: "cover",
     title: "표지",
+    imageType: "COVER",
+    imageStyle,
     cover: {
       src: coverImageRow?.image || SAMPLE_PAGES[0].cover.src,
       x: 0,
@@ -175,6 +182,9 @@ const createEditorPagesFromCreationState = (state) => {
       id: `p${pageNo}`,
       type: "spread",
       title: `${pageNo} 페이지`,
+      pageNo,
+      imageType: "PAGE",
+      imageStyle: imageRow?.imageStyle || imageStyle,
       image: {
         src: imageRow?.image || SAMPLE_PAGES[1]?.image?.src,
         x: 0,

@@ -5,43 +5,81 @@
  * 현재는 협업 및 페이지 병합을 고려하여 Mock 로직과 인터페이스가 먼저 설계되어 있으며,
  * 실 배포 시 axios 또는 fetch를 이용한 비동기 통신 코드로 간편하게 대체할 수 있도록 설계되었습니다.
  */
+import { getMySubscription, startSubscription, changeSubscriptionPlan, cancelSubscription, resumeSubscription, getSubscriptionPlans, getPayments, getMyUsage } from '../../../api/subscriptionApi';
 
-const CREDIT_PRICE_PER_UNIT = 98; // ₩98 / 1매
+const PLAN_TYPE_BY_SUB_PERIOD = {
+  monthly: 'PREMIUM_MONTHLY',
+  yearly: 'PREMIUM_YEARLY',
+};
+
+const PLAN_TYPE_LABEL = {
+  PREMIUM_MONTHLY: '정기 결제 (월간)',
+  PREMIUM_YEARLY: '정기 결제 (연간)',
+};
+
+const PAYMENT_STATUS_LABEL = {
+  SUCCESS: '완료',
+  FAILED: '실패',
+};
+
+/** ISO 날짜 문자열을 "YYYY.MM.DD" 형식으로 변환 */
+const formatPaidDate = (isoString) => {
+  if (!isoString) return '';
+  return isoString.slice(0, 10).replace(/-/g, '.');
+};
+
+const unwrap = (res) => {
+  const body = res.data;
+  if (!body?.success) {
+    throw new Error(body?.message || '요청 처리 중 문제가 발생했습니다.');
+  }
+  return body.data;
+};
+
+/**
+ * 결제+구독시작(POST) / 요금제 변경(PATCH)이 서버에서 같은 subscribe() 로직을 공유하도록
+ * 리팩터링됨 — 프론트도 동일하게 두 흐름이 같은 형태의 바디(paymentKey/orderId/amount)를 쓰도록 공용 처리.
+ * 실제 PG 위젯이 없어서 paymentKey/orderId는 프론트에서 placeholder로 생성.
+ */
+const buildMockPaymentIds = () => ({
+  paymentKey: `mock_pay_${Date.now()}`,
+  orderId: `mock_order_${Date.now()}`,
+});
+
+const mapSubscriptionResponse = (data) => ({
+  planType: data.planType,
+  isPremium: data.isPremium,
+  isSubscriptionCanceled: data.isCanceled,
+  benefitEndDate: data.benefitEndDate,
+  nextBillingDate: data.nextBillingDate,
+});
 
 export const subscriptionService = {
-  /** 요금제 안내 화면(PricingView) 및 구독 대시보드(SubscriptionView)가 공유하는 FAQ 목록 */
+  /** 내 구독 상태 조회 (GET /api/subscriptions/me) */
+  getMySubscription: async () => {
+    const data = unwrap(await getMySubscription());
+    return mapSubscriptionResponse(data);
+  },
+
+
+  /** 구독 대시보드(SubscriptionView)의 FAQ 목록 */
   getFaqs: () => [
     {
       id: 1,
-      q: 'AI가 작성하는 소설 단락의 저작권은 누구에게 있나요?',
-      a: '상상서가에서 가공해 드린 모든 소설 텍스트 및 완성된 책의 저작권은 온전히 작가(사용자) 본인에게 귀속됩니다. 상업적 출판 및 판매도 전적으로 자유롭게 진행이 가능합니다.'
+      q: 'AI가 작성한 소설의 저작권은 누구에게 있나요?',
+      a: '작성된 모든 텍스트와 완성된 책의 저작권은 작성자 본인에게 있습니다. 상업적 출판 및 판매도 자유롭게 가능합니다.'
     },
     {
       id: 2,
-      q: '프리미엄 요금제의 자동 결제는 언제든 취소가 가능한가요?',
-      a: '네, 마이페이지 결제 및 구독 관리 대시보드에서 단 한 번의 클릭만으로 자동 정기 구독 해지가 가능하며, 취소 시 해당 결제 주기 마지막 날까지는 모든 프리미엄 기능을 제약 없이 그대로 누리실 수 있습니다.'
+      q: '프리미엄 요금제는 언제든 해지할 수 있나요?',
+      a: '네, 구독 관리 페이지에서 언제든 해지할 수 있으며, 해지 후에도 결제 기간이 끝날 때까지는 프리미엄 기능을 계속 이용할 수 있습니다.'
     },
     {
       id: 3,
-      q: '무료 요금제와 프리미엄 요금제의 구체적인 AI 퀄리티 차이가 있나요?',
-      a: '프리미엄 요금제는 더욱 고도화된 고매개변수 LLM 모델인 Gemini Pro 계열을 사용하며, 다채로운 가구와 묘사, 소설 맥락 및 캐릭터 일관성 제어 가이드 템플릿(여름의 소나기 에디션 등)이 추가 제공됩니다.'
+      q: '무료 요금제와 프리미엄 요금제의 차이는 무엇인가요?',
+      a: '무료 플랜은 가입 시 지급되는 체험 페이지를 모두 사용하면 종료되고, 프리미엄 플랜은 매일 정해진 만큼의 AI 텍스트/이미지 생성을 계속 이용할 수 있습니다.'
     }
   ],
-
-  /** 단발 생성권 패키지 프리셋 목록 */
-  getCreditPackages: () => [
-    { count: 3, label: '🥉 3회 단편 이용권', price: 2900, desc: '가벼운 체험 및 습작' },
-    { count: 5, label: '🥈 5회 실속 이용권', price: 4500, desc: '중장편 소설 1권 완벽 제본' },
-    { count: 10, label: '👑 10회 스페셜 패키지', price: 8000, desc: '정가 대비 10% 즉시 보정 할인', isPopular: true }
-  ],
-
-  /** 선택된 생성권 매수에 대한 결제 예정 금액 산정 (프리셋 매칭 우선, 그 외엔 매당 단가 적용) */
-  calculateCreditsCost: (count) => {
-    const preset = subscriptionService.getCreditPackages().find(pkg => pkg.count === count);
-    return preset ? preset.price : count * CREDIT_PRICE_PER_UNIT;
-  },
-
-  creditPricePerUnit: CREDIT_PRICE_PER_UNIT,
 
   /** 신용카드 번호 입력 포맷팅 (4자리 단위 구분) */
   formatCardNumber: (value) => {
@@ -101,25 +139,101 @@ export const subscriptionService = {
   },
 
   /**
-   * 단발 생성권 구매 처리 및 결제 내역 레코드 생성
-   * TODO: API 연동 필요 (POST /api/subscription/credits/purchase)
+   * 정기구독 시작 (POST /api/subscriptions)
+   * 실제 PG 위젯 없이 Mock 결제(simulatePaymentApproval) 통과 후 서버 등록만 수행 —
+   * paymentKey/orderId는 실제 토스페이먼츠 콜백이 없으므로 프론트에서 placeholder로 생성해 전달.
    */
-  purchaseCredits: async (count, cost) => {
-    return {
-      id: `pay_${Date.now().toString().slice(-4)}`,
-      title: `추가 생성권 (${count}매)`,
-      date: '방금 전 • 결제 완료',
-      amount: cost,
-      status: '완료',
-      icon: 'add_circle'
-    };
+  startSubscription: async ({ subPeriod, price }) => {
+    const planType = PLAN_TYPE_BY_SUB_PERIOD[subPeriod] || PLAN_TYPE_BY_SUB_PERIOD.monthly;
+    const { paymentKey, orderId } = buildMockPaymentIds();
+    const data = unwrap(await startSubscription(planType, paymentKey, orderId, price));
+    return data;
   },
 
   /**
-   * 구독 해지 예약 처리
-   * TODO: API 연동 필요 (POST /api/subscription/cancel)
+   * 이미 활성 구독 중인 사용자의 요금제 변경 (PATCH /api/subscriptions)
+   * 월간 → 연간만 즉시 전환 허용(재결제 + 기간 새로 시작). 연간 → 월간은 서버가
+   * 400 DOWNGRADE_NOT_SUPPORTED로 거절 — 프론트는 이 경로 자체를 UI에서 막아둠(SubscriptionView 참고).
+   * POST와 동일하게 paymentKey/orderId/amount 바디를 공유.
    */
+  changeSubscriptionPlan: async (subPeriod, price) => {
+    const planType = PLAN_TYPE_BY_SUB_PERIOD[subPeriod] || PLAN_TYPE_BY_SUB_PERIOD.monthly;
+    const { paymentKey, orderId } = buildMockPaymentIds();
+    const data = unwrap(await changeSubscriptionPlan(planType, paymentKey, orderId, price));
+    return mapSubscriptionResponse(data);
+  },
+
+  /** 구독 해지 예약 처리 (POST /api/subscriptions/cancel) */
   cancelSubscription: async () => {
-    return { success: true };
+    const data = unwrap(await cancelSubscription());
+    return {
+      isSubscriptionCanceled: data.isCanceled,
+      benefitEndDate: data.benefitEndDate,
+    };
+  },
+
+  /** 구독 해지 예약 취소(재개) 처리 (POST /api/subscriptions/resume) */
+  resumeSubscription: async () => {
+    const data = unwrap(await resumeSubscription());
+    return {
+      isSubscriptionCanceled: data.isCanceled,
+      benefitEndDate: data.benefitEndDate,
+    };
+  },
+
+  /** 구독 요금제 목록 조회 (GET /api/subscription-plans) — FREE/PREMIUM_MONTHLY/PREMIUM_YEARLY 3종 */
+  getSubscriptionPlans: async () => {
+    const data = unwrap(await getSubscriptionPlans());
+    const plans = {};
+    data.forEach((plan) => {
+      let key = 'monthly';
+      if (plan.planType === 'FREE') key = 'free';
+      else if (plan.planType === 'PREMIUM_YEARLY') key = 'yearly';
+      plans[key] = {
+        planType: plan.planType,
+        price: plan.price,
+        dailyTextLimit: plan.dailyTextLimit,
+        dailyImageLimit: plan.dailyImageLimit,
+        trialPageLimit: plan.trialPageLimit,
+      };
+    });
+    return plans;
+  },
+
+  /** 결제/인보이스 내역 조회 (GET /api/payments) — { items, totalCount, page, hasNext } 형태 */
+  getPayments: async (page = 0, size = 20) => {
+    const data = unwrap(await getPayments(page, size));
+    const items = data.items || [];
+    return items.map((item) => ({
+      id: item.paymentId,
+      title: PLAN_TYPE_LABEL[item.planType] || '정기 결제',
+      date: `${formatPaidDate(item.paidAt)} • 결제 ${PAYMENT_STATUS_LABEL[item.status] || item.status}`,
+      amount: item.amount,
+      status: PAYMENT_STATUS_LABEL[item.status] || item.status,
+      icon: 'receipt_long',
+      maskedCardNumber: item.maskedCardNumber,
+      merchantName: item.merchantName,
+      merchantBusinessNumber: item.merchantBusinessNumber,
+      merchantAddress: item.merchantAddress,
+    }));
+  },
+
+  /** 오늘 사용량 조회 (GET /api/usage/me) */
+  getMyUsage: async () => {
+    const data = unwrap(await getMyUsage());
+    const isPremium = data.plan !== 'FREE';
+    return {
+      plan: data.plan,
+      isPremium,
+      // FREE/PREMIUM 응답 형태가 서로 달라서(플랜별 필드명이 다름) 화면에서 공용으로 쓸 수 있게 정규화
+      text: isPremium
+        ? { remaining: data.dailyTextRemaining, limit: data.dailyTextLimit }
+        : { remaining: data.freeTrialTextCallsRemaining, limit: data.freeTrialTextCallLimit },
+      image: isPremium
+        ? { remaining: data.dailyImageRemaining, limit: data.dailyImageLimit }
+        : { remaining: data.freeTrialImageCallsRemaining, limit: data.freeTrialImageCallLimit },
+      freeTrialUsed: data.freeTrialUsed ?? null,
+      trialPageLimit: data.trialPageLimit ?? null,
+    };
   },
 };

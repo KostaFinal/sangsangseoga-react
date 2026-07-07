@@ -117,6 +117,38 @@ export const createPagePlans = (pageCount) => {
   return [cover, ...pages];
 };
 
+// 이전 화면(공동창작실/채팅형 글쓰기)에서 만든 실제 pagePlan(sceneTitle/imagePromptBase)이 있으면
+// 하드코딩 placeholder 대신 그 값으로 장면 수정 칸(sceneTitle/editText)을 채운다.
+// 실제 데이터가 없는 페이지는 기존 placeholder를 그대로 fallback으로 유지한다.
+export const buildRealPageRows = (previousData, pageCount) => {
+  const realPages =
+    (Array.isArray(previousData?.pagePlans) && previousData.pagePlans.length && previousData.pagePlans) ||
+    (Array.isArray(previousData?.storyPages) && previousData.storyPages.length && previousData.storyPages) ||
+    (Array.isArray(previousData?.fairyTalePages) && previousData.fairyTalePages.length && previousData.fairyTalePages) ||
+    [];
+
+  if (!realPages.length) return null;
+
+  const byPageNo = new Map(realPages.map((page) => [Number(page.pageNo), page]));
+  const bookTitle = previousData?.fairyTaleSetting?.title || previousData?.title;
+
+  return createPagePlans(pageCount).map((row) => {
+    if (row.page === "표지") {
+      return bookTitle ? { ...row, sceneTitle: bookTitle } : row;
+    }
+
+    const pageNo = Number(String(row.page).replace("p", ""));
+    const realPage = byPageNo.get(pageNo);
+    if (!realPage) return row;
+
+    return {
+      ...row,
+      sceneTitle: realPage.sceneTitle || realPage.title || row.sceneTitle,
+      editText: realPage.imagePromptBase || realPage.summary || realPage.body || row.editText,
+    };
+  });
+};
+
 export const LOADING_MESSAGES = [
   "루미의 얼굴이 페이지마다 비슷하게 보이도록 맞추고 있어요.",
   "표지에는 동화의 분위기가 잘 드러나도록 색감을 정리하고 있어요.",

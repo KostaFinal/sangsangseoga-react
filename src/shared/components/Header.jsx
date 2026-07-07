@@ -26,12 +26,7 @@ export const Header = ({
   onSelectMyLibrary,
   onSelectFriendsLibrary,
   currentUser: propCurrentUser,
-  freeTrialRemaining: propFreeTrialRemaining,
-  freeTrialTextTokens: propFreeTrialTextTokens,
-  freeTrialImageCount: propFreeTrialImageCount,
-  dailyScore: propDailyScore,
-  dailyTextTokens: propDailyTextTokens,
-  dailyImageCount: propDailyImageCount
+  usage: propUsage,
 }) => {
   const navContext = useContext(NavigationContext) || {};
 
@@ -39,12 +34,7 @@ export const Header = ({
   const onNavigate = propOnNavigate || navContext.onNavigate;
   const onLogout = propOnLogout || navContext.onLogout;
   const currentUser = propCurrentUser || navContext.currentUser;
-  const freeTrialRemaining = propFreeTrialRemaining !== undefined ? propFreeTrialRemaining : navContext.freeTrialRemaining;
-  const freeTrialTextTokens = propFreeTrialTextTokens !== undefined ? propFreeTrialTextTokens : navContext.freeTrialTextTokens;
-  const freeTrialImageCount = propFreeTrialImageCount !== undefined ? propFreeTrialImageCount : navContext.freeTrialImageCount;
-  const dailyScore = propDailyScore !== undefined ? propDailyScore : navContext.dailyScore;
-  const dailyTextTokens = propDailyTextTokens !== undefined ? propDailyTextTokens : navContext.dailyTextTokens;
-  const dailyImageCount = propDailyImageCount !== undefined ? propDailyImageCount : navContext.dailyImageCount;
+  const usage = propUsage !== undefined ? propUsage : navContext.usage;
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showSangsangMenu, setShowSangsangMenu] = useState(false);
@@ -303,12 +293,10 @@ export const Header = ({
                     </span>
                     <div className="font-sans">
                       <span className="text-[7.5px] text-neutral-400 font-extrabold uppercase tracking-tight hidden lg:block leading-none select-none mt-0.5">
-                        실시간 소모
+                        오늘 사용량
                       </span>
                       <span className="text-[10px] font-bold text-neutral-800 font-mono block mt-0.5 leading-none">
-                        {currentUser?.isSubscribed
-                          ? `${(dailyScore || 2400).toLocaleString()} / 5,000 pt`
-                          : `${freeTrialTextTokens || 0} / 1,000 pt`}
+                        {usage ? `텍스트 ${usage.text.remaining}/${usage.text.limit} · 이미지 ${usage.image.remaining}/${usage.image.limit}` : '-'}
                       </span>
                     </div>
                   </button>

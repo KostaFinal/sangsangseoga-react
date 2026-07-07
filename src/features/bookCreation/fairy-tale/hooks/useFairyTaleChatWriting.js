@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
+import { toBookDraft } from "../../utils/bookDraftMapper";
 import {
   createPagePlan,
   extractGeneratedPages,
-  extractGeneratedText,
+  requestAiGenerateStream,
+  rewritePage,
   writePage,
 } from "../../services/aiGenerateService";
 import {
@@ -15,6 +17,36 @@ import {
   makeInitialPages,
   makePageText,
 } from "../data/fairyTaleChatWritingOptions";
+import {
+  extractPartialField,
+  getEditSummary,
+  getNextQuestion,
+  getPageBody,
+  isValidPageBody,
+} from "../utils/aiSettingOptions";
+
+// 톤 변경 버튼 → REWRITE_PAGE의 editRequest. rewrite_page.txt가 이미 이 카테고리들을 지원한다.
+const TONE_EDIT_REQUEST = {
+  쉽게: "더 쉽게",
+  따뜻하게: "더 따뜻하게",
+  짧게: "더 짧게",
+};
+
+const toAiOutlinePage = (page) => ({
+  pageNo: page.pageNo,
+  phase: page.phase || "",
+  sceneTitle: page.sceneTitle || "",
+  sceneSummary: page.sceneSummary || "",
+  mainEmotion: page.mainEmotion || "",
+  imagePromptBase: page.imagePromptBase || "",
+});
+
+const toAiWrittenPage = (page) => ({
+  pageNo: page.pageNo,
+  sceneTitle: page.sceneTitle || "",
+  bodyText: page.body || "",
+  summary: page.sceneSummary || "",
+});
 
 export function useFairyTaleChatWriting() {
   const navigate = useNavigate();
@@ -24,16 +56,27 @@ export function useFairyTaleChatWriting() {
   const setupData = location.state || {};
   const pageCount = Number(setting.pageCount) || 16;
 
-  const [pages, setPages] = useState(() => makeInitialPages(pageCount));
+  const [pages, setPages] = useState(() => {
+    const incoming = location.state?.pagePlans || location.state?.fairyTalePages;
+    return Array.isArray(incoming) && incoming.length ? incoming : makeInitialPages(pageCount);
+  });
   const [currentPageNo, setCurrentPageNo] = useState(1);
   const [requestText, setRequestText] = useState("");
+  const [chatNotes, setChatNotes] = useState([]);
   const [messages, setMessages] = useState([
     {
       sender: "AI",
       text: "기본설정을 바탕으로 한 페이지씩 동화를 완성해볼게요. 먼저 1페이지를 써볼까요?",
     },
   ]);
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+  const [isWorking, setIsWorking] = useState(false);
+  const [streamingPreview, setStreamingPreview] = useState("");
+  const [usedFallbackNotice, setUsedFallbackNotice] = useState(false);
+
   const chatLogRef = useRef(null);
+  const planRequestRef = useRef(false);
+  const workGuardRef = useRef(false);
 
   useEffect(() => {
     if (!chatLogRef.current) return;
@@ -41,44 +84,53 @@ export function useFairyTaleChatWriting() {
     chatLogRef.current.scrollTop = chatLogRef.current.scrollHeight;
   }, [messages]);
 
+  // 마운트 시 1회: 이미 pagePlan(장면 계획)이 있으면 다시 생성하지 않는다.
+  // 없을 때만 CREATE_PAGE_PLAN을 1번 호출해서 캐시한다(공동창작실과 동일한 가드 패턴).
   useEffect(() => {
-    let isMounted = true;
+    if (planRequestRef.current) return;
+    planRequestRef.current = true;
 
-    const syncPagePlan = async () => {
+    const alreadyEnriched = pages.some((page) => String(page.sceneSummary || "").trim());
+    if (alreadyEnriched) return;
+
+    (async () => {
+      setIsGeneratingPlan(true);
+
       const response = await createPagePlan(
-        {
-          ...setupData,
-          fairyTaleSetting: setting,
-          fairyTalePages: pages,
-        },
-        {
-          pageCount,
-        }
+        { ...setupData, fairyTaleSetting: setting, fairyTalePages: pages },
+        { pageCount }
       );
       const aiPages = response.ok ? extractGeneratedPages(response.data) : [];
 
-      if (isMounted && aiPages.length) {
+      if (aiPages.length) {
         setPages((prev) =>
-          aiPages.map((page, index) => ({
-            ...prev[index],
-            ...page,
-            pageNo: page.pageNo || prev[index]?.pageNo || index + 1,
-            status: page.status || prev[index]?.status || "WAITING",
-          }))
+          prev.map((page, index) => {
+            const aiPage = aiPages.find((item) => item.pageNo === page.pageNo) || aiPages[index];
+            if (!aiPage) return page;
+
+            return {
+              ...page,
+              phase: aiPage.phase || page.phase,
+              sceneTitle: aiPage.sceneTitle || page.sceneTitle,
+              sceneSummary: aiPage.sceneSummary || page.sceneSummary,
+              mainEmotion: aiPage.mainEmotion || page.mainEmotion,
+              imagePromptBase: aiPage.imagePromptBase || page.imagePromptBase,
+              role: aiPage.sceneSummary || page.role,
+            };
+          })
         );
+      } else {
+        console.warn("AI 페이지 계획 생성 실패. 기본 장면 구성으로 진행합니다.", response.message);
       }
-    };
 
-    syncPagePlan();
-
-    return () => {
-      isMounted = false;
-    };
+      setIsGeneratingPlan(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const currentPage = useMemo(() => {
-    return pages.find((page) => page.pageNo === currentPageNo) || pages[0];
-  }, [pages, currentPageNo]);
+  const getCurrentPage = (fromPages) =>
+    fromPages.find((page) => page.pageNo === currentPageNo) || fromPages[0];
+  const currentPage = getCurrentPage(pages);
 
   const completedCount = pages.filter((page) => page.status === "DONE").length;
 
@@ -96,147 +148,176 @@ export function useFairyTaleChatWriting() {
   };
 
   const addAiMessage = (text) => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        sender: "AI",
-        text,
-      },
-    ]);
+    setMessages((prev) => [...prev, { sender: "AI", text }]);
   };
 
   const addUserMessage = (text) => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        sender: "USER",
-        text,
-      },
-    ]);
+    setMessages((prev) => [...prev, { sender: "USER", text }]);
   };
 
-  const handleWritePage = async () => {
-    let body = makePageText({
-      page: currentPage,
-      setting,
-      tone: "기본",
-    });
-    const response = await writePage(
-      {
-        ...setupData,
-        fairyTaleSetting: setting,
-        fairyTalePages: pages,
-      },
-      {
-        page: currentPage,
-        pageNo: currentPageNo,
-      }
-    );
+  const buildDraftInput = () => ({
+    ...setupData,
+    bookType: "FAIRY_TALE",
+    fairyTaleSetting: setting,
+    fairyTalePages: pages.filter((page) => page.body).map(toAiWrittenPage),
+    outline: { pages: pages.map(toAiOutlinePage) },
+  });
 
-    if (response.ok) {
-      body = extractGeneratedText(response.data) || body;
-    } else {
-      console.warn("WRITE_PAGE failed:", response.message);
+  // 스트리밍은 로딩 프리뷰용 보조 수단일 뿐, 정답 소스는 non-stream writePage/rewritePage 호출이다.
+  const fireBodyStream = (draftInput, extra, taskType) => {
+    let streamed = "";
+    const fieldName = taskType === "REWRITE_PAGE" ? "revisedBodyText" : "bodyText";
+
+    requestAiGenerateStream({
+      taskType,
+      draft: toBookDraft(draftInput),
+      extra,
+      onDelta: (text) => {
+        streamed += text;
+        const partial = extractPartialField(streamed, fieldName);
+        if (partial) setStreamingPreview(partial);
+      },
+    });
+  };
+
+  // WRITE_PAGE(최초 작성)/REWRITE_PAGE(수정) 공용 실행 함수.
+  const runPageAction = async ({ taskType, extra, fallbackTone }) => {
+    if (workGuardRef.current) return;
+
+    workGuardRef.current = true;
+    setIsWorking(true);
+    setStreamingPreview("");
+    setUsedFallbackNotice(false);
+
+    const draftInput = buildDraftInput();
+    fireBodyStream(draftInput, extra, taskType);
+
+    const response =
+      taskType === "REWRITE_PAGE"
+        ? await rewritePage(draftInput, extra)
+        : await writePage(draftInput, extra);
+
+    setStreamingPreview("");
+
+    if (response.ok && isValidPageBody(response.data)) {
+      const body = getPageBody(response.data);
+      const nextQuestion = getNextQuestion(response.data);
+      const editSummary = getEditSummary(response.data);
+
+      updateCurrentPage({
+        body,
+        status: "WRITING",
+        nextQuestion: nextQuestion || currentPage.nextQuestion,
+        teacherNote: editSummary || currentPage.teacherNote,
+      });
+
+      addAiMessage(
+        nextQuestion ||
+          (taskType === "REWRITE_PAGE"
+            ? "요청하신 대로 다듬었어요."
+            : `${currentPageNo}페이지 글을 작성했어요. 읽어보고 더 바꾸고 싶으면 말해 주세요.`)
+      );
+
+      setChatNotes([]);
+      setIsWorking(false);
+      workGuardRef.current = false;
+      return true;
     }
 
-    updateCurrentPage({
-      body,
-      status: "WRITING",
-      teacherNote: "AI 선생님이 이번 페이지 글을 작성했어요. 마음에 들면 페이지를 완성해 주세요.",
+    console.warn("AI 페이지 글쓰기 실패. 기본 문장으로 이어갑니다.", response.message);
+    setUsedFallbackNotice(true);
+
+    const fallbackBody = makePageText({
+      page: currentPage,
+      setting,
+      tone: fallbackTone || "기본",
     });
 
-    addAiMessage(`${currentPageNo}페이지 글을 작성했어요. 읽어보고 분위기나 문장을 더 바꾸고 싶으면 말해 주세요.`);
+    updateCurrentPage({ body: fallbackBody, status: "WRITING" });
+    addAiMessage("AI 응답을 불러오지 못해 기본 문장으로 이어갈게요.");
+    setIsWorking(false);
+    workGuardRef.current = false;
+    return false;
   };
 
-  const handleQuickAction = (action) => {
+  // "이 페이지 글쓰기" / "AI 선생님에게 다시 도움받기" — 지금까지 채팅으로 남긴 메모(chatNotes)를
+  // extra.userInput으로 합쳐서 보낸다. 이게 "채팅에서 논의한 내용이 정리되어 반영"되는 지점이다.
+  const handleWritePage = async () => {
+    const userInput = chatNotes.length ? chatNotes.join("\n") : undefined;
+
+    await runPageAction({
+      taskType: "WRITE_PAGE",
+      extra: { currentPageNo, userInput },
+    });
+  };
+
+  const handleQuickAction = async (action) => {
     if (!currentPage.body) {
       addAiMessage("먼저 현재 페이지 글을 작성한 뒤에 문장을 다듬을 수 있어요.");
       return;
     }
 
-    const body = makePageText({
-      page: currentPage,
-      setting,
-      tone: action.tone,
-    });
-
-    updateCurrentPage({
-      body,
-      teacherNote: action.teacherText,
-    });
-
     addUserMessage(action.label);
-    addAiMessage(action.teacherText);
+
+    await runPageAction({
+      taskType: "REWRITE_PAGE",
+      extra: {
+        currentPageNo,
+        editRequest: TONE_EDIT_REQUEST[action.tone] || action.tone,
+      },
+      fallbackTone: action.tone,
+    });
   };
 
-  const handleChatHelp = (action) => {
+  const handleChatHelp = async (action) => {
     addUserMessage(action.label);
 
     if (action.id === "direction") {
       addAiMessage(
-        `${currentPageNo}페이지는 "${currentPage.sceneTitle}" 장면이에요. ${
-          currentPage.role
-        }이므로 앞 장면과 자연스럽게 이어지게 쓰면 좋아요.`
-      );
-      return;
-    }
-
-    if (action.id === "continue") {
-      if (!currentPage.body) {
-        const body = makePageText({
-          page: currentPage,
-          setting,
-          tone: "기본",
-        });
-
-        updateCurrentPage({
-          body,
-          status: "WRITING",
-          teacherNote:
-            "AI 선생님이 현재 페이지 글을 이어서 작성했어요. 마음에 들면 다음 페이지로 넘어가도 좋아요.",
-        });
-
-        addAiMessage("좋아요. 현재 페이지 글을 이어서 작성했어요.");
-        return;
-      }
-
-      const continuedText = `${currentPage.body}
-
-  루루는 잠시 멈춰 서서 주변을 둘러보았어요.
-  작은 빛들이 길을 알려주듯 반짝였고, 루루는 다시 용기를 내어 앞으로 걸어갔어요.`;
-
-      updateCurrentPage({
-        body: continuedText,
-        teacherNote: "앞 문장과 자연스럽게 이어지도록 내용을 덧붙였어요.",
-      });
-
-      addAiMessage("좋아요. 앞 문장과 자연스럽게 이어지는 문장을 추가했어요.");
-      return;
-    }
-
-    if (action.id === "explain") {
-      addAiMessage(
-        `쉽게 말하면, ${currentPageNo}페이지는 "${currentPage.sceneTitle}" 장면이에요. 이 장면에서는 주인공이 무엇을 보고, 어떤 마음이 들었는지를 분명하게 보여주면 좋아요.`
-      );
-      return;
-    }
-
-    if (action.id === "emotion") {
-      updateCurrentPage({
-        teacherNote:
-          "주인공의 두근거림, 걱정, 용기 같은 감정을 더 넣으면 장면이 살아나요.",
-      });
-
-      addAiMessage(
-        "좋아요. 이 장면에는 주인공의 마음을 더 넣으면 좋아요. 예를 들면 ‘무섭지만 궁금했어요’, ‘가슴이 콩콩 뛰었어요’ 같은 표현을 사용할 수 있어요."
+        `${currentPageNo}페이지는 "${currentPage.sceneTitle}" 장면이에요. ${currentPage.role}이므로 앞 장면과 자연스럽게 이어지게 쓰면 좋아요.`
       );
       return;
     }
 
     if (action.id === "nextScene") {
       addAiMessage(
-        `다음 장면에서는 ${currentPage.sceneTitle} 이후에 주인공이 작은 단서를 발견하거나, 새로운 친구를 만나는 방향이 좋아요.`
+        currentPage.nextQuestion
+          ? `다음 장면 힌트: ${currentPage.nextQuestion}`
+          : `아직 다음 장면 힌트가 없어요. 먼저 "이 페이지 글쓰기"로 이번 페이지를 써보면 다음 힌트를 받을 수 있어요.`
       );
+      return;
+    }
+
+    if (!currentPage.body) {
+      addAiMessage("먼저 현재 페이지 글을 작성한 뒤에 이어쓰거나 다듬을 수 있어요.");
+      return;
+    }
+
+    if (action.id === "continue") {
+      await runPageAction({
+        taskType: "REWRITE_PAGE",
+        extra: {
+          currentPageNo,
+          editRequest: "현재 내용에 자연스럽게 이어지는 다음 문장을 덧붙여줘",
+        },
+      });
+      return;
+    }
+
+    if (action.id === "explain") {
+      await runPageAction({
+        taskType: "REWRITE_PAGE",
+        extra: { currentPageNo, editRequest: "더 쉽게" },
+        fallbackTone: "쉽게",
+      });
+      return;
+    }
+
+    if (action.id === "emotion") {
+      await runPageAction({
+        taskType: "REWRITE_PAGE",
+        extra: { currentPageNo, editRequest: "감정 더 넣기" },
+      });
     }
   };
 
@@ -247,10 +328,7 @@ export function useFairyTaleChatWriting() {
       return;
     }
 
-    updateCurrentPage({
-      status: "DONE",
-    });
-
+    updateCurrentPage({ status: "DONE" });
     addAiMessage(`${currentPageNo}페이지를 완성했어요. 다음 페이지도 이어서 써볼 수 있어요.`);
   };
 
@@ -283,10 +361,14 @@ export function useFairyTaleChatWriting() {
     );
 
     setCurrentPageNo(nextPageNo);
+    setChatNotes([]);
+    setStreamingPreview("");
 
     addAiMessage(`${nextPageNo}페이지로 이동했어요. 앞 장면과 자연스럽게 이어서 써볼게요.`);
   };
 
+  // 채팅은 그 자체로 AI를 부르지 않는다 — 메모만 쌓아두고, "이 페이지 글쓰기"/"다시 도움받기"를
+  // 누를 때 한꺼번에 반영한다.
   const handleSendRequest = (event) => {
     event.preventDefault();
 
@@ -294,36 +376,26 @@ export function useFairyTaleChatWriting() {
     if (!trimmed) return;
 
     addUserMessage(trimmed);
-
-    if (!currentPage.body) {
-      const body = makePageText({
-        page: currentPage,
-        setting,
-        tone: "기본",
-      });
-
-      updateCurrentPage({
-        body,
-        status: "WRITING",
-        teacherNote: "요청을 참고해서 현재 페이지 글을 작성했어요.",
-      });
-
-      addAiMessage("좋아요. 요청을 참고해서 현재 페이지 글을 작성했어요.");
-    } else {
-      updateCurrentPage({
-        teacherNote: "요청을 반영해서 문장 분위기와 흐름을 다시 다듬었어요.",
-      });
-
-      addAiMessage("좋아요. 요청을 반영해서 현재 페이지를 다시 다듬었어요.");
-    }
-
+    setChatNotes((prev) => [...prev, trimmed]);
+    addAiMessage(
+      "메모했어요! \"이 페이지 글쓰기\" 또는 \"다시 도움받기\"를 누르면 지금까지 나눈 이야기를 반영해서 정리해드릴게요."
+    );
     setRequestText("");
   };
 
   const handleShowSetting = () => {
-    addAiMessage(
-      `현재 기본설정은 "${setting.storySeed}"이고, 주인공은 "${setting.protagonist}", 배경은 "${setting.backgroundPlace}"이에요.`
-    );
+    const lines = [
+      `📖 이야기 씨앗: ${setting.storySeed || "미정"}`,
+      `🧑 주인공: ${setting.protagonist || setting.protagonistName || "미정"}`,
+      setting.protagonistDesc && `　${setting.protagonistDesc}`,
+      `🏰 배경: ${setting.backgroundPlace || "미정"}`,
+      `❓ 문제/목표: ${setting.problem || "미정"}`,
+      `🎨 분위기: ${setting.mood || "미정"}`,
+      `📚 페이지 수: ${setting.pageCount ? `${setting.pageCount}페이지` : "미정"}`,
+      setting.title && `✏️ 제목: ${setting.title}`,
+    ].filter(Boolean);
+
+    addAiMessage(`지금까지 정한 기본설정을 알려드릴게요.\n${lines.join("\n")}`);
   };
 
   const handleSave = () => {
@@ -341,6 +413,7 @@ export function useFairyTaleChatWriting() {
         ...setupData,
         fairyTaleSetting: setting,
         fairyTalePages: pages,
+        pagePlans: pages,
       },
     });
   };
@@ -358,6 +431,11 @@ export function useFairyTaleChatWriting() {
     chatLogRef,
     currentPage,
     completedCount,
+    isGeneratingPlan,
+    isWorking,
+    streamingPreview,
+    usedFallbackNotice,
+    chatNotesCount: chatNotes.length,
     handleWritePage,
     handleQuickAction,
     handleChatHelp,
