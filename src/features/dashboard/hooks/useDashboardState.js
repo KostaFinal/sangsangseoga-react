@@ -13,18 +13,8 @@ import { dashboardService } from '../services/dashboardService';
  */
 export const useDashboardState = ({
   isPremium,
-  freeTrialRemaining,
-  setFreeTrialRemaining,
-  freeTrialTextTokens,
-  setFreeTrialTextTokens,
-  freeTrialImageCount,
-  setFreeTrialImageCount,
-  dailyScore,
-  setDailyScore,
-  dailyTextTokens,
-  setDailyTextTokens,
-  dailyImageCount,
-  setDailyImageCount,
+  usage,
+  setUsage,
 }) => {
   // 내 서재 (필터/검색/정렬)
   const [libraryGenreFilter, setLibraryGenreFilter] = useState('전체');
@@ -65,66 +55,35 @@ export const useDashboardState = ({
   const handleGenerate = async (e) => {
     e.preventDefault();
     if (!prompt.trim()) return;
+    if (!usage) return; // 사용량 아직 로딩 전
 
-    if (isPremium) {
-      const estimatedPrice = 250;
-      const imagePrice = generateImage ? 1200 : 0;
-      const nextScore = dailyScore + estimatedPrice + imagePrice;
+    const textRemaining = usage.text?.remaining ?? 0;
+    const imageRemaining = usage.image?.remaining ?? 0;
+    const needsImage = generateImage;
 
-      if (dailyScore >= 5000 || nextScore > 5000) {
-        setIsGenerating(false);
+    if (textRemaining <= 0 || (needsImage && imageRemaining <= 0)) {
+      if (isPremium) {
         setShowPremiumSoftCapModal(true);
-        return;
-      }
-
-      setIsGenerating(true);
-      setGeneratedResult(null);
-
-      const result = await dashboardService.generateStoryContent({ genre, prompt, tier: 'premium' });
-      setIsGenerating(false);
-      setDailyScore(prev => prev + estimatedPrice + imagePrice);
-      setDailyTextTokens(prev => prev + estimatedPrice);
-      if (generateImage) {
-        setDailyImageCount(prev => prev + 1);
-      }
-      setGeneratedResult(result);
-
-    } else {
-      if (freeTrialRemaining > 0) {
-        const nextTrialText = freeTrialTextTokens + 250;
-        const nextTrialImage = freeTrialImageCount + (generateImage ? 1 : 0);
-
-        if (freeTrialTextTokens >= 1000 || freeTrialImageCount >= 3 || nextTrialText > 1000 || nextTrialImage > 3) {
-          setShowFreeTrialCapModal(true);
-          return;
-        }
-
-        setIsGenerating(true);
-        setGeneratedResult(null);
-
-        const result = await dashboardService.generateStoryContent({ genre, prompt, tier: 'trial' });
-        setIsGenerating(false);
-        const textAdd = 250;
-        const imgAdd = generateImage ? 1 : 0;
-
-        setFreeTrialTextTokens(t => {
-          const finalT = t + textAdd;
-          if (finalT >= 1000) setFreeTrialRemaining(0);
-          return finalT;
-        });
-
-        setFreeTrialImageCount(c => {
-          const finalC = c + imgAdd;
-          if (finalC >= 3) setFreeTrialRemaining(0);
-          return finalC;
-        });
-
-        setGeneratedResult(result);
-
       } else {
         setShowFreeTrialCapModal(true);
-        return;
       }
+      return;
+    }
+
+    setIsGenerating(true);
+    setGeneratedResult(null);
+
+    const result = await dashboardService.generateStoryContent({ genre, prompt, tier: isPremium ? 'premium' : 'trial' });
+    setIsGenerating(false);
+    setGeneratedResult(result);
+
+    // 실제 생성 API가 없어 서버 사용량이 자동으로 줄지 않으므로, 조회해 둔 usage를 프론트에서 낙관적으로 차감
+    if (setUsage) {
+      setUsage(prev => (prev ? {
+        ...prev,
+        text: { ...prev.text, remaining: Math.max(0, prev.text.remaining - 1) },
+        image: needsImage ? { ...prev.image, remaining: Math.max(0, prev.image.remaining - 1) } : prev.image,
+      } : prev));
     }
   };
 
@@ -168,10 +127,7 @@ export const useDashboardState = ({
     friendBooks,
     filteredCabinetBooks,
 
-    dailyScore,
-    freeTrialRemaining,
-    freeTrialTextTokens,
-    freeTrialImageCount,
+    usage,
     isPremium,
   };
 };

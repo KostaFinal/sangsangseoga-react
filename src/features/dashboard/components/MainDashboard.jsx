@@ -45,10 +45,7 @@ export const MainDashboard = (props) => {
 
   const {
     isPremium,
-    freeTrialRemaining,
-    freeTrialTextTokens,
-    freeTrialImageCount,
-    dailyScore,
+    usage,
 
     libraryGenreFilter, setLibraryGenreFilter,
     librarySearchQuery, setLibrarySearchQuery,
@@ -496,14 +493,14 @@ export const MainDashboard = (props) => {
             </h3>
             <p className="text-xs text-[#7C769D] leading-relaxed">
               준비된 신규 가입자 전용 무료 체험 혜택을 전부 소진하셨습니다.<br />
-              <strong className="text-[#2F2D59] font-bold">· 누적 사용량: 글 {freeTrialTextTokens}/1,000자 | 그림 {freeTrialImageCount}/3장</strong><br /><br />
+              <strong className="text-[#2F2D59] font-bold">· 남은 횟수: 텍스트 {usage?.text?.remaining ?? 0}/{usage?.text?.limit ?? 0}회 | 이미지 {usage?.image?.remaining ?? 0}/{usage?.image?.limit ?? 0}회</strong><br /><br />
               계속해서 예쁜 소설과 동화책을 집필하고 삽화를 완성하려면 <strong>프리미엄 요금제</strong>를 구독해 보세요.
             </p>
             <div className="flex flex-col gap-2 pt-2 text-xs">
               <button
                 onClick={() => {
                   setShowFreeTrialCapModal(false);
-                  onNavigate('pricing');
+                  onNavigate('subscription');
                 }}
                 className="w-full py-3 bg-[#6B54E7] hover:bg-[#6148E1] text-white font-extrabold rounded-xl transition-all shadow-md text-center cursor-pointer"
               >
@@ -531,8 +528,8 @@ export const MainDashboard = (props) => {
               오늘 도서 생성 권장량을 초과하였습니다
             </h3>
             <p className="text-xs text-[#7C769D] leading-relaxed">
-              프리미엄 작가님용 일일 자동 할당 이야기 점수가 일시 완성되었습니다. 작성 중이던 원고는 내 서재에 안전하게 보관되어 있습니다.<br /><br />
-              매일 자정(00:00)이 지나면 새로운 글 한도가 무료로 자동 리셋 및 재충전됩니다.
+              오늘 사용 가능한 텍스트/이미지 생성 횟수를 모두 사용하셨습니다. 작성 중이던 원고는 내 서재에 안전하게 보관되어 있습니다.<br /><br />
+              매일 자정(00:00)이 지나면 생성 횟수가 초기화됩니다.
             </p>
             <div className="flex flex-col gap-2 pt-2 text-xs">
               <button
@@ -594,18 +591,20 @@ export const MainDashboard = (props) => {
               {isPremium ? (
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span className="font-bold text-[#6B54E7]">PRO 무제한 창작방 인가 완료</span>
+                  <span className="font-bold text-[#6B54E7]">프리미엄 창작방</span>
                   <span className="text-[#B9B0DC]">|</span>
-                  <span className="text-[#7C769D]">오늘 사용량: <strong className="text-[#2F2D59]">{dailyScore?.toLocaleString()}자 / 5,000자</strong></span>
+                  <span className="text-[#7C769D]">
+                    오늘 남은 횟수: <strong className="text-[#2F2D59]">텍스트 {usage?.text?.remaining ?? '-'}/{usage?.text?.limit ?? '-'}회 · 이미지 {usage?.image?.remaining ?? '-'}/{usage?.image?.limit ?? '-'}회</strong>
+                  </span>
                 </div>
               ) : (
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#B9B0DC]"></span>
                   <span className="font-bold text-[#2F2D59]">무료 가입자 체험 패키지</span>
                   <span className="text-[#D4CDF2]">|</span>
-                  {freeTrialRemaining > 0 ? (
+                  {(usage?.text?.remaining ?? 0) > 0 ? (
                     <span className="text-[#6B54E7] font-semibold">
-                      무료 체험 1회 생성 가능 (텍스트 {freeTrialTextTokens}/1,000자 | 그림 {freeTrialImageCount}/3장)
+                      남은 무료 체험 (텍스트 {usage?.text?.remaining}/{usage?.text?.limit}회 | 이미지 {usage?.image?.remaining}/{usage?.image?.limit}회)
                     </span>
                   ) : (
                     <span className="text-[#7C769D] font-bold">
@@ -714,7 +713,7 @@ export const MainDashboard = (props) => {
                       </button>
                       <button 
                         type="button"
-                        onClick={() => { setShowAtelierSection(false); onNavigate('pricing'); }}
+                        onClick={() => { setShowAtelierSection(false); onNavigate('subscription'); }}
                         className="px-3.5 py-1.5 bg-[#6B54E7] hover:bg-[#6148E1] text-white text-[11px] rounded-lg font-bold flex items-center gap-1 cursor-pointer"
                       >
                         <span>출판 및 소장 신청</span>

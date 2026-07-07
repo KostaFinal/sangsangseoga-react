@@ -47,14 +47,13 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
           <div className="p-4 bg-red-50/50 rounded-2xl text-left border border-red-100 text-xs text-red-800 space-y-2.5">
             <p className="font-extrabold text-red-900 flex items-center gap-1.5 border-b border-red-100 pb-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-              결제 수납대행 거절 사유
+              실패 사유
             </p>
             <p className="leading-relaxed text-[11px]">{failureReason}</p>
           </div>
 
           <p className="text-xs text-[#7C769D] leading-relaxed">
-             실패 상태에서는 기존 구독 등급이 변동되지 않습니다. <br />
-             카드를 다시 확인하신 후 재시도 버튼을 눌러 결제 정보 입력 화면으로 복구할 수 있습니다.
+             실패 상태에서는 기존 구독 등급이 변동되지 않습니다.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4 text-xs">
@@ -62,13 +61,13 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
               onClick={retryPayment}
               className="flex-1 py-3.5 bg-[#6B54E7] hover:bg-[#5b45d6] text-white font-extrabold rounded-2xl tracking-wide shadow-md transition-all cursor-pointer"
             >
-              다시 시도해주세요 (재시도)
+              다시 시도
             </button>
             <button
               onClick={onNavigateBack}
               className="flex-1 py-3.5 bg-white hover:bg-neutral-50 text-[#7C769D] font-bold rounded-2xl tracking-wide transition-all border border-neutral-200 cursor-pointer"
             >
-              결제 취소 (이전으로 복귀)
+              취소
             </button>
           </div>
         </div>
@@ -82,8 +81,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
       <div className="py-12 bg-[#FAF9FF] min-h-screen px-4 sm:px-6 lg:px-8 flex items-center justify-center font-sans text-[#2F2D59] animate-in fade-in duration-200">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-4 border-[#6B54E7] border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-sm font-bold text-[#2F2D59]">토스페이먼츠(Toss Payments) 수납대행 심사 승인 요청 중...</p>
-          <p className="text-xs text-[#7C769D]">네트워크 보안 가상터널 세션을 할당받아 심사가 즉시 기동되고 있습니다.</p>
+          <p className="text-sm font-bold text-[#2F2D59]">결제 승인 처리 중...</p>
         </div>
       </div>
     );
@@ -99,7 +97,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
             <div className="text-left">
               <h3 id="payment-form-title" className="text-base font-bold text-[#2F2D59]">결제 신용카드 정보 등록</h3>
               <p className="text-[11px] text-[#7C769D] mt-0.5">
-                정기 아틀리에 구독 가입에 연동할 카드 정보를 등록합니다.
+                구독 결제에 사용할 카드 정보를 등록합니다.
               </p>
             </div>
             <button
@@ -241,22 +239,16 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
 
           <div className="border-t border-white/10 pt-4 space-y-3 text-xs text-neutral-300">
             <div className="flex justify-between">
-              <span>상품 유형</span>
-              <span className="text-white font-bold">정기 충전 플랜 ({subPeriod})</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>프리미엄 정기 요금</span>
+              <span>결제 금액</span>
               <span className="font-bold text-white">₩{displayPrice?.toLocaleString()} / 월</span>
             </div>
             <div className="flex justify-between">
               <span>제공 혜택</span>
-              <span className="text-neutral-100 font-bold">AI 아틀리에 무제한 구동</span>
+              <span className="text-neutral-100 font-bold">AI 텍스트/이미지 생성 무제한</span>
             </div>
-
             <div className="flex justify-between">
               <span>결제 주기</span>
-              <span>매월 자동결제 (토스 수납대행)</span>
+              <span>매월 자동결제</span>
             </div>
           </div>
 
