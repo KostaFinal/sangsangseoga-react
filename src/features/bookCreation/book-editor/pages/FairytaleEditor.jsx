@@ -1,7 +1,14 @@
 /* eslint-disable no-unused-vars, react-hooks/static-components, react-hooks/refs */
-import { useState, useCallback, useEffect, useRef, useReducer } from "react";
+import {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useReducer,
+  useMemo,
+} from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Rnd } from "react-rnd";
-import { useNavigate } from "react-router-dom";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
@@ -20,18 +27,179 @@ import {
   AlignCenter,
   AlignLeft,
   AlignRight,
-  RotateCcw,
   Check,
   X,
-  Wand2,
   Underline as UnderlineIcon,
   Strikethrough,
   BookOpen,
 } from "lucide-react";
 
 import "./FairytaleEditor.css";
-import { clone, COVER_HEIGHT, COVER_WIDTH, PAGE_HEIGHT, PAGE_WIDTH, SAMPLE_PAGES } from "../data/fairytaleEditorOptions";
+import {
+  clone,
+  COVER_HEIGHT,
+  COVER_WIDTH,
+  PAGE_HEIGHT,
+  PAGE_WIDTH,
+  SAMPLE_PAGES,
+} from "../data/fairytaleEditorOptions";
 
+const escapeHtml = (value = "") =>
+  String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+const toParagraphHtml = (value = "") => {
+  const text = String(value || "").trim();
+
+  if (!text) return "<p></p>";
+
+  return `<p>${escapeHtml(text).replaceAll("\n", "<br>")}</p>`;
+};
+
+const getTitleFromState = (state) => {
+  return (
+    state?.title ||
+    state?.fairyTaleSetting?.title ||
+    state?.fairyTaleSettings?.title ||
+    state?.setting?.title ||
+    state?.settings?.title ||
+    state?.storySeed ||
+    state?.seed ||
+    "나만의 동화"
+  );
+};
+
+const getStoryPagesFromState = (state) => {
+  const source =
+    state?.fairyTalePages ||
+    state?.storyPages ||
+    state?.pagePlans ||
+    state?.outlinePages ||
+    [];
+
+  return Array.isArray(source) ? source : [];
+};
+
+const getPageNoFromImageRow = (row, fallbackIndex) => {
+  if (!row?.page) return fallbackIndex + 1;
+
+  const matched = String(row.page).match(/\d+/);
+
+  return matched ? Number(matched[0]) : fallbackIndex + 1;
+};
+
+const getBodyTextFromStoryPage = (storyPage, imageRow, pageNo) => {
+  return (
+    storyPage?.bodyText ||
+    storyPage?.body ||
+    storyPage?.content ||
+    storyPage?.summary ||
+    storyPage?.text ||
+    imageRow?.editText ||
+    imageRow?.sceneTitle ||
+    `${pageNo}페이지 본문을 입력해 주세요.`
+  );
+};
+
+const createEditorPagesFromCreationState = (state) => {
+  const pageImages = Array.isArray(state?.pageImages) ? state.pageImages : [];
+  const storyPages = getStoryPagesFromState(state);
+
+  if (pageImages.length === 0 && storyPages.length === 0) {
+    return clone(SAMPLE_PAGES);
+  }
+
+  const coverImageRow =
+    pageImages.find((row) => row.page === "표지" || row.page === "cover") ||
+    pageImages[0];
+
+  const bodyImageRows = pageImages.filter(
+    (row) => row.page !== "표지" && row.page !== "cover"
+  );
+
+  const pageCount =
+    Number(state?.pageCount) ||
+    Math.max(bodyImageRows.length, storyPages.length, 1);
+
+  const title = getTitleFromState(state);
+
+  const coverPage = {
+    id: "cover",
+    type: "cover",
+    title: "표지",
+    cover: {
+      src: coverImageRow?.image || SAMPLE_PAGES[0].cover.src,
+      x: 0,
+      y: 0,
+      w: COVER_WIDTH,
+      h: COVER_HEIGHT,
+      visible: true,
+    },
+    text: {
+      html: toParagraphHtml(title),
+      x: 58,
+      y: 420,
+      w: 365,
+      h: 90,
+      fontSize: 34,
+      lineHeight: 1.25,
+      color: "#ffffff",
+      align: "center",
+      visible: true,
+    },
+  };
+
+  const bodyPages = Array.from({ length: pageCount }, (_, index) => {
+    const pageNo = index + 1;
+
+    const imageRow =
+      bodyImageRows.find(
+        (row, rowIndex) => getPageNoFromImageRow(row, rowIndex) === pageNo
+      ) || bodyImageRows[index];
+
+    const storyPage =
+      storyPages.find(
+        (item) =>
+          Number(item.pageNo) === pageNo ||
+          Number(item.page) === pageNo ||
+          Number(item.pageNumber) === pageNo
+      ) || storyPages[index];
+
+    const bodyText = getBodyTextFromStoryPage(storyPage, imageRow, pageNo);
+
+    return {
+      id: `p${pageNo}`,
+      type: "spread",
+      title: `${pageNo} 페이지`,
+      image: {
+        src: imageRow?.image || SAMPLE_PAGES[1]?.image?.src,
+        x: 0,
+        y: 0,
+        w: PAGE_WIDTH,
+        h: PAGE_HEIGHT,
+        visible: true,
+      },
+      text: {
+        html: toParagraphHtml(bodyText),
+        x: 40,
+        y: 220,
+        w: 400,
+        h: 150,
+        fontSize: 20,
+        lineHeight: 1.6,
+        color: "#2f2d59",
+        align: "left",
+        visible: true,
+      },
+    };
+  });
+
+  return [coverPage, ...bodyPages];
+};
 
 function Toolbar({
   editor,
@@ -45,7 +213,6 @@ function Toolbar({
   currentColor,
 }) {
   const hasTextSelected = selectedBlock === "text" && editor;
-  const hasBlockSelected = Boolean(selectedBlock);
 
   const run = (fn) => (e) => {
     e.preventDefault();
@@ -63,16 +230,6 @@ function Toolbar({
 
   return (
     <div className="fairy-toolbar">
-      {/* <button type="button" className="fairy-tool-btn primary-soft" onClick={onAddText}>
-        <Type size={15} />
-        텍스트 추가
-      </button>
-
-      <button type="button" className="fairy-tool-btn primary-soft" onClick={onReplaceVisual}>
-        <ImageIcon size={15} />
-        이미지 교체
-      </button> */}
-
       <div className="fairy-toolbar-divider" />
 
       <button
@@ -85,21 +242,13 @@ function Toolbar({
         <Bold size={15} />
       </button>
 
-      {/* <button
-        type="button"
-        disabled={!hasTextSelected}
-        onMouseDown={run(() => editor.chain().focus().toggleItalic().run())}
-        className={`fairy-icon-btn ${editor?.isActive("italic") ? "active" : ""}`}
-        title="기울임"
-      >
-        <Italic size={15} />
-      </button> */}
-
       <button
         type="button"
         disabled={!hasTextSelected}
         onMouseDown={run(() => editor.chain().focus().toggleUnderline().run())}
-        className={`fairy-icon-btn ${editor?.isActive("underline") ? "active" : ""}`}
+        className={`fairy-icon-btn ${
+          editor?.isActive("underline") ? "active" : ""
+        }`}
         title="밑줄"
       >
         <UnderlineIcon size={15} />
@@ -166,25 +315,6 @@ function Toolbar({
         <option value="36">36px</option>
       </select>
 
-      <input
-        disabled={!hasTextSelected}
-        className="fairy-color-input"
-        type="color"
-        value={currentColor || "#2f2d59"}
-        onChange={(e) => onTextStyleChange({ color: e.target.value })}
-        title="글자 색상"
-      />
-
-      {/* <button
-        type="button"
-        disabled={!hasBlockSelected}
-        className="fairy-icon-btn danger"
-        onClick={onDeleteSelected}
-        title="삭제"
-      >
-        <Trash2 size={15} />
-      </button> */}
-
       <div className="fairy-toolbar-spacer" />
 
       <button type="button" className="fairy-tool-btn preview" onClick={onOpenPreview}>
@@ -207,7 +337,9 @@ function PageThumbnail({ page, index, active, onClick }) {
       onClick={onClick}
     >
       <div className="fairy-thumb-preview">
-        {thumbImage?.visible && <img src={thumbImage.src} alt="" draggable={false} />}
+        {thumbImage?.visible && (
+          <img src={thumbImage.src} alt="" draggable={false} />
+        )}
 
         <div className="fairy-thumb-text">
           {page.type === "cover" ? <BookOpen size={12} /> : index}
@@ -274,36 +406,11 @@ function EditableTextBlock({
       position={{ x: data.x, y: data.y }}
       size={{ width: data.w, height: data.h }}
       bounds="parent"
-      enableResizing={{
-        top: true,
-        right: true,
-        bottom: true,
-        left: true,
-        topLeft: true,
-        topRight: true,
-        bottomLeft: true,
-        bottomRight: true,
-      }}
-      cancel=".fairy-editor-content"
-      onDragStop={(_, d) => {
-        onChange({
-          ...data,
-          x: d.x,
-          y: d.y,
-        });
-      }}
-      onResizeStop={(_, __, ref, ___, pos) => {
-        onChange({
-          ...data,
-          w: parseInt(ref.style.width, 10),
-          h: parseInt(ref.style.height, 10),
-          x: pos.x,
-          y: pos.y,
-        });
-      }}
+      disableDragging
+      enableResizing={false}
       onMouseDown={onSelect}
       className={`fairy-rnd ${isSelected ? "selected" : ""}`}
-      style={{ zIndex: isSelected ? 30 : 20 }}
+      style={{ zIndex: isSelected ? 25 : 10 }}
     >
       <div
         className="fairy-text-block"
@@ -315,15 +422,6 @@ function EditableTextBlock({
         }}
       >
         <EditorContent className="fairy-editor-content" editor={editor} />
-
-        {isSelected && (
-          <>
-            <span className="fairy-handle-dot top-left" />
-            <span className="fairy-handle-dot top-right" />
-            <span className="fairy-handle-dot bottom-left" />
-            <span className="fairy-handle-dot bottom-right" />
-          </>
-        )}
       </div>
     </Rnd>
   );
@@ -337,55 +435,26 @@ function EditableImageBlock({
   onPick,
   label = "이미지 변경",
 }) {
-  if (!data.visible) return null;
+  if (!data?.visible) return null;
 
   return (
     <Rnd
       position={{ x: data.x, y: data.y }}
       size={{ width: data.w, height: data.h }}
       bounds="parent"
-      enableResizing
-      onDragStop={(_, d) => {
-        onChange({
-          ...data,
-          x: d.x,
-          y: d.y,
-        });
-      }}
-      onResizeStop={(_, __, ref, ___, pos) => {
-        onChange({
-          ...data,
-          w: parseInt(ref.style.width, 10),
-          h: parseInt(ref.style.height, 10),
-          x: pos.x,
-          y: pos.y,
-        });
-      }}
+      disableDragging
+      enableResizing={false}
       onMouseDown={onSelect}
       className={`fairy-rnd ${isSelected ? "selected" : ""}`}
       style={{ zIndex: isSelected ? 25 : 10 }}
     >
       <div className="fairy-image-block">
-        <img src={data.src} alt="" referrerPolicy="no-referrer" draggable={false} />
-
-        <button
-          type="button"
-          className="fairy-image-floating-btn"
-          onMouseDown={(e) => e.stopPropagation()}
-          onClick={onPick}
-        >
-          <ImageIcon size={12} />
-          {label}
-        </button>
-
-        {isSelected && (
-          <>
-            <span className="fairy-handle-dot top-left" />
-            <span className="fairy-handle-dot top-right" />
-            <span className="fairy-handle-dot bottom-left" />
-            <span className="fairy-handle-dot bottom-right" />
-          </>
-        )}
+        <img
+          src={data.src}
+          alt=""
+          referrerPolicy="no-referrer"
+          draggable={false}
+        />
       </div>
     </Rnd>
   );
@@ -407,19 +476,6 @@ function PropertyPanel({
 }) {
   const text = page.text;
   const targetVisual = selectedBlock === "cover" ? page.cover : page.image;
-  const patchVisual = selectedBlock === "cover" ? onCoverChange : onImageChange;
-
-  const NumberInput = ({ label, value, onChange, min = 0 }) => (
-    <label className="fairy-field">
-      <span>{label}</span>
-      <input
-        type="number"
-        value={value}
-        min={min}
-        onChange={(e) => onChange(Number(e.target.value))}
-      />
-    </label>
-  );
 
   const toggleMark = (mark) => {
     if (!editor) return;
@@ -462,7 +518,10 @@ function PropertyPanel({
             <Type size={22} />
           </div>
           <strong>선택된 요소 없음</strong>
-          <p>가운데 책 화면에서 텍스트, 이미지, 표지를 클릭하면 세부 설정을 수정할 수 있어요.</p>
+          <p>
+            가운데 책 화면에서 텍스트, 이미지, 표지를 클릭하면 세부 설정을
+            수정할 수 있어요.
+          </p>
         </div>
       )}
 
@@ -471,13 +530,6 @@ function PropertyPanel({
           <div className="fairy-selected-label">
             <Type size={15} />
             텍스트 설정
-          </div>
-
-          <div className="fairy-field-grid">
-            <NumberInput label="X" value={text.x} onChange={(v) => onTextChange({ x: v })} />
-            <NumberInput label="Y" value={text.y} onChange={(v) => onTextChange({ y: v })} />
-            <NumberInput label="W" value={text.w} onChange={(v) => onTextChange({ w: v })} />
-            <NumberInput label="H" value={text.h} onChange={(v) => onTextChange({ h: v })} />
           </div>
 
           <div className="fairy-style-row">
@@ -492,18 +544,6 @@ function PropertyPanel({
             >
               <Bold size={15} />
             </button>
-
-            {/* <button
-              type="button"
-              className={editor?.isActive("italic") ? "active" : ""}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                toggleMark("italic");
-              }}
-              title="기울임"
-            >
-              <Italic size={15} />
-            </button> */}
 
             <button
               type="button"
@@ -562,15 +602,6 @@ function PropertyPanel({
             </select>
           </label>
 
-          <label className="fairy-field full">
-            <span>글자 색상</span>
-            <input
-              type="color"
-              value={text.color || "#2f2d59"}
-              onChange={(e) => onTextChange({ color: e.target.value })}
-            />
-          </label>
-
           <div className="fairy-align-row">
             <button type="button" onClick={() => onTextChange({ align: "left" })}>
               <AlignLeft size={15} />
@@ -582,18 +613,6 @@ function PropertyPanel({
               <AlignRight size={15} />
             </button>
           </div>
-
-          <div className="fairy-ai-box">
-            <strong>AI 문장 보조</strong>
-            <button type="button">
-              <Wand2 size={14} />
-              문장 다듬기
-            </button>
-            <button type="button">
-              <Wand2 size={14} />
-              더 동화답게 바꾸기
-            </button>
-          </div>
         </div>
       )}
 
@@ -601,34 +620,13 @@ function PropertyPanel({
         <div className="fairy-panel-section">
           <div className="fairy-selected-label">
             <ImageIcon size={15} />
-            {selectedBlock === "cover" ? "표지 이미지 설정" : "본문 이미지 설정"}
+            {selectedBlock === "cover" ? "표지 이미지" : "본문 이미지"}
           </div>
 
-          <div className="fairy-field-grid">
-            <NumberInput label="X" value={targetVisual.x} onChange={(v) => patchVisual({ x: v })} />
-            <NumberInput label="Y" value={targetVisual.y} onChange={(v) => patchVisual({ y: v })} />
-            <NumberInput label="W" value={targetVisual.w} onChange={(v) => patchVisual({ w: v })} />
-            <NumberInput label="H" value={targetVisual.h} onChange={(v) => patchVisual({ h: v })} />
+          <div className="fairy-empty-panel">
+            <strong>이미지는 고정되어 있어요</strong>
+            <p>이미지 변경과 위치 조정 기능은 사용할 수 없어요.</p>
           </div>
-
-          <label className="fairy-field full">
-            <span>이미지 URL</span>
-            <input
-              type="text"
-              value={targetVisual.src}
-              onChange={(e) => patchVisual({ src: e.target.value })}
-            />
-          </label>
-
-          <button type="button" className="fairy-wide-btn" onClick={onReplaceVisual}>
-            <ImageIcon size={15} />
-            이미지 교체
-          </button>
-
-          <button type="button" className="fairy-wide-btn ghost">
-            <Wand2 size={15} />
-            AI 이미지 다시 생성
-          </button>
         </div>
       )}
     </aside>
@@ -756,7 +754,10 @@ function PreviewModal({ pages, initialIndex, onClose }) {
 
   return (
     <div className="fairy-preview-modal-backdrop" onMouseDown={onClose}>
-      <div className="fairy-preview-modal flip-modal" onMouseDown={(e) => e.stopPropagation()}>
+      <div
+        className="fairy-preview-modal flip-modal"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <div className="fairy-preview-modal-header">
           <div>
             <h3>동화 미리보기</h3>
@@ -796,7 +797,9 @@ function PreviewModal({ pages, initialIndex, onClose }) {
             {flipPages.map((item) => (
               <div
                 key={item.id}
-                className={`flipbook-page ${item.type === "cover" ? "cover-page" : ""}`}
+                className={`flipbook-page ${
+                  item.type === "cover" ? "cover-page" : ""
+                }`}
               >
                 {item.type === "cover" && (
                   <>
@@ -831,10 +834,23 @@ function PreviewModal({ pages, initialIndex, onClose }) {
 
 export default function FairytaleEditor() {
   const navigate = useNavigate();
-  const [pages, setPages] = useState(() => clone(SAMPLE_PAGES));
+  const location = useLocation();
+
+  const initialPages = useMemo(
+    () => createEditorPagesFromCreationState(location.state),
+    [location.state]
+  );
+
+  const [pages, setPages] = useState(() => initialPages);
   const [pageIndex, setPageIndex] = useState(0);
   const [selectedBlock, setSelectedBlock] = useState(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+
+  useEffect(() => {
+    setPages(initialPages);
+    setPageIndex(0);
+    setSelectedBlock(null);
+  }, [initialPages]);
 
   const page = pages[pageIndex];
   const isCoverPage = page.type === "cover";
@@ -842,7 +858,8 @@ export default function FairytaleEditor() {
   const totalBodyPages = pages.filter((item) => item.type === "spread").length;
   const bodyPageNumber = isCoverPage
     ? 0
-    : pages.slice(0, pageIndex + 1).filter((item) => item.type === "spread").length;
+    : pages.slice(0, pageIndex + 1).filter((item) => item.type === "spread")
+        .length;
 
   const activeEditorRef = useRef(null);
   const [, bumpToolbar] = useReducer((count) => count + 1, 0);
@@ -927,7 +944,9 @@ export default function FairytaleEditor() {
 
   const handlePickVisual = useCallback(() => {
     const currentImage = isCoverPage ? page.cover : page.image;
-    const label = isCoverPage ? "새 표지 이미지 URL을 입력하세요" : "새 본문 이미지 URL을 입력하세요";
+    const label = isCoverPage
+      ? "새 표지 이미지 URL을 입력하세요"
+      : "새 본문 이미지 URL을 입력하세요";
 
     const url = window.prompt(label, currentImage?.src || "");
     if (!url) return;
@@ -996,36 +1015,20 @@ export default function FairytaleEditor() {
     setSelectedBlock(null);
   }, [selectedBlock, patchText, patchImage, patchCover]);
 
-  const handleResetCurrentPage = useCallback(() => {
-    const origin = SAMPLE_PAGES[pageIndex] || SAMPLE_PAGES[0];
-
-    setPages((prev) =>
-      prev.map((p, i) =>
-        i === pageIndex
-          ? {
-              ...clone(origin),
-              id: p.id,
-              title: p.title,
-            }
-          : p
-      )
-    );
-
-    setSelectedBlock(null);
-  }, [pageIndex]);
-
   const handleSave = useCallback(() => {
     console.log("저장할 페이지 데이터:", pages);
 
     navigate(BOOK_CREATION_ROUTES.FAIRY_TALE.COMPLETE, {
       state: {
+        ...location.state,
         pages,
       },
     });
-  }, [pages, navigate]);
+  }, [pages, navigate, location.state]);
 
   const handleAddPage = useCallback(() => {
-    const newBodyPageNumber = pages.filter((item) => item.type === "spread").length + 1;
+    const newBodyPageNumber =
+      pages.filter((item) => item.type === "spread").length + 1;
     const base = clone(SAMPLE_PAGES[1]);
 
     const newPage = {
@@ -1108,28 +1111,24 @@ export default function FairytaleEditor() {
         <div>
           <h2>동화 편집 모드</h2>
           <p>
-            표지는 한 장으로 편집하고, 본문은 왼쪽 이미지와 오른쪽 텍스트가 있는 펼침 페이지로 편집하세요.
+            표지는 한 장으로 편집하고, 본문은 왼쪽 이미지와 오른쪽 텍스트가 있는
+            펼침 페이지로 편집하세요.
           </p>
         </div>
 
         <div className="fairy-header-actions">
-          <button type="button" className="fairy-header-btn" onClick={handleResetCurrentPage}>
-            <RotateCcw size={16} />
-            초기화
+          <button
+            type="button"
+            className="fairy-header-btn preview"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsPreviewModalOpen(true);
+              setSelectedBlock(null);
+            }}
+          >
+            <EyeOff size={16} />
+            미리보기
           </button>
-
-            <button
-              type="button"
-              className="fairy-header-btn preview"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsPreviewModalOpen(true);
-                setSelectedBlock(null);
-              }}
-            >
-              <EyeOff size={16} />
-              미리보기
-            </button>
 
           <button type="button" className="fairy-header-btn save" onClick={handleSave}>
             <Check size={16} />
@@ -1142,9 +1141,6 @@ export default function FairytaleEditor() {
         <aside className="fairy-page-sidebar" onMouseDown={(e) => e.stopPropagation()}>
           <div className="fairy-sidebar-head">
             <h3>페이지</h3>
-            {/* <button type="button" onClick={handleAddPage}>
-              <Plus size={14} />
-            </button> */}
           </div>
 
           <div className="fairy-thumb-list">
@@ -1161,11 +1157,6 @@ export default function FairytaleEditor() {
               />
             ))}
           </div>
-
-          {/* <button type="button" className="fairy-duplicate-btn" onClick={handleDuplicatePage}>
-            <Copy size={14} />
-            현재 페이지 복제
-          </button> */}
         </aside>
 
         <section className="fairy-book-area">
@@ -1177,11 +1168,9 @@ export default function FairytaleEditor() {
 
               <span>
                 {selectedBlock === "text" &&
-                  "텍스트 블록 선택됨 — 빈 여백을 드래그해서 이동, 모서리로 크기 조절"}
-                {selectedBlock === "image" &&
-                  "본문 이미지 선택됨 — 드래그해서 이동, 모서리로 크기 조절"}
-                {selectedBlock === "cover" &&
-                  "표지 이미지 선택됨 — 한 장 표지 안에서 위치와 크기 조절"}
+                  "텍스트 블록 선택됨 — 문장과 글자 스타일을 수정할 수 있어요"}
+                {selectedBlock === "image" && "본문 이미지 선택됨 — 이미지는 고정되어 있어요"}
+                {selectedBlock === "cover" && "표지 이미지 선택됨 — 표지는 고정되어 있어요"}
               </span>
 
               <button type="button" onClick={() => setSelectedBlock(null)}>
@@ -1190,7 +1179,12 @@ export default function FairytaleEditor() {
             </div>
           )}
 
-          <div className={`fairy-book-stage ${isCoverPage ? "cover-mode" : "spread-mode"}`} key={page.id}>
+          <div
+            className={`fairy-book-stage ${
+              isCoverPage ? "cover-mode" : "spread-mode"
+            }`}
+            key={page.id}
+          >
             {isCoverPage ? (
               <SquareCanvas side="cover">
                 <EditableImageBlock
@@ -1269,7 +1263,11 @@ export default function FairytaleEditor() {
               ))}
             </div>
 
-            <button type="button" onClick={goNext} disabled={pageIndex === pages.length - 1}>
+            <button
+              type="button"
+              onClick={goNext}
+              disabled={pageIndex === pages.length - 1}
+            >
               <ChevronRight size={18} />
             </button>
           </div>
@@ -1301,5 +1299,3 @@ export default function FairytaleEditor() {
     </div>
   );
 }
-
-

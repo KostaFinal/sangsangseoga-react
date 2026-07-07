@@ -62,7 +62,7 @@ export const pageCountOptions = [
 
 export const initialSettings = {
   seed: "마법 물건 이야기",
-  pageCount: 12,
+  pageCount: null,
   character: "",
   setting: "",
   event: "",

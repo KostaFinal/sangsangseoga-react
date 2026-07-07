@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { normalizeSetting } from "../../services/aiGenerateService";
+import { createSettingOptions, requestAiGenerateStream } from "../../services/aiGenerateService";
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import { toBookDraft } from "../../utils/bookDraftMapper";
 import {
@@ -11,51 +11,14 @@ import {
   steps,
 } from "../data/fairyTaleSettingWizardOptions";
 import { normalizeFairyTaleDraftState } from "../utils/normalizeFairyTaleDraftState";
-
-const getResult = (data) => data?.result ?? data?.data?.result ?? data;
-
-const getChoiceQuestion = (data) => {
-  const result = getResult(data);
-  return (
-    result?.question ||
-    result?.nextQuestion ||
-    result?.message ||
-    result?.prompt ||
-    ""
-  );
-};
-
-const getChoiceOptions = (data) => {
-  const result = getResult(data);
-  const options =
-    result?.options ||
-    result?.selectedOptions ||
-    result?.choices ||
-    result?.recommendations ||
-    [];
-
-  if (Array.isArray(options)) return options;
-  if (options && typeof options === "object") return Object.values(options);
-  return [];
-};
-
-const normalizeChoiceOptions = (options, stepKey) =>
-  options
-    .map((option, index) => {
-      const raw = option && typeof option === "object" ? option : { title: option };
-      const title = raw.title || raw.label || raw.value || raw.text || "";
-
-      if (!title) return null;
-
-      return {
-        ...raw,
-        id: raw.id || `${stepKey}_${index}`,
-        title,
-        description: raw.description || raw.reason || raw.summary || "",
-        icon: raw.icon || raw.emoji || "?",
-      };
-    })
-    .filter(Boolean);
+import {
+  extractPartialQuestion,
+  getChoiceGuide,
+  getChoiceOptions,
+  getChoiceQuestion,
+  isValidOptionsResponse,
+  normalizeChoiceOptions,
+} from "../utils/aiSettingOptions";
 
 const makeFallbackStep = (step, index) => ({
   ...step,
@@ -85,6 +48,8 @@ export function useFairyTaleSettingWizard() {
   );
   const [previousAnswers, setPreviousAnswers] = useState([]);
   const [isLoadingChoiceStep, setIsLoadingChoiceStep] = useState(false);
+  const [fallbackNoticeByStep, setFallbackNoticeByStep] = useState({});
+  const [loadingHint, setLoadingHint] = useState("");
 
   const currentStepInfo =
     aiSteps[currentStep] || makeFallbackStep(steps[currentStep], currentStep);
@@ -173,50 +138,62 @@ export function useFairyTaleSettingWizard() {
     };
   };
 
-  const requestChoiceStep = async (nextStepIndex, nextPreviousAnswers) => {
-    const fallbackStep = makeFallbackStep(steps[nextStepIndex], nextStepIndex);
+  const requestChoiceStep = async (nextStepIndex, nextPreviousAnswers, version = 0) => {
+    const stepDef = steps[nextStepIndex];
+    const fallbackStep = makeFallbackStep(stepDef, nextStepIndex);
 
+    // pageCount는 정책상 항상 고정 선택지를 사용한다(AI 실패 fallback이 아니라 구조적 제약).
     if (fallbackStep.key === "pageCount") {
-      return fallbackStep;
+      return { step: fallbackStep, usedFallback: false };
     }
 
     const draftInput = {
       ...setupData,
       ...settings,
     };
-    const draft = toBookDraft(draftInput);
     const extra = {
       purpose: "CREATE_FAIRY_TALE_CHOICE_STEP",
-      currentStep: nextStepIndex + 1,
+      currentStepKey: stepDef.key,
+      currentStepLabel: stepDef.label,
+      currentStepIndex: nextStepIndex,
       previousAnswers: nextPreviousAnswers,
-      currentPageNo: nextStepIndex + 1,
       fallbackQuestion: fallbackStep.question,
+      interactionMode: "MIXED",
+      recommendationVersion: version,
     };
 
-    console.log("[CHOICE STEP REQUEST]", {
-      currentStep: nextStepIndex + 1,
-      previousAnswers: nextPreviousAnswers,
-      draft,
+    console.log("[CHOICE STEP REQUEST]", { extra, draftInput });
+
+    // 스트리밍은 로딩 텍스트 갱신용 보조 수단일 뿐, 정답 소스는 아래의 non-stream 호출이다.
+    let streamedText = "";
+    requestAiGenerateStream({
+      taskType: "CREATE_SETTING_OPTIONS",
+      draft: toBookDraft(draftInput),
+      extra,
+      onDelta: (text) => {
+        streamedText += text;
+        const partial = extractPartialQuestion(streamedText);
+        if (partial) setLoadingHint(partial);
+      },
     });
 
-    const response = await normalizeSetting(draftInput, extra);
+    const response = await createSettingOptions(draftInput, extra);
 
     console.log("[CHOICE STEP RESPONSE]", response);
 
-    const aiQuestion = response.ok ? getChoiceQuestion(response.data) : "";
-    const aiOptions = response.ok
-      ? normalizeChoiceOptions(getChoiceOptions(response.data), fallbackStep.key)
-      : [];
-
-    if (!response.ok || !aiQuestion || aiOptions.length === 0) {
-      console.warn("[CHOICE STEP FALLBACK]", response.message);
-      return fallbackStep;
+    if (!response.ok || !isValidOptionsResponse(response.data, fallbackStep.key)) {
+      console.warn("AI 선택지 생성 실패. fallback 선택지를 사용합니다.", response.message);
+      return { step: fallbackStep, usedFallback: true };
     }
 
     return {
-      ...fallbackStep,
-      question: aiQuestion,
-      options: aiOptions,
+      step: {
+        ...fallbackStep,
+        question: getChoiceQuestion(response.data) || fallbackStep.question,
+        guide: getChoiceGuide(response.data) || fallbackStep.guide,
+        options: normalizeChoiceOptions(getChoiceOptions(response.data), fallbackStep.key),
+      },
+      usedFallback: false,
     };
   };
 
@@ -234,13 +211,18 @@ export function useFairyTaleSettingWizard() {
     if (currentStep < steps.length - 1) {
       requestGuardRef.current = true;
       setIsLoadingChoiceStep(true);
+      setLoadingHint("");
 
       const nextIndex = currentStep + 1;
-      const nextStep = await requestChoiceStep(nextIndex, nextPreviousAnswers);
+      const { step: nextStep, usedFallback } = await requestChoiceStep(
+        nextIndex,
+        nextPreviousAnswers
+      );
 
       setAiSteps((prev) =>
         prev.map((step, index) => (index === nextIndex ? nextStep : step))
       );
+      setFallbackNoticeByStep((prev) => ({ ...prev, [nextStep.key]: usedFallback }));
       setPreviousAnswers(nextPreviousAnswers);
       setCurrentStep(nextIndex);
       setIsLoadingChoiceStep(false);
@@ -268,6 +250,7 @@ export function useFairyTaleSettingWizard() {
 
   const isSeedStep = currentStepInfo.key === "seed";
   const isChoiceStep = currentStepOptions.length > 0;
+  const showFallbackNotice = Boolean(fallbackNoticeByStep[currentStepInfo.key]);
 
   return {
     steps,
@@ -289,5 +272,7 @@ export function useFairyTaleSettingWizard() {
     isSeedStep,
     isChoiceStep,
     isLoadingChoiceStep,
+    showFallbackNotice,
+    loadingHint,
   };
 }

@@ -1,4 +1,22 @@
 import { useState, useEffect } from "react";
+
+const bookTypeToGenre = {
+  "NOVEL": "소설", "POEM": "시", "ESSAY": "에세이",
+  "FAIRY_TALE": "동화",
+};
+
+const genreBadge = (genre) => {
+  const map = {
+    "NOVEL": { cls: "bg-[#ddd6fe] text-[#5b21b6] border-[#c4b5fd]", label: "소설" },
+    "POEM": { cls: "bg-[#e9d5ff] text-[#7e22ce] border-[#d8b4fe]", label: "시" },
+    "ESSAY": { cls: "bg-[#ede9ff] text-[#6b54e7] border-[#d4cdf2]", label: "에세이" },
+    "FAIRY_TALE": { cls: "bg-[#f3e8ff] text-[#9333ea] border-[#e9d5ff]", label: "동화" },
+  };
+  return map[genre] || { cls: "bg-[#e6e2fc] text-[#6b54e7] border-[#d4cdf2]", label: bookTypeToGenre[genre] || genre };
+};
+import { getRecommendations } from "@/src/api/bookApi";
+
+
 import { Heart, ChevronLeft, UserPlus, Check, Flag } from "lucide-react";
 import ReportModal from "@/src/shared/components/ReportModal";
 import { submitReport, isReported } from "@/src/shared/utils/reports";
@@ -26,7 +44,7 @@ export default function BookDetailView({
   const [reportTarget, setReportTarget] = useState(null); // { type, id, label }
   const [reportedIds, setReportedIds] = useState([]);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [editSummary, setEditSummary] = useState(book.summary || "");
+  const [editDescription, setEditDescription] = useState(book.description || "");
 
   const handleStartReport = (type, id, label) => setReportTarget({ type, id, label });
   const handleSubmitReport = ({ reason, detail }) => {
@@ -45,71 +63,16 @@ export default function BookDetailView({
   };
 
   // Generate a beautiful poetic Korean subtitle based on the book
-  const getSubtitle = b => {
-    if (b.id === "book-1") return "잃어버린 기억들의 아련하고 황홀한 서사";
-    if (b.id === "book-2") return "우주의 푸른 꿈을 수여하는 성단 항로";
-    if (b.id === "book-3") return "점차 멀어져가는 영원의 가교를 조용히 건너며";
-
-    // Generics based on genre
-    switch (b.genre) {
-      case "시":
-        return "찰나의 순간들이 남기는 서정적 메아리";
-      case "에세이":
-        return "피로한 영혼에 가만히 건네는 따스한 고독";
-      case "소설":
-        return "인간의 가녀린 운명이 자아내는 보이지 않는 실타래";
-      case "동화":
-        return "순수한 상상과 맑은 웃음이 흘러넘치는 동심의 강가";
-      case "지식정보":
-        return "차분히 정리된 지식과 통찰이 깃든 안내서";
-      default:
-        return "사유와 고요함이 아늑하게 머무는 마음의 안식처";
-    }
-  };
-  const getTags = genre => {
-    switch (genre) {
-      case "에세이":
-        return ["힐링", "위로", "추억", "전연령"];
-      case "시":
-        return ["시집", "서정", "감성", "전연령"];
-      case "소설":
-        return ["이야기", "드라마", "감동", "전연령"];
-      case "동화":
-        return ["동화책", "비행", "동심", "전연령"];
-      case "지식정보":
-        return ["지식", "정보", "가이드", "전연령"];
-      default:
-        return ["문학", "사색", "창작", "전연령"];
-    }
-  };
-  const getHashTags = genre => {
-    switch (genre) {
-      case "에세이":
-        return ["#사색", "#치유", "#가을밤", "#기억"];
-      case "시":
-        return ["#서정시", "#은유", "#감정선", "#구절"];
-      case "소설":
-        return ["#이야기", "#인생", "#여정", "#인간"];
-      case "동화":
-        return ["#상상력", "#아기자기", "#어린이", "#꿈결"];
-      case "지식정보":
-        return ["#지식정보", "#가이드", "#정리", "#인사이트"];
-      default:
-        return ["#활자", "#수필", "#감수성", "#상상"];
-    }
-  };
 
   // Get dynamic simulated human friendly relative time for comments list
-  const getCommentTime = index => {
-    if (index === 0) return "21분 전";
-    if (index === 1) return "2시간 전";
-    if (index === 2) return "5시간 전";
-    if (index === 3) return "1일 전";
-    return "3일 전";
-  };
 
-  // Filter recommendations (other books)
-  const recommendations = allBooks.filter(b => b.id !== book.id).slice(0, 4);
+  const [recommendations, setRecommendations] = useState([]);
+  useEffect(() => {
+    if (!book?.id) return;
+    getRecommendations(book.id, 4)
+      .then(res => setRecommendations(res.data?.data?.items || []))
+      .catch(() => setRecommendations([]));
+  }, [book?.id]);
   const handleSubmitComment = e => {
     e.preventDefault();
     if (!commentText.trim()) return;
@@ -133,30 +96,14 @@ export default function BookDetailView({
   const cardBgClass = isPoetry ? "bg-[#fdfbf7] border border-[#e8dfcb] shadow-sm" : "bg-white border border-[#e6e2fc] shadow-sm";
 
   // Accent badge text and background for the cover banner
-  let genreTagText = `📖 정통 소설`;
-  let genreTagStyle = "bg-neutral-900 text-white border border-neutral-700 font-extrabold";
-  if (isFairytale) {
-    genreTagText = `🧸 창작 동화`;
-    genreTagStyle = "bg-neutral-900 text-white border border-neutral-700 font-extrabold";
-  } else if (book.genre === "시") {
-    genreTagText = `❊ 서정시`;
-    genreTagStyle = "bg-neutral-900 text-white border border-neutral-700 font-extrabold";
-  } else if (book.genre === "에세이") {
-    genreTagText = `❀ 감성 에세이`;
-    genreTagStyle = "bg-neutral-900 text-white border border-neutral-700 font-extrabold";
-  } else if (book.genre === "지식정보") {
-    genreTagText = `📚 지식정보`;
-    genreTagStyle = "bg-neutral-900 text-white border border-neutral-700 font-extrabold";
-  }
+  const badge = genreBadge(book.genre);
+  const genreTagText = badge.label;
+  const genreTagStyle = badge.cls;
 
   // Cover image container borders
   const coverBorderClass = isPoetry ? "border border-[#dcd3be] rounded-lg" : "border border-black/10 rounded-xl";
 
   // Subtitle styling - 글씨 크기를 키우고 보라빛 도는 진한 색상으로 교체
-  const getSubtitleStyle = () => {
-    if (isPoetry) return "text-amber-900 italic font-bold text-base md:text-lg";
-    return "text-[#4b3e80] italic font-semibold text-base md:text-lg";
-  };
 
   // Title class (요청하신 대로 '책 제목' 부분은 기존 스타일 혹은 약간만 다듬어 유지)
   const getTitleStyle = () => {
@@ -225,9 +172,6 @@ export default function BookDetailView({
               <h2 className={getTitleStyle()}>
                 {book.title}
               </h2>
-              <p className={getSubtitleStyle()}>
-                {getSubtitle(book)}
-              </p>
               {/* 저자 정보 텍스트 선명화 (text-gray-700 -> text-black / font-bold) */}
               <p className="text-[16px] font-black text-black mt-2 pl-[10px]">
                 저자:{" "}
@@ -239,22 +183,15 @@ export default function BookDetailView({
 
             {/* Tags Outline Row 1 - 태그 테두리와 글씨색 진하게 강화 */}
             <div className="flex flex-wrap gap-2">
-              {getTags(book.genre).map((tag, idx) => (
-                <span key={idx} className={`px-3.5 py-1 text-[12px] font-black tracking-normal rounded-full border transition duration-200 cursor-pointer ${isPoetry ? "bg-amber-100/60 border-amber-400 text-amber-950 hover:bg-amber-200" : "bg-neutral-50 border-[#aaa0e3] text-[#3c375e] hover:border-[#5139d6] hover:text-[#5139d6]"}`}>
-                  {isPoetry && "❊ "}
-                  {tag}
-                </span>
-              ))}
+              
             </div>
 
             {/* Likes heart and follow button block - 회색빛에서 뚜렷한 색상 대비로 변경 */}
             <div className="flex flex-wrap items-center gap-3">
-              {mode !== "owner" && (
-                <button onClick={onToggleLike} className="inline-flex items-center gap-1.5 border-2 px-4 py-2 text-xs md:text-sm font-black rounded-lg transition duration-200 border-[#aaa0e3] text-[#3c375e] hover:bg-[#f3f0ff] hover:border-[#5139d6] bg-white cursor-pointer">
-                  <Heart className={`w-4 h-4 stroke-[2.5] ${book.isLikedByMe ? "fill-red-500 stroke-red-500 text-red-500" : "text-[#4b4570]"}`} />
-                  <span>좋아요 {book.likes.toLocaleString()}</span>
-                </button>
-              )}
+              <button onClick={onToggleLike} className="inline-flex items-center gap-1.5 border-2 px-4 py-2 text-xs md:text-sm font-black rounded-lg transition duration-200 border-[#aaa0e3] text-[#3c375e] hover:bg-[#f3f0ff] hover:border-[#5139d6] bg-white cursor-pointer">
+                <Heart className={`w-4 h-4 stroke-[2.5] ${book.isLikedByMe ? "fill-red-500 stroke-red-500 text-red-500" : "text-[#4b4570]"}`} />
+                <span>좋아요 {book.likes.toLocaleString()}</span>
+              </button>
 
               {mode !== "owner" && (
                 <button onClick={() => setIsFollowing(!isFollowing)} className={`inline-flex items-center gap-1.5 border-2 px-4 py-2 text-xs md:text-sm font-black rounded-lg transition duration-200 shadow-sm cursor-pointer ${isFollowing ? "bg-[#5139d6] text-white border-[#5139d6]" : "border-[#aaa0e3] text-[#3c375e] hover:bg-[#f3f0ff] bg-white"}`}>
@@ -287,11 +224,7 @@ export default function BookDetailView({
 
             {/* Tags outline Row 2 - 해시태그 배경 및 글씨 진하게 */}
             <div className="flex flex-wrap gap-2">
-              {getHashTags(book.genre).map((tag, idx) => (
-                <span key={idx} className={`px-3 py-1.5 text-xs font-black rounded-md transition cursor-pointer ${isPoetry ? "bg-[#f3eade] text-amber-950 hover:bg-[#ebdcc7]" : "bg-neutral-100 text-[#3c375e] hover:bg-neutral-200"}`}>
-                  {tag}
-                </span>
-              ))}
+              
             </div>
 
             {/* Thick Border Primary CTA button */}
@@ -376,14 +309,14 @@ export default function BookDetailView({
               {isEditingDescription ? (
                 <div className="space-y-3">
                   <textarea
-                    value={editSummary}
-                    onChange={(e) => setEditSummary(e.target.value)}
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
                     className="w-full min-h-36 border-2 border-[#b3a6eb] rounded-xl p-4 text-sm font-bold text-black outline-none focus:ring-2 focus:ring-[#5139d6] font-gowun bg-white"
                   />
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => {
-                        setEditSummary(book.summary || "");
+                        setEditDescription(book.description || "");
                         setIsEditingDescription(false);
                       }}
                       className="px-4 py-2 rounded-lg border-2 border-[#b3a6eb] text-xs font-black text-[#3c375e] cursor-pointer bg-white"
@@ -392,7 +325,7 @@ export default function BookDetailView({
                     </button>
                     <button
                       onClick={() => {
-                        onUpdateDescription?.(editSummary);
+                        onUpdateDescription?.(editDescription);
                         setIsEditingDescription(false);
                       }}
                       className="px-4 py-2 rounded-lg bg-[#5139d6] text-white text-xs font-black cursor-pointer"
@@ -405,7 +338,7 @@ export default function BookDetailView({
                 <>
                   {/* 작품소개 글씨 두께 및 선명도 대폭 강화 (text-gray-800 -> text-neutral-950 / font-bold) */}
                   <p className="text-[15px] md:text-[16px] leading-[1.8] text-neutral-950 font-bold whitespace-pre-wrap">
-                    {book.summary}
+                    {book.description}
                   </p>
 
                   {mode === "owner" && (
@@ -484,7 +417,7 @@ export default function BookDetailView({
                         </h5>
                         {/* 작성 시간 가독성 개선 */}
                         <span className="text-xs font-bold text-[#4b3e80]">
-                          {comment.date || getCommentTime(index)}
+                          {comment.date || ""}
                         </span>
                       </div>
                       {reportedIds.includes(comment.id) ? (

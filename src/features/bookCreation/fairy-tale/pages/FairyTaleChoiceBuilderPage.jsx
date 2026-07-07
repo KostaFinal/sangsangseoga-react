@@ -13,7 +13,6 @@ function FairyTaleChoiceBuilderPage() {
   const {
     currentStepIndex,
     setCurrentStepIndex,
-    optionSets,
     previousData,
     currentStep,
     isLastStep,
@@ -25,6 +24,10 @@ function FairyTaleChoiceBuilderPage() {
     handleRecommendAgain,
     handlePrevStep,
     handleNextStep,
+    canRecommendAgain,
+    isLoadingChoiceStep,
+    showFallbackNotice,
+    loadingHint,
   } = useFairyTaleChoiceBuilder();
   return (
     <div
@@ -139,6 +142,18 @@ function FairyTaleChoiceBuilderPage() {
               </div>
             </div>
 
+            {isLoadingChoiceStep && (
+              <p style={{ color: "var(--choice-sub)", fontWeight: 800, marginBottom: "12px" }}>
+                🤖 {loadingHint || "AI가 선택지를 만드는 중..."}
+              </p>
+            )}
+
+            {!isLoadingChoiceStep && showFallbackNotice && (
+              <div className="summary-notice" style={{ marginTop: 0, marginBottom: "18px" }}>
+                <p>AI 추천을 불러오지 못해 기본 선택지를 보여드려요.</p>
+              </div>
+            )}
+
             <div className="choice-option-grid">
               {currentOptions.map((option) => {
                 const isSelected = selectedOption?.id === option.id;
@@ -151,6 +166,7 @@ function FairyTaleChoiceBuilderPage() {
                       isSelected ? "selected" : ""
                     }`}
                     onClick={() => handleSelectOption(option)}
+                    disabled={isLoadingChoiceStep}
                   >
                     <div className="option-icon">{option.icon}</div>
 
@@ -170,6 +186,7 @@ function FairyTaleChoiceBuilderPage() {
                 type="button"
                 className="choice-sub-btn"
                 onClick={handlePrevStep}
+                disabled={isLoadingChoiceStep}
               >
                 ← 이전 단계
               </button>
@@ -178,7 +195,7 @@ function FairyTaleChoiceBuilderPage() {
                 type="button"
                 className="choice-refresh-btn"
                 onClick={handleRecommendAgain}
-                disabled={(optionSets[currentStep.key] || []).length <= 1}
+                disabled={!canRecommendAgain || isLoadingChoiceStep}
               >
                 ↻ 다시 추천
               </button>
@@ -187,6 +204,7 @@ function FairyTaleChoiceBuilderPage() {
                 type="button"
                 className="choice-main-btn"
                 onClick={handleNextStep}
+                disabled={isLoadingChoiceStep}
               >
                 {isLastStep ? "설정 확인하기 →" : "다음 단계 →"}
               </button>

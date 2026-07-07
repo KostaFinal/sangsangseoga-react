@@ -246,7 +246,7 @@ const normalizeNovelSetting = (state) => {
 export const toBookDraft = (state = {}) => {
   const bookType =
     state.bookType === BOOK_TYPES.NOVEL ? BOOK_TYPES.NOVEL : BOOK_TYPES.FAIRY_TALE;
-  const writerLevel = state.writerLevel || (bookType === BOOK_TYPES.NOVEL ? "TEEN" : "");
+  const writerLevel = state.writerLevel || (bookType === BOOK_TYPES.NOVEL ? "TEEN" : null);
   const interactionMode = normalizeInteractionMode(state.interactionMode);
   const readerAge = normalizeReaderAge(
     state.readerAge,

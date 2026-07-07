@@ -1,4 +1,12 @@
-﻿@layer components {
+﻿@font-face {
+  font-family: "Gowun Dodum";
+  src: url("../../../../assets/fonts/GowunDodum-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer components {
   /* =========================================================
      Fairy Tale Pages - merged CSS
      湲곗〈 ?섏씠吏 CSS 蹂댁〈 ?곸뿭
@@ -1171,7 +1179,7 @@ padding: 8px 22px;
 .fairy-setup-page .progress-dots {
 flex: 1;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   align-items: center;
   gap: 14px;
   position: relative;
@@ -1459,10 +1467,9 @@ margin-left: auto;
   font-style: normal;
   font-weight: 900;
 }
-
 .fairy-setup-page .garden-progress {
-width: 190px;
-  margin-top: 20px;
+  width: 100%;
+  margin-top: 36px;
   padding: 16px;
   border: 1px solid rgba(112, 76, 255, 0.25);
   border-radius: 14px;
@@ -1488,13 +1495,6 @@ display: block;
   height: 100%;
   border-radius: 99px;
   background: linear-gradient(90deg, var(--primary), #a879ff);
-}
-
-.fairy-setup-page .plant-illust {
-margin-left: auto;
-  margin-top: -70px;
-  font-size: 96px;
-  line-height: 1;
 }
 
 .fairy-setup-page .bottom-summary {
@@ -1595,6 +1595,61 @@ height: 72px;
 
 .fairy-setup-page .big-start-btn span {
 font-size: 42px;
+}
+
+/* 페이지 수 선택 카드 전용 */
+.fairy-setting-page .page-count-option,
+.fairy-setting-wizard-page .page-count-option,
+.fairy-wizard-page .page-count-option {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  align-items: center;
+  gap: 14px;
+
+  min-height: 88px;
+  padding: 18px 22px;
+  text-align: left;
+}
+
+.fairy-setting-page .page-count-option .option-icon,
+.fairy-setting-wizard-page .page-count-option .option-icon,
+.fairy-wizard-page .page-count-option .option-icon {
+  font-size: 42px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.fairy-setting-page .page-count-option-body,
+.fairy-setting-wizard-page .page-count-option-body,
+.fairy-wizard-page .page-count-option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.fairy-setting-page .option-page-count,
+.fairy-setting-wizard-page .option-page-count,
+.fairy-wizard-page .option-page-count {
+  display: block;
+
+  color: #12183f;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.fairy-setting-page .page-count-description,
+.fairy-setting-wizard-page .page-count-description,
+.fairy-wizard-page .page-count-description {
+  margin: 0;
+
+  color: #5f6783;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+  word-break: keep-all;
 }
 
 @media (max-width: 1400px) {

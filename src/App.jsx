@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { BookOpen } from "lucide-react";
-import { initialBooks, BookDetailView, BookReaderView } from "./features/library";
+import { BookDetailView, BookReaderView } from "./features/library";
 import { AuthorProfileView, SearchAuthorView } from "./features/authors";
 import { LoginView } from './features/auth/components/LoginView';
 import { SignupView } from './features/auth/components/SignupView';
@@ -27,7 +27,7 @@ import { ErrorPage500 } from './shared/components/ErrorPage500';
 import { CURRENT_USER_PROFILE } from './shared/data';
 import SideMenu from './shared/components/SideMenu';
 import { MainBookshelf, MyBookTab, FinishedTab, ReadingTab, WishlistTab } from './features/bookshelf';
-import { likeBook, unlikeBook, addBookmark, removeBookmark } from './api/bookApi';
+import { getBooks, likeBook, unlikeBook, addBookmark, removeBookmark } from './api/bookApi';
 import { addComment, addReply } from './api/commentApi';
 import { followAuthor, unfollowAuthor } from './api/authorApi';
 import FriendsLibraryView from './features/library/components/FriendsLibraryView';
@@ -36,6 +36,10 @@ import { BookCalendar } from './features/calendar';
 import { BookStats } from './features/stats';
 import { SavedAuthorTab } from './features/library';
 import { initialBooks as myLibraryInitialBooks } from './data.js';
+
+const bookTypeToGenre = {
+  "NOVEL": "소설", "POEM": "시", "ESSAY": "에세이", "FAIRY_TALE": "동화",
+};
 
 export default function App() {
   const [myLibraryKey, setMyLibraryKey] = useState(0);
@@ -50,7 +54,6 @@ export default function App() {
     nickname: '상상의작가',
     profileImage: CURRENT_USER_PROFILE
   });
-
   // --- New Subscription & Token Limits State Management (2026-06-19 한국어 요구사항 완벽 준수) ---
   const [freeTrialRemaining, setFreeTrialRemaining] = useState(1);       // 가입 시 지급된 무료 체험 1회 (1 = 사용 가능, 0 = 소진)
   const [freeTrialTextTokens, setFreeTrialTextTokens] = useState(250);     // 텍스트 호출 누적 토큰 점수 (절대캡: 1000)
@@ -84,34 +87,31 @@ export default function App() {
     const cachedBooks = localStorage.getItem("sangsang_books");
     if (cachedBooks) {
       try {
-        const parsed = JSON.parse(cachedBooks);
-        const parsedIds = new Set(parsed.map(b => b.id));
-        const missingInitial = initialBooks.filter(b => !parsedIds.has(b.id));
-        const updatedParsed = parsed.map(pb => {
-          const match = initialBooks.find(ib => ib.id === pb.id);
-          if (match) {
-            return {
-              ...match,
-              likes: Math.max(pb.likes, match.likes),
-              isLikedByMe: pb.isLikedByMe,
-              isBookmarked: pb.isBookmarked,
-              comments: pb.comments.length > match.comments.length ? pb.comments : match.comments,
-              commentsCount: Math.max(pb.commentsCount, match.commentsCount),
-            };
-          }
-          return pb;
-        });
-        const merged = [...updatedParsed, ...missingInitial];
-        setBooks(merged);
-        localStorage.setItem("sangsang_books", JSON.stringify(merged));
+        setBooks(JSON.parse(cachedBooks));
+        return;
       } catch (e) {
-        setBooks(initialBooks);
-        localStorage.setItem("sangsang_books", JSON.stringify(initialBooks));
+        // 캐시 파싱 실패 시 아래에서 API로 새로 조회
       }
-    } else {
-      setBooks(initialBooks);
-      localStorage.setItem("sangsang_books", JSON.stringify(initialBooks));
     }
+
+    (async () => {
+      try {
+        const res = await getBooks({ size: 100 });
+        const items = res.data?.data?.items || [];
+        const mapped = items.map(b => ({
+          ...b,
+          coverImage: b.coverImageUrl,
+          likes: b.likeCount,
+          commentsCount: b.commentCount,
+          genre: bookTypeToGenre[b.genre] || b.genre,
+          comments: b.comments || [],
+        }));
+        setBooks(mapped);
+        localStorage.setItem("sangsang_books", JSON.stringify(mapped));
+      } catch (err) {
+        console.error("책 목록 조회 실패", err);
+      }
+    })();
   }, []);
 
   const saveBooksToStorage = updatedBooks => {
@@ -312,6 +312,8 @@ export default function App() {
             }}
             setActiveTab={(tab) => {
               if (tab === 'friends') {
+                setViewingBook(null);
+                setPreviousScreen(null);
                 setCurrentScreen('friends-library');
               } else if (tab === 'mylibrary') {
                 setCurrentScreen('my-library');
@@ -338,7 +340,6 @@ export default function App() {
       case 'friends-library':
         return (
           <FriendsLibraryView
-            books={books}
             viewingBook={viewingBook}
             setViewingBook={setViewingBook}
             setSelectedBook={setSelectedBook}
@@ -347,13 +348,8 @@ export default function App() {
             setPreviousScreen={setPreviousScreen}
             setSelectedAuthor={setSelectedAuthor}
             setAuthorProfileMode={setAuthorProfileMode}
-            handleToggleLike={handleToggleLike}
             handleToggleBookmark={handleToggleBookmark}
-            handleDeleteBook={handleDeleteBook}
-            handleDetailAddComment={handleDetailAddComment}
-            handleAddReply={handleAddReply}
-            saveBooksToStorage={saveBooksToStorage}
-            setBooks={setBooks}
+            currentUser={currentUser}
           />
         );
       case 'my-library':
@@ -386,7 +382,7 @@ export default function App() {
                 mode={authorProfileMode}
               />
             ) : (
-              <SearchAuthorView allBooks={books} onSelectAuthor={name => setSelectedAuthor(name)} />
+              <SearchAuthorView onSelectAuthor={name => setSelectedAuthor(name)} />
             )}
           </motion.div>
         );
@@ -591,6 +587,13 @@ export default function App() {
           onNavigate={(screen) => {
             if (screen === 'my-library') {
               setMyLibraryKey(prev => prev + 1);
+            }
+            if (screen === 'friends-library') {
+              setViewingBook(null);
+              setPreviousScreen(null);
+            }
+            if (screen === 'author-search') {
+              setSelectedAuthor(null);
             }
             setCurrentScreen(screen)
           }
@@ -891,7 +894,6 @@ function MyLibraryApp({ setViewingBook,
     setSelectedReaderBook({
       ...book,
       genre: book.category,
-      summary: book.description,
       coverImage: book.coverUrl,
       likes: book.totalLikes || 0,
       comments: book.reviews || [],
@@ -1068,7 +1070,6 @@ function MyLibraryApp({ setViewingBook,
                     const convertedBook = {
                       ...book,
                       genre: book.category,
-                      summary: book.description,
                       coverImage: book.coverUrl,
                       likes: book.totalLikes || 0,
                       isLikedByMe: book.isLikedByMe || false,
@@ -1093,7 +1094,6 @@ function MyLibraryApp({ setViewingBook,
                     const convertedBook = {
                       ...book,
                       genre: book.category,
-                      summary: book.description,
                       coverImage: book.coverUrl,
                       likes: book.totalLikes || 0,
                       isLikedByMe: book.isLikedByMe || false,
@@ -1119,7 +1119,6 @@ function MyLibraryApp({ setViewingBook,
                     const convertedBook = {
                       ...book,
                       genre: book.category,
-                      summary: book.description,
                       coverImage: book.coverUrl,
                       likes: book.totalLikes || 0,
                       isLikedByMe: book.isLikedByMe || false,
@@ -1157,7 +1156,6 @@ function MyLibraryApp({ setViewingBook,
                     const convertedBook = {
                       ...book,
                       genre: book.category,
-                      summary: book.description,
                       coverImage: book.coverUrl,
                       likes: book.totalLikes || 0,
                       isLikedByMe: book.isLikedByMe || false,
