@@ -4,6 +4,7 @@ import { Search, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, X, T
 import BookDetailView from "./BookDetailView";
 import { getBooks, likeBook, unlikeBook } from "../../../api/bookApi";
 import { addComment, addReply } from "../../../api/commentApi";
+import { addWishlist } from "../../../api/myLibraryApi";
 
 const bookTypeOptions = [
   { label: "전체", value: null },
@@ -125,6 +126,7 @@ export default function FriendsLibraryView({
         await unlikeBook(bookId);
       } else {
         await likeBook(bookId);
+        await addWishlist(bookId);
       }
     } catch (err) {
       // 실패 시 원복

@@ -67,6 +67,7 @@ export default function BookDetailView({
   // Get dynamic simulated human friendly relative time for comments list
 
   const [recommendations, setRecommendations] = useState([]);
+  const comments = book.comments || [];
   useEffect(() => {
     if (!book?.id) return;
     getRecommendations(book.id, 4)
@@ -86,8 +87,11 @@ export default function BookDetailView({
       top: 0,
       behavior: "smooth"
     });
-    setReportedIds([book.id, ...book.comments.map(c => c.id)].filter(id => isReported("book", id) || isReported("comment", id)));
-  }, [book.id]);
+    setReportedIds(
+      [book.id, ...comments.map(c => c.id)]
+        .filter(id => isReported("book", id) || isReported("comment", id))
+    );
+  }, [book.id, comments]);
 
   const isPoetry = false;
   const isFairytale = book.genre === "동화";
@@ -139,6 +143,7 @@ export default function BookDetailView({
     return "w-10 h-10 rounded-full bg-[#1e1d3b] border border-black/5 flex items-center justify-center text-[#ffd9b6] font-black text-sm shadow-inner shrink-0";
   };
 
+
   return (
     <div className="w-full max-w-4xl mx-auto px-4 md:px-0 py-4 animate-fadeIn font-gowun">
       {/* Back button - 더 굵고 진한 보라색으로 가독성 개선 */}
@@ -183,12 +188,12 @@ export default function BookDetailView({
 
             {/* Tags Outline Row 1 - 태그 테두리와 글씨색 진하게 강화 */}
             <div className="flex flex-wrap gap-2">
-              
+
             </div>
 
             {/* Likes heart and follow button block - 회색빛에서 뚜렷한 색상 대비로 변경 */}
             <div className="flex flex-wrap items-center gap-3">
-              <button onClick={onToggleLike} className="inline-flex items-center gap-1.5 border-2 px-4 py-2 text-xs md:text-sm font-black rounded-lg transition duration-200 border-[#aaa0e3] text-[#3c375e] hover:bg-[#f3f0ff] hover:border-[#5139d6] bg-white cursor-pointer">
+              <button onClick={(e) => onToggleLike(e, book.bookId || book.id)} className="inline-flex items-center gap-1.5 border-2 px-4 py-2 text-xs md:text-sm font-black rounded-lg transition duration-200 border-[#aaa0e3] text-[#3c375e] hover:bg-[#f3f0ff] hover:border-[#5139d6] bg-white cursor-pointer">
                 <Heart className={`w-4 h-4 stroke-[2.5] ${book.isLikedByMe ? "fill-red-500 stroke-red-500 text-red-500" : "text-[#4b4570]"}`} />
                 <span>좋아요 {book.likes.toLocaleString()}</span>
               </button>
@@ -224,7 +229,7 @@ export default function BookDetailView({
 
             {/* Tags outline Row 2 - 해시태그 배경 및 글씨 진하게 */}
             <div className="flex flex-wrap gap-2">
-              
+
             </div>
 
             {/* Thick Border Primary CTA button */}
@@ -397,12 +402,12 @@ export default function BookDetailView({
 
           {/* Comments feed list layout */}
           <div className="space-y-5 pr-1">
-            {book.comments.length === 0 ? (
+            {comments.length === 0 ? (
               <p className="text-sm text-[#3c375e] font-bold py-4 text-center">
                 作品에 남겨진 사색이 아직 없습니다. 첫 의견을 심어보세요.
               </p>
             ) : (
-              book.comments.map((comment, index) => (
+              comments.map((comment, index) => (
                 <div key={comment.id || index} className="pb-5 border-b border-[#b3a6eb] last:border-none last:pb-0">
                   <div className="flex gap-4 items-start">
                     <div className={getCommentAvatarStyle()}>
