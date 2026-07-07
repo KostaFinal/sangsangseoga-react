@@ -3,29 +3,35 @@ import { useFairyTaleFreeSetting } from "../hooks/useFairyTaleFreeSetting";
 
 const FairyTaleFreeSettingPage = () => {
   const {
-    REQUIRED_FIELDS,
     SUMMARY_ITEMS,
     settings,
-    currentStepIndex,
     answer,
     setAnswer,
-    records,
-    currentStep,
+    messages,
+    activeField,
+    displayedExamples,
+    canShowExamplesHint,
+    handleShowExamples,
+    isLoadingQuestion,
+    isCompleting,
+    usedFallbackNotice,
+    loadingHint,
     completedRequiredCount,
     progress,
     isRequiredComplete,
-    isOptionalStep,
-    isLastStep,
     progressDegree,
     getDisplayValue,
     getStatusIcon,
     handleSubmit,
     handleExampleClick,
     handleExampleApply,
-    handleSkip,
     handleStartStudio,
-    navigate,
   } = useFairyTaleFreeSetting();
+
+  const latestAiMessage =
+    [...messages].reverse().find((message) => message.sender === "AI")?.text ||
+    activeField.question;
+
   return (
     <div
       className="free-setting-page"
@@ -46,25 +52,41 @@ const FairyTaleFreeSettingPage = () => {
           <div className="interview-area">
             <div className="question-card">
               <div className="question-top">
-                <span className="question-badge">
-                  Q{currentStepIndex + 1}
-                </span>
+                <span className="question-badge">AI</span>
 
-                <span className="question-label">{currentStep.title}</span>
+                <span className="question-label">{activeField.title}</span>
 
-                {currentStep.optional && (
+                {activeField.optional && (
                   <span className="optional-badge">선택사항</span>
                 )}
 
-                {isRequiredComplete && isOptionalStep && (
+                {isRequiredComplete && activeField.optional && (
                   <span className="ready-badge">시작 가능</span>
                 )}
               </div>
 
-              <h2>{currentStep.question}</h2>
-              <p>{currentStep.guide}</p>
+              <h2>{latestAiMessage}</h2>
+              <p>{activeField.guide}</p>
 
-              {isRequiredComplete && isOptionalStep && (
+              {isLoadingQuestion && (
+                <p style={{ color: "var(--text-sub)", fontWeight: 800 }}>
+                  🤖 {loadingHint || "AI 선생님이 다음 질문을 생각하고 있어요..."}
+                </p>
+              )}
+
+              {isCompleting && (
+                <p style={{ color: "var(--text-sub)", fontWeight: 800 }}>
+                  🤖 설정을 정리하고 있어요...
+                </p>
+              )}
+
+              {!isLoadingQuestion && usedFallbackNotice && (
+                <p style={{ color: "#a97c1f", fontWeight: 700 }}>
+                  AI 질문을 불러오지 못해 기본 질문으로 이어갈게요.
+                </p>
+              )}
+
+              {isRequiredComplete && activeField.optional && (
                 <div className="optional-start-notice">
                   <strong>필수 설정은 모두 끝났어요.</strong>
                   <span>
@@ -74,7 +96,19 @@ const FairyTaleFreeSettingPage = () => {
                 </div>
               )}
 
-              {currentStep.examples?.length > 0 && (
+              {canShowExamplesHint && (
+                <div style={{ marginTop: "22px" }}>
+                  <button
+                    type="button"
+                    className="example-chip"
+                    onClick={handleShowExamples}
+                  >
+                    🤔 잘 모르겠어요, 예시 보여줘
+                  </button>
+                </div>
+              )}
+
+              {displayedExamples.length > 0 && (
                 <div className="example-area">
                   <div className="example-title">
                     <span>추천 예시</span>
@@ -84,7 +118,7 @@ const FairyTaleFreeSettingPage = () => {
                   </div>
 
                   <div className="example-list">
-                    {currentStep.examples.map((example) => (
+                    {displayedExamples.map((example) => (
                       <button
                         key={example}
                         type="button"
@@ -92,7 +126,7 @@ const FairyTaleFreeSettingPage = () => {
                         onClick={() => handleExampleClick(example)}
                         onDoubleClick={() => handleExampleApply(example)}
                       >
-                        {currentStep.key === "pageCount"
+                        {activeField.key === "pageCount"
                           ? `${example}페이지`
                           : example}
                       </button>
@@ -103,7 +137,7 @@ const FairyTaleFreeSettingPage = () => {
             </div>
 
             <form className="answer-form" onSubmit={handleSubmit}>
-              {currentStep.key === "pageCount" ? (
+              {activeField.key === "pageCount" ? (
                 <select
                   value={answer}
                   onChange={(event) => setAnswer(event.target.value)}
@@ -118,37 +152,27 @@ const FairyTaleFreeSettingPage = () => {
                 <textarea
                   value={answer}
                   onChange={(event) => setAnswer(event.target.value)}
-                  placeholder={currentStep.placeholder}
+                  placeholder={activeField.placeholder}
                   className="answer-textarea"
                 />
               )}
 
               <div className="answer-actions">
-                {/* {isRequiredComplete && (
+                {isRequiredComplete && (
                   <button
                     type="button"
                     className="inline-start-btn"
                     onClick={handleStartStudio}
+                    disabled={isCompleting}
                   >
                     바로 시작하기
-                  </button>
-                )} */}
-
-                {currentStep.optional && (
-                  <button
-                    type="button"
-                    className="skip-btn"
-                    onClick={handleSkip}
-                    disabled={isLastStep && !answer.trim()}
-                  >
-                    건너뛰기
                   </button>
                 )}
 
                 <button
                   type="submit"
                   className="send-btn"
-                  disabled={!answer.trim()}
+                  disabled={!answer.trim() || isLoadingQuestion || isCompleting}
                 >
                   AI 선생님에게 보내기
                 </button>
@@ -157,27 +181,20 @@ const FairyTaleFreeSettingPage = () => {
 
             <div className="mini-history">
               <div className="mini-history-head">
-                <h3>설정 기록</h3>
-                <span>최근 기록 {Math.min(records.length, 5)}개</span>
+                <h3>대화 기록</h3>
+                <span>최근 기록 {Math.min(messages.length, 5)}개</span>
               </div>
 
               <div className="history-list">
-                {records.slice(-5).map((record, index) => (
+                {messages.slice(-5).map((message, index) => (
                   <div
-                    key={`${record.type}-${record.title}-${index}`}
-                    className={`history-message ${record.type.toLowerCase()}`}
+                    key={`${message.sender}-${index}`}
+                    className={`history-message ${message.sender.toLowerCase()}`}
                   >
-                    <span>
-                      {record.type === "AI"
-                        ? "AI"
-                        : record.type === "SET"
-                        ? "설정"
-                        : "건너뜀"}
-                    </span>
+                    <span>{message.sender === "AI" ? "AI" : "나"}</span>
 
                     <div className="record-content">
-                      <strong>{record.title}</strong>
-                      <p>{record.text}</p>
+                      <p>{message.text}</p>
                     </div>
                   </div>
                 ))}
@@ -222,8 +239,9 @@ const FairyTaleFreeSettingPage = () => {
                 <>
                   <strong>필수 설정을 채우는 중</strong>
                   <p>
-                    {REQUIRED_FIELDS.length - completedRequiredCount}개를 더
-                    정하면 동화 만들기를 시작할 수 있어요.
+                    {SUMMARY_ITEMS.filter((item) => item.required).length -
+                      completedRequiredCount}
+                    개를 더 정하면 동화 만들기를 시작할 수 있어요.
                   </p>
                 </>
               )}
@@ -253,14 +271,6 @@ const FairyTaleFreeSettingPage = () => {
 
                       <p>{getDisplayValue(item.key, value)}</p>
                     </div>
-
-                    {/* <button
-                      type="button"
-                      className="edit-summary-btn"
-                      onClick={() => handleEdit(item.key)}
-                    >
-                      수정
-                    </button> */}
                   </div>
                 );
               })}
@@ -273,14 +283,14 @@ const FairyTaleFreeSettingPage = () => {
                 </p>
               ) : (
                 <p className="ready-text">
-                  기본설정이 완료됐어요. <br/>이제 동화 공동창작을 시작할 수 있어요.
+                  기본설정이 완료됐어요. <br />이제 동화 공동창작을 시작할 수 있어요.
                 </p>
               )}
 
               <button
                 type="button"
                 className="start-studio-btn"
-                disabled={!isRequiredComplete}
+                disabled={!isRequiredComplete || isCompleting}
                 onClick={handleStartStudio}
               >
                 이 설정으로 동화 만들기 시작
@@ -294,8 +304,3 @@ const FairyTaleFreeSettingPage = () => {
 };
 
 export default FairyTaleFreeSettingPage;
-
-
-
-
-

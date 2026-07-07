@@ -1,13 +1,13 @@
-﻿import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { normalizeSetting } from "../../services/aiGenerateService";
+import { createPagePlan } from "../../services/aiGenerateService";
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
-import { toBookDraft } from "../../utils/bookDraftMapper";
 import {
   fallbackStudioSetup,
   friendOptions as fallbackChoices,
 } from "../data/fairyTaleCoCreationStudioOptions";
+import { getPagePlan, isValidPagePlan, normalizeChoiceOptions } from "../utils/aiSettingOptions";
 
 const FALLBACK_QUESTION = "다음 장면에서는 어떤 일이 일어날까요?";
 const PHASE_META = [
@@ -33,73 +33,12 @@ const makePhaseSections = (pageCount) => {
   ].filter((section) => section.pages.length);
 };
 
-const getResult = (data) => data?.result ?? data?.data?.result ?? data;
-
-const getChoiceQuestion = (data) => {
-  const result = getResult(data);
-  return (
-    result?.nextQuestion ||
-    result?.question ||
-    result?.message ||
-    result?.prompt ||
-    ""
-  );
-};
-
-const getChoiceOptions = (data) => {
-  const result = getResult(data);
-  const options =
-    result?.choices ||
-    result?.options ||
-    result?.selectedOptions ||
-    result?.recommendations ||
-    [];
-
-  if (Array.isArray(options)) return options;
-  if (options && typeof options === "object") return Object.values(options);
-  return [];
-};
-
-const getSceneTitle = (data) => {
-  const result = getResult(data);
-  return (
-    result?.sceneTitle ||
-    result?.title ||
-    result?.currentSceneTitle ||
-    result?.pageTitle ||
-    ""
-  );
-};
-
-const getSceneSummary = (data) => {
-  const result = getResult(data);
-  return (
-    result?.sceneSummary ||
-    result?.summary ||
-    result?.body ||
-    result?.text ||
-    result?.content ||
-    ""
-  );
-};
-
-const normalizeChoices = (choices) =>
-  choices
-    .map((choice, index) => {
-      const raw = choice && typeof choice === "object" ? choice : { title: choice };
-      const title = raw.title || raw.label || raw.value || raw.text || "";
-
-      if (!title) return null;
-
-      return {
-        ...raw,
-        id: String(raw.id || `choice-${index + 1}`),
-        title,
-        desc: raw.desc || raw.description || raw.reason || raw.summary || "",
-        color: raw.color || ["green", "yellow", "purple"][index % 3],
-      };
-    })
-    .filter(Boolean);
+// 화면에서 쓰는 친구 카드 색상만 추가 — 실제 정규화/검증은 aiSettingOptions.js의 공용 유틸을 재사용한다.
+const normalizeChoicesForDisplay = (options, keyPrefix) =>
+  normalizeChoiceOptions(options, keyPrefix).map((option, index) => ({
+    ...option,
+    color: option.color || ["green", "yellow", "purple"][index % 3],
+  }));
 
 const makeInitialPagePlans = (setupData, pageCount) =>
   Array.from({ length: pageCount }, (_, index) => {
@@ -108,10 +47,44 @@ const makeInitialPagePlans = (setupData, pageCount) =>
 
     return {
       pageNo,
-      title: `${pageNo}p 장면`,
+      phase: "",
+      title: pageNo === 1 ? seed : `${pageNo}p 장면`,
       summary: pageNo === 1 ? seed : "",
+      mainEmotion: "",
+      imagePromptBase: "",
+      question: "",
+      guide: "",
+      options: [],
+      selectedAnswer: "",
     };
   });
+
+// Python(CREATE_PAGE_PLAN) 응답의 페이지 하나를 화면에서 쓰는 로컬 pagePlan 항목으로 변환한다.
+const toLocalPagePlan = (aiPage, existingPlan) => ({
+  pageNo: aiPage.pageNo,
+  phase: aiPage.phase || existingPlan?.phase || "",
+  title: aiPage.sceneTitle || existingPlan?.title || "",
+  summary: aiPage.sceneSummary || existingPlan?.summary || "",
+  mainEmotion: aiPage.mainEmotion || existingPlan?.mainEmotion || "",
+  imagePromptBase: aiPage.imagePromptBase || existingPlan?.imagePromptBase || "",
+  question: aiPage.question || "",
+  guide: aiPage.guide || "",
+  options: Array.isArray(aiPage.options) ? aiPage.options : [],
+  selectedAnswer: existingPlan?.selectedAnswer || "",
+});
+
+// 로컬 pagePlan 항목을 "다시 추천" 요청의 extra.existingPagePlan에 실을 AI 스키마로 되돌린다.
+const toAiPageShape = (plan) => ({
+  pageNo: plan.pageNo,
+  phase: plan.phase,
+  sceneTitle: plan.title,
+  sceneSummary: plan.summary,
+  mainEmotion: plan.mainEmotion,
+  imagePromptBase: plan.imagePromptBase,
+  question: plan.question,
+  guide: plan.guide,
+  options: plan.options,
+});
 
 const makeFallbackTitle = (answer) => (answer ? `${answer} 선택` : "새 장면");
 
@@ -125,7 +98,6 @@ export function useFairyTaleCoCreationStudio() {
     bookType: "FAIRY_TALE",
   };
   const pageCount = Number(setupData.pageCount) || 10;
-  const requestGuardRef = useRef(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [completedPageNumbers, setCompletedPageNumbers] = useState([]);
@@ -134,8 +106,6 @@ export function useFairyTaleCoCreationStudio() {
       ? initialSetup.pagePlans
       : makeInitialPagePlans(setupData, pageCount)
   );
-  const [choiceQuestion, setChoiceQuestion] = useState(FALLBACK_QUESTION);
-  const [choices, setChoices] = useState(() => normalizeChoices(fallbackChoices));
   const [selectedChoiceId, setSelectedChoiceId] = useState(null);
   const [customAnswer, setCustomAnswer] = useState("");
   const [previousAnswers, setPreviousAnswers] = useState(
@@ -143,7 +113,30 @@ export function useFairyTaleCoCreationStudio() {
   );
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewPage, setPreviewPage] = useState(1);
-  const [isLoadingChoiceStep, setIsLoadingChoiceStep] = useState(false);
+
+  // 최초 전체 pagePlan 생성(마운트 시 1회)과, 페이지별 "다시 추천"의 로딩 상태를 분리해서 관리한다.
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+  const [isRecommendingAgain, setIsRecommendingAgain] = useState(false);
+  const [planFallbackNotice, setPlanFallbackNotice] = useState(false);
+  const [pageFallbackNotice, setPageFallbackNotice] = useState({});
+  const [pageRecommendationVersion, setPageRecommendationVersion] = useState({});
+
+  const planRequestRef = useRef(false);
+  const recommendGuardRef = useRef(false);
+
+  const currentPageData = pagePlans.find((plan) => plan.pageNo === currentPage);
+  const choiceQuestion = currentPageData?.question || FALLBACK_QUESTION;
+  const choiceGuide = currentPageData?.guide || "";
+  const showFallbackNotice = planFallbackNotice || Boolean(pageFallbackNotice[currentPage]);
+  const isLoadingChoiceStep = isGeneratingPlan || isRecommendingAgain;
+
+  const choices = useMemo(() => {
+    const aiOptions = currentPageData?.options;
+    return normalizeChoicesForDisplay(
+      aiOptions?.length ? aiOptions : fallbackChoices,
+      `page${currentPage}`
+    );
+  }, [currentPageData, currentPage]);
 
   const selectedChoice = choices.find((choice) => choice.id === selectedChoiceId);
   const selectedAnswer = customAnswer.trim() || selectedChoice?.title || "";
@@ -182,8 +175,126 @@ export function useFairyTaleCoCreationStudio() {
     [completedPageNumbers, currentPage, pageCount]
   );
 
-  const handleNextScene = async () => {
-    if (requestGuardRef.current || !selectedAnswer) return;
+  // 마운트 시 1회: pagePlan이 아직 AI로 보강된 적 없으면(옵션이 하나도 없으면) CREATE_PAGE_PLAN을 1번만 호출한다.
+  // 공동창작실 진입/페이지 이동마다 다시 호출하지 않는다 — "다시 추천" 또는 최초 생성 실패 시에만 재호출한다.
+  useEffect(() => {
+    if (planRequestRef.current) return;
+    planRequestRef.current = true;
+
+    const alreadyEnriched = pagePlans.some(
+      (plan) => Array.isArray(plan.options) && plan.options.length > 0
+    );
+    if (alreadyEnriched) return;
+
+    (async () => {
+      setIsGeneratingPlan(true);
+
+      // 어떤 이유로 실패하든(네트워크 오류, 예상 못한 예외 포함) 로딩 상태는 반드시 풀려야
+      // 화면이 멈추지 않는다 — finally에서 무조건 해제한다.
+      try {
+        const extra = {
+          purpose: "CREATE_FAIRY_TALE_PAGE_PLAN",
+          previousAnswers,
+        };
+        const response = await createPagePlan(setupData, extra);
+
+        if (response.ok && isValidPagePlan(response.data, pageCount)) {
+          const aiPages = getPagePlan(response.data);
+
+          setPagePlans((prev) =>
+            aiPages.map((aiPage) =>
+              toLocalPagePlan(
+                aiPage,
+                prev.find((plan) => plan.pageNo === aiPage.pageNo)
+              )
+            )
+          );
+          setPlanFallbackNotice(false);
+        } else {
+          console.warn(
+            "AI 페이지 계획 생성 실패. 기본 선택지로 진행합니다.",
+            response.message
+          );
+          setPlanFallbackNotice(true);
+        }
+      } catch (error) {
+        console.warn("AI 페이지 계획 생성 중 예외 발생. 기본 선택지로 진행합니다.", error);
+        setPlanFallbackNotice(true);
+      } finally {
+        setIsGeneratingPlan(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleRecommendAgain = async () => {
+    if (recommendGuardRef.current || isGeneratingPlan) return;
+
+    recommendGuardRef.current = true;
+    setIsRecommendingAgain(true);
+
+    const pageNo = currentPage;
+    const nextVersion = (pageRecommendationVersion[pageNo] || 0) + 1;
+
+    // 어떤 이유로 실패하든(네트워크 오류, 예상 못한 예외 포함) 로딩 상태는 반드시 풀려야
+    // 화면이 멈추지 않는다 — finally에서 무조건 해제한다.
+    try {
+      const extra = {
+        purpose: "CREATE_FAIRY_TALE_PAGE_PLAN",
+        regeneratePageNo: pageNo,
+        existingPagePlan: pagePlans.map(toAiPageShape),
+        previousAnswers,
+        recommendationVersion: nextVersion,
+      };
+
+      const response = await createPagePlan(setupData, extra);
+      const aiPages = response.ok && isValidPagePlan(response.data, pageCount)
+        ? getPagePlan(response.data)
+        : [];
+      const updatedPage = aiPages.find((page) => page.pageNo === pageNo);
+
+      if (updatedPage) {
+        setPagePlans((prev) =>
+          prev.map((plan) => (plan.pageNo === pageNo ? toLocalPagePlan(updatedPage, plan) : plan))
+        );
+        setPageFallbackNotice((prev) => ({ ...prev, [pageNo]: false }));
+      } else {
+        console.warn("AI 다시 추천 실패. 기존 선택지를 유지합니다.", response.message);
+        setPageFallbackNotice((prev) => ({ ...prev, [pageNo]: true }));
+      }
+
+      setPageRecommendationVersion((prev) => ({ ...prev, [pageNo]: nextVersion }));
+      setSelectedChoiceId(null);
+      setCustomAnswer("");
+    } catch (error) {
+      console.warn("AI 다시 추천 중 예외 발생. 기존 선택지를 유지합니다.", error);
+      setPageFallbackNotice((prev) => ({ ...prev, [pageNo]: true }));
+    } finally {
+      setIsRecommendingAgain(false);
+      recommendGuardRef.current = false;
+    }
+  };
+
+  // AI 재호출 없이, 이미 캐시된 pagePlan 안에서 선택/입력값만 반영하고 다음 페이지로 진행한다.
+  // 직접 입력이 있으면(customAnswer) 선택한 옵션(chosenValue)보다 우선한다.
+  const handleNextScene = () => {
+    if (!selectedAnswer) return;
+
+    const chosenValue = selectedChoice?.value;
+    const hasCustomAnswer = Boolean(customAnswer.trim());
+
+    const nextPagePlans = pagePlans.map((plan) => {
+      if (plan.pageNo !== currentPage) return plan;
+
+      return {
+        ...plan,
+        title: hasCustomAnswer
+          ? makeFallbackTitle(selectedAnswer)
+          : chosenValue?.sceneTitle || plan.title,
+        summary: hasCustomAnswer ? customAnswer.trim() : chosenValue?.summary || plan.summary,
+        selectedAnswer,
+      };
+    });
 
     const currentAnswerRecord = {
       step: currentPage,
@@ -196,81 +307,25 @@ export function useFairyTaleCoCreationStudio() {
       ...previousAnswers.filter((item) => item.pageNo !== currentPage),
       currentAnswerRecord,
     ];
-    const draftInput = {
-      ...setupData,
-      currentPage,
-      pagePlans,
-      storyPages: pagePlans,
-      selectedChoiceId,
-      selectedChoice,
-      customAnswer,
-      selectedAnswer,
-      previousAnswers: nextPreviousAnswers,
-    };
-    const draft = toBookDraft(draftInput);
-    const extra = {
-      purpose: "CREATE_FAIRY_TALE_CHOICE_STEP",
-      currentStep: currentPage,
-      currentPageNo: currentPage,
-      previousAnswers: nextPreviousAnswers,
-      selectedChoice,
-      selectedAnswer,
-      fallbackQuestion: choiceQuestion || FALLBACK_QUESTION,
-    };
-
-    requestGuardRef.current = true;
-    setIsLoadingChoiceStep(true);
-
-    console.log("[CHOICE STEP REQUEST]", {
-      currentStep: currentPage,
-      previousAnswers: nextPreviousAnswers,
-      draft,
-    });
-
-    const response = await normalizeSetting(draftInput, extra);
-
-    console.log("[CHOICE STEP RESPONSE]", response);
-
-    const aiQuestion = response.ok ? getChoiceQuestion(response.data) : "";
-    const aiChoices = response.ok ? normalizeChoices(getChoiceOptions(response.data)) : [];
-    const sceneTitle =
-      (response.ok ? getSceneTitle(response.data) : "") || makeFallbackTitle(selectedAnswer);
-    const sceneSummary = response.ok ? getSceneSummary(response.data) : "";
-
-    if (!response.ok || !aiQuestion || aiChoices.length === 0) {
-      console.warn("[CHOICE STEP FALLBACK]", response.message);
-    }
-
-    const nextPagePlans = pagePlans.map((plan) =>
-      plan.pageNo === currentPage
-        ? {
-            ...plan,
-            title: sceneTitle,
-            summary: sceneSummary || plan.summary,
-            selectedAnswer,
-          }
-        : plan
-    );
     const nextCompletedPageNumbers = completedPageNumbers.includes(currentPage)
       ? completedPageNumbers
       : [...completedPageNumbers, currentPage];
-    const fairyTalePages = nextPagePlans.map((plan) => ({
-      pageNo: plan.pageNo,
-      title: plan.title,
-      sceneTitle: plan.title,
-      summary: plan.summary || "",
-      body: plan.body || plan.summary || "",
-      selectedAnswer: plan.selectedAnswer || "",
-      status: nextCompletedPageNumbers.includes(plan.pageNo) ? "DONE" : "WAITING",
-    }));
 
     setPagePlans(nextPagePlans);
     setCompletedPageNumbers(nextCompletedPageNumbers);
     setPreviousAnswers(nextPreviousAnswers);
 
     if (currentPage === pageCount) {
-      setIsLoadingChoiceStep(false);
-      requestGuardRef.current = false;
+      const fairyTalePages = nextPagePlans.map((plan) => ({
+        pageNo: plan.pageNo,
+        title: plan.title,
+        sceneTitle: plan.title,
+        summary: plan.summary || "",
+        body: plan.body || plan.summary || "",
+        selectedAnswer: plan.selectedAnswer || "",
+        status: nextCompletedPageNumbers.includes(plan.pageNo) ? "DONE" : "WAITING",
+      }));
+
       navigate(BOOK_CREATION_ROUTES.FAIRY_TALE.IMAGES, {
         state: {
           ...setupData,
@@ -285,23 +340,17 @@ export function useFairyTaleCoCreationStudio() {
       return;
     }
 
-    if (currentPage < pageCount) {
-      setCurrentPage((prev) => prev + 1);
-      setPreviewPage((prev) => Math.min(prev + 1, pageCount));
-      setChoiceQuestion(aiQuestion || FALLBACK_QUESTION);
-      setChoices(aiChoices.length ? aiChoices : normalizeChoices(fallbackChoices));
-      setSelectedChoiceId(null);
-      setCustomAnswer("");
-    }
-
-    setIsLoadingChoiceStep(false);
-    requestGuardRef.current = false;
+    setCurrentPage((prev) => prev + 1);
+    setPreviewPage((prev) => Math.min(prev + 1, pageCount));
+    setSelectedChoiceId(null);
+    setCustomAnswer("");
   };
 
   return {
     outlineData,
     choices,
     choiceQuestion,
+    choiceGuide,
     selectedChoiceId,
     setSelectedChoiceId,
     customAnswer,
@@ -314,9 +363,13 @@ export function useFairyTaleCoCreationStudio() {
     setPreviewPage,
     pageButtons,
     isLoadingChoiceStep,
+    isGeneratingPlan,
+    isRecommendingAgain,
     canCreateNextScene,
     completedPageNumbers,
     pagePlans,
+    showFallbackNotice,
     handleNextScene,
+    handleRecommendAgain,
   };
 }

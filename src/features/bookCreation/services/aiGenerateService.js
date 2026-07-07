@@ -254,6 +254,9 @@ export const generateAiContent = (taskType, state, extra = {}, options = {}) =>
 export const normalizeSetting = (state, extra, options) =>
   generateAiContent("NORMALIZE_SETTING", state, extra, options);
 
+export const collectSetting = (state, extra, options) =>
+  generateAiContent("COLLECT_SETTING", state, extra, options);
+
 export const createSettingOptions = (state, extra, options) =>
   generateAiContent("CREATE_SETTING_OPTIONS", state, extra, options);
 
@@ -262,6 +265,9 @@ export const createPagePlan = (state, extra, options) =>
 
 export const writePage = (state, extra, options) =>
   generateAiContent("WRITE_PAGE", state, extra, options);
+
+export const rewritePage = (state, extra, options) =>
+  generateAiContent("REWRITE_PAGE", state, extra, options);
 
 export const createScenePlan = (state, extra, options) =>
   generateAiContent("CREATE_SCENE_PLAN", state, extra, options);
@@ -285,9 +291,11 @@ export const aiGenerateService = {
   extractGeneratedPages,
   extractGeneratedScenes,
   normalizeSetting,
+  collectSetting,
   createSettingOptions,
   createPagePlan,
   writePage,
+  rewritePage,
   createScenePlan,
   writeScene,
   createImagePrompt,

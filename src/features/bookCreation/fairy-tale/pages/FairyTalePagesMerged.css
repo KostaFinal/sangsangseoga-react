@@ -2008,6 +2008,19 @@ margin-top: 22px;
   border-radius: 22px;
   background: rgba(109, 77, 252, 0.05);
   border: 1px solid rgba(109, 77, 252, 0.1);
+
+  animation: free-setting-example-reveal 0.28s ease;
+}
+
+@keyframes free-setting-example-reveal {
+from {
+opacity: 0;
+    transform: translateY(-10px);
+}
+to {
+opacity: 1;
+    transform: translateY(0);
+}
 }
 
 .free-setting-page .example-title {
@@ -8659,6 +8672,29 @@ width: 100%;
 
 .fairy-confirm-page .complete-footer {
 padding: 20px;
+}
+}
+
+/* 설정확인 화면 전용: 배경의 양 캐릭터 얼굴(왼쪽)이 가려지지 않도록 카드를 오른쪽으로 배치한다.
+   choice-builder-page/choice-content-layout/choice-summary-panel 자체 스타일은 그대로 재사용하고,
+   이 페이지에서만 정렬 위치를 오버라이드한다. */
+.fairy-confirm-page .choice-content-layout {
+grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
+}
+
+.fairy-confirm-page .choice-summary-panel {
+grid-column: 2;
+margin-right: 48px;
+}
+
+@media (max-width: 1180px) {
+.fairy-confirm-page .choice-content-layout {
+grid-template-columns: 1fr;
+}
+
+.fairy-confirm-page .choice-summary-panel {
+grid-column: 1;
+margin-right: 0;
 }
 }
 

@@ -4,6 +4,7 @@ import { useFairyTaleChatWriting } from "../hooks/useFairyTaleChatWriting";
 const FairyTaleChatWritingPage = () => {
   const {
     QUICK_ACTIONS,
+    CHAT_HELP_ACTIONS,
     pageCount,
     pages,
     currentPageNo,
@@ -13,8 +14,14 @@ const FairyTaleChatWritingPage = () => {
     chatLogRef,
     currentPage,
     completedCount,
+    isGeneratingPlan,
+    isWorking,
+    streamingPreview,
+    usedFallbackNotice,
     handleWritePage,
     handleQuickAction,
+    handleChatHelp,
+    handleCompletePage,
     handleNextPage,
     handleSendRequest,
     handleShowSetting,
@@ -87,19 +94,39 @@ const FairyTaleChatWritingPage = () => {
                 <strong>{currentPage.sceneTitle}</strong>
               </div>
 
-              {currentPage.body ? (
+              {isWorking && streamingPreview ? (
+                <p className="page-body-text">{streamingPreview}</p>
+              ) : currentPage.body ? (
                 <p className="page-body-text">{currentPage.body}</p>
               ) : (
                 <div className="empty-page-guide">
                   <span>✨</span>
                   <strong>아직 이 페이지의 글이 작성되지 않았어요.</strong>
                   <p>AI 선생님과 함께 이 페이지를 써볼까요?</p>
-                  <button type="button" onClick={handleWritePage}>
-                    이 페이지 글쓰기
+                  <button type="button" onClick={handleWritePage} disabled={isWorking}>
+                    {isWorking ? "AI가 쓰는 중..." : "이 페이지 글쓰기"}
                   </button>
                 </div>
               )}
             </div>
+
+            {isGeneratingPlan && (
+              <p style={{ fontWeight: 800, color: "var(--primary)" }}>
+                🤖 AI가 전체 페이지 구성을 만드는 중...
+              </p>
+            )}
+
+            {isWorking && currentPage.body && (
+              <p style={{ fontWeight: 800, color: "var(--primary)" }}>
+                🤖 AI가 실시간으로 쓰고 있어요...
+              </p>
+            )}
+
+            {!isWorking && usedFallbackNotice && (
+              <p style={{ fontWeight: 700, color: "#a97c1f" }}>
+                AI 응답을 불러오지 못해 기본 문장으로 이어갔어요.
+              </p>
+            )}
 
             {currentPage.teacherNote && (
               <div className="teacher-note">
@@ -114,6 +141,7 @@ const FairyTaleChatWritingPage = () => {
                   key={action.id}
                   type="button"
                   onClick={() => handleQuickAction(action)}
+                  disabled={isWorking || !currentPage.body}
                 >
                   {action.label}
                 </button>
@@ -121,16 +149,31 @@ const FairyTaleChatWritingPage = () => {
             </div>
 
             <div className="page-main-actions">
-              {/* <button type="button" className="outline-btn" onClick={handleWritePage}>
-                AI 선생님에게 다시 도움받기
-              </button>
-              <button type="button" className="complete-btn" onClick={handleCompletePage}>
-                이 페이지 완성
-              </button> */}
+              {currentPage.body && (
+                <>
+                  <button
+                    type="button"
+                    className="outline-btn"
+                    onClick={handleWritePage}
+                    disabled={isWorking}
+                  >
+                    AI 선생님에게 다시 도움받기
+                  </button>
+                  <button
+                    type="button"
+                    className="complete-btn"
+                    onClick={handleCompletePage}
+                    disabled={isWorking}
+                  >
+                    이 페이지 완성
+                  </button>
+                </>
+              )}
               <button
                 type="button"
                 className="page-side-next-btn"
                 onClick={handleNextPage}
+                disabled={isWorking}
               >
                 <span>다음</span>
                 <span>페이지</span>
@@ -158,11 +201,16 @@ const FairyTaleChatWritingPage = () => {
             </div>
 
             <div className="quick-help-list">
-              {QUICK_ACTIONS.map((action) => (
+              <button type="button" onClick={handleShowSetting}>
+                📋 기본설정 확인하기
+              </button>
+
+              {CHAT_HELP_ACTIONS.map((action) => (
                 <button
                   key={`chat-${action.id}`}
                   type="button"
-                  onClick={() => handleQuickAction(action)}
+                  onClick={() => handleChatHelp(action)}
+                  disabled={isWorking}
                 >
                   {action.label}
                 </button>
@@ -175,7 +223,7 @@ const FairyTaleChatWritingPage = () => {
                   key={`${message.sender}-${index}`}
                   className={`chat-message ${message.sender.toLowerCase()}`}
                 >
-                  <p>{message.text}</p>
+                  <p style={{ whiteSpace: "pre-line" }}>{message.text}</p>
                 </div>
               ))}
             </div>

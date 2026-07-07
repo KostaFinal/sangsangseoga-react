@@ -34,40 +34,6 @@ function FairyTaleChoiceBuilderPage() {
       className="choice-builder-page"
       style={{ "--choice-bg": `url(${fairyback})` }}
     >
-      <header className="choice-header">
-        <div className="choice-brand">
-          <div className="choice-logo">🏰</div>
-          <div>
-            <strong>동화별</strong>
-            <span>이야기가 자라는 곳</span>
-          </div>
-        </div>
-
-        <nav className="choice-nav">
-          <button type="button">내 책장</button>
-          <button type="button" className="active">
-            동화 만들기
-          </button>
-          <button type="button">템플릿</button>
-          <button type="button">이용 가이드</button>
-          <button type="button">요금제</button>
-        </nav>
-
-        <div className="choice-user">
-          <button type="button" className="choice-premium">
-            프리미엄
-          </button>
-          <button type="button" className="choice-bell">
-            🔔
-          </button>
-          <div className="choice-profile">
-            <span>🧑</span>
-            <strong>하늘빛 작가님</strong>
-            <em>⌄</em>
-          </div>
-        </div>
-      </header>
-
       <main className="choice-main">
         <section className="choice-title-section">
           <span className="choice-kicker">CHOICE MODE</span>

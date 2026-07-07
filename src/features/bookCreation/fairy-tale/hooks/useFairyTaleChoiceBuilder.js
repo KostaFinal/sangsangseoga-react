@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import {
@@ -163,6 +163,25 @@ export function useFairyTaleChoiceBuilder() {
       usedFallback: false,
     };
   };
+
+  // 첫 단계(인덱스 0)는 aiSteps 초기값이 fallback이라, 마운트 시 1회 AI를 호출해 채운다.
+  const initialFetchRef = useRef(false);
+  useEffect(() => {
+    if (initialFetchRef.current) return;
+    initialFetchRef.current = true;
+
+    (async () => {
+      setIsLoadingChoiceStep(true);
+      setLoadingHint("");
+
+      const { step: firstStep, usedFallback } = await requestStepOptions(0, 0, [], {});
+
+      setAiSteps((prev) => prev.map((step, index) => (index === 0 ? firstStep : step)));
+      setFallbackNoticeByStep((prev) => ({ ...prev, [firstStep.key]: usedFallback }));
+      setIsLoadingChoiceStep(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRecommendAgain = async () => {
     if (requestGuardRef.current || !canRecommendAgain) return;

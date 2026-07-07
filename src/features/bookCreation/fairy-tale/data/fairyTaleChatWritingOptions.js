@@ -37,6 +37,12 @@ export const makeInitialPages = (pageCount) => {
         pageNo === 1
           ? "첫 페이지는 주인공과 동화의 분위기를 부드럽게 보여주면 좋아요."
           : "이번 페이지에서는 앞 장면과 자연스럽게 이어지는 사건을 쓰면 좋아요.",
+      // CREATE_PAGE_PLAN(공동창작실과 동일 스키마) 응답으로 채워지는 필드 — 초기엔 비워둔다.
+      phase: "",
+      sceneSummary: "",
+      mainEmotion: "",
+      imagePromptBase: "",
+      nextQuestion: "",
     };
   });
 };

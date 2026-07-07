@@ -16,6 +16,8 @@ function FairyTaleSettingWizardPage() {
         handleOptionSelect,
         handleCustomSeedChange,
         handleNext,
+        handleRecommendAgain,
+        canRecommendAgain,
         isSeedStep,
         isChoiceStep,
         isLoadingChoiceStep,
@@ -188,15 +190,29 @@ function FairyTaleSettingWizardPage() {
                         </div>
                     )}
 
-                    <button
-                        type="button"
-                        className="next-btn"
-                        onClick={handleNext}
-                        disabled={isLoadingChoiceStep}
-                    >
-                        {currentStep === steps.length - 1 ? "동화 만들기 시작" : "다음 질문"}
-                        <span>→</span>
-                    </button>
+                    <div style={{ display: "flex", gap: "12px", marginTop: "auto", justifyContent: "flex-end" }}>
+                        {isChoiceStep && (
+                            <button
+                                type="button"
+                                className="next-btn"
+                                style={{ margin: 0, background: "#ede6ff", color: "#6d4dfc", boxShadow: "none" }}
+                                onClick={handleRecommendAgain}
+                                disabled={!canRecommendAgain || isLoadingChoiceStep}
+                            >
+                                ↻ 다시 추천
+                            </button>
+                        )}
+
+                        <button
+                            type="button"
+                            className="next-btn"
+                            onClick={handleNext}
+                            disabled={isLoadingChoiceStep}
+                        >
+                            {currentStep === steps.length - 1 ? "동화 만들기 시작" : "다음 질문"}
+                            <span>→</span>
+                        </button>
+                    </div>
                 </section>
 
                 <aside className="garden-card">
