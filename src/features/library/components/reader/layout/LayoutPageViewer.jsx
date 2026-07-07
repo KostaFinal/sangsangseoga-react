@@ -85,7 +85,26 @@ export default function LayoutPageViewer({
   onComplete,
   onLastPageBlocked,
 }) {
-  const rawPages = book.pages;
+  const rawPages = Array.isArray(book.pages)
+    ? book.pages
+    : [
+      {
+        id: "page-empty",
+        backgroundColor: "#ffffff",
+        elements: [
+          {
+            id: "text-empty",
+            type: "text",
+            x: 60,
+            y: 100,
+            w: 360,
+            h: 300,
+            html: "본문을 불러오지 못했습니다. 읽는 중 목록에서 다시 열어주세요.",
+            fontSize: 18
+          }
+        ]
+      }
+    ];
   // react-pageflip은 페이지가 짝수여야 마지막 스프레드 에러가 안 남
   const pages = rawPages.length % 2 !== 0
     ? [...rawPages, { id: '__blank__', elements: [], backgroundColor: '#ffffff' }]

@@ -116,7 +116,7 @@ export default function CompletionScreen({ book, books = [], onBack, onReread, o
                 </button>
               </div>
               <div className="p-6">
-                <p className="text-sm font-sans text-neutral-600 leading-relaxed font-normal">{selectedRecommend.summary}</p>
+                <p className="text-sm font-sans text-neutral-600 leading-relaxed font-normal">{selectedRecommend.description}</p>
                 <div className="mt-6">
                   <button
                     onClick={() => {

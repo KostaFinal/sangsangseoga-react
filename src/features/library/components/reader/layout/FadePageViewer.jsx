@@ -73,7 +73,21 @@ export default function FadePageViewer({
   onComplete,
   onLastPageBlocked,
 }) {
-  const pages = book.pages;
+  const pages = Array.isArray(book.pages)
+    ? book.pages
+    : [
+      {
+        id: "page-empty",
+        backgroundColor: "#ffffff",
+        elements: [
+          {
+            id: "text-empty",
+            type: "text",
+            html: "본문을 불러오지 못했습니다.",
+          }
+        ]
+      }
+    ];
   const isLast = currentIndex >= pages.length - 1;
   const [direction, setDirection] = useState(1); // 1: 다음, -1: 이전
 
