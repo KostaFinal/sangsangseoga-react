@@ -155,7 +155,11 @@ export const Header = () => {
               </button>
 
               {/* 친구의 서재 Dropdown Menu */}
-              <div className="relative inline-block text-left">
+              <div
+                className="relative inline-block text-left"
+                onMouseEnter={() => setShowFriendsMenu(true)}
+                onMouseLeave={() => setShowFriendsMenu(false)}
+              >
                 <button
                   onClick={() => {
                     if (isLoggedIn) {
