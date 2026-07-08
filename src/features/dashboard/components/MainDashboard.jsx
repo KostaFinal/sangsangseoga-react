@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   HERO_BG_IMAGE,
   CURRENT_USER_PROFILE,
@@ -41,15 +42,11 @@ import {
 import { useDashboardState } from '../hooks/useDashboardState';
 
 export const MainDashboard = (props) => {
-  const { onNavigate, setActiveTab } = props;
+  const navigate = useNavigate();
 
   const {
     isPremium,
-    freeTrialRemaining,
-    freeTrialTextTokens,
-    freeTrialImageCount,
-    extraCreditsRemaining,
-    dailyScore,
+    usage,
 
     libraryGenreFilter, setLibraryGenreFilter,
     librarySearchQuery, setLibrarySearchQuery,
@@ -69,7 +66,6 @@ export const MainDashboard = (props) => {
 
     showFreeTrialCapModal, setShowFreeTrialCapModal,
     showPremiumSoftCapModal, setShowPremiumSoftCapModal,
-    showExhaustedCreditsModal, setShowExhaustedCreditsModal,
 
     handleGenerate,
 
@@ -170,11 +166,11 @@ export const MainDashboard = (props) => {
                     key={idx} 
                     onClick={() => {
                       if (item.name === '시') {
-                        onNavigate('create-poem');
+                        navigate('/create/poem');
                       } else if (item.name === '에세이') {
-                        onNavigate('create-essay');
+                        navigate('/create/essay');
                       } else if (item.name === '교육/지식') {
-                        onNavigate('create-nonfiction');
+                        navigate('/create/nonfiction');
                       } else {
                         setGenre(item.genreKey);
                         setPrompt(item.preset);
@@ -210,7 +206,7 @@ export const MainDashboard = (props) => {
 
             <div className="space-y-4 pt-4 z-10 relative">
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-1 cursor-pointer group" onClick={() => setActiveTab('mylibrary')}>
+                <div className="flex items-center gap-1 cursor-pointer group" onClick={() => navigate('/library')}>
                   <h2 className="text-base sm:text-lg font-extrabold text-[#2F2D59] hover:text-[#6B54E7] transition-colors flex items-center gap-1">
                     <span>최근 읽은 작품</span>
                     <ChevronRight className="w-4 h-4 text-[#2F2D59] group-hover:translate-x-0.5 transition-transform" />
@@ -354,7 +350,7 @@ export const MainDashboard = (props) => {
                   </h2>
                 </div>
                 <button 
-                  onClick={() => setActiveTab('friends')}
+                  onClick={() => navigate('/friends')}
                   className="text-xs sm:text-sm text-[#7C769D] hover:text-[#6B54E7] font-bold flex items-center gap-1 transition-colors"
                 >
                   <span>모두 보기</span>
@@ -498,27 +494,18 @@ export const MainDashboard = (props) => {
             </h3>
             <p className="text-xs text-[#7C769D] leading-relaxed">
               준비된 신규 가입자 전용 무료 체험 혜택을 전부 소진하셨습니다.<br />
-              <strong className="text-[#2F2D59] font-bold">· 누적 사용량: 글 {freeTrialTextTokens}/1,000자 | 그림 {freeTrialImageCount}/3장</strong><br /><br />
-              계속해서 예쁜 소설과 동화책을 집필하고 삽화를 완성하려면 <strong>프리미엄 요금제</strong>를 구독하시거나 <strong>추가 생성권</strong>을 단건 구매해 보세요.
+              <strong className="text-[#2F2D59] font-bold">· 남은 횟수: 텍스트 {usage?.text?.remaining ?? 0}/{usage?.text?.limit ?? 0}회 | 이미지 {usage?.image?.remaining ?? 0}/{usage?.image?.limit ?? 0}회</strong><br /><br />
+              계속해서 예쁜 소설과 동화책을 집필하고 삽화를 완성하려면 <strong>프리미엄 요금제</strong>를 구독해 보세요.
             </p>
             <div className="flex flex-col gap-2 pt-2 text-xs">
               <button
                 onClick={() => {
                   setShowFreeTrialCapModal(false);
-                  onNavigate('pricing');
+                  navigate('/subscription');
                 }}
                 className="w-full py-3 bg-[#6B54E7] hover:bg-[#6148E1] text-white font-extrabold rounded-xl transition-all shadow-md text-center cursor-pointer"
               >
                 프리미엄 이용권 구독하기
-              </button>
-              <button
-                onClick={() => {
-                  setShowFreeTrialCapModal(false);
-                  onNavigate('subscription');
-                }}
-                className="w-full py-3 bg-slate-100 hover:bg-slate-150 text-slate-700 font-bold rounded-xl transition-all text-center border border-slate-200 cursor-pointer"
-              >
-                추가 생성권 구매하기
               </button>
               <button
                 onClick={() => setShowFreeTrialCapModal(false)}
@@ -542,14 +529,14 @@ export const MainDashboard = (props) => {
               오늘 도서 생성 권장량을 초과하였습니다
             </h3>
             <p className="text-xs text-[#7C769D] leading-relaxed">
-              프리미엄 작가님용 일일 자동 할당 이야기 점수가 일시 완성되었습니다. 작성 중이던 원고는 내 서재에 안전하게 보관되어 있습니다.<br /><br />
-              매일 자정(00:00)이 지나면 새로운 글 한도가 무료로 자동 리셋 및 재충전됩니다.
+              오늘 사용 가능한 텍스트/이미지 생성 횟수를 모두 사용하셨습니다. 작성 중이던 원고는 내 서재에 안전하게 보관되어 있습니다.<br /><br />
+              매일 자정(00:00)이 지나면 생성 횟수가 초기화됩니다.
             </p>
             <div className="flex flex-col gap-2 pt-2 text-xs">
               <button
                 onClick={() => {
                   setShowPremiumSoftCapModal(false);
-                  onNavigate('subscription');
+                  navigate('/subscription');
                 }}
                 className="w-full py-3 bg-[#6B54E7] hover:bg-[#6148E1] text-white font-bold rounded-xl transition-all text-center cursor-pointer"
               >
@@ -558,50 +545,6 @@ export const MainDashboard = (props) => {
               <button
                 onClick={() => setShowPremiumSoftCapModal(false)}
                 className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-center cursor-pointer"
-              >
-                닫기
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showExhaustedCreditsModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-250">
-          <div className="bg-white max-w-md w-full rounded-2xl p-6 sm:p-8 text-left shadow-2xl space-y-4 border border-[#D4CDF2]">
-            <div className="flex items-center gap-2 text-slate-800 font-bold text-xs uppercase">
-              <span className="w-2 h-2 bg-slate-850 rounded-full"></span>
-              🎫 도서 생성권 부족
-            </div>
-            <h3 className="text-lg font-bold text-[#2F2D59]">
-              사용 가능한 이야기 생성권이 부족합니다
-            </h3>
-            <p className="text-xs text-[#7C769D] leading-relaxed">
-              가입 축하 무료 체험을 모두 완료하셨으며, 보유하셨던 충전형 단건 생성권도 현재 잔여 수량이 0매입니다.<br /><br />
-              계속해서 예쁜 그림책을 무제한 쓰시려면 <strong>프리미엄 요금제</strong>를 가입하시거나 <strong>추가 생성권</strong> 패키지를 구매해 보시기 바랍니다.
-            </p>
-            <div className="flex flex-col gap-2 pt-2 text-xs">
-              <button
-                onClick={() => {
-                  setShowExhaustedCreditsModal(false);
-                  onNavigate('pricing');
-                }}
-                className="w-full py-3 bg-[#6B54E7] hover:bg-[#6148E1] text-white font-extrabold rounded-xl transition-all shadow-md text-center cursor-pointer"
-              >
-                프리미엄 구독권 가입하기
-              </button>
-              <button
-                onClick={() => {
-                  setShowExhaustedCreditsModal(false);
-                  onNavigate('subscription');
-                }}
-                className="w-full py-3 bg-slate-100 hover:bg-slate-150 text-slate-700 font-bold text-center rounded-xl border border-slate-200 cursor-pointer"
-              >
-                추가 생성권 충전하기
-              </button>
-              <button
-                onClick={() => setShowExhaustedCreditsModal(false)}
-                className="w-full py-2 bg-white text-slate-400 hover:text-slate-650 font-bold text-center cursor-pointer"
               >
                 닫기
               </button>
@@ -649,22 +592,24 @@ export const MainDashboard = (props) => {
               {isPremium ? (
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span className="font-bold text-[#6B54E7]">PRO 무제한 창작방 인가 완료</span>
+                  <span className="font-bold text-[#6B54E7]">프리미엄 창작방</span>
                   <span className="text-[#B9B0DC]">|</span>
-                  <span className="text-[#7C769D]">오늘 사용량: <strong className="text-[#2F2D59]">{dailyScore?.toLocaleString()}자 / 5,000자</strong></span>
+                  <span className="text-[#7C769D]">
+                    오늘 남은 횟수: <strong className="text-[#2F2D59]">텍스트 {usage?.text?.remaining ?? '-'}/{usage?.text?.limit ?? '-'}회 · 이미지 {usage?.image?.remaining ?? '-'}/{usage?.image?.limit ?? '-'}회</strong>
+                  </span>
                 </div>
               ) : (
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#B9B0DC]"></span>
                   <span className="font-bold text-[#2F2D59]">무료 가입자 체험 패키지</span>
                   <span className="text-[#D4CDF2]">|</span>
-                  {freeTrialRemaining > 0 ? (
+                  {(usage?.text?.remaining ?? 0) > 0 ? (
                     <span className="text-[#6B54E7] font-semibold">
-                      무료 체험 1회 생성 가능 (텍스트 {freeTrialTextTokens}/1,000자 | 그림 {freeTrialImageCount}/3장)
+                      남은 무료 체험 (텍스트 {usage?.text?.remaining}/{usage?.text?.limit}회 | 이미지 {usage?.image?.remaining}/{usage?.image?.limit}회)
                     </span>
                   ) : (
                     <span className="text-[#7C769D] font-bold">
-                      무료 체험 완료 • 보유 생성권: <strong className="text-[#6B54E7]">{extraCreditsRemaining}장</strong>
+                      무료 체험 완료 • 계속 집필하려면 프리미엄 구독이 필요합니다
                     </span>
                   )}
                 </div>
@@ -672,7 +617,7 @@ export const MainDashboard = (props) => {
 
               <button
                 type="button"
-                onClick={() => { setShowAtelierSection(false); onNavigate('subscription'); }}
+                onClick={() => { setShowAtelierSection(false); navigate('/subscription'); }}
                 className="text-[#6B54E7] hover:underline font-extrabold text-[11px] flex items-center gap-0.5 cursor-pointer"
               >
                 한도 충전 및 관리하기 →
@@ -769,7 +714,7 @@ export const MainDashboard = (props) => {
                       </button>
                       <button 
                         type="button"
-                        onClick={() => { setShowAtelierSection(false); onNavigate('pricing'); }}
+                        onClick={() => { setShowAtelierSection(false); navigate('/subscription'); }}
                         className="px-3.5 py-1.5 bg-[#6B54E7] hover:bg-[#6148E1] text-white text-[11px] rounded-lg font-bold flex items-center gap-1 cursor-pointer"
                       >
                         <span>출판 및 소장 신청</span>

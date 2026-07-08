@@ -35,7 +35,7 @@ export default function AllBooksTab({ filteredBooks,
   };
 
   const myBooks = filteredBooks.filter(
-    (b) => b.author.includes('지우') || b.category === '나만의 AI 창작' || b.id.includes('manual')
+    (b) => b.isMyWrittenBook
   );
 
   return (
@@ -45,7 +45,7 @@ export default function AllBooksTab({ filteredBooks,
           <h3 className="font-plus text-xl font-black text-navy-purple">내가 쓴 책</h3>
         </div>
 
-       
+
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

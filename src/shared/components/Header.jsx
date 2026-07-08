@@ -1,57 +1,24 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
-import { 
-  BookOpen, 
-  ChevronDown, 
-  User, 
-  Library, 
-  Users, 
-  Compass, 
-  Key, 
-  CreditCard, 
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  ChevronDown,
+  User,
+  CreditCard,
   LogOut,
-  Edit,
-  Sparkles,
-  Info
 } from 'lucide-react';
 import { CURRENT_USER_PROFILE } from '../data';
+import { useAuth } from '../context/AuthContext';
 import logoUrl from '../../assets/images/sangsangseoga_official_logo_1782313504336.jpg';
 
-export const NavigationContext = createContext(null);
-
-export const Header = ({ 
-  currentScreen: propCurrentScreen, 
-  onNavigate: propOnNavigate, 
-  onLogout: propOnLogout,
-  onSelectCreateBook,
-  onSelectMyLibrary,
-  onSelectFriendsLibrary,
-  currentUser: propCurrentUser,
-  freeTrialRemaining: propFreeTrialRemaining,
-  freeTrialTextTokens: propFreeTrialTextTokens,
-  freeTrialImageCount: propFreeTrialImageCount,
-  dailyScore: propDailyScore,
-  dailyTextTokens: propDailyTextTokens,
-  dailyImageCount: propDailyImageCount
-}) => {
-  const navContext = useContext(NavigationContext) || {};
-
-  const currentScreen = propCurrentScreen || navContext.currentScreen;
-  const onNavigate = propOnNavigate || navContext.onNavigate;
-  const onLogout = propOnLogout || navContext.onLogout;
-  const currentUser = propCurrentUser || navContext.currentUser;
-  const freeTrialRemaining = propFreeTrialRemaining !== undefined ? propFreeTrialRemaining : navContext.freeTrialRemaining;
-  const freeTrialTextTokens = propFreeTrialTextTokens !== undefined ? propFreeTrialTextTokens : navContext.freeTrialTextTokens;
-  const freeTrialImageCount = propFreeTrialImageCount !== undefined ? propFreeTrialImageCount : navContext.freeTrialImageCount;
-  const dailyScore = propDailyScore !== undefined ? propDailyScore : navContext.dailyScore;
-  const dailyTextTokens = propDailyTextTokens !== undefined ? propDailyTextTokens : navContext.dailyTextTokens;
-  const dailyImageCount = propDailyImageCount !== undefined ? propDailyImageCount : navContext.dailyImageCount;
+export const Header = () => {
+  const { isAuthenticated, currentUser, usage, handleLogout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showSangsangMenu, setShowSangsangMenu] = useState(false);
   const [showFriendsMenu, setShowFriendsMenu] = useState(false);
-  const [showEditInfoModal, setShowEditInfoModal] = useState(false);
   const [nickname, setNickname] = useState('상상의작가');
-  const [showSaveAlert, setShowSaveAlert] = useState(false);
 
   // Sync state nickname with logged-in user profile
   useEffect(() => {
@@ -60,26 +27,34 @@ export const Header = ({
     }
   }, [currentUser]);
 
-  // Determine auth status automatically based on the current screen path
-  const nonAuthedScreens = ['login', 'signup', 'password-reset', 'social-auth'];
-  const isLoggedIn = !nonAuthedScreens.includes(currentScreen);
+  // 화면 이동 시 열려 있던 드롭다운 메뉴 닫기 (예전엔 key={currentScreen}로 Header 전체를 리마운트해서 처리했음)
+  useEffect(() => {
+    setShowProfileMenu(false);
+    setShowSangsangMenu(false);
+    setShowFriendsMenu(false);
+  }, [location.pathname]);
 
-  // Local handler for Logo click
-  const handleLogoClick = () => {
+  const isLoggedIn = isAuthenticated;
+  const path = location.pathname;
+  const isCreatePath = path.startsWith('/create');
+  const isFriendsOrAuthorsPath = path === '/friends' || path.startsWith('/authors');
+
+  const goTo = (to) => {
     if (isLoggedIn) {
-      onNavigate('home');
+      navigate(to);
     } else {
-      onNavigate('login');
+      navigate('/login');
     }
   };
 
-  const handleEditInfoSubmit = (e) => {
-    e.preventDefault();
-    setShowSaveAlert(true);
-    setTimeout(() => {
-      setShowSaveAlert(false);
-      setShowEditInfoModal(false);
-    }, 1500);
+  const handleLogoClick = () => {
+    navigate(isLoggedIn ? '/' : '/login');
+  };
+
+  const onLogoutClick = async () => {
+    setShowProfileMenu(false);
+    await handleLogout();
+    navigate('/login');
   };
 
   return (
@@ -108,13 +83,13 @@ export const Header = ({
               <button
                 onClick={() => {
                   if (isLoggedIn) {
-                    onNavigate("home");
+                    navigate("/");
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   } else {
-                    onNavigate("login");
+                    navigate("/login");
                   }
                 }}
-                className={`transition-colors py-1 cursor-pointer hover:text-black ${currentScreen === "home" ? "text-black border-b border-black" : ""}`}
+                className={`transition-colors py-1 cursor-pointer hover:text-black ${path === "/" ? "text-black border-b border-black" : ""}`}
               >
                 작가 홈
               </button>
@@ -130,10 +105,10 @@ export const Header = ({
                     if (isLoggedIn) {
                       setShowSangsangMenu(!showSangsangMenu);
                     } else {
-                      onNavigate("login");
+                      navigate("/login");
                     }
                   }}
-                  className={`transition-colors py-1 cursor-pointer hover:text-black flex items-center gap-1 ${["create-poem", "create-essay", "create-nonfiction", "create-fairy-tale", "create-novel"].includes(currentScreen) ? "text-black border-b border-black" : ""}`}
+                  className={`transition-colors py-1 cursor-pointer hover:text-black flex items-center gap-1 ${isCreatePath ? "text-black border-b border-black" : ""}`}
                 >
                   <span>상상더하기</span>
                   <ChevronDown className="w-3 h-3 text-neutral-400 shrink-0" />
@@ -143,54 +118,26 @@ export const Header = ({
                   <div className="absolute left-0 top-full pt-2 w-32 z-50">
                     <div className="bg-white rounded-2xl shadow-xl border border-neutral-200 py-1.5 animate-in fade-in slide-in-from-top-2 duration-150">
                       <button
-                        onClick={() => {
-                          if (isLoggedIn) {
-                            onNavigate("create-fairy-tale");
-                          } else {
-                            onNavigate("login");
-                          }
-                          setShowSangsangMenu(false);
-                        }}
-                        className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[#F3F0FF] hover:text-[#6B54E7] flex items-center transition-colors font-bold ${currentScreen === "create-fairy-tale" ? "text-[#6B54E7] bg-[#F3F0FF]/50" : "text-neutral-700"}`}
+                        onClick={() => { goTo("/create/fairy-tale"); setShowSangsangMenu(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[#F3F0FF] hover:text-[#6B54E7] flex items-center transition-colors font-bold ${path.startsWith("/create/fairy-tale") ? "text-[#6B54E7] bg-[#F3F0FF]/50" : "text-neutral-700"}`}
                       >
                         동화
                       </button>
                       <button
-                        onClick={() => {
-                          if (isLoggedIn) {
-                            onNavigate("create-novel");
-                          } else {
-                            onNavigate("login");
-                          }
-                          setShowSangsangMenu(false);
-                        }}
-                        className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[#F3F0FF] hover:text-[#6B54E7] flex items-center transition-colors font-bold ${currentScreen === "create-novel" ? "text-[#6B54E7] bg-[#F3F0FF]/50" : "text-neutral-700"}`}
+                        onClick={() => { goTo("/create/novel"); setShowSangsangMenu(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[#F3F0FF] hover:text-[#6B54E7] flex items-center transition-colors font-bold ${path.startsWith("/create/novel") ? "text-[#6B54E7] bg-[#F3F0FF]/50" : "text-neutral-700"}`}
                       >
                         소설
                       </button>
                       <button
-                        onClick={() => {
-                          if (isLoggedIn) {
-                            onNavigate("create-poem");
-                          } else {
-                            onNavigate("login");
-                          }
-                          setShowSangsangMenu(false);
-                        }}
-                        className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[#F3F0FF] hover:text-[#6B54E7] flex items-center transition-colors font-bold ${currentScreen === "create-poem" ? "text-[#6B54E7] bg-[#F3F0FF]/50" : "text-neutral-700"}`}
+                        onClick={() => { goTo("/create/poem"); setShowSangsangMenu(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[#F3F0FF] hover:text-[#6B54E7] flex items-center transition-colors font-bold ${path === "/create/poem" ? "text-[#6B54E7] bg-[#F3F0FF]/50" : "text-neutral-700"}`}
                       >
                         시
                       </button>
                       <button
-                        onClick={() => {
-                          if (isLoggedIn) {
-                            onNavigate("create-essay");
-                          } else {
-                            onNavigate("login");
-                          }
-                          setShowSangsangMenu(false);
-                        }}
-                        className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[#F3F0FF] hover:text-[#6B54E7] flex items-center transition-colors font-bold ${currentScreen === "create-essay" ? "text-[#6B54E7] bg-[#F3F0FF]/50" : "text-neutral-700"}`}
+                        onClick={() => { goTo("/create/essay"); setShowSangsangMenu(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[#F3F0FF] hover:text-[#6B54E7] flex items-center transition-colors font-bold ${path === "/create/essay" ? "text-[#6B54E7] bg-[#F3F0FF]/50" : "text-neutral-700"}`}
                       >
                         에세이
                       </button>
@@ -201,29 +148,27 @@ export const Header = ({
 
               {/* 내 서재 link */}
               <button
-                onClick={() => {
-                  if (isLoggedIn) {
-                    onNavigate("my-library");
-                  } else {
-                    onNavigate("login");
-                  }
-                }}
-                className={`transition-colors py-1 cursor-pointer hover:text-black ${currentScreen === "my-library" ? "text-black border-b border-black" : ""}`}
+                onClick={() => goTo("/library")}
+                className={`transition-colors py-1 cursor-pointer hover:text-black ${path.startsWith("/library") ? "text-black border-b border-black" : ""}`}
               >
                 내 서재
               </button>
 
               {/* 친구의 서재 Dropdown Menu */}
-              <div className="relative inline-block text-left">
+              <div
+                className="relative inline-block text-left"
+                onMouseEnter={() => setShowFriendsMenu(true)}
+                onMouseLeave={() => setShowFriendsMenu(false)}
+              >
                 <button
                   onClick={() => {
                     if (isLoggedIn) {
                       setShowFriendsMenu(!showFriendsMenu);
                     } else {
-                      onNavigate("login");
+                      navigate("/login");
                     }
                   }}
-                  className={`transition-colors py-1 cursor-pointer hover:text-black flex items-center gap-1 ${["friends-library", "author-search"].includes(currentScreen) ? "text-black border-b border-black" : ""}`}
+                  className={`transition-colors py-1 cursor-pointer hover:text-black flex items-center gap-1 ${isFriendsOrAuthorsPath ? "text-black border-b border-black" : ""}`}
                 >
                   <span>친구의 서재</span>
                   <ChevronDown className="w-3 h-3 text-neutral-400 shrink-0" />
@@ -233,20 +178,14 @@ export const Header = ({
                   <div className="absolute left-0 top-full pt-2 w-32 z-50">
                     <div className="bg-white rounded-2xl shadow-xl border border-neutral-200 py-1.5 animate-in fade-in slide-in-from-top-2 duration-150">
                       <button
-                        onClick={() => {
-                          onNavigate("friends-library");
-                          setShowFriendsMenu(false);
-                        }}
-                        className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[#F3F0FF] hover:text-[#6B54E7] flex items-center transition-colors font-bold ${currentScreen === "friends-library" ? "text-[#6B54E7] bg-[#F3F0FF]/50" : "text-neutral-700"}`}
+                        onClick={() => { goTo("/friends"); setShowFriendsMenu(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[#F3F0FF] hover:text-[#6B54E7] flex items-center transition-colors font-bold ${path === "/friends" ? "text-[#6B54E7] bg-[#F3F0FF]/50" : "text-neutral-700"}`}
                       >
                         도서 검색
                       </button>
                       <button
-                        onClick={() => {
-                          onNavigate("author-search");
-                          setShowFriendsMenu(false);
-                        }}
-                        className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[#F3F0FF] hover:text-[#6B54E7] flex items-center transition-colors font-bold ${currentScreen === "author-search" ? "text-[#6B54E7] bg-[#F3F0FF]/50" : "text-neutral-700"}`}
+                        onClick={() => { goTo("/authors"); setShowFriendsMenu(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[#F3F0FF] hover:text-[#6B54E7] flex items-center transition-colors font-bold ${path.startsWith("/authors") ? "text-[#6B54E7] bg-[#F3F0FF]/50" : "text-neutral-700"}`}
                       >
                         작가 검색
                       </button>
@@ -258,10 +197,8 @@ export const Header = ({
               {/* Admin Panel Shortcut link (ONLY shown if isLoggedIn AND currentUser of Role ADMIN) */}
               {isLoggedIn && currentUser?.role === "ADMIN" && (
                 <button
-                  onClick={() => {
-                    onNavigate("admin");
-                  }}
-                  className={`transition-colors py-1 cursor-pointer text-red-600 hover:text-red-700 font-extrabold flex items-center ${currentScreen === "admin" ? "text-red-700 border-b border-red-700 font-black" : ""}`}
+                  onClick={() => navigate("/admin")}
+                  className={`transition-colors py-1 cursor-pointer text-red-600 hover:text-red-700 font-extrabold flex items-center ${path.startsWith("/admin") ? "text-red-700 border-b border-red-700 font-black" : ""}`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse mr-1.5 inline-block"></span>
                   <span>관리자 영역</span>
@@ -275,14 +212,14 @@ export const Header = ({
                 // 3-A. Logged-out state: [로그인 / 회원가입]
                 <div className="flex items-center space-x-3.5 font-sans">
                   <button
-                    onClick={() => onNavigate("login")}
+                    onClick={() => navigate("/login")}
                     className="text-xs font-bold text-neutral-700 hover:text-black cursor-pointer transition-colors"
                   >
                     로그인
                   </button>
                   <span className="w-px h-3 bg-neutral-200"></span>
                   <button
-                    onClick={() => onNavigate("signup")}
+                    onClick={() => navigate("/signup")}
                     className="text-xs font-bold text-white bg-black hover:bg-neutral-900 px-3.5 py-1.5 rounded-lg transition-all cursor-pointer shadow-xs active:scale-97"
                   >
                     회원가입
@@ -293,7 +230,7 @@ export const Header = ({
                 <div className="relative flex items-center space-x-1.5 sm:space-x-2.5">
                   {/* 바로 소모량을 파악할 수 있는 헤더 실시간 지표 버튼 (클릭 시 구독/아틀리에 관리 이동) */}
                   <button
-                    onClick={() => onNavigate("subscription")}
+                    onClick={() => navigate("/subscription")}
                     className="hidden md:flex items-center gap-2 px-2.5 py-1 bg-neutral-50 hover:bg-neutral-100 active:scale-97 border border-neutral-200 rounded-xl cursor-pointer transition-all shrink-0 font-sans group text-left"
                     title="클릭 시 실시간 구독 지표 및 사용량 대시보드로 이동"
                   >
@@ -303,12 +240,10 @@ export const Header = ({
                     </span>
                     <div className="font-sans">
                       <span className="text-[7.5px] text-neutral-400 font-extrabold uppercase tracking-tight hidden lg:block leading-none select-none mt-0.5">
-                        실시간 소모
+                        오늘 사용량
                       </span>
                       <span className="text-[10px] font-bold text-neutral-800 font-mono block mt-0.5 leading-none">
-                        {currentUser?.isSubscribed
-                          ? `${(dailyScore || 2400).toLocaleString()} / 5,000 pt`
-                          : `${freeTrialTextTokens || 0} / 1,000 pt`}
+                        {usage ? `텍스트 ${usage.text.remaining}/${usage.text.limit} · 이미지 ${usage.image.remaining}/${usage.image.limit}` : '-'}
                       </span>
                     </div>
                   </button>
@@ -361,7 +296,7 @@ export const Header = ({
                         {/* Menu Item: 구독 및 사용량 관리 */}
                         <button
                           onClick={() => {
-                            onNavigate("subscription");
+                            navigate("/subscription");
                             setShowProfileMenu(false);
                           }}
                           className="w-full text-left px-4 py-2.5 text-xs text-neutral-700 hover:bg-neutral-50 flex items-center transition-colors font-bold border-b border-neutral-100"
@@ -373,7 +308,7 @@ export const Header = ({
                         {/* Menu Item 1: 내 정보 수정 */}
                         <button
                           onClick={() => {
-                            onNavigate("profile-edit");
+                            navigate("/profile/edit");
                             setShowProfileMenu(false);
                           }}
                           className="w-full text-left px-4 py-2.5 text-xs text-neutral-700 hover:bg-neutral-50 flex items-center transition-colors font-bold"
@@ -384,10 +319,7 @@ export const Header = ({
 
                         {/* Menu Item: 로그아웃 */}
                         <button
-                          onClick={() => {
-                            setShowProfileMenu(false);
-                            onLogout();
-                          }}
+                          onClick={onLogoutClick}
                           className="w-full text-left px-4 py-2.5 text-xs text-red-600 hover:bg-neutral-50 flex items-center transition-colors font-extrabold border-t border-neutral-100"
                         >
                           <LogOut className="w-4 h-4 mr-2.5 text-red-500" />

@@ -98,6 +98,12 @@ export const authService = {
     return { consentId: data.consentId, status: data.status, expiresAt: data.expiresAt };
   },
 
+  /** 이메일로 받은 동의 링크(토큰 기반, 비로그인) 승인/거절 처리 (PATCH /api/guardian-consents/:consentId) */
+  processGuardianConsent: async (consentId, token, status) => {
+    const data = unwrap(await authApi.processGuardianConsent(consentId, token, status));
+    return { consentId: data.consentId, status: data.status };
+  },
+
   /** 새 비밀번호 강도(규칙 충족 여부) 계산 */
   getPasswordStrength: (newPassword) => ({
     hasLetter: /[a-zA-Z]/.test(newPassword),

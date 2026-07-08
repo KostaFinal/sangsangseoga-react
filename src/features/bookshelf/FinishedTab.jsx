@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ThumbsUp, Eye } from 'lucide-react';
 
-const GENRES = ["전체", "소설", "시", "에세이", "동화", "지식정보"];
+const GENRES = ["전체", "소설", "시", "에세이", "동화"];
 
 export default function FinishedTab({ filteredBooks, onOpenViewer, onReread, setActiveTab, onOpenDetail }) {
   const [selectedGenre, setSelectedGenre] = useState('전체');

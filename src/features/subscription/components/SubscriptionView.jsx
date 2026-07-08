@@ -1,72 +1,71 @@
 import React from 'react';
 import { useSubscriptionState } from '../hooks/useSubscriptionState';
 import {
-  Award, 
-  Star, 
-  Crown, 
-  Sparkles, 
-  Zap, 
-  Clock, 
-  Coins, 
-  HelpCircle, 
-  ChevronDown, 
-  ChevronUp, 
-  FileText, 
-  TrendingUp, 
-  Check, 
-  X, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Printer, 
-  Receipt, 
+  Award,
+  Star,
+  Crown,
+  Sparkles,
+  HelpCircle,
+  ChevronDown,
+  Check,
+  X,
+  CheckCircle2,
+  AlertTriangle,
+  Printer,
+  Receipt,
   ArrowLeft,
-  Activity,
-  CreditCard,
-  Plus
+  RotateCcw,
+  CreditCard
 } from 'lucide-react';
 
-export const SubscriptionView = ({ 
-  onNavigateHome, 
+export const SubscriptionView = ({
+  onNavigateHome,
   onNavigate,
   onCancelSubscription,
+  onResumeSubscription,
+  onPlanChanged,
   onSelectPlan,
   isPremium,
-  freeTrialRemaining,
-  freeTrialTextTokens,
-  freeTrialImageCount,
-  extraCreditsRemaining,
-  setExtraCreditsRemaining,
-  dailyScore,
-  dailyTextTokens,
-  dailyImageCount,
   isSubscriptionCanceled,
   benefitEndDate,
-  onInitiateCreditsPayment
+  currentPlanType,
+  usage,
 }) => {
   const {
     records,
-    extraCreditsCount, setExtraCreditsCount,
+    isRecordsLoading,
+    recordsError,
     selectedInvoice,
-    purchaseSuccess, setPurchaseSuccess,
     showCancelConfirm,
     showCancelSuccess, setShowCancelSuccess,
     printSuccess, setPrintSuccess,
     selectedPlanType, setSelectedPlanType,
     openFaqId,
     faqs,
-    creditPackages,
-    pricePerCredit,
-    calculatedCost,
+    plans,
+    isResuming,
+    isChangingPlan,
+    changePlanError,
     toggleFaq,
-    handleBuyCredits,
     openCancelConfirm,
     closeCancelConfirm,
     confirmCancelSubscription,
+    handleResumeSubscription,
+    handleChangePlan,
     handleSelectPremium,
     viewInvoice,
     closeInvoiceModal,
     printInvoice,
-  } = useSubscriptionState({ onCancelSubscription, onSelectPlan, setExtraCreditsRemaining, onInitiateCreditsPayment });
+  } = useSubscriptionState({ currentPlanType, onCancelSubscription, onResumeSubscription, onPlanChanged, onSelectPlan });
+
+  const isCurrentBillingPeriod = currentPlanType === (selectedPlanType === 'yearly' ? 'PREMIUM_YEARLY' : 'PREMIUM_MONTHLY');
+  // 연간 → 월간 다운그레이드는 서버가 지원하지 않음 (400 DOWNGRADE_NOT_SUPPORTED) — UI에서부터 막아둠
+  const isUnsupportedDowngrade = currentPlanType === 'PREMIUM_YEARLY' && selectedPlanType === 'monthly';
+  const currentBillingPeriodLabel = currentPlanType === 'PREMIUM_YEARLY' ? '연간' : currentPlanType === 'PREMIUM_MONTHLY' ? '월간' : '';
+
+  const yearlyDiscountPercent = (plans.monthly?.price != null && plans.yearly?.price != null)
+    ? Math.round((1 - plans.yearly.price / (plans.monthly.price * 12)) * 100)
+    : null;
 
   return (
     <div className="bg-[#FAF9FF] min-h-screen font-sans text-[#2F2D59] w-full px-0 py-0 pb-16 relative">
@@ -76,12 +75,12 @@ export const SubscriptionView = ({
       <div className="absolute top-20 right-1/4 w-[400px] h-[400px] bg-[#EDF5FF]/50 rounded-full filter blur-[100px] pointer-events-none"></div>
 
       {/* 1. Header Hero Panel with back button and elegant metrics */}
-      <div className="relative w-full bg-[#110F24] text-white overflow-hidden rounded-b-[2.5rem] shadow-lg border-b border-[#2F2D59]/30 z-10 px-4 py-8 sm:py-12 sm:px-8">
+      <div className="relative w-full bg-[#110F24] text-white overflow-hidden rounded-b-[2rem] shadow-lg border-b border-[#2F2D59]/30 z-10 px-4 py-5 sm:py-7 sm:px-8">
         {/* Deep starry background vibe */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(107,84,231,0.2),transparent)] pointer-events-none"></div>
-        
-        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 relative z-10">
-          
+
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-5 relative z-10">
+
           {/* Back button and Tag */}
           <div className="flex flex-wrap items-center justify-between gap-4">
             <button
@@ -94,50 +93,42 @@ export const SubscriptionView = ({
 
             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#6B54E7]/30 text-[#B9B0DC] rounded-full text-xs font-semibold border border-[#6B54E7]/40">
               <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-              <span>실시간 구독 통계 센터</span>
+              <span>구독 관리</span>
             </div>
           </div>
 
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-            <div className="text-left space-y-2 max-w-2xl">
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
-                <Crown className="w-8 h-8 text-yellow-300 fill-yellow-300/10 shrink-0" />
-                <span>나의 구독 및 아틀리에 관리 대시보드</span>
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div className="text-left space-y-1 max-w-2xl">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                <Crown className="w-6 h-6 text-yellow-300 fill-yellow-300/10 shrink-0" />
+                <span>구독 관리</span>
               </h2>
               <p className="text-xs sm:text-sm text-[#B9B0DC] leading-relaxed">
-                현재 이용 현황, 실시간 소모량 통계 확인은 물론 정기 결제 플랜 변경 및 추가 생성권 개별 보충까지, 작가님만의 풍요롭고 편리한 집필 전산망을 원스톱으로 관리합니다.
+                오늘 사용량과 결제 내역을 확인하고 요금제를 변경할 수 있습니다.
               </p>
             </div>
 
             {/* Quick status card with glowing effect */}
-            <div className="relative w-full lg:w-auto flex items-center gap-5 bg-white/[0.04] backdrop-blur-md px-6 py-5 rounded-2xl border border-white/10 shrink-0 text-left">
+            <div className="relative w-full lg:w-auto flex items-center gap-5 bg-white/[0.04] backdrop-blur-md px-5 py-3.5 rounded-2xl border border-white/10 shrink-0 text-left">
               <div className="absolute -top-3 -right-3 w-12 h-12 bg-[#6B54E7]/30 rounded-full filter blur-md"></div>
-              
+
               <div className="space-y-1">
-                <span className="text-[10px] text-[#B9B0DC] block tracking-wider font-bold uppercase">나의 현재 작가 등급</span>
+                <span className="text-[10px] text-[#B9B0DC] block tracking-wider font-bold uppercase">현재 요금제</span>
                 <span className={`text-sm sm:text-base font-black flex items-center gap-1.5 ${isPremium ? 'text-yellow-300' : 'text-slate-300'}`}>
                   {isPremium ? (
                     <>
                       <Star className="w-4.5 h-4.5 text-yellow-300 fill-yellow-300" />
-                      <span>프리미엄 작가 플랜</span>
+                      <span>프리미엄{currentBillingPeriodLabel && ` (${currentBillingPeriodLabel})`}</span>
                     </>
                   ) : (
                     <>
                       <Award className="w-4.5 h-4.5 text-slate-300" />
-                      <span>새싹 작가 회원 (기본)</span>
+                      <span>무료 플랜</span>
                     </>
                   )}
                 </span>
               </div>
-              
-              <div className="h-10 w-[1px] bg-white/10"></div>
-              
-              <div className="space-y-1">
-                <span className="text-[10px] text-[#B9B0DC] block tracking-wider font-bold uppercase">내 잔여 단편 크레딧</span>
-                <span className="text-sm sm:text-base font-extrabold text-white block">
-                  {isPremium ? '무제한 (∞)' : `${extraCreditsRemaining || 0}매`}
-                </span>
-              </div>
+
             </div>
 
           </div>
@@ -145,194 +136,76 @@ export const SubscriptionView = ({
       </div>
 
       {/* 2. Unified Grid Layout Container */}
-      <div className="w-full max-w-7xl mx-auto px-4 py-8 sm:px-6 md:px-8 relative z-10">
-        
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
+      <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 md:px-8 relative z-10">
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
           {/* ==================== LEFT SIDE: Current Subscription + Usage + Pricing (Colspan 8) ==================== */}
-          <div className="lg:col-span-8 space-y-8">
-            
-            {/* Left Card 1: Real-time Resource usage stats */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E6E2FC]/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-6">
-              
-              <div className="flex items-center justify-between border-b border-[#E6E2FC]/40 pb-4">
-                <div className="flex items-center gap-2 text-left">
-                  <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                  <h3 className="text-base font-black text-[#2F2D59]">
-                    실시간 리소스 소모 지표
-                  </h3>
+          <div className="lg:col-span-8 space-y-6">
+
+            {/* Left Card 1: Today's usage */}
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E6E2FC]/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-4">
+
+              <h3 className="text-base font-black text-[#2F2D59] border-b border-[#E6E2FC]/40 pb-3">
+                오늘 사용량
+              </h3>
+
+              {!usage && (
+                <div className="text-xs text-[#7C769D] font-semibold py-6 text-center">불러오는 중...</div>
+              )}
+
+              {usage && (
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-[#7C769D] font-semibold">텍스트 생성{!usage.isPremium && ' (무료 체험)'}</span>
+                      <span className="font-mono font-bold text-[#2F2D59]">{usage.text.remaining} / {usage.text.limit}</span>
+                    </div>
+                    <div className="relative w-full bg-[#E6E2FC]/50 h-2.5 rounded-full overflow-hidden">
+                      <div
+                        className="absolute left-0 top-0 h-full bg-[#6B54E7] rounded-full"
+                        style={{ width: `${usage.text.limit ? (usage.text.remaining / usage.text.limit) * 100 : 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-[#7C769D] font-semibold">이미지 생성{!usage.isPremium && ' (무료 체험)'}</span>
+                      <span className="font-mono font-bold text-[#2F2D59]">{usage.image.remaining} / {usage.image.limit}</span>
+                    </div>
+                    <div className="relative w-full bg-[#E6E2FC]/50 h-2.5 rounded-full overflow-hidden">
+                      <div
+                        className="absolute left-0 top-0 h-full bg-[#5179E6] rounded-full"
+                        style={{ width: `${usage.image.limit ? (usage.image.remaining / usage.image.limit) * 100 : 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {!usage.isPremium && usage.trialPageLimit !== null && (
+                    <div className="flex justify-between items-center text-xs pt-2 border-t border-[#E6E2FC]/40">
+                      <span className="text-[#7C769D] font-semibold">무료 체험 사용 여부</span>
+                      <span className="font-bold text-[#2F2D59]">{usage.freeTrialUsed ? '사용 완료' : '미사용'}</span>
+                    </div>
+                  )}
                 </div>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#EDF5FF] text-[#5179E6] text-[10px] font-bold rounded-md">
-                  <Activity className="w-3 h-3 animate-pulse" />
-                  <span>실시간 동기화 활성</span>
-                </span>
-              </div>
-
-              {isPremium ? (
-                // Premium Status report (Unified tracking with co-weighted components)
-                (() => {
-                  const score = dailyScore || 2400;
-                  const textTokens = dailyTextTokens || 1200;
-                  const imageCount = dailyImageCount || 1;
-                  const scorePercent = Math.min(100, (score / 5000) * 100);
-
-                  return (
-                    <div className="space-y-6">
-                      
-                      {/* Sleek Gauge Area */}
-                      <div className="bg-[#FAF9FF] rounded-2xl p-5 sm:p-6 border border-[#E6E2FC]/40 space-y-4">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-left">
-                          <div className="space-y-1">
-                            <span className="text-[9px] bg-[#6B54E7] text-white font-extrabold px-2.5 py-0.5 rounded-full tracking-wider uppercase">
-                              통합 풀 모델 (Unified Pool)
-                            </span>
-                            <h4 className="text-sm sm:text-base font-extrabold text-[#2F2D59] pt-1">
-                              종합 인공지능 리소스 소모 상태
-                            </h4>
-                          </div>
-                          <div className="text-left sm:text-right font-mono">
-                            <span className="text-2xl sm:text-3xl font-black text-[#6B54E7]">{score.toLocaleString()}</span>
-                            <span className="text-xs text-[#7C769D] font-bold"> / 5,000 pt (일일 한도)</span>
-                          </div>
-                        </div>
-
-                        {/* Combined Premium Progress Bar */}
-                        <div className="relative w-full bg-[#E6E2FC]/50 h-3.5 rounded-full overflow-hidden">
-                          <div 
-                            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#6B54E7] via-[#5179E6] to-[#835AF1] transition-all duration-700 rounded-full" 
-                            style={{ width: `${scorePercent}%` }}
-                          ></div>
-                        </div>
-
-                        {/* Breakdown Legend inside premium */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[#E6E2FC]/50 text-xs text-left">
-                          <div className="space-y-1.5">
-                            <div className="flex justify-between items-center text-[#5179E6]">
-                              <span className="flex items-center gap-2 font-bold">
-                                <span className="w-2 h-2 bg-[#5179E6] rounded-full"></span>
-                                📖 텍스트 소모 (자당 1.0 pt)
-                              </span>
-                              <span className="font-mono font-black text-[#2F2D59]">{textTokens.toLocaleString()} pt</span>
-                            </div>
-                            <p className="text-[11px] text-[#7C769D] leading-normal pl-4">
-                              문장 필사, 퇴고 조력 및 대화 생성 자수 한도에 비례하여 자동 산정
-                            </p>
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <div className="flex justify-between items-center text-[#6B54E7]">
-                              <span className="flex items-center gap-2 font-bold">
-                                <span className="w-2 h-2 bg-[#6B54E7] rounded-full"></span>
-                                🎨 이미지 소모 (장당 1,200 pt)
-                              </span>
-                              <span className="font-mono font-black text-[#2F2D59]">{(imageCount * 1200).toLocaleString()} pt</span>
-                            </div>
-                            <p className="text-[11px] text-[#7C769D] leading-normal pl-4">
-                              시네마틱 수채화 및 소설 맞춤식 인공지능 명화 일러스트 삽화 차감
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Informative advice banner */}
-                      <div className="bg-[#E6E2FC]/20 border border-[#E6E2FC]/50 rounded-xl p-4 text-xs text-[#6B54E7] leading-relaxed text-left flex items-start gap-2.5">
-                        <Zap className="w-5 h-5 text-[#6B54E7] shrink-0 mt-0.5" />
-                        <p>
-                          <strong>리소스 통합 정산 규칙:</strong> 상상서가의 실시간 제어 모델은 복잡하고 인위적인 기능별 제약을 생략하는 대신, <strong>텍스트와 이미지를 자산 가중 비율로 신축 통합해 단일 전산 풀로 조율</strong>합니다. 작가님의 스타일대로 삽화 중심 구상 또는 순수 문학 중심 집필을 능동적으로 배분해 보세요.
-                        </p>
-                      </div>
-
-                    </div>
-                  );
-                })()
-              ) : (
-                // Free trial status report (Unified tracking with co-weighted components)
-                (() => {
-                  const textTokens = freeTrialTextTokens || 0;
-                  const imageCount = freeTrialImageCount || 0;
-                  const isExpired = freeTrialRemaining === 0 || (textTokens >= 1000 && imageCount >= 3);
-                  
-                  const trialUsed = textTokens + (imageCount * 300);
-                  const trialTotal = 1900; 
-                  const scorePercent = Math.min(100, (trialUsed / trialTotal) * 100);
-
-                  return (
-                    <div className="space-y-6">
-                      
-                      {isExpired && (
-                        <div className="bg-rose-50 border border-rose-150 p-4 rounded-xl text-xs text-rose-800 leading-relaxed text-left flex items-start gap-2.5">
-                          <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-                          <p>
-                            <strong>무료 체험 패키지 소진:</strong> 지급해 드린 가입 무료 체험 패키지가 모두 소멸되었습니다. 상상력을 멈추지 않으시도록 아래 프리미엄 플랜을 자유롭게 이용해 보세요!
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Unified Gauge Box */}
-                      <div className="bg-[#FAF9FF] rounded-2xl p-5 sm:p-6 border border-[#E6E2FC]/40 space-y-4">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-left">
-                          <div className="space-y-1">
-                            <span className="text-[9px] bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded-full tracking-wider uppercase">
-                              체험판 통합 모형 (Free-Trial Pool)
-                            </span>
-                            <h4 className="text-sm sm:text-base font-extrabold text-[#2F2D59] pt-1">
-                              체험판 실시간 가중 리소스 사용량
-                            </h4>
-                          </div>
-                          <div className="text-left sm:text-right font-mono">
-                            <span className="text-2xl sm:text-3xl font-black text-emerald-600">{trialUsed.toLocaleString()}</span>
-                            <span className="text-xs text-[#7C769D] font-bold"> / {trialTotal.toLocaleString()} pt (전체 혜택)</span>
-                          </div>
-                        </div>
-
-                        {/* Progress Bar */}
-                        <div className="relative w-full bg-[#E6E2FC]/50 h-3.5 rounded-full overflow-hidden">
-                          <div 
-                            className="absolute left-0 top-0 h-full bg-gradient-to-r from-emerald-500 to-[#5179E6] transition-all duration-700 rounded-full" 
-                            style={{ width: `${scorePercent}%` }}
-                          ></div>
-                        </div>
-
-                        {/* Weight Breakdown */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[#E6E2FC]/50 text-xs text-left">
-                          <div className="space-y-1">
-                            <span className="text-[#7C769D] block">📖 체험 텍스트 소모 (가중치: 자당 1.0 pt)</span>
-                            <span className="font-mono font-black text-[#2F2D59] block text-sm">{textTokens} / 1,000 pt</span>
-                          </div>
-                          <div className="space-y-1">
-                            <span className="text-[#7C769D] block">🎨 체험 이미지 삽화 (가중치: 장당 300 pt)</span>
-                            <span className="font-mono font-black text-[#2F2D59] block text-sm">{(imageCount * 300)} / 900 pt ({imageCount}장)</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-[#FAF9FF] border border-[#E6E2FC]/40 rounded-xl p-4 text-[11px] text-[#7C769D] leading-relaxed text-left flex items-start gap-2">
-                        <HelpCircle className="w-4 h-4 text-[#6B54E7] shrink-0 mt-0.5" />
-                        <p>
-                          <strong>체험판 이용 안내:</strong> 신규 작가님께는 부정 이용 방지를 위해 무료 체험 리소스가 일정 한도로 제공됩니다.
-                        </p>
-                      </div>
-
-                    </div>
-                  );
-                })()
               )}
             </div>
 
             {/* Left Card 2: Subscription Pricing Section */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E6E2FC]/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-6">
-              
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E6E2FC]/40 pb-5 text-left">
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E6E2FC]/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-4">
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E6E2FC]/40 pb-4 text-left">
                 <div className="space-y-1">
                   <h3 className="text-base sm:text-lg font-black text-[#2F2D59]">
-                    아틀리에 멤버십 구독 요금제
+                    구독 요금제
                   </h3>
                   <p className="text-xs text-[#7C769D]">
-                    상상서가의 고품격 무제한 초안 생성과 맞춤 제본용 명화 일러스트 패키지를 가동합니다.
+                    무료 플랜과 프리미엄 플랜을 비교해보세요.
                   </p>
                 </div>
 
-                {/* Subcription toggle switch */}
+                {/* Subscription toggle switch */}
                 <div className="bg-[#FAF9FF] p-1.5 rounded-2xl border border-[#E6E2FC]/60 flex space-x-1 self-start sm:self-auto shrink-0">
                   <button
                     type="button"
@@ -355,72 +228,94 @@ export const SubscriptionView = ({
                     }`}
                   >
                     <span>연간 결제</span>
-                    <span className="text-[9px] bg-red-100 text-red-600 px-1 py-0.25 rounded-md font-black">20% 할인</span>
+                    {yearlyDiscountPercent != null && (
+                      <span className="text-[9px] bg-red-100 text-red-600 px-1 py-0.25 rounded-md font-black">{yearlyDiscountPercent}% 할인</span>
+                    )}
                   </button>
                 </div>
               </div>
 
+              {/* 현재 구독 상태 안내 */}
+              <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-bold ${
+                isPremium && isSubscriptionCanceled
+                  ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                  : isPremium
+                    ? 'bg-[#F3F0FF] text-[#6B54E7] border border-[#E6E2FC]'
+                    : 'bg-[#FAF9FF] text-[#7C769D] border border-[#E6E2FC]/60'
+              }`}>
+                {isPremium && isSubscriptionCanceled && (
+                  <>
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span>현재 프리미엄 플랜({currentBillingPeriodLabel}) 이용 중 · <strong>{benefitEndDate || '결제 기간 만료일'}</strong>에 무료 플랜으로 전환 예정</span>
+                  </>
+                )}
+                {isPremium && !isSubscriptionCanceled && (
+                  <>
+                    <Star className="w-4 h-4 shrink-0 text-[#6B54E7]" />
+                    <span>현재 프리미엄 플랜({currentBillingPeriodLabel}) 이용 중</span>
+                  </>
+                )}
+                {!isPremium && (
+                  <>
+                    <Award className="w-4 h-4 shrink-0" />
+                    <span>현재 무료 플랜 이용 중</span>
+                  </>
+                )}
+              </div>
+
               {/* Bento-style Plan Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
                 {/* 1. Free Plan Card */}
-                <div className="p-6 rounded-2xl border border-[#E6E2FC]/60 bg-[#FAF9FF] flex flex-col justify-between text-left space-y-6">
-                  <div className="space-y-4">
+                <div className="p-5 rounded-2xl border border-[#E6E2FC]/60 bg-[#FAF9FF] flex flex-col justify-between text-left space-y-4">
+                  <div className="space-y-3">
                     <div>
-                      <span className="text-[10px] text-[#7C769D] tracking-wider font-extrabold uppercase">Standard Free</span>
-                      <h4 className="text-base font-black text-[#2F2D59] mt-0.5">새싹 작가 무료 이용권</h4>
-                      <p className="text-xs text-[#7C769D] mt-1.5 leading-relaxed">
-                        상상서가의 문장력 수사 및 기초 가구 배치를 가볍게 체험하고 아이디어를 기록할 수 있습니다.
-                      </p>
+                      <span className="text-[10px] text-[#7C769D] tracking-wider font-extrabold uppercase">Free</span>
+                      <h4 className="text-base font-black text-[#2F2D59] mt-0.5">무료 플랜</h4>
                     </div>
 
-                    <div className="pt-2">
-                      <span className="text-3xl font-black text-[#2F2D59]">₩0</span>
-                      <span className="text-[11px] text-[#7C769D] block mt-1">추가 결제 의무 및 청구 없이 평생 이용 가능</span>
-                    </div>
+                    <span className="text-2xl font-black text-[#2F2D59] block">₩0</span>
 
-                    <div className="space-y-2.5 border-t border-[#E6E2FC]/40 pt-4 text-xs text-[#7C769D]">
+                    <div className="space-y-2 border-t border-[#E6E2FC]/40 pt-3 text-xs text-[#7C769D]">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                        <span>하루 AI 초안 집필 10편 한정 제공</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                        <span>기초 동화 일러스트 6종 장식 지원</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-[#7C769D]/50 line-through">
-                        <X className="w-4 h-4 text-rose-400 shrink-0" />
-                        <span>고선명 인명 일러스트 무제한 영속 보존 불가</span>
+                        <span>무료 체험 {plans.free?.trialPageLimit ?? '-'}페이지 제공</span>
                       </div>
                     </div>
                   </div>
 
-                  <button
-                    disabled={!isPremium}
-                    onClick={() => {
-                      if (isPremium) {
-                        openCancelConfirm();
-                      }
-                    }}
-                    className={`w-full py-3 rounded-xl text-xs font-bold transition-all text-center ${
-                      isPremium
-                        ? 'bg-[#E6E2FC] hover:bg-[#d8d2f7] text-[#6B54E7] cursor-pointer'
-                        : 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default font-extrabold flex items-center justify-center gap-1.5'
-                    }`}
-                  >
-                    {isPremium ? (
-                      '기본 무료 요금으로 다운그레이드'
-                    ) : (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        <span>현재 이용 중인 기본 요금제</span>
-                      </>
-                    )}
-                  </button>
+                  {!isPremium && (
+                    <button
+                      disabled
+                      className="w-full py-3 rounded-xl text-xs font-extrabold text-center bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default flex items-center justify-center gap-1.5"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>현재 이용 중인 플랜</span>
+                    </button>
+                  )}
+
+                  {isPremium && !isSubscriptionCanceled && (
+                    <button
+                      type="button"
+                      onClick={openCancelConfirm}
+                      className="w-full py-3 rounded-xl text-xs font-bold transition-all text-center bg-[#E6E2FC] hover:bg-[#d8d2f7] text-[#6B54E7] cursor-pointer"
+                    >
+                      무료 플랜으로 변경
+                    </button>
+                  )}
+
+                  {isPremium && isSubscriptionCanceled && (
+                    <button
+                      disabled
+                      className="w-full py-3 rounded-xl text-xs font-bold text-center bg-[#FAF9FF] text-[#7C769D] border border-dashed border-[#E6E2FC] cursor-default"
+                    >
+                      {benefitEndDate || '만료일'}부터 자동 적용 예정
+                    </button>
+                  )}
                 </div>
 
                 {/* 2. Premium Plan Card */}
-                <div className={`p-6 rounded-2xl border-2 flex flex-col justify-between text-left space-y-6 transition-all duration-300 relative ${
+                <div className={`p-5 rounded-2xl border-2 flex flex-col justify-between text-left space-y-4 transition-all duration-300 relative ${
                   isPremium && !isSubscriptionCanceled
                     ? 'border-[#6B54E7] bg-white shadow-xl shadow-[#6B54E7]/5'
                     : 'border-[#E6E2FC]/60 bg-white hover:border-[#6B54E7]/40 hover:shadow-lg'
@@ -428,71 +323,106 @@ export const SubscriptionView = ({
                   {/* Popular Badge */}
                   <div className="absolute -top-3.5 right-6 bg-[#6B54E7] text-white text-[10px] font-black tracking-wider px-3 py-1 rounded-full uppercase shadow-md flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-yellow-300" />
-                    <span>추천 아틀리에</span>
+                    <span>추천</span>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div>
-                      <span className="text-[10px] text-[#6B54E7] tracking-wider font-extrabold uppercase">Premium Membership</span>
-                      <h4 className="text-base font-black text-[#2F2D59] mt-0.5">프리미엄 창작 패키지</h4>
-                      <p className="text-xs text-[#7C769D] mt-1.5 leading-relaxed">
-                        초고선명 시네마틱 화풍과 장문 줄거리 일관성을 영속 보정받아 가치 높은 가공 책을 빌드합니다.
-                      </p>
+                      <span className="text-[10px] text-[#6B54E7] tracking-wider font-extrabold uppercase">Premium</span>
+                      <h4 className="text-base font-black text-[#2F2D59] mt-0.5">프리미엄 플랜</h4>
                     </div>
 
-                    <div className="pt-2">
+                    <div>
                       <div className="flex items-baseline gap-1.5">
-                        <span className="text-3xl font-black text-[#6B54E7]">
-                          {selectedPlanType === 'monthly' ? '₩9,900' : '₩7,900'}
+                        <span className="text-2xl font-black text-[#6B54E7]">
+                          {plans[selectedPlanType]?.price != null ? `₩${plans[selectedPlanType].price.toLocaleString()}` : '-'}
                         </span>
-                        <span className="text-xs text-[#7C769D] font-bold">/ 월 자동 결제</span>
+                        <span className="text-xs text-[#7C769D] font-bold">
+                          {selectedPlanType === 'yearly' ? '/ 년 자동 결제' : '/ 월 자동 결제'}
+                        </span>
                       </div>
-                      {selectedPlanType === 'yearly' && (
+                      {selectedPlanType === 'yearly' && yearlyDiscountPercent != null && (
                         <span className="text-[10px] bg-red-50 text-red-600 font-extrabold px-2 py-0.5 rounded-lg inline-block mt-1.5">
-                          연간 20% 특별 우대 적용 완료 (연 24,000원 절약)
+                          연간 결제 {yearlyDiscountPercent}% 할인 적용
                         </span>
                       )}
                     </div>
 
-                    <div className="space-y-2.5 border-t border-[#E6E2FC]/40 pt-4 text-xs text-[#2F2D59]">
+                    <div className="space-y-2 border-t border-[#E6E2FC]/40 pt-3 text-xs text-[#2F2D59]">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-[#6B54E7] shrink-0 font-bold" />
-                        <span className="font-semibold">실시간 소설 창작 무제한 (Gemini Pro 전담)</span>
+                        <span className="font-semibold">AI 텍스트 생성 하루 {plans[selectedPlanType]?.dailyTextLimit ?? '-'}회</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-[#6B54E7] shrink-0 font-bold" />
-                        <span className="font-semibold">시네마틱/유화 명화 화풍 일러스트 무제한 제공</span>
+                        <span className="font-semibold">AI 이미지 생성 하루 {plans[selectedPlanType]?.dailyImageLimit ?? '-'}회</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-[#6B54E7] shrink-0 font-bold" />
-                        <span className="font-semibold">PDF 정밀 이북 다운로드 및 제본 인가권 포함</span>
+                        <span className="font-semibold">PDF 다운로드</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-3 pt-4 border-t border-[#E6E2FC]/40">
-                    <button
-                      onClick={handleSelectPremium}
-                      className={`w-full py-3 rounded-xl text-xs font-black transition-all text-center cursor-pointer shadow-md ${
-                        isPremium && !isSubscriptionCanceled
-                          ? 'bg-[#110F24] hover:bg-neutral-800 text-white'
-                          : 'bg-gradient-to-r from-[#5179E6] via-[#6B54E7] to-[#835AF1] text-white hover:opacity-95'
-                      }`}
-                    >
-                      {isPremium && !isSubscriptionCanceled ? '구독 변경 및 결제 내역 확인' : '프리미엄 정기 구독 개시'}
-                    </button>
-                    
+                  <div className="space-y-2 pt-3 border-t border-[#E6E2FC]/40">
+                    {!isPremium && (
+                      <button
+                        onClick={handleSelectPremium}
+                        className="w-full py-3 rounded-xl text-xs font-black transition-all text-center cursor-pointer shadow-md bg-gradient-to-r from-[#5179E6] via-[#6B54E7] to-[#835AF1] text-white hover:opacity-95"
+                      >
+                        프리미엄 구독 시작
+                      </button>
+                    )}
+
                     {isPremium && !isSubscriptionCanceled && (
-                      <div className="text-center">
-                        <button
-                          type="button"
-                          onClick={openCancelConfirm}
-                          className="text-[11px] text-rose-500 hover:text-rose-600 font-extrabold transition-all cursor-pointer inline-flex items-center gap-1 hover:underline"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                          <span>정기 결제 자동 갱신 해지 예약</span>
-                        </button>
-                      </div>
+                      <>
+                        {changePlanError && (
+                          <p className="text-[11px] text-rose-600 font-bold text-center">{changePlanError}</p>
+                        )}
+                        {isCurrentBillingPeriod ? (
+                          <button
+                            disabled
+                            className="w-full py-3 rounded-xl text-xs font-extrabold text-center bg-[#F3F0FF] text-[#6B54E7] border border-[#E6E2FC] cursor-default"
+                          >
+                            선택 중인 요금제 (변경 사항 없음)
+                          </button>
+                        ) : isUnsupportedDowngrade ? (
+                          <div className="p-3 rounded-xl bg-[#FAF9FF] border border-dashed border-[#E6E2FC] text-[11px] text-[#7C769D] leading-relaxed text-left">
+                            연간 → 월간 전환은 지원되지 않습니다. 구독을 해지하고 이용 기간이 끝난 뒤 월간 요금제로 다시 가입해 주세요.
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={isChangingPlan}
+                            onClick={handleChangePlan}
+                            className="w-full py-3 rounded-xl text-xs font-black transition-all text-center cursor-pointer shadow-md bg-[#110F24] hover:bg-neutral-800 text-white disabled:opacity-60"
+                          >
+                            {isChangingPlan ? '변경 중...' : `${selectedPlanType === 'yearly' ? '연간' : '월간'} 결제로 전환`}
+                          </button>
+                        )}
+                        <div className="text-center">
+                          <button
+                            type="button"
+                            onClick={openCancelConfirm}
+                            className="text-[11px] text-rose-500 hover:text-rose-600 font-extrabold transition-all cursor-pointer inline-flex items-center gap-1 hover:underline"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>구독 해지</span>
+                          </button>
+                        </div>
+                      </>
+                    )}
+
+                    {isPremium && isSubscriptionCanceled && (
+                      <button
+                        type="button"
+                        disabled={isResuming}
+                        onClick={handleResumeSubscription}
+                        className="w-full py-3 rounded-xl text-xs font-black transition-all text-center cursor-pointer shadow-md bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5 disabled:opacity-60"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>{isResuming ? '처리 중...' : '구독 유지하기 (해지 취소)'}</span>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -500,22 +430,22 @@ export const SubscriptionView = ({
               </div>
 
               {/* Collapsible FAQ list */}
-              <div className="mt-8 pt-6 border-t border-[#E6E2FC]/40 text-left">
-                <span className="text-xs text-[#7C769D] font-extrabold flex items-center gap-2 uppercase mb-4">
+              <div className="mt-5 pt-4 border-t border-[#E6E2FC]/40 text-left">
+                <span className="text-xs text-[#7C769D] font-extrabold flex items-center gap-2 uppercase mb-3">
                   <HelpCircle className="w-4.5 h-4.5 text-[#6B54E7]" />
-                  <span>멤버십 및 창작 아틀리에 FAQ</span>
+                  <span>자주 묻는 질문</span>
                 </span>
 
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {faqs.map((faq) => (
-                    <div 
-                      key={faq.id} 
+                    <div
+                      key={faq.id}
                       className="rounded-2xl border border-[#E6E2FC]/40 bg-[#FAF9FF] overflow-hidden transition-all duration-200"
                     >
                       <button
                         type="button"
                         onClick={() => toggleFaq(faq.id)}
-                        className="w-full flex justify-between items-center text-left px-5 py-4 text-xs sm:text-sm font-extrabold text-[#2F2D59] hover:bg-[#E6E2FC]/20 transition-colors cursor-pointer"
+                        className="w-full flex justify-between items-center text-left px-4 py-3 text-xs sm:text-sm font-extrabold text-[#2F2D59] hover:bg-[#E6E2FC]/20 transition-colors cursor-pointer"
                       >
                         <span className="flex items-center gap-2">
                           <span className="text-[#6B54E7] font-black">Q.</span>
@@ -541,109 +471,38 @@ export const SubscriptionView = ({
 
           </div>
 
-          {/* ==================== RIGHT SIDE: Add-on Purchases + Bill Receipts (Colspan 4) ==================== */}
-          <div className="lg:col-span-4 space-y-8">
-            
-            {/* Right Card 1: Single item credit charging block */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E6E2FC]/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-6">
-              
-              <div className="space-y-1.5 text-left">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-black tracking-wider uppercase rounded-md">
-                  <Coins className="w-3.5 h-3.5 text-amber-600" />
-                  <span>단발 보강 충전소</span>
-                </span>
-                <h3 className="text-base font-black text-[#2F2D59]">
-                  단편 생성권 개별 즉시 구매
-                </h3>
-                <p className="text-xs text-[#7C769D] leading-relaxed">
-                  정기 구독 갱신일과 관계없이 소설 책 삽화와 긴 소설 영감이 갑자기 소진되었을 때, 긴급하게 가용 단편을 추가 충전합니다.
-                </p>
-              </div>
+          {/* ==================== RIGHT SIDE: Bill Receipts (Colspan 4) ==================== */}
+          <div className="lg:col-span-4 space-y-6">
 
-              {/* Direct Package Selection list */}
-              <div className="space-y-3 pt-1">
-                {creditPackages.map((pkg) => (
-                  <button
-                    key={pkg.count}
-                    type="button"
-                    onClick={() => setExtraCreditsCount(pkg.count)}
-                    className={`relative w-full p-4 rounded-2xl border text-left transition-all duration-200 flex justify-between items-center cursor-pointer ${
-                      extraCreditsCount === pkg.count
-                        ? 'border-[#6B54E7] bg-[#E6E2FC]/20 shadow-xs ring-1 ring-[#6B54E7]'
-                        : 'border-[#E6E2FC]/60 hover:border-[#6B54E7]/40 bg-white'
-                    }`}
-                  >
-                    {pkg.isPopular && (
-                      <span className="absolute -top-2 right-4 bg-[#6B54E7] text-white text-[8px] font-black tracking-wider px-2 py-0.5 rounded-full uppercase shadow-xs">
-                        BEST
-                      </span>
-                    )}
-                    <div className="space-y-0.5">
-                      <h4 className="text-xs font-bold text-[#2F2D59]">{pkg.label}</h4>
-                      <p className="text-[10px] text-[#7C769D]">{pkg.desc}</p>
-                    </div>
-                    <span className="text-xs font-black text-[#6B54E7] font-mono">
-                      ₩{pkg.price.toLocaleString()}
-                    </span>
-                  </button>
-                ))}
-              </div>
+            {/* Payment logs timeline */}
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E6E2FC]/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-3">
 
-              {/* Interactive slider */}
-              <div className="space-y-4 pt-4 border-t border-[#E6E2FC]/40 text-left">
-                <div className="flex justify-between items-center text-[11px] text-[#7C769D] font-semibold">
-                  <span>원하는 장수 직접 조절 (10~200매)</span>
-                  <span className="text-[#6B54E7]">장당 ₩98 won</span>
-                </div>
-
-                <div className="flex items-center gap-4 bg-[#FAF9FF] p-3 rounded-2xl border border-[#E6E2FC]/40">
-                  <input
-                    type="range"
-                    min="10"
-                    max="200"
-                    step="10"
-                    value={extraCreditsCount < 10 ? 10 : extraCreditsCount}
-                    onChange={(e) => setExtraCreditsCount(Number(e.target.value))}
-                    className="flex-grow h-1.5 bg-[#E6E2FC] rounded-lg appearance-none cursor-pointer accent-[#6B54E7]"
-                  />
-                  <span className="text-xs font-extrabold text-[#2F2D59] shrink-0 bg-white px-3 py-1 rounded-xl border border-[#E6E2FC]/50 font-mono shadow-xs">
-                    {extraCreditsCount}매
-                  </span>
-                </div>
-
-                {/* Confirm pricing box */}
-                <div className="flex justify-between items-center pt-4 border-t border-[#E6E2FC]/40">
-                  <div className="space-y-0.5">
-                    <span className="text-[#7C769D] text-[10px] font-bold block">총 결제 금액</span>
-                    <span className="text-base font-black text-[#2F2D59] font-mono">
-                      ₩{calculatedCost.toLocaleString()}원
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={handleBuyCredits}
-                    className="px-4 py-2.5 bg-[#6B54E7] hover:bg-[#5b45d6] text-white text-xs font-black rounded-xl transition-all shadow-md shadow-[#6B54E7]/15 cursor-pointer hover:scale-[1.02] active:scale-95"
-                  >
-                    충전하기
-                  </button>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Right Card 2: Payment logs timeline */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E6E2FC]/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-4">
-              
               <div className="border-b border-[#E6E2FC]/40 pb-3 flex justify-between items-center text-left">
                 <h3 className="text-xs font-extrabold text-[#2F2D59] uppercase tracking-wider flex items-center gap-1.5">
                   <Receipt className="w-4 h-4 text-[#6B54E7]" />
                   <span>최근 결제 영수 기록</span>
                 </h3>
-                <span className="text-[10px] text-[#7C769D] font-semibold">최근 4건</span>
+                <span className="text-[10px] text-[#7C769D] font-semibold">최근 {records.length}건</span>
               </div>
 
+              {isRecordsLoading && (
+                <div className="text-xs text-[#7C769D] font-semibold py-6 text-center">불러오는 중...</div>
+              )}
+
+              {!isRecordsLoading && recordsError && (
+                <div className="text-xs text-rose-600 font-bold p-3 bg-rose-50 border border-rose-200 rounded-xl">
+                  {recordsError}
+                </div>
+              )}
+
+              {!isRecordsLoading && !recordsError && records.length === 0 && (
+                <div className="text-xs text-[#7C769D] font-semibold py-6 text-center bg-[#FAF9FF] border border-dashed border-[#E6E2FC] rounded-xl">
+                  아직 결제 내역이 없습니다.
+                </div>
+              )}
+
               <div className="divide-y divide-[#E6E2FC]/30 max-h-64 overflow-y-auto pr-1">
-                {records.map((rec) => (
+                {!isRecordsLoading && !recordsError && records.map((rec) => (
                   <div key={rec.id} className="py-3 flex justify-between items-center text-xs text-left">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 bg-[#FAF9FF] rounded-xl flex items-center justify-center border border-[#E6E2FC]/50 text-[#6B54E7] shrink-0">
@@ -696,33 +555,45 @@ export const SubscriptionView = ({
                 <div className="inline-flex items-center justify-center w-11 h-11 bg-[#FAF9FF] text-[#6B54E7] rounded-2xl border border-[#E6E2FC]/60 mb-2 shadow-sm">
                   <Receipt className="w-5.5 h-5.5" />
                 </div>
-                <h4 className="font-black text-base text-[#2F2D59]">상상서가 명세 내역서</h4>
-                <p className="text-[10px] text-[#7C769D] font-mono">영수 일련번호: {selectedInvoice.id}</p>
+                <h4 className="font-black text-base text-[#2F2D59]">결제 영수증</h4>
+                <p className="text-[10px] text-[#7C769D] font-mono">영수 번호: {selectedInvoice.id}</p>
               </div>
 
               <div className="border-t border-b border-dashed border-[#E6E2FC] py-4 space-y-2.5 text-xs text-[#7C769D]">
                 <div className="flex justify-between">
-                  <span>공급 가맹점</span>
-                  <span className="font-bold text-[#2F2D59]">상상서가 아틀리에</span>
+                  <span>가맹점</span>
+                  <span className="font-bold text-[#2F2D59]">{selectedInvoice.merchantName || '상상서가'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>품목 규격</span>
+                  <span>결제 항목</span>
                   <span className="font-bold text-[#6B54E7]">{selectedInvoice.title}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>인증 완료 시간</span>
+                  <span>결제 일시</span>
                   <span className="font-mono text-[#2F2D59]">{selectedInvoice.date.split(' • ')[0]}</span>
                 </div>
+                {selectedInvoice.maskedCardNumber && (
+                  <div className="flex justify-between">
+                    <span>결제 카드</span>
+                    <span className="font-mono text-[#2F2D59]">{selectedInvoice.maskedCardNumber}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
-                  <span>거래 거래 상태</span>
+                  <span>거래 상태</span>
                   <span className="bg-emerald-50 text-emerald-700 text-[10px] font-black px-2 py-0.5 rounded-md border border-emerald-200">
                     {selectedInvoice.status || '성공'}
                   </span>
                 </div>
+                {selectedInvoice.merchantBusinessNumber && (
+                  <div className="flex justify-between">
+                    <span>사업자 번호</span>
+                    <span className="font-mono text-[#2F2D59]">{selectedInvoice.merchantBusinessNumber}</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-between items-baseline pt-2">
-                <span className="text-xs text-[#7C769D] font-bold">정산 금액</span>
+                <span className="text-xs text-[#7C769D] font-bold">결제 금액</span>
                 <span className="text-xl font-black text-[#6B54E7] font-mono">
                   ₩{selectedInvoice.amount.toLocaleString()} 원
                 </span>
@@ -735,7 +606,7 @@ export const SubscriptionView = ({
                   className="w-full py-3 bg-[#6B54E7] hover:bg-[#5b45d6] text-white text-xs font-black rounded-xl text-center cursor-pointer transition-colors flex items-center justify-center gap-2 shadow-md shadow-[#6B54E7]/15"
                 >
                   <Printer className="w-4 h-4" />
-                  <span>출력 인쇄 및 PDF 저장</span>
+                  <span>인쇄 / PDF 저장</span>
                 </button>
               </div>
             </div>
@@ -743,42 +614,17 @@ export const SubscriptionView = ({
         </div>
       )}
 
-      {/* 4. DIALOG MODAL: Credit Charge Success */}
-      {purchaseSuccess && (
-        <div className="fixed inset-0 bg-[#110F24]/50 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-xs w-full p-6 text-center border border-[#E6E2FC]/50 shadow-2xl relative animate-in zoom-in-95 duration-200">
-            <div className="mx-auto w-12 h-12 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-center text-emerald-600 mb-4">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-            <h3 className="text-base font-black text-[#2F2D59]">생성권 개별 보완 충전 완료</h3>
-            
-            <div className="text-xs text-[#7C769D] mt-3.5 space-y-1.5 text-left bg-[#FAF9FF] p-4 rounded-2xl border border-[#E6E2FC]/60 font-mono">
-              <p>📦 <strong>물품:</strong> 아틀리에 생성권 {extraCreditsCount}장</p>
-              <p>💳 <strong>정산금액:</strong> ₩{calculatedCost.toLocaleString()} 원</p>
-              <p>✓ 안전하게 충전이 완료되었습니다.</p>
-            </div>
-
-            <button
-              onClick={() => setPurchaseSuccess(false)}
-              className="mt-5 w-full py-3 bg-[#6B54E7] hover:bg-[#5b45d6] text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-md shadow-[#6B54E7]/15"
-            >
-              확인
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 5. DIALOG MODAL: Subscription Cancel Confirm */}
+      {/* 4. DIALOG MODAL: Subscription Cancel Confirm */}
       {showCancelConfirm && (
         <div className="fixed inset-0 bg-[#110F24]/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 text-center border border-[#E6E2FC]/50 shadow-2xl relative animate-in zoom-in-95 duration-200">
             <div className="mx-auto w-12 h-12 bg-rose-50 rounded-2xl border border-rose-200 flex items-center justify-center text-rose-600 mb-4 animate-bounce">
               <AlertTriangle className="w-6 h-6" />
             </div>
-            <h3 className="text-base sm:text-lg font-black text-[#2F2D59]">구독 자동 결제 해지 예약</h3>
-            
+            <h3 className="text-base sm:text-lg font-black text-[#2F2D59]">구독 해지</h3>
+
             <p className="text-xs text-[#7C769D] mt-3 leading-relaxed text-left bg-[#FAF9FF] p-4 rounded-2xl border border-[#E6E2FC]/50">
-              정말로 프리미엄 멤버십 해지 예약을 신청하시겠습니까? 해지하시더라도 이번 결제 기간 만료일인 <strong className="text-[#6B54E7] font-extrabold">{benefitEndDate || '2026.07.15'}</strong>까지는 고품격 시네마틱 명화 일러스트 및 무제한 소설 쓰기 혜택을 제약 없이 안전하게 누리실 수 있습니다.
+              구독을 해지하시겠습니까? 해지하더라도 결제 기간 만료일인 <strong className="text-[#6B54E7] font-extrabold">{benefitEndDate || '2026.07.15'}</strong>까지는 프리미엄 혜택을 계속 이용할 수 있습니다.
             </p>
 
             <div className="mt-5 flex space-x-3">
@@ -786,29 +632,29 @@ export const SubscriptionView = ({
                 onClick={closeCancelConfirm}
                 className="flex-1 py-3 bg-[#FAF9FF] hover:bg-[#E6E2FC]/30 text-[#6B54E7] border border-[#E6E2FC]/60 text-xs font-bold rounded-xl cursor-pointer transition-all active:scale-95"
               >
-                멤버십 계속 유지
+                유지하기
               </button>
               <button
                 onClick={confirmCancelSubscription}
                 className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl cursor-pointer transition-all active:scale-95 shadow-md shadow-rose-600/15"
               >
-                해지 진행 승인
+                해지하기
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 6. DIALOG MODAL: Subscription Cancel Success */}
+      {/* 5. DIALOG MODAL: Subscription Cancel Success */}
       {showCancelSuccess && (
         <div className="fixed inset-0 bg-[#110F24]/50 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in duration-200">
           <div className="bg-white rounded-3xl max-w-xs w-full p-6 text-center border border-[#E6E2FC]/50 shadow-2xl relative animate-in zoom-in-95 duration-200">
             <div className="mx-auto w-12 h-12 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-center text-emerald-600 mb-4">
               <CheckCircle2 className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-black text-[#2F2D59]">자동 결제 해지 예약 승인</h3>
+            <h3 className="text-base font-black text-[#2F2D59]">구독 해지 완료</h3>
             <p className="text-xs text-[#7C769D] mt-2 leading-relaxed text-left">
-              정상적으로 멤버십 자동 갱신 해지 처리가 적용되었습니다. 남은 유효 이용 기한까지는 프리미엄 우대 혜택이 정상 보존됩니다. 그동안 함께해주셔서 감사합니다!
+              구독 해지가 예약되었습니다. 결제 기간 만료일까지는 프리미엄 혜택을 계속 이용할 수 있습니다.
             </p>
             <button
               onClick={() => setShowCancelSuccess(false)}
@@ -820,7 +666,7 @@ export const SubscriptionView = ({
         </div>
       )}
 
-      {/* 7. DIALOG MODAL: Printer Simulation */}
+      {/* 6. DIALOG MODAL: Printer Simulation */}
       {printSuccess && (
         <div className="fixed inset-0 bg-[#110F24]/50 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in duration-200">
           <div className="bg-white rounded-3xl max-w-xs w-full p-6 text-center border border-[#E6E2FC]/50 shadow-2xl relative animate-in zoom-in-95 duration-200">
@@ -829,7 +675,7 @@ export const SubscriptionView = ({
             </div>
             <h3 className="text-base font-black text-[#2F2D59]">인쇄 파일 생성 중</h3>
             <p className="text-xs text-[#7C769D] mt-2 leading-relaxed">
-              명세서가 포함된 인쇄용 파일을 생성하고 있습니다. 잠시 후 브라우저에서 인쇄하거나 PDF로 저장하실 수 있습니다.
+              잠시 후 브라우저에서 인쇄하거나 PDF로 저장할 수 있습니다.
             </p>
             <button
               onClick={() => setPrintSuccess(false)}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CURRENT_USER_PROFILE } from '../../../shared/data';
 import { profileService } from '../services/profileService';
 
@@ -64,6 +64,30 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
   const [selectedMinorToWithdraw, setSelectedMinorToWithdraw] = useState(null);
   const [withdrawPasswordConfirm, setWithdrawPasswordConfirm] = useState('');
   const [withdrawError, setWithdrawError] = useState('');
+
+  // 대기 중인 보호자 동의 요청 목록 (GET /api/guardian-consents/pending)
+  const [pendingConsents, setPendingConsents] = useState([]);
+  const [isPendingConsentsLoading, setIsPendingConsentsLoading] = useState(false);
+  const [pendingConsentsError, setPendingConsentsError] = useState('');
+
+  const loadPendingConsents = useCallback(async () => {
+    setIsPendingConsentsLoading(true);
+    setPendingConsentsError('');
+    try {
+      const list = await profileService.getPendingGuardianConsents();
+      setPendingConsents(list);
+    } catch (err) {
+      setPendingConsentsError(err.message);
+    } finally {
+      setIsPendingConsentsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'guardian') {
+      loadPendingConsents();
+    }
+  }, [activeTab, loadPendingConsents]);
 
   // Account Withdrawal States
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -211,14 +235,37 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     }
   };
 
-  const handleRejectGuardianRequest = () => {
-    triggerToast('자녀의 가입 동의를 반려 처리하여, 이채민 어린이의 가입 요청은 중단 처리되었습니다.');
+  const handleRejectGuardianRequest = async (consent) => {
+    try {
+      await profileService.decideGuardianConsent(consent.consentId, 'REJECTED');
+      setPendingConsents(prev => prev.filter(c => c.consentId !== consent.consentId));
+      triggerToast(`자녀의 가입 동의를 반려 처리하여, ${consent.nickname} 어린이의 가입 요청은 중단 처리되었습니다.`);
+    } catch (err) {
+      triggerToast(err.message);
+    }
   };
 
-  const handleApproveGuardianRequest = () => {
-    const childApproved = profileService.createApprovedGuardianDemoChild();
-    setConnectedMinors(prev => [childApproved, ...prev]);
-    triggerToast('🎉 동의 확인 성공! 이채민 어린이의 가입이 체결되어 책방 창작 활동이 승인되었습니다.');
+  const handleApproveGuardianRequest = async (consent) => {
+    try {
+      await profileService.decideGuardianConsent(consent.consentId, 'APPROVED');
+      setPendingConsents(prev => prev.filter(c => c.consentId !== consent.consentId));
+      setConnectedMinors(prev => [
+        {
+          id: `minor_${consent.memberId}`,
+          name: `${consent.nickname} (자녀)`,
+          email: consent.email,
+          birthdate: consent.birthDate,
+          booksCount: 0,
+          subscription: '무료 새싹 작가 플랜 (기본 무료체험 1회 지급)',
+          status: 'ACTIVE',
+          joinedDate: '방금 전 동의함',
+        },
+        ...prev,
+      ]);
+      triggerToast(`🎉 동의 확인 성공! ${consent.nickname} 어린이의 가입이 체결되어 책방 창작 활동이 승인되었습니다.`);
+    } catch (err) {
+      triggerToast(err.message);
+    }
   };
 
   return {
@@ -242,6 +289,11 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     guardianEmailEditMode, setGuardianEmailEditMode,
 
     connectedMinors,
+
+    pendingConsents,
+    isPendingConsentsLoading,
+    pendingConsentsError,
+
     showWithdrawConsentModal, setShowWithdrawConsentModal,
     selectedMinorToWithdraw,
     withdrawPasswordConfirm, setWithdrawPasswordConfirm,

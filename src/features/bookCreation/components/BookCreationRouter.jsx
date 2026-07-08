@@ -1,12 +1,12 @@
-import React, { useState, useContext } from 'react';
-import { NavigationContext } from '../../../shared/components/Header';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PoemApp from '../poem/components/PoemCreationView.jsx';
 import EssayApp from '../essay/components/EssayCreationView.jsx';
 import MemberCreationRoutes from '../routes/MemberCreationRoutes.jsx';
 import '../styles/bookCreation.css';
 
 export default function BookCreationRouter({ initialGenre, onGoToMyBooks, onBookComplete }) {
-  const { onNavigate } = useContext(NavigationContext);
+  const navigate = useNavigate();
   const [activeGenre, setActiveGenre] = useState(initialGenre || 'poem');
   const [initialView, setInitialView] = useState('step1');
   const [switchKey, setSwitchKey] = useState(0);
@@ -28,9 +28,7 @@ export default function BookCreationRouter({ initialGenre, onGoToMyBooks, onBook
       window.dispatchEvent(new CustomEvent('sangsang:go-to-my-books', { detail: normalizedPayload }));
     }
 
-    if (onNavigate) {
-      onNavigate('my-library', normalizedPayload);
-    }
+    navigate('/library/all-books', { state: normalizedPayload });
   };
 
   const switchGenre = (genre) => {

@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAuthors } from "../../../api/authorApi";
 import AuthorSearchSortBar from "./AuthorSearchSortBar";
 import AuthorStatCard from "./AuthorStatCard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function SearchAuthorView({ onSelectAuthor }) {
+export default function SearchAuthorView() {
+  const navigate = useNavigate();
+  const onSelectAuthor = (name) => navigate(`/authors/${encodeURIComponent(name)}`);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("followers");
   const [currentPage, setCurrentPage] = useState(1);

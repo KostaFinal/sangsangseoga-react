@@ -25,3 +25,6 @@ export const removeBookmark = (bookId, pageNo) => api.delete(`/api/books/${bookI
 // 주간 랭킹
 export const getWeeklyRanking = () => api.get("/api/books/weekly-ranking");
 export const getWeeklyNewReleases = () => api.get("/api/books/weekly-new-releases");
+
+// 내가 쓴 책 목록 조회
+export const getMyBooks = () => api.get("/api/books/my");

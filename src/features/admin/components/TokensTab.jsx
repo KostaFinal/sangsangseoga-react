@@ -49,7 +49,7 @@ export const TokensTab = ({
               <Sliders className="w-4 h-4 text-[#6B54E7]" />
               <span>전체 AI 리소스 사용량</span>
             </h3>
-            <p className="text-[11px] text-[#7C769D] mt-0.5">요금제별 텍스트 및 이미지 생성량 총계를 비교합니다.</p>
+            <p className="text-[11px] text-[#7C769D] mt-0.5">요금제별 생성량을 비교합니다.</p>
           </div>
           <div className="flex bg-[#FAF9FF] p-1 rounded-xl border border-[#E6E2FC]/40">
             <button
@@ -120,7 +120,7 @@ export const TokensTab = ({
               <h4 className="text-sm font-black text-[#110F24] flex items-center gap-1">
                 AI 리소스 사용 회원 순위
               </h4>
-              <p className="text-[10.5px] text-[#7C769D]">회원의 인공지능 리소스 소모량 순위입니다.</p>
+              <p className="text-[10.5px] text-[#7C769D]">AI 사용량이 많은 순서입니다.</p>
             </div>
             <div className="flex bg-[#FAF9FF] rounded-lg p-0.5 border border-[#E6E2FC]/40">
               <button 
@@ -189,7 +189,7 @@ export const TokensTab = ({
             <h4 className="text-sm font-black text-[#110F24] flex items-center gap-1.5">
               상세 사용 기록 조회
             </h4>
-            <p className="text-[10.5px] text-[#7C769D]">회원을 검색하여 선택하시면 상세 사용 이력을 확인할 수 있습니다.</p>
+            <p className="text-[10.5px] text-[#7C769D]">회원을 선택하면 사용 이력을 확인할 수 있습니다.</p>
           </div>
 
           <div className="relative text-left">
@@ -234,7 +234,7 @@ export const TokensTab = ({
             </div>
           ) : (
             <div className="py-12 border border-dashed border-[#E6E2FC] rounded-xl text-center text-[#7C769D] text-xs">
-              <p className="font-medium">목록에서 회원을 선택하시면 상세 AI 사용 이력이 조회됩니다.</p>
+              <p className="font-medium">회원을 선택하면 사용 이력이 표시됩니다.</p>
             </div>
           )}
         </div>
