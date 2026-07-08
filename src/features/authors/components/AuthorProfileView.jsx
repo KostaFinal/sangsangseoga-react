@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams, useOutletContext } from "react-router-dom";
 import { ArrowRight, Heart, MessageSquare, Flag, ArrowLeft } from "lucide-react";
 import ReportModal from "@/src/shared/components/ReportModal";
-import { submitReport, isReported } from "@/src/shared/utils/reports";
+import { submitReport, getReportedIds } from "@/src/shared/utils/reports";
+import { getAuthors, followAuthor, unfollowAuthor } from "../../../api/authorApi";
+import { useAuth } from "../../../shared/context/AuthContext";
 
 // 장르 뱃지 스타일 - 통일감 있는 팔레트
 const genreBadge = (genre) => {
@@ -16,90 +18,6 @@ const genreBadge = (genre) => {
   return map[genre] || { cls: "bg-[#e6e2fc] text-[#6b54e7] border-[#d4cdf2]", label: genre };
 };
 
-// 다른 파일에서 참조하므로 반드시 export 유지해야 함
-export const authorsRegistry = {
-  "이서윤": {
-    name: "이서윤",
-    avatar: "https://picsum.photos/300/300",
-    followers: 12845,
-    publishedWorksCount: 12,
-    bio: "일상의 작은 순간에서 이야기를 발견하고, 따뜻한 문장으로 마음을 전하고자 합니다.",
-    themeColor: "bg-[#6b54e7] hover:bg-[#6148e1]",
-    accentBg: "bg-[#6b54e7]/10",
-    textAccent: "text-[#6b54e7]"
-  },
-  "김하늘": {
-    name: "김하늘",
-    avatar: "https://picsum.photos/seed/book1/300/300",
-    followers: 8520,
-    publishedWorksCount: 5,
-    bio: "밤하늘을 수놓는 무수한 별빛처럼, 마음을 움직이는 신비로운 이야기를 창조합니다.",
-    themeColor: "bg-[#6b54e7] hover:bg-[#6148e1]",
-    accentBg: "bg-[#6b54e7]/10",
-    textAccent: "text-[#6b54e7]"
-  },
-  "정연우": {
-    name: "정연우",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300&h=300",
-    followers: 6120,
-    publishedWorksCount: 8,
-    bio: "흐르는 시간 속에서 반짝이는 순간을 수집하여, 글이라는 영원한 그릇에 단단히 담습니다.",
-    themeColor: "bg-[#b45309] hover:bg-[#92400e]",
-    accentBg: "bg-[#b45309]/10",
-    textAccent: "text-[#b45309]"
-  },
-  "박지현": {
-    name: "박지현",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300&h=300",
-    followers: 9410,
-    publishedWorksCount: 10,
-    bio: "모래사장에 새긴 바람의 흔적과 푸른 파도 소리처럼, 누구나 가슴 한편에 품고 살아가는 그리움을 수놓습니다.",
-    themeColor: "bg-[#5179e6] hover:bg-[#6148e1]",
-    accentBg: "bg-[#5179e6]/10",
-    textAccent: "text-[#5179e6]"
-  },
-  "한유진": {
-    name: "한유진",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=300&h=300",
-    followers: 4230,
-    publishedWorksCount: 4,
-    bio: "도시의 서늘한 안개와 길게 늘어진 달빛 아래서, 인간 본성이 지닌 내밀하고 서정적인 심연을 집필합니다.",
-    themeColor: "bg-[#2f2d59] hover:bg-[#231f45]",
-    accentBg: "bg-[#2f2d59]/10",
-    textAccent: "text-[#2f2d59]"
-  },
-  "윤지민": {
-    name: "윤지민",
-    avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=300&h=300",
-    followers: 11050,
-    publishedWorksCount: 15,
-    bio: "심해 바닷물 속에 잠긴 조용한 아틀란티스 유적처럼, 세상의 소음에서 완전히 이탈한 마음 치유 기행을 꿈꿉니다.",
-    themeColor: "bg-[#5179e6] hover:bg-[#6148e1]",
-    accentBg: "bg-[#5179e6]/10",
-    textAccent: "text-[#5179e6]"
-  },
-  "이지안": {
-    name: "이지안",
-    avatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=300&h=300",
-    followers: 7340,
-    publishedWorksCount: 7,
-    bio: "출퇴근길 지하철 열차 안에서 느끼는 고즈넉한 온기처럼, 서로 상처 입은 우리가 마음으로 이어지는 조용한 일상의 기적을 말하고 싶습니다.",
-    themeColor: "bg-[#be123c] hover:bg-[#9f1239]",
-    accentBg: "bg-[#be123c]/10",
-    textAccent: "text-[#be123c]"
-  },
-  "배수빈": {
-    name: "배수빈",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300&h=300",
-    followers: 5980,
-    publishedWorksCount: 9,
-    bio: "지직거리는 LP 판 아래 번지는 향긋한 연꽃차 향기처럼, 기억 깊은 구석을 다듬는 따스하고 단아한 수필을 지향합니다.",
-    themeColor: "bg-[#c2410c] hover:bg-[#9a3412]",
-    accentBg: "bg-[#c2410c]/10",
-    textAccent: "text-[#c2410c]"
-  }
-};
-
 export default function AuthorProfileView() {
   const { authorName: rawAuthorName } = useParams();
   const authorName = decodeURIComponent(rawAuthorName);
@@ -107,33 +25,94 @@ export default function AuthorProfileView() {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode") === "owner" ? "owner" : "viewer";
   const { books: allBooks } = useOutletContext();
+  const { currentUser } = useAuth();
   const onSelectBook = (book) => navigate(`/friends/${book.id}`);
   const onBackToDirectory = () => navigate("/authors");
 
   const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(null);
+  const [authorRecord, setAuthorRecord] = useState(null); // getAuthors API의 원본 항목
+  const [followBusy, setFollowBusy] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
-  const [hasReported, setHasReported] = useState(() => isReported("author", authorName));
-
-  const handleSubmitReport = ({ reason, detail }) => {
-    submitReport({ targetType: "author", targetId: authorName, reason, detail });
-    setHasReported(true);
-    setIsReportOpen(false);
-    alert("신고가 접수되었습니다. 검토 후 조치하겠습니다.");
-  };
-
-  const authorProfile = authorsRegistry[authorName] || {
-    name: authorName,
-    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=300&h=300",
-    followers: Math.abs(authorName.charCodeAt(0) * 153 % 4500) + 1200,
-    publishedWorksCount: allBooks.filter(b => b.author === authorName).length || 3,
-    bio: "독자 여러분께 감미롭고 평안한 사색의 밤을 전하는 상상서가 소속 작가입니다.",
-    themeColor: "bg-[#6b54e7] hover:bg-[#6148e1]",
-    accentBg: "bg-[#6b54e7]/10",
-    textAccent: "text-[#6b54e7]"
-  };
+  const [hasReported, setHasReported] = useState(false);
 
   const realAuthorBooks = allBooks.filter(b => b.author.trim() === authorName.trim());
-  const displayFollowers = isFollowing ? authorProfile.followers + 1 : authorProfile.followers;
+
+  const authorProfile = {
+    name: authorRecord?.nickname || authorName,
+    avatar: authorRecord?.profileImageUrl || null,
+    worksCount: authorRecord?.worksCount ?? realAuthorBooks.length,
+    bio: authorRecord?.introduction || "아직 작성된 소개글이 없습니다.",
+  };
+
+  const effectiveAuthorId = authorRecord?.id ?? realAuthorBooks[0]?.authorId ?? null;
+  const displayFollowers = followerCount ?? 0;
+  // mode 뿐 아니라 memberId 비교로도 본인 프로필인지 확인 (mode가 못 갱신되는 진입 경로 대비)
+  const isOwnProfile = mode === "owner" ||
+    (currentUser?.memberId != null && effectiveAuthorId != null && String(currentUser.memberId) === String(effectiveAuthorId));
+
+  useEffect(() => {
+    let cancelled = false;
+    getAuthors({ keyword: authorName, size: 20 })
+      .then(res => {
+        if (cancelled) return;
+        const items = res.data?.data?.items || [];
+        const matched = items.find(a => a.nickname?.trim() === authorName.trim());
+        if (matched) {
+          setAuthorRecord(matched);
+          setIsFollowing(!!matched.isFollowedByMe);
+          setFollowerCount(matched.followerCount);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [authorName]);
+
+  useEffect(() => {
+    if (!effectiveAuthorId) return;
+    let cancelled = false;
+    getReportedIds("author")
+      .then(ids => {
+        if (!cancelled) setHasReported(ids.includes(effectiveAuthorId));
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [effectiveAuthorId]);
+
+  const handleSubmitReport = async ({ reason, detail }) => {
+    if (!effectiveAuthorId) return;
+    try {
+      await submitReport({ targetType: "author", targetId: effectiveAuthorId, reason, detail });
+      setHasReported(true);
+      setIsReportOpen(false);
+      alert("신고가 접수되었습니다. 검토 후 조치하겠습니다.");
+    } catch (err) {
+      alert(err?.response?.data?.message || "신고 접수에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+    }
+  };
+
+  const handleToggleFollow = async () => {
+    if (!effectiveAuthorId || followBusy) return;
+    const wasFollowing = isFollowing;
+    setFollowBusy(true);
+    setIsFollowing(!wasFollowing);
+    setFollowerCount(prev => (prev == null ? prev : (wasFollowing ? prev - 1 : prev + 1)));
+    try {
+      if (wasFollowing) {
+        await unfollowAuthor(effectiveAuthorId);
+      } else {
+        const res = await followAuthor(effectiveAuthorId);
+        const data = res?.data?.data;
+        if (data?.followerCount != null) setFollowerCount(data.followerCount);
+      }
+    } catch (err) {
+      setIsFollowing(wasFollowing);
+      setFollowerCount(prev => (prev == null ? prev : (wasFollowing ? prev + 1 : prev - 1)));
+      console.error("팔로우 처리 실패", err);
+    } finally {
+      setFollowBusy(false);
+    }
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 md:px-0 py-8 animate-fadeIn font-gowun">
@@ -141,7 +120,7 @@ export default function AuthorProfileView() {
       {/* 1. 상단 내비게이션 (요청하신 프로필 왼쪽 위 배치) */}
       <div className="flex items-center gap-4 mb-6">
         <button onClick={onBackToDirectory} className="inline-flex items-center gap-1.5 text-sm text-[#4d4671] hover:text-[#6b54e7] font-bold transition">
-          <ArrowLeft className="w-4 h-4" /> 작가 목록으로 돌아가기
+          <ArrowLeft className="w-4 h-4" /> 작가 목록
         </button>
       </div>
 
@@ -150,7 +129,13 @@ export default function AuthorProfileView() {
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
           <div className="relative shrink-0">
             <div className="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden p-1 border-2 border-[#e6e2fc] shadow-md">
-              <img src={authorProfile.avatar} alt={authorProfile.name} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
+              {authorProfile.avatar ? (
+                <img src={authorProfile.avatar} alt={authorProfile.name} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="w-full h-full rounded-full bg-[#6b54e7] flex items-center justify-center text-white text-3xl font-black">
+                  {authorProfile.name.charAt(0)}
+                </div>
+              )}
             </div>
             <div className="absolute right-1 bottom-1 w-6 h-6 bg-[#6b54e7] border-2 border-white rounded-full flex items-center justify-center shadow-xs">
               <span className="text-[10px] text-white">✓</span>
@@ -162,9 +147,13 @@ export default function AuthorProfileView() {
               <h2 className="text-3xl md:text-4xl font-bold text-[#110f24] tracking-tight">
                 {authorProfile.name}
               </h2>
-              {mode !== "owner" && (
+              {!isOwnProfile && (
                 <div className="flex gap-2 justify-center sm:justify-start">
-                  <button onClick={() => setIsFollowing(!isFollowing)} className={`px-5 py-1.5 rounded-full text-xs font-bold transition duration-300 shadow-xs cursor-pointer border ${isFollowing ? `${authorProfile.themeColor} text-white border-transparent` : "bg-white text-[#69619a] border-gray-200 hover:text-[#6b54e7] hover:border-[#d4cdf2]"}`}>
+                  <button
+                    onClick={handleToggleFollow}
+                    disabled={!effectiveAuthorId || followBusy}
+                    className={`px-5 py-1.5 rounded-full text-xs font-bold transition duration-300 shadow-xs cursor-pointer border disabled:opacity-50 disabled:cursor-default ${isFollowing ? "bg-[#6b54e7] hover:bg-[#6148e1] text-white border-transparent" : "bg-white text-[#69619a] border-gray-200 hover:text-[#6b54e7] hover:border-[#d4cdf2]"}`}
+                  >
                     {isFollowing ? "팔로잉" : "팔로우"}
                   </button>
                   <button
@@ -187,7 +176,7 @@ export default function AuthorProfileView() {
               </div>
               <div className="text-center">
                 <p className="text-[11px] font-bold text-[#69619a] uppercase tracking-wide">작품 수</p>
-                <p className="text-lg font-bold text-[#110f24] mt-0.5">{authorProfile.publishedWorksCount}</p>
+                <p className="text-lg font-bold text-[#110f24] mt-0.5">{authorProfile.worksCount}</p>
               </div>
             </div>
           </div>

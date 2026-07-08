@@ -10,14 +10,14 @@ import { BookCalendar } from '../../features/calendar';
 import { BookStats } from '../../features/stats';
 import { getBookContents } from '../../api/bookApi';
 import {
-  getWishlistBookshelf,
-  getReadingBookshelf,
-  getFinishedBookshelf,
+  getWishlist as getWishlistBookshelf,
+  getReadingList as getReadingBookshelf,
+  getFinishedList as getFinishedBookshelf,
   updateReadingProgress,
   completeReading,
-  rereadFinishedBook,
-  removeWishlistBook,
-} from '../../api/bookshelfApi';
+  rereadBook as rereadFinishedBook,
+  deleteWishlist as removeWishlistBook,
+} from '../../api/myLibraryApi';
 
 export function MyLibraryLayout() {
   const navigate = useNavigate();

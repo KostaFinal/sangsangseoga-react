@@ -1,16 +1,18 @@
-import { submitReport as apiSubmitReport } from "@/src/api/reportApi";
+import { submitReport as apiSubmitReport, getMyReportedTargetIds as apiGetMyReportedTargetIds } from "@/src/api/reportApi";
 
-// targetType: "BOOK" | "COMMENT" | "AUTHOR" (백엔드 enum 대문자)
+// targetType: "book" | "comment" | "author" (호출부는 소문자로 넘기고 여기서 대문자로 변환)
+// reason: 이미 백엔드 enum 값(SPAM/ABUSE/SEXUAL/OTHER)으로 넘어옴 (ReportModal 참고)
 export async function submitReport({ targetType, targetId, reason, detail }) {
   await apiSubmitReport({
     targetType: targetType.toUpperCase(),
     targetId,
-    reason: reason.toUpperCase(),
+    reason,
     reasonDetail: detail,
   });
 }
 
-// 신고 여부 확인 - 백엔드 연동 전 임시로 false 반환 (나중에 API 추가)
-export function isReported(targetType, targetId) {
-  return false;
+// 내가 신고한 대상 ID 목록 조회 (targetType: "book" | "comment" | "author")
+export async function getReportedIds(targetType) {
+  const res = await apiGetMyReportedTargetIds(targetType.toUpperCase());
+  return res.data?.data || [];
 }

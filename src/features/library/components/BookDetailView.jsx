@@ -15,11 +15,14 @@ const genreBadge = (genre) => {
   return map[genre] || { cls: "bg-[#e6e2fc] text-[#6b54e7] border-[#d4cdf2]", label: bookTypeToGenre[genre] || genre };
 };
 import { getRecommendations, getBookContents } from "@/src/api/bookApi";
+import { getComments, updateComment, deleteComment } from "@/src/api/commentApi";
+import { getAuthors, followAuthor, unfollowAuthor } from "@/src/api/authorApi";
+import { mapBookPagesByGenre } from "../utils/mapBookPages";
 
 
 import { Heart, ChevronLeft, UserPlus, Check, Flag } from "lucide-react";
 import ReportModal from "@/src/shared/components/ReportModal";
-import { submitReport, isReported } from "@/src/shared/utils/reports";
+import { submitReport, getReportedIds } from "@/src/shared/utils/reports";
 
 export default function BookDetailView({
   book,
@@ -33,33 +36,78 @@ export default function BookDetailView({
   onSaveReply,
   onSelectAuthor,
   mode = "viewer",
-  onUpdateDescription
+  onUpdateDescription,
+  currentUser,
 }) {
-  const [commentUser, setCommentUser] = useState("");
   const [commentText, setCommentText] = useState("");
   const [isFollowing, setIsFollowing] = useState(false);
-  const [replyingTo, setReplyingTo] = useState(null);
-  const [replyUser, setReplyUser] = useState("");
-  const [replyText, setReplyText] = useState("");
+  const [followBusy, setFollowBusy] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null); // { id, nickname } of parent comment
+  const [expandedReplyIds, setExpandedReplyIds] = useState([]);
   const [reportTarget, setReportTarget] = useState(null); // { type, id, label }
-  const [reportedIds, setReportedIds] = useState([]);
+  const [isBookReported, setIsBookReported] = useState(false);
+  const [reportedCommentIds, setReportedCommentIds] = useState([]);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [editDescription, setEditDescription] = useState(book.description || "");
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
 
   const handleStartReport = (type, id, label) => setReportTarget({ type, id, label });
-  const handleSubmitReport = ({ reason, detail }) => {
-    submitReport({ targetType: reportTarget.type, targetId: reportTarget.id, reason, detail });
-    setReportedIds(prev => [...prev, reportTarget.id]);
-    alert("신고가 접수되었습니다. 검토 후 조치하겠습니다.");
-    setReportTarget(null);
+  const handleSubmitReport = async ({ reason, detail }) => {
+    try {
+      await submitReport({ targetType: reportTarget.type, targetId: reportTarget.id, reason, detail });
+      if (reportTarget.type === "book") {
+        setIsBookReported(true);
+      } else if (reportTarget.type === "comment") {
+        setReportedCommentIds(prev => [...prev, reportTarget.id]);
+      }
+      alert("신고가 접수되었습니다. 검토 후 조치하겠습니다.");
+      setReportTarget(null);
+    } catch (err) {
+      alert(err?.response?.data?.message || "신고 접수에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+    }
   };
-  const handleSubmitReply = (e, parentCommentId) => {
-    e.preventDefault();
-    if (!replyText.trim()) return;
-    onSaveReply?.(parentCommentId, replyUser.trim() || "익명의 사색가", replyText.trim());
-    setReplyText("");
-    setReplyUser("");
-    setReplyingTo(null);
+
+  const isOwnComment = (c) =>
+    currentUser?.memberId != null && c?.memberId != null && String(c.memberId) === String(currentUser.memberId);
+
+  const handleStartEditComment = (c) => {
+    setEditingCommentId(c.id);
+    setEditingCommentText(c.content || c.text || "");
+  };
+  const handleCancelEditComment = () => {
+    setEditingCommentId(null);
+    setEditingCommentText("");
+  };
+  const handleSaveEditComment = async (commentId) => {
+    const text = editingCommentText.trim();
+    if (!text) return;
+    try {
+      const res = await updateComment(commentId, text);
+      const saved = res?.data?.data;
+      setComments(prev => prev.map(c => c.id === commentId ? { ...c, content: saved?.content || text } : c));
+    } catch (err) {
+      console.error("댓글 수정 실패", err);
+    } finally {
+      setEditingCommentId(null);
+      setEditingCommentText("");
+    }
+  };
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+    try {
+      await deleteComment(commentId);
+      setComments(prev => prev.filter(c => c.id !== commentId && c.replyToCommentId !== commentId));
+    } catch (err) {
+      console.error("댓글 삭제 실패", err);
+    }
+  };
+
+  const formatCommentDate = (value) => {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" });
   };
 
   // Generate a beautiful poetic Korean subtitle based on the book
@@ -70,14 +118,114 @@ export default function BookDetailView({
   useEffect(() => {
     if (!book?.id) return;
     getRecommendations(book.id, 4)
-      .then(res => setRecommendations(res.data?.data?.items || []))
+      .then(res => {
+        const items = res.data?.data?.items || [];
+        setRecommendations(items.map(item => ({ ...item, coverImage: item.coverImageUrl })));
+      })
       .catch(() => setRecommendations([]));
   }, [book?.id]);
-  const handleSubmitComment = e => {
+
+  useEffect(() => {
+    if (!book?.authorId) return;
+    getAuthors({ keyword: book.author, size: 20 })
+      .then(res => {
+        const items = res.data?.data?.items || [];
+        const matched = items.find(a => String(a.id) === String(book.authorId));
+        if (matched) setIsFollowing(!!matched.isFollowedByMe);
+      })
+      .catch(() => {});
+  }, [book?.authorId, book?.author]);
+
+  const handleToggleFollow = async () => {
+    if (!book?.authorId || followBusy) return;
+    const wasFollowing = isFollowing;
+    setFollowBusy(true);
+    setIsFollowing(!wasFollowing);
+    try {
+      if (wasFollowing) {
+        await unfollowAuthor(book.authorId);
+      } else {
+        await followAuthor(book.authorId);
+      }
+    } catch (err) {
+      setIsFollowing(wasFollowing);
+      console.error("팔로우 처리 실패", err);
+    } finally {
+      setFollowBusy(false);
+    }
+  };
+
+  const [comments, setComments] = useState([]);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasNextComment, setHasNextComment] = useState(false);
+
+  useEffect(() => {
+    if (!book?.id) return;
+    getComments(book.id)
+      .then(res => {
+        const data = res.data?.data;
+        setComments(data?.items || []);
+        setNextCursor(data?.nextCursor || null);
+        setHasNextComment(data?.hasNext || false);
+      })
+      .catch(() => setComments([]));
+  }, [book?.id]);
+
+  const loadMoreComments = async () => {
+    if (!hasNextComment || !nextCursor) return;
+    try {
+      const res = await getComments(book.id, nextCursor);
+      const data = res.data?.data;
+      setComments(prev => [...prev, ...(data?.items || [])]);
+      setNextCursor(data?.nextCursor || null);
+      setHasNextComment(data?.hasNext || false);
+    } catch (err) {
+      console.error("댓글 더보기 실패", err);
+    }
+  };
+  const handleSubmitComment = async e => {
     e.preventDefault();
     if (!commentText.trim()) return;
-    onSaveComment(commentUser.trim() || "익명의 사색가", commentText.trim());
+    const text = commentText.trim();
     setCommentText("");
+
+    if (replyingTo) {
+      const parentCommentId = replyingTo.id;
+      setReplyingTo(null);
+      try {
+        const res = await onSaveReply?.(parentCommentId, currentUser?.nickname || "익명의 사색가", text);
+        const saved = res?.data?.data;
+        setComments(prev => [...prev, {
+          id: saved?.id,
+          memberId: saved?.memberId,
+          nickname: saved?.nickname || currentUser?.nickname || "익명의 사색가",
+          content: saved?.content || text,
+          createdAt: saved?.createdAt || new Date().toISOString(),
+          replyToCommentId: parentCommentId,
+        }]);
+        setExpandedReplyIds(prev => prev.includes(parentCommentId) ? prev : [...prev, parentCommentId]);
+      } catch (err) {
+        console.error("답글 작성 실패", err);
+      }
+      return;
+    }
+
+    try {
+      const res = await onSaveComment(currentUser?.nickname || "익명의 사색가", text);
+      const saved = res?.data?.data;
+      if (saved) {
+        setComments(prev => [{
+          id: saved.id,
+          memberId: saved.memberId,
+          nickname: saved.nickname || currentUser?.nickname || "익명의 사색가",
+          content: saved.content || text,
+          createdAt: saved.createdAt || new Date().toISOString(),
+          replyToCommentId: null,
+        }, ...prev]);
+      }
+    } catch (err) {
+      console.error("댓글 작성 실패", err);
+    }
   };
 
   // Auto-scroll to top on mounting a new book
@@ -86,8 +234,20 @@ export default function BookDetailView({
       top: 0,
       behavior: "smooth"
     });
-    setReportedIds([book.id, ...book.comments.map(c => c.id)].filter(id => isReported("book", id) || isReported("comment", id)));
   }, [book.id]);
+
+  useEffect(() => {
+    getReportedIds("book").then(ids => setIsBookReported(ids.includes(book.id))).catch(() => {});
+    getReportedIds("comment").then(ids => setReportedCommentIds(ids)).catch(() => {});
+  }, [book.id]);
+
+  const topLevelComments = comments.filter(c => !c.replyToCommentId);
+  const repliesByParent = comments.reduce((acc, c) => {
+    if (c.replyToCommentId) {
+      (acc[c.replyToCommentId] ||= []).push(c);
+    }
+    return acc;
+  }, {});
 
   const isPoetry = false;
   const isFairytale = book.genre === "동화";
@@ -139,6 +299,7 @@ export default function BookDetailView({
     return "w-10 h-10 rounded-full bg-[#1e1d3b] border border-black/5 flex items-center justify-center text-[#ffd9b6] font-black text-sm shadow-inner shrink-0";
   };
 
+
   return (
     <div className="w-full max-w-4xl mx-auto px-4 md:px-0 py-4 animate-fadeIn font-gowun">
       {/* Back button - 더 굵고 진한 보라색으로 가독성 개선 */}
@@ -183,18 +344,22 @@ export default function BookDetailView({
 
             {/* Tags Outline Row 1 - 태그 테두리와 글씨색 진하게 강화 */}
             <div className="flex flex-wrap gap-2">
-              
+
             </div>
 
             {/* Likes heart and follow button block - 회색빛에서 뚜렷한 색상 대비로 변경 */}
             <div className="flex flex-wrap items-center gap-3">
-              <button onClick={onToggleLike} className="inline-flex items-center gap-1.5 border-2 px-4 py-2 text-xs md:text-sm font-black rounded-lg transition duration-200 border-[#aaa0e3] text-[#3c375e] hover:bg-[#f3f0ff] hover:border-[#5139d6] bg-white cursor-pointer">
+              <button onClick={(e) => onToggleLike(e, book.bookId || book.id)} className="inline-flex items-center gap-1.5 border-2 px-4 py-2 text-xs md:text-sm font-black rounded-lg transition duration-200 border-[#aaa0e3] text-[#3c375e] hover:bg-[#f3f0ff] hover:border-[#5139d6] bg-white cursor-pointer">
                 <Heart className={`w-4 h-4 stroke-[2.5] ${book.isLikedByMe ? "fill-red-500 stroke-red-500 text-red-500" : "text-[#4b4570]"}`} />
                 <span>좋아요 {book.likes.toLocaleString()}</span>
               </button>
 
               {mode !== "owner" && (
-                <button onClick={() => setIsFollowing(!isFollowing)} className={`inline-flex items-center gap-1.5 border-2 px-4 py-2 text-xs md:text-sm font-black rounded-lg transition duration-200 shadow-sm cursor-pointer ${isFollowing ? "bg-[#5139d6] text-white border-[#5139d6]" : "border-[#aaa0e3] text-[#3c375e] hover:bg-[#f3f0ff] bg-white"}`}>
+                <button
+                  onClick={handleToggleFollow}
+                  disabled={!book?.authorId || followBusy}
+                  className={`inline-flex items-center gap-1.5 border-2 px-4 py-2 text-xs md:text-sm font-black rounded-lg transition duration-200 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-default ${isFollowing ? "bg-[#5139d6] text-white border-[#5139d6]" : "border-[#aaa0e3] text-[#3c375e] hover:bg-[#f3f0ff] bg-white"}`}
+                >
                   {isFollowing ? (
                     <>
                       <Check className="w-4 h-4 text-[#ffd9b6] stroke-[3]" />
@@ -211,20 +376,20 @@ export default function BookDetailView({
 
               {mode !== "owner" && (
                 <button
-                  onClick={() => !reportedIds.includes(book.id) && handleStartReport("book", book.id, `'${book.title}'`)}
-                  disabled={reportedIds.includes(book.id)}
+                  onClick={() => !isBookReported && handleStartReport("book", book.id, `'${book.title}'`)}
+                  disabled={isBookReported}
                   className="inline-flex items-center gap-1.5 border px-3 py-2 text-xs font-bold rounded-lg transition duration-200 border-gray-300 text-[#7368a1] hover:text-red-700 hover:border-red-300 hover:bg-red-50 bg-white ml-auto disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-[#b9b0dc] disabled:cursor-default cursor-pointer"
                   title="이 작품 신고하기"
                 >
                   <Flag className="w-3.5 h-3.5" />
-                  <span>{reportedIds.includes(book.id) ? "신고됨" : "신고"}</span>
+                  <span>{isBookReported ? "신고됨" : "신고"}</span>
                 </button>
               )}
             </div>
 
             {/* Tags outline Row 2 - 해시태그 배경 및 글씨 진하게 */}
             <div className="flex flex-wrap gap-2">
-              
+
             </div>
 
             {/* Thick Border Primary CTA button */}
@@ -234,35 +399,8 @@ export default function BookDetailView({
                   const bookId = book.bookId || book.id;
 
                   const res = await getBookContents(bookId);
-                  const pageItems = res.data.data?.items || [];
-
-                  const viewerPages = pageItems.map(page => ({
-                    id: `page-${page.pageNo}`,
-                    backgroundColor: "#ffffff",
-                    elements: [
-                      {
-                        id: `text-${page.pageNo}`,
-                        type: "text",
-                        x: 60,
-                        y: 80,
-                        w: 360,
-                        h: 260,
-                        fontSize: 18,
-                        lineHeight: 1.8,
-                        html: page.contentTextKo || page.contentTextEn || ""
-                      },
-                      ...(page.imageUrl ? [{
-                        id: `image-${page.pageNo}`,
-                        type: "image",
-                        x: 60,
-                        y: 370,
-                        w: 360,
-                        h: 180,
-                        src: page.imageUrl,
-                        radius: 12
-                      }] : [])
-                    ]
-                  }));
+                  const pageItems = res.data?.data?.items || [];
+                  const viewerPages = mapBookPagesByGenre(book.bookType, pageItems);
 
                   onStartReading({
                     ...book,
@@ -356,14 +494,10 @@ export default function BookDetailView({
         {/* 이 책을 좋아한다면 section */}
         {mode !== "owner" && (
           <div className="space-y-6 text-left relative z-10">
-            <div className="flex justify-between items-end border-b border-[#b3a6eb] pb-3">
+            <div className="border-b border-[#b3a6eb] pb-3">
               <h3 className="text-[19px] md:text-xl font-bold text-gray-900">
                 이 책을 좋아한다면
               </h3>
-              {/* 더 보기 버튼 선명화 */}
-              <span className="text-xs md:text-sm text-[#4b3e80] hover:text-black cursor-pointer font-black transition duration-200 underline">
-                더 보기
-              </span>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -395,113 +529,219 @@ export default function BookDetailView({
 
           {/* Comments feed list layout */}
           <div className="space-y-5 pr-1">
-            {book.comments.length === 0 ? (
+            {topLevelComments.length === 0 ? (
               <p className="text-sm text-[#3c375e] font-bold py-4 text-center">
                 作品에 남겨진 사색이 아직 없습니다. 첫 의견을 심어보세요.
               </p>
             ) : (
-              book.comments.map((comment, index) => (
-                <div key={comment.id || index} className="pb-5 border-b border-[#b3a6eb] last:border-none last:pb-0">
+              topLevelComments.map((comment, index) => (
+                <div key={comment.id || index} className={`pb-5 border-b border-[#b3a6eb] last:border-none last:pb-0 ${reportedCommentIds.includes(comment.id) ? "opacity-50" : ""}`}>
                   <div className="flex gap-4 items-start">
                     <div className={getCommentAvatarStyle()}>
-                      {comment.user.charAt(0)}
+                      {(comment.nickname || comment.user || "?").charAt(0)}
                     </div>
 
                     <div className="flex-1 space-y-1">
                       <div className="flex justify-between items-center">
                         {/* 댓글 유저 이름 두껍게 */}
                         <h5 className="font-black text-[15px] text-black">
-                          {comment.user}
+                          {comment.nickname || comment.user}
                         </h5>
                         {/* 작성 시간 가독성 개선 */}
                         <span className="text-xs font-bold text-[#4b3e80]">
-                          {comment.date || ""}
+                          {comment.date || formatCommentDate(comment.createdAt)}
                         </span>
                       </div>
-                      {reportedIds.includes(comment.id) ? (
-                        <p className="text-[13px] text-[#7368a1] italic font-bold">신고가 접수된 댓글입니다.</p>
+                      {reportedCommentIds.includes(comment.id) ? (
+                        <p className="text-[13px] text-neutral-400 italic font-normal">신고가 접수된 댓글입니다.</p>
+                      ) : editingCommentId === comment.id ? (
+                        <div className="space-y-2 pt-1">
+                          <textarea
+                            value={editingCommentText}
+                            onChange={e => setEditingCommentText(e.target.value)}
+                            className="w-full min-h-20 border-2 border-[#b3a6eb] rounded-lg p-2.5 text-[13px] font-bold text-black outline-none focus:ring-2 focus:ring-[#5139d6] font-gowun bg-white"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <button onClick={handleCancelEditComment} className="text-xs font-black px-3 py-1.5 rounded-lg border-2 border-[#b3a6eb] text-[#3c375e] bg-white cursor-pointer">
+                              취소
+                            </button>
+                            <button onClick={() => handleSaveEditComment(comment.id)} className="text-xs font-black px-3 py-1.5 rounded-lg bg-[#5139d6] hover:bg-[#3b25b8] text-white cursor-pointer">
+                              저장
+                            </button>
+                          </div>
+                        </div>
                       ) : (
                         /* 댓글 본문 글씨 진하게 (text-gray-700 -> text-neutral-900 / font-semibold) */
                         <p className="text-[14px] leading-relaxed text-neutral-900 font-semibold">
-                          {comment.text}
+                          {comment.content || comment.text}
                         </p>
                       )}
-                      <div className="flex items-center gap-3 pt-1">
-                        {/* 답글쓰기 / 신고 액션 텍스트 더 굵고 진하게 */}
-                        <button
-                          onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                          className="text-xs font-black text-[#5139d6] hover:text-black hover:underline transition cursor-pointer"
-                        >
-                          답글쓰기
-                        </button>
-
-                        {mode !== "owner" && (
+                      {editingCommentId !== comment.id && !reportedCommentIds.includes(comment.id) && (
+                        <div className="flex items-center gap-3 pt-1">
+                          {/* 답글쓰기 / 수정 / 삭제 / 신고 액션 텍스트 더 굵고 진하게 */}
                           <button
-                            onClick={() => handleStartReport("comment", comment.id, `${comment.user}님의 댓글`)}
-                            className="text-xs font-bold text-neutral-400 hover:text-red-600 transition inline-flex items-center gap-0.5 cursor-pointer"
+                            onClick={() => {
+                              setReplyingTo(replyingTo?.id === comment.id ? null : { id: comment.id, nickname: comment.nickname || comment.user });
+                              document.getElementById("detail-comment-input")?.focus();
+                            }}
+                            className="text-xs font-black text-[#5139d6] hover:text-black hover:underline transition cursor-pointer"
                           >
-                            <Flag className="w-3 h-3 stroke-[2.5]" /> 신고
+                            답글쓰기
                           </button>
-                        )}
-                      </div>
 
-                      {/* 답글 입력 폼 */}
-                      {replyingTo === comment.id && (
-                        <form onSubmit={e => handleSubmitReply(e, comment.id)} className="mt-3 flex gap-2">
-                          <input
-                            type="text"
-                            placeholder="닉네임"
-                            value={replyUser}
-                            onChange={e => setReplyUser(e.target.value)}
-                            className="border-2 border-[#b3a6eb] px-3 py-2 text-xs font-bold text-black w-24 focus:outline-none focus:bg-white placeholder-neutral-500 bg-white rounded-lg focus:ring-2 focus:ring-[#5139d6] font-gowun"
-                          />
-                          <input
-                            type="text"
-                            placeholder="답글을 남겨보세요..."
-                            required
-                            value={replyText}
-                            onChange={e => setReplyText(e.target.value)}
-                            className="flex-1 border-2 border-[#b3a6eb] px-3 py-2 text-xs font-bold text-black focus:outline-none focus:bg-white placeholder-neutral-500 bg-white rounded-lg focus:ring-2 focus:ring-[#5139d6] font-gowun"
-                          />
-                          <button type="submit" className="text-xs font-black px-3.5 rounded-lg transition shadow-sm cursor-pointer shrink-0 bg-[#5139d6] hover:bg-[#3b25b8] text-white">
-                            등록
-                          </button>
-                        </form>
+                          {isOwnComment(comment) && (
+                            <>
+                              <button
+                                onClick={() => handleStartEditComment(comment)}
+                                className="text-xs font-black text-neutral-500 hover:text-black hover:underline transition cursor-pointer"
+                              >
+                                수정
+                              </button>
+                              <button
+                                onClick={() => handleDeleteComment(comment.id)}
+                                className="text-xs font-black text-neutral-500 hover:text-red-600 hover:underline transition cursor-pointer"
+                              >
+                                삭제
+                              </button>
+                            </>
+                          )}
+
+                          {mode !== "owner" && !isOwnComment(comment) && (
+                            <button
+                              onClick={() => handleStartReport("comment", comment.id, `${comment.nickname || comment.user}님의 댓글`)}
+                              className="text-xs font-bold text-neutral-400 hover:text-red-600 transition inline-flex items-center gap-0.5 cursor-pointer"
+                            >
+                              <Flag className="w-3 h-3 stroke-[2.5]" /> 신고
+                            </button>
+                          )}
+                        </div>
                       )}
 
                       {/* 답글 목록 */}
-                      {comment.replies?.length > 0 && (
-                        <div className="mt-3 pl-4 border-l-2 border-[#b3a6eb] space-y-3">
-                          {comment.replies.map((reply, rIdx) => (
-                            <div key={reply.id || rIdx} className="flex gap-3 items-start">
-                              <div className="w-7 h-7 rounded-full bg-neutral-200 border border-black/5 flex items-center justify-center text-black font-black text-[11px] shrink-0">
-                                {reply.user.charAt(0)}
-                              </div>
-                              <div className="flex-1">
-                                <div className="flex justify-between items-center">
-                                  <h6 className="font-black text-xs text-neutral-900">{reply.user}</h6>
-                                  <span className="text-[10px] font-bold text-[#4b3e80]">{reply.date}</span>
+                      {(repliesByParent[comment.id]?.length > 0) && (() => {
+                        const replies = repliesByParent[comment.id];
+                        const isExpanded = expandedReplyIds.includes(comment.id) || replies.length < 2;
+                        return (
+                          <div className="mt-3 pl-4 space-y-3">
+                            {isExpanded && replies.map((reply, rIdx) => (
+                              <div key={reply.id || rIdx} className={`flex gap-2 items-start ${reportedCommentIds.includes(reply.id) ? "opacity-50" : ""}`}>
+                                <div className="w-7 h-7 rounded-full bg-neutral-200 border border-black/5 flex items-center justify-center text-black font-black text-[11px] shrink-0">
+                                  {(reply.nickname || reply.user || "?").charAt(0)}
                                 </div>
-                                {/* 답글 내용도 명확하게 선명화 */}
-                                <p className="text-[13px] leading-relaxed text-neutral-800 font-medium">{reply.text}</p>
+                                <div className="flex-1">
+                                  <div className="flex justify-between items-center">
+                                    <h6 className="font-black text-xs text-neutral-900">{reply.nickname || reply.user}</h6>
+                                    <span className="text-[10px] font-bold text-[#4b3e80]">{reply.date || formatCommentDate(reply.createdAt)}</span>
+                                  </div>
+                                  {reportedCommentIds.includes(reply.id) ? (
+                                    <p className="text-[12px] text-neutral-400 italic font-normal">신고가 접수된 댓글입니다.</p>
+                                  ) : editingCommentId === reply.id ? (
+                                    <div className="space-y-2 pt-1">
+                                      <textarea
+                                        value={editingCommentText}
+                                        onChange={e => setEditingCommentText(e.target.value)}
+                                        className="w-full min-h-16 border-2 border-[#b3a6eb] rounded-lg p-2 text-[12px] font-bold text-black outline-none focus:ring-2 focus:ring-[#5139d6] font-gowun bg-white"
+                                      />
+                                      <div className="flex justify-end gap-2">
+                                        <button onClick={handleCancelEditComment} className="text-[11px] font-black px-2.5 py-1 rounded-lg border-2 border-[#b3a6eb] text-[#3c375e] bg-white cursor-pointer">
+                                          취소
+                                        </button>
+                                        <button onClick={() => handleSaveEditComment(reply.id)} className="text-[11px] font-black px-2.5 py-1 rounded-lg bg-[#5139d6] hover:bg-[#3b25b8] text-white cursor-pointer">
+                                          저장
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      {/* 답글 내용도 명확하게 선명화 */}
+                                      <p className="text-[13px] leading-relaxed text-neutral-800 font-medium">{reply.content || reply.text}</p>
+                                      {(isOwnComment(reply) || mode !== "owner") && (
+                                        <div className="flex items-center gap-2.5 pt-0.5">
+                                          {isOwnComment(reply) && (
+                                            <>
+                                              <button
+                                                onClick={() => handleStartEditComment(reply)}
+                                                className="text-[11px] font-black text-neutral-500 hover:text-black hover:underline transition cursor-pointer"
+                                              >
+                                                수정
+                                              </button>
+                                              <button
+                                                onClick={() => handleDeleteComment(reply.id)}
+                                                className="text-[11px] font-black text-neutral-500 hover:text-red-600 hover:underline transition cursor-pointer"
+                                              >
+                                                삭제
+                                              </button>
+                                            </>
+                                          )}
+                                          {mode !== "owner" && !isOwnComment(reply) && (
+                                            <button
+                                              onClick={() => handleStartReport("comment", reply.id, `${reply.nickname || reply.user}님의 답글`)}
+                                              className="text-[11px] font-bold text-neutral-400 hover:text-red-600 transition inline-flex items-center gap-0.5 cursor-pointer"
+                                            >
+                                              <Flag className="w-2.5 h-2.5 stroke-[2.5]" /> 신고
+                                            </button>
+                                          )}
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                            ))}
+                            {replies.length >= 2 && (
+                              <button
+                                onClick={() => setExpandedReplyIds(prev =>
+                                  isExpanded ? prev.filter(id => id !== comment.id) : [...prev, comment.id]
+                                )}
+                                className="text-xs font-black text-[#5139d6] hover:text-black hover:underline transition cursor-pointer flex items-center gap-1"
+                              >
+                                {isExpanded ? "답글 접기" : `답글 ${replies.length}개 더보기`}
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
               ))
             )}
+          {hasNextComment && (
+            <button onClick={loadMoreComments} className="w-full py-2 text-sm text-[#6b54e7] hover:text-[#5139d6] font-bold border border-[#e6e2fc] rounded-xl hover:bg-[#f3f0ff] transition mt-4">
+              댓글 더보기
+            </button>
+          )}
           </div>
 
           {/* Comment register form box */}
           <form onSubmit={handleSubmitComment} className="mt-8 space-y-3">
+            {replyingTo && (
+              <div className="flex items-center justify-between bg-[#f3f0ff] border border-[#b3a6eb] rounded-lg px-3 py-2">
+                <span className="text-xs font-bold text-[#5139d6]">
+                  <span className="font-black">{replyingTo.nickname}</span>님에게 답글 작성 중
+                </span>
+                <button type="button" onClick={() => setReplyingTo(null)} className="text-xs font-bold text-neutral-500 hover:text-black cursor-pointer">
+                  취소
+                </button>
+              </div>
+            )}
             <div className="flex gap-3">
-              <input type="text" placeholder="닉네임" value={commentUser} onChange={e => setCommentUser(e.target.value)} className="border-2 border-[#b3a6eb] px-4.5 py-3.5 text-sm font-bold text-black w-28 md:w-36 focus:outline-none focus:bg-white placeholder-neutral-500 bg-white rounded-lg focus:ring-2 focus:ring-[#5139d6] font-gowun" />
+              <div className="w-10 h-10 rounded-full bg-[#e6e2fc] border border-[#b3a6eb] flex items-center justify-center shrink-0 overflow-hidden mt-1">
+                {currentUser?.profileImageUrl
+                  ? <img src={currentUser.profileImageUrl} alt="프로필" className="w-full h-full object-cover" />
+                  : <span className="text-[#5139d6] font-black text-sm">{(currentUser?.nickname || "?").charAt(0)}</span>
+                }
+              </div>
               <div className="relative flex-1 flex">
-                <input type="text" placeholder="댓글을 남겨보세요..." required value={commentText} onChange={e => setCommentText(e.target.value)} className="flex-1 border-2 border-[#b3a6eb] py-3.5 pl-4.5 pr-20 text-sm font-bold text-black focus:outline-none focus:bg-white placeholder-neutral-500 bg-white rounded-xl focus:ring-2 focus:ring-[#5139d6] font-gowun" />
+                <input
+                  id="detail-comment-input"
+                  type="text"
+                  placeholder={replyingTo ? "답글을 남겨보세요..." : "댓글을 남겨보세요..."}
+                  required
+                  value={commentText}
+                  onChange={e => setCommentText(e.target.value)}
+                  className="flex-1 border-2 border-[#b3a6eb] py-3.5 pl-4.5 pr-20 text-sm font-bold text-black focus:outline-none focus:bg-white placeholder-neutral-500 bg-white rounded-xl focus:ring-2 focus:ring-[#5139d6] font-gowun"
+                />
                 <button type="submit" className="absolute right-1.5 top-1.5 h-[calc(100%-12px)] text-xs font-black px-5 rounded-lg transition shadow-sm cursor-pointer shrink-0 bg-[#5139d6] hover:bg-[#3b25b8] text-white">
                   등록
                 </button>

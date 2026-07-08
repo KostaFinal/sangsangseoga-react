@@ -13,7 +13,6 @@ function getReaderMode(genre) {
   if (genre === "동화") return "fairytale";
   if (genre === "시") return "poetry";
   if (genre === "에세이") return "essay";
-  if (genre === "지식정보") return "knowledge";
   return "novel";
 }
 
@@ -27,7 +26,6 @@ const READER_COMPONENTS = {
 
 export default function BookReaderView({
   book,
-  books = [],
   onBack,
   onToggleBookmark,
   onToggleLike,
@@ -64,6 +62,15 @@ export default function BookReaderView({
   }, [book.id]);
 
   useEffect(() => {
+    if (!onProgressSave) return;
+
+    const bookId = book.bookId || book.id;
+    const totalPages = book.pages?.length || book.pageCount || 1;
+
+    onProgressSave(bookId, 1, totalPages);
+  }, [book.id]);
+
+  useEffect(() => {
     const saved = localStorage.getItem(`sangsang_memos_${book.id}`);
     if (saved) {
       try {
@@ -83,7 +90,7 @@ export default function BookReaderView({
   }, [book.id]);
 
   if (isCompleted) {
-    return <CompletionScreen book={book} books={books} onBack={onBack} onReread={() => setIsCompleted(false)} onSelectRecommended={onSelectRecommended} />;
+    return <CompletionScreen book={book} onBack={onBack} onReread={() => setIsCompleted(false)} onSelectRecommended={onSelectRecommended} />;
   }
 
   const ActiveReader = READER_COMPONENTS[readerMode];
@@ -122,18 +129,40 @@ export default function BookReaderView({
               setIsCompleted(true);
             }}
             onLastPageBlocked={() => setShowLastPageAlert(true)}
+            // onPageChange={async (pageKey) => {
+            //   setCurrentPageKey(pageKey);
+
+            //   if (onProgressSave) {
+            //     const currentPage = pageKey + 1;
+            //     const totalPages = book.pages?.length || book.pageCount || 1;
+            //     await onProgressSave(book.bookId || book.id, currentPage, totalPages);
+            //   }
+            // }}
+
             onPageChange={async (pageKey) => {
+              console.log("페이지 변경:", pageKey);
+
               setCurrentPageKey(pageKey);
 
               if (onProgressSave) {
                 const currentPage = pageKey + 1;
                 const totalPages = book.pages?.length || book.pageCount || 1;
+
+                console.log("onProgressSave 호출", {
+                  bookId: book.bookId || book.id,
+                  currentPage,
+                  totalPages,
+                });
+
                 await onProgressSave(book.bookId || book.id, currentPage, totalPages);
+              } else {
+                console.log("onProgressSave 없음");
               }
             }}
-            editable={editable}
-            onLayoutChange={onLayoutChange}
-            viewType={viewType}
+            
+          editable={editable}
+          onLayoutChange={onLayoutChange}
+          viewType={viewType}
           />
 
           {bookmarkedPages[currentPageKey] && (
