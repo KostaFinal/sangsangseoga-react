@@ -16,9 +16,9 @@ export const ReportsTab = ({
       {/* Secondary Report Type Selector Tabs */}
       <div className="flex border-b border-[#E6E2FC]/60">
         {[
-          { id: 'books', name: '도서 신고 심의', count: reportedBooks.filter(r => r.status === 'pending').length, icon: BookOpen },
-          { id: 'comments', name: '댓글 신고 심의', count: reportedComments.filter(r => r.status === 'pending').length, icon: MessageSquare },
-          { id: 'authors', name: '작가 계정 신고', count: reportedAuthors.filter(r => r.status === 'pending').length, icon: User }
+          { id: 'books', name: '도서 신고', count: reportedBooks.filter(r => r.status === 'pending').length, icon: BookOpen },
+          { id: 'comments', name: '댓글 신고', count: reportedComments.filter(r => r.status === 'pending').length, icon: MessageSquare },
+          { id: 'authors', name: '작가 신고', count: reportedAuthors.filter(r => r.status === 'pending').length, icon: User }
         ].map((sTab) => {
           const Icon = sTab.icon;
           return (
@@ -51,10 +51,10 @@ export const ReportsTab = ({
         <AlertCircle className="w-4 h-4 text-[#835AF1] mt-0.5 shrink-0 animate-pulse" />
         <div>
           <p className="font-extrabold text-[11px] tracking-wide text-white">
-            중복 신고 제한 및 정밀 심사 안내
+            중복 신고 안내
           </p>
           <p className="text-[#B9B0DC] text-[10.5px] mt-1 leading-normal text-left">
-            무분별한 중복 신고를 방지하기 위해 동일 대상에 대해서는 계정당 1회만 카운트됩니다. 리스트의 신고 카드를 클릭하시면 상세한 신고 내용 검토 및 반려/제재 조치를 즉시 이행할 수 있습니다.
+            동일 대상 신고는 계정당 1회만 집계됩니다. 카드를 클릭하면 상세 내용을 확인하고 반려/제재 처리를 할 수 있습니다.
           </p>
         </div>
       </div>

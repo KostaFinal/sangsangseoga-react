@@ -116,7 +116,7 @@ export const ReportDetailModal = ({
           <div className="bg-[#110F24] text-white p-4.5 text-center font-bold text-xs space-y-1.5 rounded-xl w-full text-left">
             <p className="text-emerald-400 font-extrabold flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
-              <span>처리가 종결된 신고 사안입니다.</span>
+              <span>처리 완료된 신고입니다.</span>
             </p>
             <p className="text-[10px] text-[#B9B0DC] mt-1">
               결과: <span className="font-extrabold text-white">{selectedReport.status === 'hidden' ? '제한 조치 완료' : '신고 반려 완료'}</span>

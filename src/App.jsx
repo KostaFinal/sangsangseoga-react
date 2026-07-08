@@ -256,11 +256,11 @@ function AppInner() {
           <Route path="subscription/payment" element={<PaymentRoute />} />
           <Route path="profile/edit" element={<ProfileEditRoute />} />
 
-          <Route path="create/poem" element={<BookCreationRouter initialGenre="poem" />} />
-          <Route path="create/essay" element={<BookCreationRouter initialGenre="essay" />} />
-          <Route path="create/nonfiction" element={<BookCreationRouter initialGenre="nonfiction" />} />
-          <Route path="create/fairy-tale/*" element={<BookCreationRouter initialGenre="fairy-tale" />} />
-          <Route path="create/novel/*" element={<BookCreationRouter initialGenre="novel" />} />
+          <Route path="create/poem" element={<BookCreationRouter key="poem" initialGenre="poem" />} />
+          <Route path="create/essay" element={<BookCreationRouter key="essay" initialGenre="essay" />} />
+          <Route path="create/nonfiction" element={<BookCreationRouter key="nonfiction" initialGenre="nonfiction" />} />
+          <Route path="create/fairy-tale/*" element={<BookCreationRouter key="fairy-tale" initialGenre="fairy-tale" />} />
+          <Route path="create/novel/*" element={<BookCreationRouter key="novel" initialGenre="novel" />} />
           {LEGACY_BOOK_CREATION_REDIRECTS.map(({ path, to }) => (
             <Route key={path} path={path} element={<Navigate to={to} replace />} />
           ))}

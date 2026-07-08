@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Activity,
   ArrowLeft,
-  LogOut,
   ShieldCheck,
   LayoutDashboard
 } from 'lucide-react';
@@ -77,25 +76,6 @@ export const AdminView = ({ initialTab = 'member' }) => {
   return (
     <div id="admin-main-view" className="min-h-screen bg-[#FAF9FF] flex flex-col font-sans text-[#2F2D59] selection:bg-[#6B54E7] selection:text-white pb-20 relative overflow-x-hidden">
       
-      {/* Upper Unified Admin Status Banner */}
-      <div className="bg-white/80 backdrop-blur-md border-b border-[#E6E2FC]/50 py-3.5 px-4 sm:px-6 sticky top-0 z-40">
-        <div className="w-full flex items-center justify-between">
-          <div className="flex items-center space-x-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
-            <span className="text-xs font-black text-[#110F24] tracking-wider uppercase">상상서가 어드민 센터</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <button 
-              onClick={() => navigate('/')}
-              className="inline-flex items-center gap-1.5 text-xs font-black text-[#7C769D] hover:text-[#6B54E7] transition-all bg-[#FAF9FF] hover:bg-[#E6E2FC]/30 border border-[#E6E2FC] px-3.5 py-1.5 rounded-xl cursor-pointer"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>로그아웃</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Top Background Ambient Glows */}
       <div className="absolute top-10 left-1/4 w-[600px] h-[600px] bg-[#E6E2FC]/30 rounded-full filter blur-[130px] pointer-events-none"></div>
       <div className="absolute top-40 right-1/4 w-[500px] h-[500px] bg-[#EDF5FF]/40 rounded-full filter blur-[110px] pointer-events-none"></div>
@@ -118,7 +98,7 @@ export const AdminView = ({ initialTab = 'member' }) => {
 
             <div className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-[#6B54E7]/30 text-[#B9B0DC] rounded-full text-xs font-semibold border border-[#6B54E7]/40">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>최고 관리자 콘솔</span>
+              <span>관리자</span>
             </div>
           </div>
 
@@ -126,10 +106,10 @@ export const AdminView = ({ initialTab = 'member' }) => {
             <div className="text-left space-y-2 max-w-2xl">
               <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-3">
                 <LayoutDashboard className="w-8 h-8 text-[#835AF1] shrink-0" />
-                <span>종합 관리자 콘솔</span>
+                <span>관리자 페이지</span>
               </h2>
               <p className="text-xs sm:text-sm text-[#B9B0DC] leading-relaxed">
-                작가 계정의 자격을 제어하고, 접수된 신고를 심사하며, AI 생성 리소스 소모 추세를 실시간으로 모니터링합니다.
+                작가 계정, 신고, AI 사용량을 관리합니다.
               </p>
             </div>
 
@@ -170,14 +150,14 @@ export const AdminView = ({ initialTab = 'member' }) => {
             <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E6E2FC]/60 text-left">
               <div className="mb-5 border-b border-[#E6E2FC]/40 pb-4">
                 <span className="text-[9px] font-mono tracking-widest text-[#7C769D] uppercase font-black block">Administrator</span>
-                <h1 className="text-lg font-black text-[#110F24] tracking-tight mt-1">중앙 통제실</h1>
+                <h1 className="text-lg font-black text-[#110F24] tracking-tight mt-1">관리 메뉴</h1>
               </div>
 
               <nav className="space-y-2">
                 {[
-                  { id: 'member', name: '작가 계정 관리', icon: Users, desc: '계정 상태 복구 및 일시 정지' },
-                  { id: 'reports', name: '신고 사안 심의', icon: Flag, desc: '도서/댓글/작가 정밀 심사' },
-                  { id: 'tokens', name: 'AI 리소스 관리', icon: BarChart3, desc: '글자/이미지 생성 추이 분석' }
+                  { id: 'member', name: '작가 계정 관리', icon: Users, desc: '계정 상태 변경' },
+                  { id: 'reports', name: '신고 관리', icon: Flag, desc: '신고 심사' },
+                  { id: 'tokens', name: 'AI 사용량 관리', icon: BarChart3, desc: 'AI 사용량 분석' }
                 ].map((tab) => {
                   const IconComp = tab.icon;
                   const isSelected = activeTab === tab.id;
@@ -215,7 +195,7 @@ export const AdminView = ({ initialTab = 'member' }) => {
             <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E6E2FC]/60 text-left space-y-4">
               <h3 className="text-[10px] font-black text-[#7C769D] uppercase tracking-widest flex items-center gap-1.5">
                 <Activity className="w-3.5 h-3.5 text-[#6B54E7] animate-pulse" />
-                <span>소속 창작실 통계</span>
+                <span>작가 통계</span>
               </h3>
               
               <div className="space-y-3 pt-1">
@@ -254,13 +234,13 @@ export const AdminView = ({ initialTab = 'member' }) => {
               <div className="border-b border-[#E6E2FC]/40 pb-5 mb-6 text-left">
                 <h2 className="text-xl font-black text-[#110F24] tracking-tight">
                   {activeTab === 'member' && '작가 계정 관리'}
-                  {activeTab === 'reports' && '신고 사안 심의'}
-                  {activeTab === 'tokens' && 'AI 리소스 관리'}
+                  {activeTab === 'reports' && '신고 관리'}
+                  {activeTab === 'tokens' && 'AI 사용량 관리'}
                 </h2>
                 <p className="text-xs text-[#7C769D] mt-1 leading-relaxed">
-                  {activeTab === 'member' && '작가 계정의 자격, 상태, 가입 승인 등을 관리합니다.'}
-                  {activeTab === 'reports' && '접수된 도서, 댓글, 작가 등의 유해성 및 신고 사안을 심사합니다.'}
-                  {activeTab === 'tokens' && '사용자들의 AI 텍스트 및 이미지 생성 사용량을 실시간 파악합니다.'}
+                  {activeTab === 'member' && '작가 계정 상태와 가입 승인을 관리합니다.'}
+                  {activeTab === 'reports' && '접수된 도서, 댓글, 작가 신고를 심사합니다.'}
+                  {activeTab === 'tokens' && 'AI 텍스트/이미지 생성 사용량을 확인합니다.'}
                 </p>
               </div>
 
