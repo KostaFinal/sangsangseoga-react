@@ -3,13 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { createPagePlan } from "../../services/aiGenerateService";
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
-import {
-  fallbackStudioSetup,
-  friendOptions as fallbackChoices,
-} from "../data/fairyTaleCoCreationStudioOptions";
+import { fallbackStudioSetup } from "../data/fairyTaleCoCreationStudioOptions";
 import { getPagePlan, isValidPagePlan, normalizeChoiceOptions } from "../utils/aiSettingOptions";
 
 const FALLBACK_QUESTION = "다음 장면에서는 어떤 일이 일어날까요?";
+const UNREVEALED_SCENE_TEXT = "아직 공개되지 않은 장면";
 const PHASE_META = [
   { phase: "기", icon: "1", className: "start" },
   { phase: "승", icon: "2", className: "middle" },
@@ -61,7 +59,8 @@ const makeInitialPagePlans = (setupData, pageCount) =>
 
 // Python(CREATE_PAGE_PLAN) 응답의 페이지 하나를 화면에서 쓰는 로컬 pagePlan 항목으로 변환한다.
 const toLocalPagePlan = (aiPage, existingPlan) => ({
-  pageNo: aiPage.pageNo,
+  // AI가 pageNo를 문자열로 줄 수 있어(예: "1") currentPage(숫자)와의 비교가 깨지지 않도록 여기서 숫자로 고정한다.
+  pageNo: Number(aiPage.pageNo),
   phase: aiPage.phase || existingPlan?.phase || "",
   title: aiPage.sceneTitle || existingPlan?.title || "",
   summary: aiPage.sceneSummary || existingPlan?.summary || "",
@@ -124,36 +123,45 @@ export function useFairyTaleCoCreationStudio() {
   const planRequestRef = useRef(false);
   const recommendGuardRef = useRef(false);
 
-  const currentPageData = pagePlans.find((plan) => plan.pageNo === currentPage);
+  // pageNo가 숫자/문자열로 섞여 들어와도 안전하게 매칭되도록 Number로 비교한다.
+  const currentPageData = pagePlans.find((plan) => Number(plan.pageNo) === Number(currentPage));
   const choiceQuestion = currentPageData?.question || FALLBACK_QUESTION;
   const choiceGuide = currentPageData?.guide || "";
   const showFallbackNotice = planFallbackNotice || Boolean(pageFallbackNotice[currentPage]);
   const isLoadingChoiceStep = isGeneratingPlan || isRecommendingAgain;
 
+  // AI가 실제로 만든 options만 사용한다. 비어있으면 하드코딩 샘플 선택지로 대체하지 않고
+  // 빈 배열을 반환해 화면에서 안내 문구 + 직접 입력만 보이게 한다.
   const choices = useMemo(() => {
     const aiOptions = currentPageData?.options;
-    return normalizeChoicesForDisplay(
-      aiOptions?.length ? aiOptions : fallbackChoices,
-      `page${currentPage}`
-    );
+    if (!aiOptions?.length) return [];
+    return normalizeChoicesForDisplay(aiOptions, `page${currentPage}`);
   }, [currentPageData, currentPage]);
+
+  const showNoOptionsNotice = !isLoadingChoiceStep && !showFallbackNotice && choices.length === 0;
 
   const selectedChoice = choices.find((choice) => choice.id === selectedChoiceId);
   const selectedAnswer = customAnswer.trim() || selectedChoice?.title || "";
   const canCreateNextScene = Boolean(selectedAnswer) && !isLoadingChoiceStep;
 
+  // AI가 pagePlan 전체(12페이지)를 미리 받아둬도, 화면에는 사용자가 아직 진행하지 않은
+  // 미래 페이지의 제목/내용을 보여주지 않는다 — currentPage까지 도달한 페이지만 실제 제목을 노출한다.
   const outlineData = useMemo(
     () =>
       makePhaseSections(pageCount).map((section) => ({
         ...section,
         items: section.pages.map((pageNo) => {
-          const pagePlan = pagePlans.find((plan) => plan.pageNo === pageNo);
+          const isRevealed = pageNo <= currentPage;
+          const pagePlan = isRevealed
+            ? pagePlans.find((plan) => Number(plan.pageNo) === pageNo)
+            : null;
 
           return {
             page: pageNo,
-            text: pagePlan?.title || `${pageNo}p 장면`,
+            text: isRevealed ? pagePlan?.title || `${pageNo}p 장면` : UNREVEALED_SCENE_TEXT,
             done: completedPageNumbers.includes(pageNo),
             current: pageNo === currentPage,
+            locked: !isRevealed,
           };
         }),
       })),
@@ -169,6 +177,7 @@ export function useFairyTaleCoCreationStudio() {
           page,
           done: completedPageNumbers.includes(page),
           current: page === currentPage,
+          future: page > currentPage,
           disabled: true,
         };
       }),
@@ -346,6 +355,10 @@ export function useFairyTaleCoCreationStudio() {
     setCustomAnswer("");
   };
 
+  // 선택형(CHOICE)은 버튼 선택만으로 완성하는 모드라 직접 입력란이 없어야 한다.
+  // MIXED(선택+입력형)만 직접 입력을 허용한다.
+  const allowCustomAnswer = setupData.interactionMode !== "CHOICE";
+
   return {
     outlineData,
     choices,
@@ -355,6 +368,7 @@ export function useFairyTaleCoCreationStudio() {
     setSelectedChoiceId,
     customAnswer,
     setCustomAnswer,
+    allowCustomAnswer,
     currentPage,
     pageCount,
     isPreviewOpen,
@@ -369,6 +383,7 @@ export function useFairyTaleCoCreationStudio() {
     completedPageNumbers,
     pagePlans,
     showFallbackNotice,
+    showNoOptionsNotice,
     handleNextScene,
     handleRecommendAgain,
   };

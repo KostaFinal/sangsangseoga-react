@@ -19,6 +19,8 @@ function FairyTaleImageDesignPage() {
     generationCards,
     currentGenerationLabel,
     currentTeacherMessage,
+    generationError,
+    generatedImages,
     selectedStyleInfo,
     pageCount,
     totalImageCount,
@@ -264,6 +266,14 @@ function FairyTaleImageDesignPage() {
                   <div className="scene-info">
                     <strong>장면</strong>
                     <p>{row.sceneTitle}</p>
+                    {generatedImages[row.page] && (
+                      <img
+                        className="generated-scene-thumb"
+                        src={generatedImages[row.page]}
+                        alt={`${row.page} 생성 이미지`}
+                        style={{ width: 96, height: 128, objectFit: "cover", marginTop: 8, borderRadius: 8 }}
+                      />
+                    )}
                   </div>
 
                   <div className={`scene-edit ${row.isLocked ? "locked" : ""}`}>
@@ -303,6 +313,9 @@ function FairyTaleImageDesignPage() {
 
           <footer className="image-generate-footer">
             <p>ⓘ 전체 이미지 생성 후 에디터로 자동 이동됩니다.</p>
+            {generationError && (
+              <p style={{ color: "#d33" }}>{generationError}</p>
+            )}
 
             <button
               type="button"
