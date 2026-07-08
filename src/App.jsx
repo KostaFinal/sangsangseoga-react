@@ -29,7 +29,7 @@ import { ErrorPage500 } from './shared/components/ErrorPage500';
 import { CURRENT_USER_PROFILE } from './shared/data';
 import SideMenu from './shared/components/SideMenu';
 import { MainBookshelf, MyBookTab, FinishedTab, ReadingTab, WishlistTab } from './features/bookshelf';
-import { getBooks, getMyBooks, likeBook, unlikeBook, addBookmark, removeBookmark } from './api/bookApi';
+import { getBooks, getBook, getMyBooks, likeBook, unlikeBook, addBookmark, removeBookmark } from './api/bookApi';
 import { addComment, addReply } from './api/commentApi';
 import { followAuthor, unfollowAuthor } from './api/authorApi';
 import FriendsLibraryView from './features/library/components/FriendsLibraryView';
@@ -104,7 +104,7 @@ export default function App() {
           coverImage: b.coverImageUrl,
           likes: b.likeCount,
           commentsCount: b.commentCount,
-          genre: bookTypeToGenre[b.genre] || b.genre,
+          genre: bookTypeToGenre[b.bookType] || b.bookType,
           comments: b.comments || [],
         }));
         setBooks(mapped);
@@ -435,6 +435,7 @@ export default function App() {
                 onBackToLibrary={() => setCurrentScreen("friends-library")}
                 onBackToDirectory={() => setSelectedAuthor(null)}
                 mode={authorProfileMode}
+                currentUser={currentUser}
               />
             ) : (
               <SearchAuthorView onSelectAuthor={name => setSelectedAuthor(name)} />
@@ -630,7 +631,28 @@ export default function App() {
                 onBack={() => { setSelectedBook(null); document.body.style.overflow = "unset"; }}
                 onToggleBookmark={e => handleToggleBookmark(e, selectedBook.id)}
                 onToggleLike={e => handleToggleLike(e, selectedBook.id)}
-                onSelectRecommended={b => { setSelectedBook(null); document.body.style.overflow = "unset"; setViewingBook(b); }}
+                onSelectRecommended={async (rec) => {
+                  setSelectedBook(null);
+                  document.body.style.overflow = "unset";
+                  try {
+                    const res = await getBook(rec.id);
+                    const full = res.data?.data;
+                    if (full) {
+                      setViewingBook({
+                        ...full,
+                        coverImage: full.coverImageUrl,
+                        likes: full.likeCount,
+                        commentsCount: full.commentCount,
+                        genre: bookTypeToGenre[full.bookType] || full.bookType,
+                        comments: full.comments || [],
+                        pages: full.pages || [],
+                        mode: currentUser?.memberId && full.authorId && String(currentUser.memberId) === String(full.authorId) ? "owner" : "viewer",
+                      });
+                    }
+                  } catch (err) {
+                    console.error("추천 도서 조회 실패", err);
+                  }
+                }}
               />
             </motion.div>
           )}

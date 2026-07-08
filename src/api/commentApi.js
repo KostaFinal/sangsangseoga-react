@@ -1,5 +1,7 @@
 import api from "./axios";
 
+export const getComments = (bookId, cursor = null, size = 20) =>
+  api.get(`/api/books/${bookId}/comments`, { params: { cursor, size } });
 export const addComment = (bookId, content, replyToCommentId = null) =>
   api.post(`/api/books/${bookId}/comments`, { content, replyToCommentId });
 export const addReply = (commentId, content) =>

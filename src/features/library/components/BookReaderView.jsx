@@ -26,7 +26,6 @@ const READER_COMPONENTS = {
 
 export default function BookReaderView({
   book,
-  books = [],
   onBack,
   onToggleBookmark,
   onToggleLike,
@@ -91,7 +90,7 @@ export default function BookReaderView({
   }, [book.id]);
 
   if (isCompleted) {
-    return <CompletionScreen book={book} books={books} onBack={onBack} onReread={() => setIsCompleted(false)} onSelectRecommended={onSelectRecommended} />;
+    return <CompletionScreen book={book} onBack={onBack} onReread={() => setIsCompleted(false)} onSelectRecommended={onSelectRecommended} />;
   }
 
   const ActiveReader = READER_COMPONENTS[readerMode];

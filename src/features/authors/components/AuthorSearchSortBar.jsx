@@ -25,9 +25,9 @@ export default function AuthorSearchSortBar({ search, onSearchChange, sortBy, on
           팔로워 순
         </button>
         <button
-          onClick={() => onSortByChange("activity")}
+          onClick={() => onSortByChange("works")}
           className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
-            sortBy === "activity"
+            sortBy === "works"
               ? "bg-[#6b54e7] text-white border-[#6b54e7] shadow-sm"
               : "bg-white border-[#e6e2fc] text-[#7c769d] hover:border-[#6b54e7]/40 hover:text-[#6b54e7]"
           }`}
