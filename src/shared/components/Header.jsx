@@ -201,7 +201,7 @@ export const Header = () => {
                   className={`transition-colors py-1 cursor-pointer text-red-600 hover:text-red-700 font-extrabold flex items-center ${path.startsWith("/admin") ? "text-red-700 border-b border-red-700 font-black" : ""}`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse mr-1.5 inline-block"></span>
-                  <span>관리자 영역</span>
+                  <span>관리자</span>
                 </button>
               )}
             </nav>

@@ -3,7 +3,6 @@ import {
   User,
   Shield,
   Trash2,
-  CheckCircle,
   AlertTriangle,
   Mail,
   Lock,
@@ -14,14 +13,9 @@ import {
   Check,
   X,
   Camera,
-  Save,
   Key,
   ShieldAlert,
-  Sparkles,
-  Activity,
   CheckCircle2,
-  LockKeyhole,
-  FileText
 } from 'lucide-react';
 import { useProfileState } from '../hooks/useProfileState';
 
@@ -78,7 +72,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
   } = useProfileState({ currentUser, onUpdateProfile, onLogout });
 
   return (
-    <div id="profile-edit-container" className="bg-[#FAF9FF] min-h-screen font-sans text-[#2F2D59] w-full px-0 py-0 pb-16 relative leading-relaxed overflow-x-hidden">
+    <div id="profile-edit-container" className="bg-[#FAF9FF] min-h-screen font-sans text-[#2F2D59] w-full leading-relaxed">
       
       {/* Toast Alert */}
       {toastMessage && (
@@ -88,72 +82,19 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
         </div>
       )}
 
-      {/* Top Background Ambient Glows */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#E6E2FC]/30 rounded-full filter blur-[120px] pointer-events-none"></div>
-      <div className="absolute top-20 right-1/4 w-[400px] h-[400px] bg-[#EDF5FF]/40 rounded-full filter blur-[100px] pointer-events-none"></div>
-
-      {/* 1. Header Hero Panel (Slate Dark theme, matching SubscriptionView) */}
-      <div className="relative w-full bg-[#110F24] text-white overflow-hidden rounded-b-[2.5rem] shadow-lg border-b border-[#2F2D59]/30 z-10 px-4 py-8 sm:py-12 sm:px-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(107,84,231,0.25),transparent)] pointer-events-none"></div>
-        
-        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 relative z-10">
-          
-          {/* Back button and Tag */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <button
-              onClick={onNavigateHome}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white/90 text-xs font-bold transition-all border border-white/5 active:scale-95 cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>작가 홈으로 가기</span>
-            </button>
-
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#6B54E7]/30 text-[#B9B0DC] rounded-full text-xs font-semibold border border-[#6B54E7]/40">
-              <Shield className="w-3.5 h-3.5 text-yellow-300" />
-              <span>실시간 가입 및 계정 전산 보안 센터</span>
-            </div>
-          </div>
-
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-            <div className="text-left space-y-2 max-w-2xl">
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
-                <LockKeyhole className="w-8 h-8 text-[#835AF1] shrink-0" />
-                <span>나의 아틀리에 보안 관리 대시보드</span>
-              </h2>
-              <p className="text-xs sm:text-sm text-[#B9B0DC] leading-relaxed">
-                나만의 고유한 작가 필명을 등록하고 메일 알림 수신 상태를 조정할 수 있습니다. 자녀가 있는 보호자 회원인 경우, 법정대리인 자격 검증과 가입 안심 수락까지 투명하게 조율합니다.
-              </p>
-            </div>
-
-            {/* Quick security status card with glowing effect */}
-            <div className="relative w-full lg:w-auto flex items-center gap-5 bg-white/[0.04] backdrop-blur-md px-6 py-5 rounded-2xl border border-white/10 shrink-0 text-left">
-              <div className="absolute -top-3 -right-3 w-12 h-12 bg-[#6B54E7]/30 rounded-full filter blur-md"></div>
-              
-              <div className="space-y-1">
-                <span className="text-[10px] text-[#B9B0DC] block tracking-wider font-bold uppercase">나의 안전 지수</span>
-                <span className="text-sm sm:text-base font-black flex items-center gap-1.5 text-emerald-400">
-                  <CheckCircle className="w-4.5 h-4.5 text-emerald-400" />
-                  <span>매우 안전함 (1급)</span>
-                </span>
-              </div>
-              
-              <div className="h-10 w-[1px] bg-white/10"></div>
-              
-              <div className="space-y-1">
-                <span className="text-[10px] text-[#B9B0DC] block tracking-wider font-bold uppercase">보호자 동의 상태</span>
-                <span className="text-sm sm:text-base font-extrabold text-white block">
-                  {isMinor ? '체결 완료 (보증됨)' : '대상 아님'}
-                </span>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
       {/* 2. Unified Grid Layout Container */}
-      <div className="w-full max-w-7xl mx-auto px-4 py-8 sm:px-6 md:px-8 relative z-10">
-        
+      <div className="w-full max-w-7xl mx-auto px-4 py-8 sm:px-6 md:px-8">
+
+        <button
+          onClick={onNavigateHome}
+          className="group mb-6 flex items-center gap-1.5 text-sm font-black text-[#514c73] hover:text-[#5139d6] transition cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          <span>홈으로</span>
+        </button>
+
+        <h2 className="text-2xl font-black text-[#110F24] tracking-tight mb-6">내 정보 수정</h2>
+
         {/* Tab Navigation Segmented Menu */}
         <div className="flex border-b border-[#E6E2FC]/60 bg-white/70 backdrop-blur-md p-1.5 rounded-2xl mb-8 gap-2 w-full sm:w-fit shadow-xs">
           <button
@@ -166,7 +107,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
             }`}
           >
             <User className="w-4 h-4" />
-            <span>기본 정보 및 계정 보안</span>
+            <span>기본 정보</span>
           </button>
           
           <button
@@ -179,7 +120,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
             }`}
           >
             <Users className="w-4 h-4" />
-            <span>보호자 동의 및 자녀 관리</span>
+            <span>보호자 동의</span>
             {isMinor && (
               <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
             )}
@@ -199,16 +140,16 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                   <div className="border-b border-[#E6E2FC]/40 pb-4">
                     <h3 className="text-base font-black text-[#2F2D59] flex items-center gap-2">
                       <span className="w-1.5 h-3 bg-[#6B54E7] rounded-full"></span>
-                      <span>작가 공식 필명 설정</span>
+                      <span>필명 설정</span>
                     </h3>
-                    <p className="text-xs text-[#7C769D] mt-1 text-left">상상서가 창작 소설과 일러스트 책 표지에 영구적으로 기재될 작가 서명 이름입니다.</p>
+                    <p className="text-xs text-[#7C769D] mt-1 text-left">책 표지에 표시될 작가 이름입니다.</p>
                   </div>
 
                   <div className="space-y-2.5 pt-1">
                     <label className="block text-xs font-extrabold text-[#7C769D] uppercase tracking-wider">
-                      공개 작가명 (필명) <span className="text-rose-500">*</span>
+                      필명 <span className="text-rose-500">*</span>
                     </label>
-                    
+
                     <div className="flex gap-2.5">
                       <div className="relative flex-grow">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7C769D]">
@@ -219,16 +160,16 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                           value={nickname}
                           onChange={(e) => handleNicknameChange(e.target.value)}
                           className="w-full pl-11 pr-4 py-3 bg-[#FAF9FF] hover:bg-neutral-100/50 focus:bg-white text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
-                          placeholder="활동하실 공식 작가명을 적어주세요"
+                          placeholder="사용할 필명을 입력하세요"
                         />
                       </div>
-                      
+
                       <button
                         type="button"
                         onClick={handleCheckNicknameDuplicate}
                         className="px-5 py-3 bg-[#6B54E7] hover:bg-[#5b45d6] text-white rounded-xl text-xs font-black transition-all active:scale-95 cursor-pointer shadow-md shadow-[#6B54E7]/10 shrink-0"
                       >
-                        실시간 중복 검증
+                        중복 확인
                       </button>
                     </div>
 
@@ -249,25 +190,25 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                     <div>
                       <h3 className="text-base font-black text-[#2F2D59] flex items-center gap-2">
                         <span className="w-1.5 h-3 bg-[#6B54E7] rounded-full"></span>
-                        <span>비밀번호 개정 및 2중 보호</span>
+                        <span>비밀번호 변경</span>
                       </h3>
-                      <p className="text-xs text-[#7C769D] mt-1 text-left">정기적으로 계정 비밀번호를 갱신하여 작가님의 독창적 소설 자산을 단단하게 보존해 주세요.</p>
+                      <p className="text-xs text-[#7C769D] mt-1 text-left">정기적으로 비밀번호를 변경해 계정을 안전하게 보호하세요.</p>
                     </div>
-                    
+
                     <button
                       type="button"
                       onClick={() => setShowPwText(!showPwText)}
                       className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#FAF9FF] hover:bg-[#E6E2FC]/20 border border-[#E6E2FC] rounded-lg text-[11px] font-bold text-[#7C769D] hover:text-[#2F2D59] transition-all cursor-pointer"
                     >
                       {showPwText ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                      <span>{showPwText ? '암호 마스킹' : '암호 보기'}</span>
+                      <span>{showPwText ? '숨기기' : '보기'}</span>
                     </button>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
                     <div className="space-y-1.5">
                       <label className="block text-xs font-extrabold text-[#7C769D]">
-                        현재 확인용 암호 <span className="text-rose-500">*</span>
+                        현재 비밀번호 <span className="text-rose-500">*</span>
                       </label>
                       <div className="relative">
                         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Lock className="w-3.5 h-3.5" /></span>
@@ -276,13 +217,13 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                           value={currentPassword}
                           onChange={(e) => setCurrentPassword(e.target.value)}
                           className="w-full pl-10 pr-3 py-3 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
-                          placeholder="현재 비밀번호 확인"
+                          placeholder="현재 비밀번호"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-extrabold text-[#7C769D]">개정할 신규 암호</label>
+                      <label className="block text-xs font-extrabold text-[#7C769D]">새 비밀번호</label>
                       <div className="relative">
                         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Key className="w-3.5 h-3.5" /></span>
                         <input
@@ -290,13 +231,13 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                           className="w-full pl-10 pr-3 py-3 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
-                          placeholder="신규 비밀번호 입력"
+                          placeholder="새 비밀번호"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-extrabold text-[#7C769D]">새 암호 대조 재확인</label>
+                      <label className="block text-xs font-extrabold text-[#7C769D]">새 비밀번호 확인</label>
                       <div className="relative">
                         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Key className="w-3.5 h-3.5" /></span>
                         <input
@@ -304,7 +245,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                           value={confirmNewPassword}
                           onChange={(e) => setConfirmNewPassword(e.target.value)}
                           className="w-full pl-10 pr-3 py-3 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
-                          placeholder="한 번 더 입력해 대조"
+                          placeholder="새 비밀번호 확인"
                         />
                       </div>
                     </div>
@@ -313,7 +254,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                   <div className="bg-[#FAF9FF] rounded-xl p-3.5 border border-[#E6E2FC]/60 text-[11px] text-[#7C769D] flex items-start gap-2 mt-3 text-left">
                     <ShieldAlert className="w-4 h-4 text-[#6B54E7] shrink-0 mt-0.5" />
                     <p>
-                      가장 최근에 사용한 임시 계정 번호 혹은 <strong>"password123"</strong>은 안전 기준 준수를 위해 보안 시스템에 의해 개정 대용으로 사용할 수 없습니다. 대소문자 및 특수 기호를 융합하여 설정해 주세요.
+                      이전 비밀번호나 <strong>"password123"</strong>은 사용할 수 없습니다. 영문 대소문자와 특수문자를 포함해 설정해 주세요.
                     </p>
                   </div>
                 </div>
@@ -324,17 +265,17 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                     <div className="border-b border-[#E6E2FC]/40 pb-4 flex justify-between items-center flex-wrap gap-2">
                       <div className="flex items-center gap-2">
                         <span className="px-2 py-0.5 bg-rose-50 text-rose-700 text-[10px] font-black tracking-tight rounded-md border border-rose-200">
-                          만 14세 미만 보호자 확인용
+                          만 14세 미만
                         </span>
-                        <h3 className="text-base font-black text-[#2F2D59]">법정대리인(학부모) 연결 메일</h3>
+                        <h3 className="text-base font-black text-[#2F2D59]">보호자 이메일</h3>
                       </div>
-                      
+
                       <button
                         type="button"
                         onClick={() => setGuardianEmailEditMode(!guardianEmailEditMode)}
                         className="text-xs font-bold text-[#6B54E7] hover:text-[#5b45d6] hover:underline cursor-pointer"
                       >
-                        {guardianEmailEditMode ? '수정 철회' : '대리인 승인 이메일 변경'}
+                        {guardianEmailEditMode ? '취소' : '이메일 변경'}
                       </button>
                     </div>
 
@@ -342,9 +283,9 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                       <div className="flex items-start gap-2.5">
                         <Shield className="text-rose-500 w-5 h-5 shrink-0 mt-0.5" />
                         <div className="space-y-0.5">
-                          <p className="font-bold text-rose-950">법정대리인 권리 의무 보증</p>
+                          <p className="font-bold text-rose-950">보호자 동의 필요</p>
                           <p className="text-[11px] text-rose-800 leading-normal">
-                            회원님은 법률에 기거한 만 14세 이하 어린이 작가 회원이므로 안전 장치 보강을 위해 학부모님의 수락용 우편 배송지가 강제 보관되어 있습니다.
+                            만 14세 미만 회원은 보호자 이메일 등록이 필요합니다.
                           </p>
                         </div>
                       </div>
@@ -364,8 +305,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                       
                       {guardianEmailEditMode && (
                         <div className="bg-white/80 p-3 rounded-xl border border-rose-200/50 text-[11px] text-rose-700 space-y-1">
-                          <p>⚠️ <strong>보호자 메일 주소 변경 시 필수 유의사항:</strong></p>
-                          <p>보호자 주소를 임의 변경 시 바뀐 메일 계정으로 안전 동의 편지가 신속 재배달되며, 7일 내로 메일 수락 단추를 누르지 않는 경우 법률 및 규정에 기거하여 청소년 계정은 즉시 안전 승인 보류(PENDING) 상태로 임시 제한 조치됩니다.</p>
+                          <p>이메일을 변경하면 새 주소로 동의 메일이 재발송됩니다. 7일 내 승인하지 않으면 계정이 일시 제한됩니다.</p>
                         </div>
                       )}
                     </div>
@@ -380,7 +320,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                     className="inline-flex items-center gap-1.5 text-xs text-[#7C769D] hover:text-rose-600 font-extrabold transition-colors cursor-pointer hover:underline"
                   >
                     <Trash2 className="w-4 h-4" />
-                    <span>상상서가 회원 탈퇴 신청하기</span>
+                    <span>회원 탈퇴</span>
                   </button>
 
                   <div className="flex gap-3 w-full sm:w-auto font-sans">
@@ -396,7 +336,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                       type="submit"
                       className="flex-1 sm:flex-none px-6 py-3 bg-gradient-to-r from-[#5179E6] to-[#6B54E7] hover:opacity-95 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-[#6B54E7]/10 cursor-pointer"
                     >
-                      저장된 변경사항 반영
+                      저장
                     </button>
                   </div>
                 </div>
@@ -411,7 +351,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                   <div className="border-b border-[#E6E2FC]/40 pb-3">
                     <h3 className="text-xs font-black text-[#2F2D59] uppercase tracking-wider flex items-center gap-1.5">
                       <Camera className="w-4 h-4 text-[#6B54E7]" />
-                      <span>작가 초상화 아바타</span>
+                      <span>프로필 사진</span>
                     </h3>
                   </div>
 
@@ -436,9 +376,8 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                     </div>
 
                     <div className="space-y-1">
-                      <h4 className="text-xs font-black text-[#2F2D59]">책방 고유 작가 초상</h4>
                       <p className="text-[10px] text-[#7C769D] leading-normal px-2">
-                        마음에 드는 시그니처 초상을 선택하거나, 직접 집필실 전경 또는 작가님 사진을 올려보세요.
+                        기본 이미지를 선택하거나 직접 사진을 업로드하세요.
                       </p>
                     </div>
 
@@ -484,9 +423,9 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                   <div>
                     <h3 className="text-base font-black text-[#2F2D59] flex items-center gap-2">
                       <span className="w-1.5 h-3 bg-[#6B54E7] rounded-full"></span>
-                      <span>연결된 보호 자녀 목록</span>
+                      <span>연결된 자녀 목록</span>
                     </h3>
-                    <p className="text-xs text-[#7C769D] mt-1 text-left">보호자 동의 협약이 정식 접수된 만 14세 미만 소속 어린 소설가 계정 일람입니다.</p>
+                    <p className="text-xs text-[#7C769D] mt-1 text-left">동의가 완료된 자녀 계정 목록입니다.</p>
                   </div>
                   
                   <span className="bg-[#FAF9FF] text-[#6B54E7] text-xs font-black px-3.5 py-1.5 rounded-full border border-[#E6E2FC] shrink-0 font-mono">
@@ -562,7 +501,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                             className="px-3.5 py-2 bg-neutral-900 hover:bg-black text-white text-[10px] font-black rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95"
                           >
                             <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-                            <span>법정 안전이용 동의 철회</span>
+                            <span>동의 철회</span>
                           </button>
                         </div>
                       )}
@@ -579,7 +518,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                     <span>보호자 동의 대기 목록</span>
                   </h3>
                   <p className="text-xs text-[#7C769D] mt-1 text-left">
-                    내 계정으로 접수된, 법정 대리인 승인을 기다리고 있는 자녀 가입 신청을 확인하고 승인/반려할 수 있습니다.
+                    승인을 기다리는 자녀 가입 신청입니다.
                   </p>
                 </div>
 
@@ -609,7 +548,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                     </div>
 
                     <div className="flex flex-wrap justify-between items-center text-xs border-b border-[#E6E2FC] pb-3 bg-white/50 p-3 rounded-xl gap-2">
-                      <span className="font-extrabold text-[#2F2D59]">📩 신규 연동 대기자: {consent.nickname} ({consent.email})</span>
+                      <span className="font-extrabold text-[#2F2D59]">{consent.nickname} ({consent.email})</span>
                       <span className="text-[#7C769D] font-mono">만료: {consent.expiresAt}</span>
                     </div>
 
@@ -631,7 +570,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                         onClick={() => handleApproveGuardianRequest(consent)}
                         className="px-5 py-2 bg-[#6B54E7] text-white hover:bg-[#5b45d6] font-black rounded-xl cursor-pointer shadow-md shadow-[#6B54E7]/15 transition-all hover:scale-[1.02] active:scale-95"
                       >
-                        안심 동의 수락 승인
+                        동의 승인
                       </button>
                     </div>
                   </div>
@@ -648,22 +587,18 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                 
                 <div className="flex items-center gap-2 font-black text-amber-400 text-xs uppercase tracking-wider relative z-10">
                   <Shield className="w-5 h-5 text-amber-400 fill-amber-400/10 shrink-0" />
-                  <span>학부모 안심 동의 가이드</span>
+                  <span>보호자 동의 안내</span>
                 </div>
-                
+
                 <div className="space-y-4 text-xs font-sans leading-relaxed text-[#B9B0DC] relative z-10">
                   <p className="text-left">
-                    상상서가 어린이가입 통제실은 관계 법령에 기거한 정보통신망법 제31조 규정을 성실하게 이행합니다.
+                    정보통신망법 제31조에 따라 만 14세 미만 회원의 가입에는 보호자 동의가 필요합니다.
                   </p>
-                  
+
                   <div className="space-y-3.5 border-t border-[#2F2D59] pt-4 text-left">
                     <div className="flex gap-2.5 items-start">
                       <Check className="text-amber-400 w-4.5 h-4.5 shrink-0 mt-0.5" />
-                      <p className="text-left text-white/90">청소년 창작자는 유해 폭력성 AI 학습을 강제로 제외한 <strong>순수 아동 템플릿 필터</strong>가 의무 가동됩니다.</p>
-                    </div>
-                    <div className="flex gap-2.5 items-start">
-                      <Check className="text-amber-400 w-4.5 h-4.5 shrink-0 mt-0.5" />
-                      <p className="text-left text-white/90">대리인 모의 검증을 통과하기 위한 학부모 확인용 비밀번호는 가상 모형상 <strong>"password123"</strong>으로 연동 처리되어 있습니다.</p>
+                      <p className="text-left text-white/90">청소년 회원에게는 안전한 콘텐츠 필터가 자동으로 적용됩니다.</p>
                     </div>
                   </div>
                 </div>
@@ -685,18 +620,18 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
           >
             <div className="flex items-center gap-2 text-rose-600 font-extrabold text-xs uppercase font-sans">
               <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0" />
-              <span>법정대리 자녀 동의 철회 경고</span>
+              <span>동의 철회 확인</span>
             </div>
 
             <h3 className="text-lg font-black text-[#2F2D59]">
-              [{selectedMinorToWithdraw.name}] 어린이 작가의 가입 승인을 해제하겠습니까?
+              {selectedMinorToWithdraw.name}의 계정 동의를 철회하시겠습니까?
             </h3>
 
             <div className="text-xs text-[#7C769D] leading-relaxed font-sans bg-[#FAF9FF] p-4.5 rounded-2xl border border-[#E6E2FC] space-y-2.5">
-              <p className="font-black text-rose-600">· 철회 신청 시 자녀 계정에 미치는 변동 사항:</p>
-              <p>1. 자녀는 철회 승인과 동시에 강제 세션 로그아웃되며, 계정 지위는 <strong className="text-[#2F2D59]">'안전 정지'</strong>로 즉각 마스킹 조정됩니다.</p>
-              <p>2. 자녀가 아틀리에 서재에 집필하여 보관 중이던 모든 소설 초고 원본은 복구 시점까지 보호 암호화 잠금 처리되어 접근이 전면 대기됩니다.</p>
-              <p>3. 자녀 계정 전용으로 정기 가동 중이던 유료 멤버십 결제도 보호 차원에서 영속 안전 일시중지 처리됩니다.</p>
+              <p className="font-black text-rose-600">철회 시 다음과 같이 처리됩니다:</p>
+              <p>1. 자녀 계정은 즉시 로그아웃되고 <strong className="text-[#2F2D59]">정지</strong> 상태로 전환됩니다.</p>
+              <p>2. 작성 중이던 작품은 잠금 처리되어 접근할 수 없습니다.</p>
+              <p>3. 진행 중이던 유료 구독도 일시 중지됩니다.</p>
             </div>
 
             <div className="space-y-1.5">
@@ -721,13 +656,13 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                 onClick={() => setShowWithdrawConsentModal(false)}
                 className="flex-1 py-3 bg-[#FAF9FF] hover:bg-[#E6E2FC]/30 text-[#6B54E7] border border-[#E6E2FC]/60 font-bold rounded-xl transition-all cursor-pointer text-center"
               >
-                돌아가기 (철회 취소)
+                취소
               </button>
               <button
                 type="submit"
                 className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl transition-all shadow-md shadow-rose-600/10 cursor-pointer text-center"
               >
-                예, 동의를 철회합니다
+                철회하기
               </button>
             </div>
           </form>
@@ -743,30 +678,30 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
           >
             <div className="flex items-center gap-2 text-rose-600 font-extrabold text-xs uppercase font-sans">
               <ShieldAlert className="w-5 h-5 text-rose-600 animate-pulse shrink-0" />
-              <span>상상서가 서비스 회원 탈퇴 경고</span>
+              <span>회원 탈퇴 확인</span>
             </div>
 
             <h3 className="text-lg font-black text-[#2F2D59]">
-              상상서가 창작 서고 of 모든 연결을 완전히 탈퇴하겠습니까?
+              정말 회원 탈퇴를 진행하시겠습니까?
             </h3>
 
             <div className="text-xs text-[#7C769D] leading-relaxed font-sans bg-[#FAF9FF] p-5 rounded-2xl border border-[#E6E2FC] space-y-3.5">
-              <h4 className="font-black text-rose-600">· 탈퇴 신청 전 유효 규격과 유실 조서 확인:</h4>
-              
+              <h4 className="font-black text-rose-600">탈퇴 시 다음 사항이 적용됩니다:</h4>
+
               <div className="space-y-2 pl-1 leading-relaxed text-left">
-                <p><strong>1. 멤버십 청산:</strong> 가입 보존 중이던 유료 프리미엄 혜택은 탈퇴 즉시 자동 정지 종료되며 남은 집필 일수에 따른 환급이나 잔량 크레딧 복구는 소멸 적용됩니다.</p>
-                <p><strong>2. 서평 및 독서 감평 익명 보존:</strong> 타인 창고 도서에 선물하셨던 감상평 및 덧글은 소설 흐름 맥락 보호를 위해 자동 삭제되지 않고 <strong>'알 수 없는 작가'</strong>로 익명 보호 마스킹 처리되어 온전 보존됩니다.</p>
-                <p><strong>3. 서재 보관함 초기화:</strong> 가슴 따뜻하게 좋아해서 즐겨찾기 북마크 해두었던 책 보관함 목록은 흔적 없이 즉시 세정 초기화됩니다.</p>
-                <p><strong>4. 30일 데이터 영속 보류 유예:</strong> 조작 실수에 의한 파괴 방지를 위해 30일의 유예 전산창이 발족합니다. 유예 중에는 기존 메일 주소로의 신규 동의 가입이 금지되며, 만료 후에는 복구 불가능하게 원본 작품이 완벽히 가상 소멸합니다.</p>
+                <p><strong>1. 구독 종료:</strong> 프리미엄 구독은 즉시 종료되며 잔여 기간에 대한 환불은 없습니다.</p>
+                <p><strong>2. 댓글/독후감:</strong> 작성한 댓글과 독후감은 삭제되지 않고 <strong>'알 수 없는 작가'</strong>로 표시됩니다.</p>
+                <p><strong>3. 서재 초기화:</strong> 위시리스트와 서재 목록은 모두 삭제됩니다.</p>
+                <p><strong>4. 재가입 제한:</strong> 탈퇴 후 30일간은 동일 이메일로 재가입할 수 없으며, 이후 모든 데이터가 영구 삭제됩니다.</p>
               </div>
             </div>
 
             {/* Radio options for public book disposal method */}
             <div className="space-y-3 border-t border-b border-[#E6E2FC] py-4">
               <span className="block text-xs font-extrabold text-[#2F2D59] uppercase tracking-wider">
-                내가 출간 완료한 소설책의 최종 처리 유형 선택 <span className="text-rose-500">*</span>
+                출간한 작품 처리 방법 선택 <span className="text-rose-500">*</span>
               </span>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
                 <label className={`flex items-start gap-3 p-4 rounded-2xl border cursor-pointer select-none transition-all ${
                   bookDisposalMethod === 'PRIVATE'
@@ -782,8 +717,8 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                     className="mt-0.5 accent-[#6B54E7]"
                   />
                   <div className="space-y-0.5 text-xs text-left">
-                    <p className="font-black text-[#2F2D59]">개인 보존 창고 보관</p>
-                    <p className="text-[10px] text-[#7C769D] font-sans leading-normal">공개 진열대에서 책을 정식 철거하는 대신, 30일 동안 비공개 안전 가상 서고에 잠금 보존합니다.</p>
+                    <p className="font-black text-[#2F2D59]">비공개 보관</p>
+                    <p className="text-[10px] text-[#7C769D] font-sans leading-normal">공개 목록에서 내리고 30일간 비공개로 보관합니다.</p>
                   </div>
                 </label>
 
@@ -801,8 +736,8 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                     className="mt-0.5 accent-rose-600"
                   />
                   <div className="space-y-0.5 text-xs text-left">
-                    <p className="font-black text-rose-950">모든 창작물 즉시 영구 영속 소멸</p>
-                    <p className="text-[10px] text-rose-800 font-sans leading-normal">인공지능으로 집필한 이야기 소절과 맞춤 제작 책 전량을 즉시 복구 불가능하게 삭제 처리합니다.</p>
+                    <p className="font-black text-rose-950">즉시 영구 삭제</p>
+                    <p className="text-[10px] text-rose-800 font-sans leading-normal">작성한 모든 작품을 복구할 수 없게 즉시 삭제합니다.</p>
                   </div>
                 </label>
               </div>
@@ -818,20 +753,20 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                   className="mt-1 accent-[#6B54E7] rounded border-[#E6E2FC] shrink-0"
                 />
                 <span className="font-bold text-[#2F2D59] leading-relaxed">
-                  [의무 동의] 회원 탈퇴에 의거한 창작 동화책 영구 마모 규정, 정기 구독 일할 환불 포기 및 30일 재가입 제약 등 모든 위험 고지안을 완전히 확인하여 이에 인가 승인합니다.
+                  위 안내 사항을 모두 확인했으며 이에 동의합니다.
                 </span>
               </label>
             </div>
 
             {/* Password input for withdrawal safety verification */}
             <div className="space-y-1.5 pt-2 text-left">
-              <label className="block text-xs font-extrabold text-[#7C769D]">작가 본인 인증 확인 비밀번호 <span className="text-rose-500">*</span></label>
+              <label className="block text-xs font-extrabold text-[#7C769D]">비밀번호 확인 <span className="text-rose-500">*</span></label>
               <input
                 type="password"
                 required
                 value={withdrawConfirmPw}
                 onChange={(e) => setWithdrawConfirmPw(e.target.value)}
-                placeholder="현재 가입 중이신 보안 암호를 대입해 주세요"
+                placeholder="현재 비밀번호를 입력하세요"
                 className="w-full px-4 py-3 bg-[#FAF9FF] border border-[#E6E2FC] text-xs font-semibold rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
               />
             </div>
@@ -846,14 +781,14 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                 onClick={() => setShowWithdrawModal(false)}
                 className="w-full py-3 bg-[#FAF9FF] hover:bg-[#E6E2FC]/30 text-[#6B54E7] border border-[#E6E2FC]/60 font-black rounded-xl transition-all shadow-xs text-center cursor-pointer"
               >
-                돌아가기 (탈퇴 취소)
+                취소
               </button>
               <button
                 type="submit"
                 disabled={isWithdrawing}
                 className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl transition-all shadow-md shadow-rose-600/15 text-center cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {isWithdrawing ? '처리 중...' : '회원 탈퇴 완료 승인'}
+                {isWithdrawing ? '처리 중...' : '탈퇴하기'}
               </button>
             </div>
           </form>

@@ -3,7 +3,6 @@ import { useSubscriptionState } from '../hooks/useSubscriptionState';
 import {
   Award,
   Star,
-  Crown,
   Sparkles,
   HelpCircle,
   ChevronDown,
@@ -68,75 +67,26 @@ export const SubscriptionView = ({
     : null;
 
   return (
-    <div className="bg-[#FAF9FF] min-h-screen font-sans text-[#2F2D59] w-full px-0 py-0 pb-16 relative">
-      
-      {/* Top Ambient Blurs */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#E6E2FC]/40 rounded-full filter blur-[120px] pointer-events-none"></div>
-      <div className="absolute top-20 right-1/4 w-[400px] h-[400px] bg-[#EDF5FF]/50 rounded-full filter blur-[100px] pointer-events-none"></div>
-
-      {/* 1. Header Hero Panel with back button and elegant metrics */}
-      <div className="relative w-full bg-[#110F24] text-white overflow-hidden rounded-b-[2rem] shadow-lg border-b border-[#2F2D59]/30 z-10 px-4 py-5 sm:py-7 sm:px-8">
-        {/* Deep starry background vibe */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(107,84,231,0.2),transparent)] pointer-events-none"></div>
-
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-5 relative z-10">
-
-          {/* Back button and Tag */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <button
-              onClick={onNavigateHome}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white/90 text-xs font-bold transition-all border border-white/5 active:scale-95 cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>작가 홈으로 가기</span>
-            </button>
-
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#6B54E7]/30 text-[#B9B0DC] rounded-full text-xs font-semibold border border-[#6B54E7]/40">
-              <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-              <span>구독 관리</span>
-            </div>
-          </div>
-
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-            <div className="text-left space-y-1 max-w-2xl">
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-                <Crown className="w-6 h-6 text-yellow-300 fill-yellow-300/10 shrink-0" />
-                <span>구독 관리</span>
-              </h2>
-              <p className="text-xs sm:text-sm text-[#B9B0DC] leading-relaxed">
-                오늘 사용량과 결제 내역을 확인하고 요금제를 변경할 수 있습니다.
-              </p>
-            </div>
-
-            {/* Quick status card with glowing effect */}
-            <div className="relative w-full lg:w-auto flex items-center gap-5 bg-white/[0.04] backdrop-blur-md px-5 py-3.5 rounded-2xl border border-white/10 shrink-0 text-left">
-              <div className="absolute -top-3 -right-3 w-12 h-12 bg-[#6B54E7]/30 rounded-full filter blur-md"></div>
-
-              <div className="space-y-1">
-                <span className="text-[10px] text-[#B9B0DC] block tracking-wider font-bold uppercase">현재 요금제</span>
-                <span className={`text-sm sm:text-base font-black flex items-center gap-1.5 ${isPremium ? 'text-yellow-300' : 'text-slate-300'}`}>
-                  {isPremium ? (
-                    <>
-                      <Star className="w-4.5 h-4.5 text-yellow-300 fill-yellow-300" />
-                      <span>프리미엄{currentBillingPeriodLabel && ` (${currentBillingPeriodLabel})`}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Award className="w-4.5 h-4.5 text-slate-300" />
-                      <span>무료 플랜</span>
-                    </>
-                  )}
-                </span>
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-      </div>
+    <div className="bg-[#FAF9FF] min-h-screen font-sans text-[#2F2D59] w-full pb-16">
 
       {/* 2. Unified Grid Layout Container */}
-      <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 md:px-8 relative z-10">
+      <div className="w-full max-w-7xl mx-auto px-4 pt-6 pb-6 sm:px-6 md:px-8">
+
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <button
+            onClick={onNavigateHome}
+            className="group inline-flex items-center gap-1.5 text-sm font-black text-[#514c73] hover:text-[#5139d6] transition cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+            <span>홈으로</span>
+          </button>
+
+          <span className={`text-xs font-bold whitespace-nowrap ${isPremium ? 'text-[#6B54E7]' : 'text-[#7C769D]'}`}>
+            {isPremium ? `프리미엄${currentBillingPeriodLabel ? ` (${currentBillingPeriodLabel})` : ''}` : '무료 플랜'}
+          </span>
+        </div>
+
+        <h2 className="text-2xl font-black text-[#110F24] tracking-tight mb-6">구독 관리</h2>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
@@ -155,11 +105,14 @@ export const SubscriptionView = ({
               )}
 
               {usage && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-[#7C769D] font-semibold">텍스트 생성{!usage.isPremium && ' (무료 체험)'}</span>
-                      <span className="font-mono font-bold text-[#2F2D59]">{usage.text.remaining} / {usage.text.limit}</span>
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-xs text-[#7C769D] font-semibold">텍스트 생성{!usage.isPremium && ' (무료 체험)'}</span>
+                      <span className="font-mono">
+                        <span className="text-xl font-black text-[#6B54E7]">{usage.text.remaining}</span>
+                        <span className="text-xs font-bold text-[#7C769D]"> / {usage.text.limit}회 남음</span>
+                      </span>
                     </div>
                     <div className="relative w-full bg-[#E6E2FC]/50 h-2.5 rounded-full overflow-hidden">
                       <div
@@ -170,9 +123,12 @@ export const SubscriptionView = ({
                   </div>
 
                   <div className="space-y-1.5">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-[#7C769D] font-semibold">이미지 생성{!usage.isPremium && ' (무료 체험)'}</span>
-                      <span className="font-mono font-bold text-[#2F2D59]">{usage.image.remaining} / {usage.image.limit}</span>
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-xs text-[#7C769D] font-semibold">이미지 생성{!usage.isPremium && ' (무료 체험)'}</span>
+                      <span className="font-mono">
+                        <span className="text-xl font-black text-[#5179E6]">{usage.image.remaining}</span>
+                        <span className="text-xs font-bold text-[#7C769D]"> / {usage.image.limit}회 남음</span>
+                      </span>
                     </div>
                     <div className="relative w-full bg-[#E6E2FC]/50 h-2.5 rounded-full overflow-hidden">
                       <div
@@ -384,7 +340,7 @@ export const SubscriptionView = ({
                             disabled
                             className="w-full py-3 rounded-xl text-xs font-extrabold text-center bg-[#F3F0FF] text-[#6B54E7] border border-[#E6E2FC] cursor-default"
                           >
-                            선택 중인 요금제 (변경 사항 없음)
+                            현재 이용 중인 요금제
                           </button>
                         ) : isUnsupportedDowngrade ? (
                           <div className="p-3 rounded-xl bg-[#FAF9FF] border border-dashed border-[#E6E2FC] text-[11px] text-[#7C769D] leading-relaxed text-left">
@@ -515,7 +471,7 @@ export const SubscriptionView = ({
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0 font-sans pl-2">
-                      <span className="font-black text-[#2F2D59] font-mono">
+                      <span className="text-sm font-black text-[#2F2D59] font-mono">
                         ₩{rec.amount.toLocaleString()}
                       </span>
                       <button
