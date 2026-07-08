@@ -115,7 +115,6 @@ export default function BookDetailView({
   // Get dynamic simulated human friendly relative time for comments list
 
   const [recommendations, setRecommendations] = useState([]);
-  const comments = book.comments || [];
   useEffect(() => {
     if (!book?.id) return;
     getRecommendations(book.id, 4)
