@@ -8,7 +8,7 @@ import { SavedAuthorTab } from '../../features/library';
 import { ReviewWithAI } from '../../features/review';
 import { BookCalendar } from '../../features/calendar';
 import { BookStats } from '../../features/stats';
-import { getBookContents } from '../../api/bookApi';
+import { getBookContents, getMyBooks } from '../../api/bookApi';
 import {
   getWishlist as getWishlistBookshelf,
   getReadingList as getReadingBookshelf,
@@ -17,6 +17,7 @@ import {
   completeReading,
   rereadBook as rereadFinishedBook,
   deleteWishlist as removeWishlistBook,
+  getReadingStats,
 } from '../../api/myLibraryApi';
 
 export function MyLibraryLayout() {
@@ -35,15 +36,17 @@ export function MyLibraryLayout() {
 
   const loadMyLibraryBooks = async () => {
     try {
-      const [wishlistRes, readingRes, finishedRes] = await Promise.all([
+      const [wishlistRes, readingRes, finishedRes, myBooksRes] = await Promise.all([
         getWishlistBookshelf(),
         getReadingBookshelf(),
         getFinishedBookshelf(),
+        getMyBooks(),
       ]);
 
       const wishlistData = wishlistRes.data;
       const readingData = readingRes.data;
       const finishedData = finishedRes.data;
+      const myBooksData = myBooksRes.data?.data?.items || [];
 
       const wishlistBooks = Array.isArray(wishlistData)
         ? wishlistData.map(book => ({
@@ -52,6 +55,8 @@ export function MyLibraryLayout() {
           title: book.title,
           coverUrl: book.coverImageUrl || "/default-book-cover.png",
           category: book.category,
+          bookType: book.bookType,
+          genre: book.bookType,
           description: book.description,
           author: "상상서가",
           progress: 0,
@@ -72,6 +77,8 @@ export function MyLibraryLayout() {
           title: book.title,
           coverUrl: book.coverImageUrl || "/default-book-cover.png",
           category: book.category,
+          bookType: book.bookType,
+          genre: book.bookType,
           description: book.description,
           author: "상상서가",
           progress: book.progress || 1,
@@ -92,6 +99,8 @@ export function MyLibraryLayout() {
           title: book.title,
           coverUrl: book.coverImageUrl || "/default-book-cover.png",
           category: book.category,
+          bookType: book.bookType,
+          genre: book.bookType,
           description: book.description,
           author: "상상서가",
           progress: 100,
@@ -111,10 +120,34 @@ export function MyLibraryLayout() {
         }))
         : [];
 
+      const myWrittenBooks = Array.isArray(myBooksData)
+        ? myBooksData.map(book => ({
+          id: book.id,
+          bookId: book.id,
+          title: book.title,
+          coverUrl: book.coverImageUrl || "/default-book-cover.png",
+          category: book.genre || "기타",
+          bookType: book.genre,
+          genre: book.genre,
+          description: book.description,
+          author: book.author || "나",
+          progress: 0,
+          currentPage: 1,
+          pageCount: book.pageCount || 1,
+          pages: book.pageCount || 1,
+          isFavorite: false,
+          totalViews: book.viewCount || 0,
+          totalLikes: book.likeCount || 0,
+          reviews: [],
+          isMyWrittenBook: true
+        }))
+        : [];
+
       const mergedBooks = [
         ...wishlistBooks,
         ...readingBooks,
-        ...finishedBooks
+        ...finishedBooks,
+        ...myWrittenBooks
       ];
 
       setBooks(mergedBooks);
@@ -298,8 +331,7 @@ export function MyLibraryFinishedRoute() {
 }
 
 export function MyLibraryStatsRoute() {
-  const { books } = useOutletContext();
-  return <BookStats books={books} />;
+  return <BookStats getReadingStats={getReadingStats} />;
 }
 
 export function MyLibraryCalendarRoute() {
