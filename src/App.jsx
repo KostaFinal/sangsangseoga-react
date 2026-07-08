@@ -29,7 +29,7 @@ import { ErrorPage500 } from './shared/components/ErrorPage500';
 import { CURRENT_USER_PROFILE } from './shared/data';
 import SideMenu from './shared/components/SideMenu';
 import { MainBookshelf, MyBookTab, FinishedTab, ReadingTab, WishlistTab } from './features/bookshelf';
-import { getBooks, likeBook, unlikeBook, addBookmark, removeBookmark } from './api/bookApi';
+import { getBooks, getMyBooks, likeBook, unlikeBook, addBookmark, removeBookmark } from './api/bookApi';
 import { addComment, addReply } from './api/commentApi';
 import { followAuthor, unfollowAuthor } from './api/authorApi';
 import FriendsLibraryView from './features/library/components/FriendsLibraryView';
@@ -46,7 +46,8 @@ import {
   updateReadingProgress,
   completeReading,
   rereadBook,
-  deleteWishlist
+  deleteWishlist,
+  getReadingStats
 } from './api/myLibraryApi';
 
 const bookTypeToGenre = {
@@ -698,15 +699,17 @@ function MyLibraryApp({ setViewingBook,
 
   const loadMyLibraryBooks = async () => {
     try {
-      const [wishlistRes, readingRes, finishedRes] = await Promise.all([
+      const [wishlistRes, readingRes, finishedRes, myBooksRes] = await Promise.all([
         getWishlist(),
         getReadingList(),
         getFinishedList(),
+        getMyBooks(),
       ]);
 
       const wishlistData = wishlistRes.data;
       const readingData = readingRes.data;
       const finishedData = finishedRes.data;
+      const myBooksData = myBooksRes.data?.data?.items || [];
 
       const wishlistBooks = Array.isArray(wishlistData)
         ? wishlistData.map(book => ({
@@ -780,10 +783,35 @@ function MyLibraryApp({ setViewingBook,
         }))
         : [];
 
+      const myWrittenBooks = Array.isArray(myBooksData)
+        ? myBooksData.map(book => ({
+          id: book.id,
+          bookId: book.id,
+          title: book.title,
+          coverUrl: book.coverImageUrl || "/default-book-cover.png",
+          category: book.genre || "기타",
+          bookType: book.genre,
+          genre: book.genre,
+          description: book.description,
+          author: book.author || "나",
+          progress: 0,
+          currentPage: 1,
+          pageCount: book.pageCount || 1,
+          pages: book.pageCount || 1,
+          isFavorite: false,
+          totalViews: book.viewCount || 0,
+          totalLikes: book.likeCount || 0,
+          reviews: [],
+          isMyWrittenBook: true
+        }))
+        : [];
+
+
       const mergedBooks = [
         ...wishlistBooks,
         ...readingBooks,
-        ...finishedBooks
+        ...finishedBooks,
+        ...myWrittenBooks
       ];
 
       setBooks(mergedBooks);
@@ -1084,7 +1112,7 @@ function MyLibraryApp({ setViewingBook,
               )}
 
               {activeTab === 'stats' && (
-                <BookStats books={books} />
+                <BookStats getReadingStats={getReadingStats} />
               )}
 
               {activeTab === 'calendar' && (

@@ -1,51 +1,56 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   PieChart, Pie, Tooltip, ResponsiveContainer, Cell
 } from 'recharts';
 
-export default function BookStats({ books }) {
+export default function BookStats({ getReadingStats }) {
   const COLORS = ['#FF8042', '#0088FE', '#00C49F', '#FFBB28', '#8884d8', '#82ca9d'];
 
-  const finishedBooks = useMemo(() => {
-    return books.filter(b => b.progress === 100 && b.id !== 'stats_magic_book');
-  }, [books]);
+  const [stats, setStats] = useState(null);
 
-  const myWrittenBooks = useMemo(() => {
-    return books.filter(b =>
-      b.author === '김지우 님' ||
-      b.author === '지우와 상상 AI' ||
-      b.category === '나만의 AI 창작'
-    );
-  }, [books]);
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const res = await getReadingStats();
+        setStats(res.data);
+      } catch (err) {
+        console.error('독서 통계 조회 실패:', err);
+      }
+    };
 
-  const reviewCount = useMemo(() => {
-    return books.reduce((sum, book) => sum + (book.reviews?.length || 0), 0);
-  }, [books]);
+    loadStats();
+  }, [getReadingStats]);
 
-  const makeCategoryData = (targetBooks) => {
-    const counts = {};
-
-    targetBooks.forEach(book => {
-      const category = book.category || '기타';
-      counts[category] = (counts[category] || 0) + 1;
-    });
-
-    const total = targetBooks.length;
-
-    return Object.keys(counts).map(name => ({
-      name,
-      value: counts[name],
-      percent: total > 0 ? Math.round((counts[name] / total) * 100) : 0
-    }));
-  };
+  const finishedBooks = stats?.finishedBooks || [];
+  const reviewCount = stats?.reportCount || 0;
 
   const readCategoryData = useMemo(() => {
-    return makeCategoryData(finishedBooks);
-  }, [finishedBooks]);
+    const categoryStats = stats?.categoryStats || [];
+    const total = categoryStats.reduce((sum, item) => sum + item.count, 0);
+
+    return categoryStats.map(item => ({
+      name: item.category || '기타',
+      value: item.count,
+      percent: total > 0 ? Math.round((item.count / total) * 100) : 0
+    }));
+  }, [stats]);
 
   const writtenCategoryData = useMemo(() => {
-    return makeCategoryData(myWrittenBooks);
-  }, [myWrittenBooks]);
+    const categoryStats = stats?.writtenCategoryStats || [];
+
+    const total = categoryStats.reduce(
+      (sum, item) => sum + item.count,
+      0
+    );
+
+    return categoryStats.map(item => ({
+      name: item.category || '기타',
+      value: item.count,
+      percent: total > 0
+        ? Math.round((item.count / total) * 100)
+        : 0
+    }));
+  }, [stats]);
 
   const CustomTooltip = ({ active, payload }) => {
     if (!active || !payload || payload.length === 0) return null;
@@ -96,7 +101,7 @@ export default function BookStats({ books }) {
     <div className="space-y-5 pr-24" id="bookstats-container">
       <div className="border-b border-lavender-border pb-3">
         <h2 className="text-xl font-black text-navy-purple tracking-tight font-serif">
-          김지우님의 서재 현황
+          나의 서재 현황
         </h2>
       </div>
 
@@ -107,7 +112,7 @@ export default function BookStats({ books }) {
               <span className="w-2.5 h-2.5 bg-brand-purple rounded-full inline-block" />
               선호 장르 및 카테고리 분포
               <span className="text-[10px] text-purple-gray-text font-bold ml-1">
-                읽은 책 {finishedBooks.length}권 · 독후감 {reviewCount}편
+                읽은 책 {stats?.completedBookCount || finishedBooks.length}권 · 독후감 {reviewCount}편
               </span>
             </h4>
             <p className="text-[11px] text-purple-gray-text mt-1 font-medium">
@@ -126,7 +131,7 @@ export default function BookStats({ books }) {
               <span className="w-2.5 h-2.5 bg-indigo-500 rounded-full inline-block" />
               선호 장르 및 카테고리 분포
               <span className="text-[10px] text-purple-gray-text font-bold ml-1">
-                내가 쓴 책 {myWrittenBooks.length}권
+                내가 쓴 책 {stats?.writtenBookCount || 0}권
               </span>
             </h4>
             <p className="text-[11px] text-purple-gray-text mt-1 font-medium">
