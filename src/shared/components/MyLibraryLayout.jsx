@@ -152,8 +152,23 @@ export function MyLibraryLayout() {
         ...myWrittenBooks
       ];
 
-      setBooks(mergedBooks);
-      return mergedBooks;
+      const dedupedBooks = Object.values(
+        mergedBooks.reduce((acc, book) => {
+          const key = String(book.bookId || book.id);
+
+          acc[key] = {
+            ...acc[key],
+            ...book,
+            isFavorite: acc[key]?.isFavorite || book.isFavorite,
+          };
+
+          return acc;
+        }, {})
+      );
+
+      setBooks(dedupedBooks);
+      return dedupedBooks;
+
     } catch (error) {
       console.error("내 서재 데이터 불러오기 실패:", error);
       setBooks([]);
