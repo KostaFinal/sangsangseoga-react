@@ -120,29 +120,7 @@ export default function MainBookshelf({ setActiveTab, onOpenCreateModal }) {
             <p className="text-neutral-500 text-xs font-bold mb-0.5 tracking-wide">안녕하세요, 상상이님! ✨</p>
             <h2 className="font-plus text-3xl font-extrabold text-navy-purple tracking-tight font-serif">상상이의 서재</h2>
           </div>
-          <div className="flex gap-3">
-            <div className="bg-white p-2.5 px-3.5 rounded-2xl shadow-sm min-w-[95px] text-center border border-lavender-border group hover:border-brand-purple/40 transition-all duration-300" id="stat-card-writing">
-              <p className="text-[10px] font-bold text-neutral-400 mb-0.5">작성 중</p>
-              <div className="flex items-baseline justify-center gap-0.5">
-                <span className="text-xl font-black text-navy-purple">3</span>
-                <span className="text-[9px] text-navy-purple font-bold">권</span>
-              </div>
-            </div>
-            <div className="bg-white p-2.5 px-3.5 rounded-2xl shadow-sm min-w-[95px] text-center border border-lavender-border group hover:border-brand-purple/40 transition-all duration-300" id="stat-card-finished">
-              <p className="text-[10px] font-bold text-neutral-400 mb-0.5">완독 수</p>
-              <div className="flex items-baseline justify-center gap-0.5">
-                <span className="text-xl font-black text-navy-purple">45</span>
-                <span className="text-[9px] text-navy-purple font-bold">권</span>
-              </div>
-            </div>
-            <div className="bg-white p-2.5 px-3.5 rounded-2xl shadow-sm min-w-[95px] text-center border border-lavender-border group hover:border-brand-purple/40 transition-all duration-300" id="stat-card-streak">
-              <p className="text-[10px] font-bold text-neutral-400 mb-0.5">연속 독서</p>
-              <div className="flex items-baseline justify-center gap-0.5">
-                <span className="text-xl font-black text-navy-purple">15</span>
-                <span className="text-[9px] text-navy-purple font-bold">일</span>
-              </div>
-            </div>
-          </div>
+          
         </div>
 
         {/* Magical Bookshelf Interface */}

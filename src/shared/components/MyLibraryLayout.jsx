@@ -43,9 +43,9 @@ export function MyLibraryLayout() {
         getMyBooks(),
       ]);
 
-      const wishlistData = wishlistRes.data;
-      const readingData = readingRes.data;
-      const finishedData = finishedRes.data;
+      const wishlistData = wishlistRes.data.data;
+      const readingData = readingRes.data.data;
+      const finishedData = finishedRes.data.data;
       const myBooksData = myBooksRes.data?.data?.items || [];
 
       const wishlistBooks = Array.isArray(wishlistData)
@@ -64,8 +64,8 @@ export function MyLibraryLayout() {
           pageCount: book.pageCount || 1,
           pages: book.pageCount || 1,
           isFavorite: true,
-          totalViews: 0,
-          totalLikes: 0,
+          totalViews: book.viewCount || 0,
+          totalLikes: book.likeCount || 0,
           reviews: []
         }))
         : [];
@@ -112,8 +112,8 @@ export function MyLibraryLayout() {
           completedAt: book.completedAt,
           readingTime: book.readingTime || 0,
           isFavorite: false,
-          totalViews: 0,
-          totalLikes: 0,
+          totalViews: book.viewCount || 0,
+          totalLikes: book.likeCount || 0,
           reviews: [],
           readingStatus: book.readingStatus,
           rereadCount: book.rereadCount || 0
@@ -139,6 +139,8 @@ export function MyLibraryLayout() {
           totalViews: book.viewCount || 0,
           totalLikes: book.likeCount || 0,
           reviews: [],
+          status: book.status || "PUBLISHED",
+          isPublic: book.status !== "HIDDEN",
           isMyWrittenBook: true
         }))
         : [];
@@ -184,11 +186,24 @@ export function MyLibraryLayout() {
     setBooks(prev => [newBookObj, ...prev]);
   };
 
-  const handleProgressSave = async (bookId, currentPage, totalPages) => {
+  const handleProgressSave = async (bookId, currentPage, totalPages, readingTime = 0) => {
     const progress = Math.floor((currentPage / totalPages) * 100);
+
     try {
-      await updateReadingProgress(bookId, currentPage, progress);
-      setBooks(prev => prev.map(book => (book.id === bookId ? { ...book, currentPage, progress } : book)));
+      await updateReadingProgress(bookId, currentPage, progress, readingTime);
+
+      setBooks(prev =>
+        prev.map(book =>
+          String(book.id) === String(bookId)
+            ? {
+              ...book,
+              currentPage,
+              progress,
+              readingTime: (book.readingTime || 0) + readingTime,
+            }
+            : book
+        )
+      );
     } catch (e) {
       console.error(e);
     }
@@ -233,7 +248,7 @@ export function MyLibraryLayout() {
   const handleToggleFavorite = async (bookId) => {
     try {
       await removeWishlistBook(bookId);
-      setBooks(prev => prev.filter(b => b.id !== bookId));
+      await loadMyLibraryBooks();
     } catch (err) {
       console.error(err);
       alert("삭제에 실패했습니다.");
@@ -242,6 +257,26 @@ export function MyLibraryLayout() {
 
   const handleLikeBook = (bookId) => {
     setBooks(prev => prev.map(b => b.id === bookId ? { ...b, totalLikes: b.totalLikes + 1 } : b));
+  };
+
+  const handleUpdateDescription = async (bookId, description) => {
+    try {
+      await updateMyWrittenBookDescription(bookId, description);
+
+      setBooks(prev =>
+        prev.map(book =>
+          String(book.id) === String(bookId)
+            ? {
+              ...book,
+              description,
+            }
+            : book
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      alert("책 소개 수정에 실패했습니다.");
+    }
   };
 
   const filteredBooks = books.filter(b =>
@@ -264,10 +299,15 @@ export function MyLibraryLayout() {
   };
 
   const outletContext = {
-    books, filteredBooks, searchQuery, setSearchQuery,
-    favoriteAuthors, setFavoriteAuthors,
+    books,
+    filteredBooks,
+    searchQuery,
+    setSearchQuery,
+    favoriteAuthors,
+    setFavoriteAuthors,
     onOpenDetail,
     onOpenViewer: (bookId) => navigate(`/library/read/${bookId}`),
+    onStartWishReading: handleStartWishReading,
     onReread: handleRereadBook,
     onToggleFavorite: handleToggleFavorite,
     onUpdateBook: handleUpdateBook,
@@ -307,10 +347,22 @@ export function MyLibraryBookshelfRoute() {
 }
 
 export function MyLibraryWishlistRoute() {
-  const { filteredBooks, onOpenDetail, onToggleFavorite } = useOutletContext();
-  return <WishlistTab filteredBooks={filteredBooks} onOpenDetail={onOpenDetail} onToggleFavorite={onToggleFavorite} />;
-}
+  const {
+    filteredBooks,
+    onOpenDetail,
+    onToggleFavorite,
+    onStartWishReading
+  } = useOutletContext();
 
+  return (
+    <WishlistTab
+      filteredBooks={filteredBooks}
+      onOpenDetail={onOpenDetail}
+      onToggleFavorite={onToggleFavorite}
+      onStartReading={onStartWishReading}
+    />
+  );
+}
 export function MyLibraryReadingRoute() {
   const { filteredBooks, onOpenDetail, onOpenViewer } = useOutletContext();
   return <ReadingTab filteredBooks={filteredBooks} onOpenViewer={onOpenViewer} onOpenDetail={onOpenDetail} />;

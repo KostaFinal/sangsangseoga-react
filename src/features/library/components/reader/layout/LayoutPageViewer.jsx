@@ -111,10 +111,30 @@ export default function LayoutPageViewer({
     : rawPages;
 
   const bookRef = useRef(null);
+  const initializedRef = useRef(false);
   const lastReachableIndex = rawPages.length % 2 === 0
     ? Math.max(0, rawPages.length - 2)
     : rawPages.length - 1;
   const isLast = currentIndex >= lastReachableIndex;
+
+  useEffect(() => {
+    initializedRef.current = false;
+  }, [book.id]);
+
+  useEffect(() => {
+    if (initializedRef.current) return;
+
+    const timer = setTimeout(() => {
+      const api = bookRef.current?.pageFlip();
+      if (!api) return;
+
+      const safeIdx = Math.min(currentIndex || 0, lastReachableIndex);
+      api.turnToPage(safeIdx);
+      initializedRef.current = true;
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [book.id, currentIndex, lastReachableIndex]);
 
   // 마지막 페이지 도달 시 모달 - 렌더링 중 setState 방지를 위해 useEffect 사용
   const prevIsLast = useRef(false);
@@ -142,14 +162,14 @@ export default function LayoutPageViewer({
 
   const goPrev = () => {
     const api = bookRef.current?.pageFlip();
-    if (!api || api.getCurrentPageIndex() === 0) return;
+    if (!api || currentIndex === 0) return;
     api.flipPrev();
   };
 
   const goNext = () => {
     const api = bookRef.current?.pageFlip();
     if (!api) return;
-    if (api.getCurrentPageIndex() >= lastReachableIndex) {
+    if (currentIndex >= lastReachableIndex) {
       onLastPageBlocked?.();
       return;
     }

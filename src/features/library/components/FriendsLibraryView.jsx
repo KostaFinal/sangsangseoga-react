@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { Search, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, X, Trash2, SlidersHorizontal, Eye } from "lucide-react";
+import { Search, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, X, SlidersHorizontal, Eye } from "lucide-react";
 import BookDetailView from "./BookDetailView";
 import { getBooks, getBook, likeBook, unlikeBook } from "../../../api/bookApi";
 import { addComment, addReply } from "../../../api/commentApi";
 import { useAuth } from "../../../shared/context/AuthContext";
-import { addWishlist } from "../../../api/myLibraryApi";
+import { addWishlist, updateMyWrittenBookDescription, updateMyWrittenBookStatus } from "../../../api/myLibraryApi";
 
 const bookTypeOptions = [
   { label: "전체", value: null },
@@ -68,6 +68,34 @@ export default function FriendsLibraryView() {
   const [hasNext, setHasNext] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+
+  const handleUpdateDescription = async (bookId, description) => {
+    try {
+      await updateMyWrittenBookDescription(bookId, description);
+
+      patchBookById(bookId, prev => ({
+        ...prev,
+        description,
+      }));
+    } catch (err) {
+      console.error(err);
+      alert("책 소개 수정에 실패했습니다.");
+    }
+  };
+
+  const handleUpdateStatus = async (bookId, status) => {
+    try {
+      await updateMyWrittenBookStatus(bookId, status);
+
+      patchBookById(bookId, prev => ({
+        ...prev,
+        status,
+      }));
+    } catch (err) {
+      console.error(err);
+      alert("공개 여부 변경에 실패했습니다.");
+    }
+  };
 
   // :bookId가 있으면 상세 화면 — 목록에서 이미 불러온 항목이면 그대로 쓰고,
   // 딥링크/새로고침 등으로 로컬 목록에 없으면 직접 조회. BookDetailView가 기대하는
@@ -197,9 +225,12 @@ export default function FriendsLibraryView() {
           mode={viewingBook?.mode === "owner" ? "owner" : "viewer"}
           book={viewingBook}
           onBack={() => navigate(-1)}
+          onUpdateDescription={handleUpdateDescription}
+          onUpdateStatus={handleUpdateStatus}
 
           onStartReading={(book) => navigate(`/books/${book.id}/read`)}
-          onToggleLike={e => handleToggleLike(e, viewingBook.id)}
+          // onToggleLike={e => handleToggleLike(e, viewingBook.id)}
+          onToggleLike={(e, bookId) => handleToggleLike(e, bookId)}
           onToggleBookmark={e => handleToggleBookmark(e, viewingBook.id)}
 
           allBooks={books}

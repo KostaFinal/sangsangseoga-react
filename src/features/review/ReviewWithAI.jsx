@@ -8,7 +8,6 @@ import {
   saveDraft,
   requestAiFeedback,
   getFinishedList,
-  getReadingList,
 } from "../../api/myLibraryApi";
 
 export default function ReviewWithAI({ onFairyTaleCreated }) {
@@ -42,7 +41,9 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
     try {
       setLoading(true);
       const res = await getReviews();
-      const list = Array.isArray(res.data) ? res.data : [];
+      const list = Array.isArray(res.data.data)
+        ? res.data.data
+        : [];
       setReports(list.map(mapReviewToReport));
     } catch (err) {
       console.error("독후감 목록 조회 실패", err);
@@ -55,25 +56,18 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
 
   const loadReviewBooks = async () => {
     try {
-      const [finishedRes, readingRes] = await Promise.all([
-        getFinishedList(),
-        getReadingList(),
-      ]);
+      const finishedRes = await getFinishedList();
 
-      const finished = Array.isArray(finishedRes.data) ? finishedRes.data : [];
-      const reading = Array.isArray(readingRes.data) ? readingRes.data : [];
+      const finished = Array.isArray(finishedRes.data.data)
+        ? finishedRes.data.data
+        : [];
 
-      const merged = [...finished, ...reading];
+      setReviewBooks(finished);
 
-      const uniqueBooks = merged.filter(
-        (book, index, arr) =>
-          arr.findIndex((b) => b.bookId === book.bookId) === index
-      );
-
-      setReviewBooks(uniqueBooks);
-
-      if (uniqueBooks.length > 0) {
-        setNewBookTitle(String(uniqueBooks[0].bookId));
+      if (finished.length > 0) {
+        setNewBookTitle(String(finished[0].bookId));
+      } else {
+        setNewBookTitle("");
       }
     } catch (err) {
       console.error("독후감 작성용 책 목록 조회 실패", err);
@@ -156,6 +150,7 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
       }
 
       await loadReviews();
+      await loadReviewBooks();
 
       setEditingReportId(null);
       setNewReportContent("");
@@ -200,6 +195,7 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
       }
 
       await loadReviews();
+      await loadReviewBooks();
 
       setEditingReportId(null);
       setNewReportContent("");
@@ -311,7 +307,7 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
           isDraft: false,
         });
 
-        reviewId = created.data.reviewId;
+        reviewId = created.data.data.reviewId;
 
         setSelectedReportForEdit((prev) => ({
           ...prev,
@@ -329,7 +325,7 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
 
       const res = await requestAiFeedback(reviewId);
 
-      setEditReportFeedback(res.data.aiFeedbackContent || "");
+      setEditReportFeedback(res.data.data?.aiFeedbackContent || "");
       setEditReportMood("AI 평가 완료");
       setEditReportSticker("👩‍🏫 AI 평가 완료");
 

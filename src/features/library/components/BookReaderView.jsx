@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReaderHeader from "./reader/ReaderHeader";
 import MemoStickyNote from "./reader/MemoStickyNote";
 import LastPageModal from "./reader/LastPageModal";
@@ -46,6 +46,7 @@ export default function BookReaderView({
   const [currentPageKey, setCurrentPageKey] = useState(0);
   const [bookmarkedPages, setBookmarkedPages] = useState({});
   const [viewType, setViewType] = useState("FLIP");
+  const readingStartTimeRef = useRef(Date.now());
 
   const handleTogglePageBookmark = () => {
     setBookmarkedPages(prev => ({
@@ -58,17 +59,16 @@ export default function BookReaderView({
 
   useEffect(() => {
     setIsCompleted(false);
-    setCurrentPageKey(0);
-  }, [book.id]);
+    readingStartTimeRef.current = Date.now();
 
-  useEffect(() => {
-    if (!onProgressSave) return;
+    const startPage = book.currentPage && book.currentPage > 0
+      ? book.currentPage - 1
+      : 0;
 
-    const bookId = book.bookId || book.id;
-    const totalPages = book.pages?.length || book.pageCount || 1;
+    setCurrentPageKey(startPage);
+  }, [book.id, book.currentPage]);
 
-    onProgressSave(bookId, 1, totalPages);
-  }, [book.id]);
+
 
   useEffect(() => {
     const saved = localStorage.getItem(`sangsang_memos_${book.id}`);
@@ -93,6 +93,27 @@ export default function BookReaderView({
     return <CompletionScreen book={book} onBack={onBack} onReread={() => setIsCompleted(false)} onSelectRecommended={onSelectRecommended} />;
   }
 
+  const saveReadingTimeAndBack = async () => {
+    if (onProgressSave) {
+      const minutes = Math.floor(
+        (Date.now() - readingStartTimeRef.current) / 1000 / 60
+      );
+
+      if (minutes > 0) {
+        const totalPages = book.pages?.length || book.pageCount || 1;
+
+        await onProgressSave(
+          book.bookId || book.id,
+          currentPageKey + 1,
+          totalPages,
+          minutes
+        );
+      }
+    }
+
+    onBack?.();
+  };
+
   const ActiveReader = READER_COMPONENTS[readerMode];
 
   return (
@@ -100,7 +121,7 @@ export default function BookReaderView({
       <ReaderHeader
         book={book}
         readerMode={readerMode}
-        onBack={onBack}
+        onBack={saveReadingTimeAndBack}
         onToggleBookmark={handleTogglePageBookmark}
         isEnglish={isEnglish}
         setIsEnglish={setIsEnglish}
@@ -119,6 +140,7 @@ export default function BookReaderView({
         <div className="relative w-full flex items-center justify-center">
           <ActiveReader
             book={book}
+            initialPageKey={currentPageKey}
             isEnglish={isEnglish}
             fontFamily={fontFamily}
             fontSize={fontSize}
@@ -129,40 +151,21 @@ export default function BookReaderView({
               setIsCompleted(true);
             }}
             onLastPageBlocked={() => setShowLastPageAlert(true)}
-            // onPageChange={async (pageKey) => {
-            //   setCurrentPageKey(pageKey);
-
-            //   if (onProgressSave) {
-            //     const currentPage = pageKey + 1;
-            //     const totalPages = book.pages?.length || book.pageCount || 1;
-            //     await onProgressSave(book.bookId || book.id, currentPage, totalPages);
-            //   }
-            // }}
-
             onPageChange={async (pageKey) => {
-              console.log("페이지 변경:", pageKey);
-
               setCurrentPageKey(pageKey);
 
               if (onProgressSave) {
                 const currentPage = pageKey + 1;
                 const totalPages = book.pages?.length || book.pageCount || 1;
-
-                console.log("onProgressSave 호출", {
-                  bookId: book.bookId || book.id,
-                  currentPage,
-                  totalPages,
-                });
-
                 await onProgressSave(book.bookId || book.id, currentPage, totalPages);
-              } else {
-                console.log("onProgressSave 없음");
               }
             }}
-            
-          editable={editable}
-          onLayoutChange={onLayoutChange}
-          viewType={viewType}
+
+
+
+            editable={editable}
+            onLayoutChange={onLayoutChange}
+            viewType={viewType}
           />
 
           {bookmarkedPages[currentPageKey] && (

@@ -12,10 +12,11 @@ export const deleteWishlist = (bookId) =>
 // 읽는 중
 export const getReadingList = () => api.get("/api/bookshelves/reading");
 
-export const updateReadingProgress = (bookId, currentPage, progress) =>
+export const updateReadingProgress = (bookId, currentPage, progress, readingTime = 0) =>
   api.patch(`/api/bookshelves/reading/${bookId}/progress`, {
     currentPage,
     progress,
+    readingTime,
   });
 
 export const completeReading = (bookId) =>
@@ -57,3 +58,16 @@ export const requestAiFeedback = (reviewId) =>
 
 export const getAiFeedback = (reviewId) =>
   api.get(`/api/bookshelves/reviews/${reviewId}/ai-feedback`);
+
+export const getMyWrittenBooks = () =>
+  api.get("/api/bookshelves/my-books");
+
+export const updateMyWrittenBookStatus = (bookId, status) =>
+  api.patch(`/api/bookshelves/my-books/${bookId}/status`, {
+    status,
+  });
+
+  export const updateMyWrittenBookDescription = (bookId, description) =>
+  api.patch(`/api/bookshelves/my-books/${bookId}/description`, {
+    description,
+  });

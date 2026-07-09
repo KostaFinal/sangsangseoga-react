@@ -37,6 +37,7 @@ export default function BookDetailView({
   onSelectAuthor,
   mode = "viewer",
   onUpdateDescription,
+  onUpdateStatus,
   currentUser,
 }) {
   const [commentText, setCommentText] = useState("");
@@ -133,7 +134,7 @@ export default function BookDetailView({
         const matched = items.find(a => String(a.id) === String(book.authorId));
         if (matched) setIsFollowing(!!matched.isFollowedByMe);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [book?.authorId, book?.author]);
 
   const handleToggleFollow = async () => {
@@ -237,8 +238,8 @@ export default function BookDetailView({
   }, [book.id]);
 
   useEffect(() => {
-    getReportedIds("book").then(ids => setIsBookReported(ids.includes(book.id))).catch(() => {});
-    getReportedIds("comment").then(ids => setReportedCommentIds(ids)).catch(() => {});
+    getReportedIds("book").then(ids => setIsBookReported(ids.includes(book.id))).catch(() => { });
+    getReportedIds("comment").then(ids => setReportedCommentIds(ids)).catch(() => { });
   }, [book.id]);
 
   const topLevelComments = comments.filter(c => !c.replyToCommentId);
@@ -460,9 +461,15 @@ export default function BookDetailView({
                       취소
                     </button>
                     <button
-                      onClick={() => {
-                        onUpdateDescription?.(editDescription);
-                        setIsEditingDescription(false);
+                      onClick={async () => {
+                        try {
+                          await onUpdateDescription?.(book.bookId || book.id, editDescription);
+
+                          setIsEditingDescription(false);
+
+                        } catch (e) {
+                          alert("책 소개 수정에 실패했습니다.");
+                        }
                       }}
                       className="px-4 py-2 rounded-lg bg-[#5139d6] text-white text-xs font-black cursor-pointer"
                     >
@@ -478,12 +485,24 @@ export default function BookDetailView({
                   </p>
 
                   {mode === "owner" && (
-                    <button
-                      onClick={() => setIsEditingDescription(true)}
-                      className="mt-4 px-4 py-2 rounded-lg border-2 border-[#b3a6eb] text-xs font-black text-[#5139d6] hover:bg-[#f3f0ff] bg-white cursor-pointer"
-                    >
-                      책 소개 수정
-                    </button>
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        onClick={() => setIsEditingDescription(true)}
+                        className="px-4 py-2 rounded-lg border-2 border-[#b3a6eb] text-xs font-black text-[#5139d6] hover:bg-[#f3f0ff] bg-white cursor-pointer"
+                      >
+                        책 소개 수정
+                      </button>
+
+                      <button
+                        onClick={async () => {
+                          const nextStatus = book.status === "PUBLISHED" ? "HIDDEN" : "PUBLISHED";
+                          await onUpdateStatus?.(book.bookId || book.id, nextStatus);
+                        }}
+                        className="px-4 py-2 rounded-lg border-2 border-[#b3a6eb] text-xs font-black text-[#3c375e] hover:bg-[#f3f0ff] bg-white cursor-pointer"
+                      >
+                        {book.status === "PUBLISHED" ? "비공개로 변경" : "공개로 변경"}
+                      </button>
+                    </div>
                   )}
                 </>
               )}
@@ -706,11 +725,11 @@ export default function BookDetailView({
                 </div>
               ))
             )}
-          {hasNextComment && (
-            <button onClick={loadMoreComments} className="w-full py-2 text-sm text-[#6b54e7] hover:text-[#5139d6] font-bold border border-[#e6e2fc] rounded-xl hover:bg-[#f3f0ff] transition mt-4">
-              댓글 더보기
-            </button>
-          )}
+            {hasNextComment && (
+              <button onClick={loadMoreComments} className="w-full py-2 text-sm text-[#6b54e7] hover:text-[#5139d6] font-bold border border-[#e6e2fc] rounded-xl hover:bg-[#f3f0ff] transition mt-4">
+                댓글 더보기
+              </button>
+            )}
           </div>
 
           {/* Comment register form box */}
