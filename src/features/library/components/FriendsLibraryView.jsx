@@ -252,6 +252,7 @@ export default function FriendsLibraryView() {
           onBack={() => navigate("/friends")}
           onUpdateDescription={handleUpdateDescription}
           onUpdateStatus={handleUpdateStatus}
+          onViewCountSynced={(id, viewCount) => patchBookById(id, prev => ({ ...prev, viewCount }))}
 
           onStartReading={(book) => navigate(`/books/${book.id}/read`)}
           // onToggleLike={e => handleToggleLike(e, viewingBook.id)}

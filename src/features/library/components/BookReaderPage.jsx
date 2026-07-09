@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import BookReaderView from './BookReaderView';
 import { getBook, getBookContents } from '../../../api/bookApi';
+import { updateReadingProgress, completeReading } from '../../../api/myLibraryApi';
 import { mapBookPagesByGenre } from '../utils/mapBookPages';
 
 const EMPTY_PAGES = [
@@ -72,6 +73,23 @@ export default function BookReaderPage() {
     return <div className="text-center py-20 text-sm text-[#7C769D]">본문을 불러오는 중입니다...</div>;
   }
 
+  const handleProgressSave = async (id, currentPage, totalPages, readingTime = 0) => {
+    const progress = Math.floor((currentPage / totalPages) * 100);
+    try {
+      await updateReadingProgress(id, currentPage, progress, readingTime);
+    } catch (err) {
+      console.error("읽기 진행률 저장 실패", err);
+    }
+  };
+
+  const handleCompleteReading = async (id) => {
+    try {
+      await completeReading(id);
+    } catch (err) {
+      console.error("완독 처리 실패", err);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-[#f3f0ff] overflow-y-auto animate-in fade-in duration-200">
       <BookReaderView
@@ -82,6 +100,9 @@ export default function BookReaderPage() {
         onToggleBookmark={e => handleToggleBookmark(e, readerBook.id)}
         onToggleLike={e => handleToggleLike(e, readerBook.id)}
         onSelectRecommended={b => navigate(`/books/${b.id}/read`)}
+        onExploreLibrary={() => navigate('/friends')}
+        onProgressSave={handleProgressSave}
+        onCompleteReading={handleCompleteReading}
       />
     </div>
   );

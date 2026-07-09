@@ -76,6 +76,11 @@ export const MainDashboard = (props) => {
     myCabinetBooks,
     friendBooks,
     filteredCabinetBooks,
+
+    weeklyRanking,
+    weeklyNewReleases,
+    isAggregating,
+    handleTriggerWeeklyRankingAggregate,
   } = useDashboardState(props);
 
   return (
@@ -292,59 +297,105 @@ export const MainDashboard = (props) => {
             </div>
             )}
 
+            {/* [테스트용] 확인 끝나면 제거 - 매주 월요일 크론과 동일한 주간 랭킹 집계를 즉시 실행 */}
+            <button
+              onClick={handleTriggerWeeklyRankingAggregate}
+              disabled={isAggregating}
+              className="text-xs font-bold text-orange-600 bg-orange-50 border border-dashed border-orange-300 rounded-lg px-3 py-1.5 hover:bg-orange-100 transition-colors disabled:opacity-50"
+            >
+              {isAggregating ? '집계 실행 중...' : '[테스트] 주간 랭킹 즉시 집계'}
+            </button>
+
             <div className="space-y-4 pt-4 z-10 relative">
               <div className="flex justify-between items-center">
-                <h2 className="text-base sm:text-lg font-extrabold text-[#2F2D59]">이번 주 인기 (랭킹)</h2>
-                <button 
-                  onClick={() => alert('인기 도서 랭킹관이 준비 중입니다.')}
-                  className="text-xs text-[#7C769D] hover:text-[#2F2D59] font-bold flex items-center gap-0.5"
-                >
-                  <span>전체 보기</span>
-                  <ChevronRight className="w-3 h-3" />
-                </button>
+                <h2 className="text-base sm:text-lg font-extrabold text-[#2F2D59]">이번 주 인기 TOP5</h2>
               </div>
-              
-              <div className="relative">
+
+              {weeklyRanking.length === 0 ? (
+                <p className="text-xs text-[#B9B0DC] font-bold py-6 text-center">이번 주 랭킹 데이터가 아직 없습니다</p>
+              ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5">
-                  {[
-                    { rank: 1, title: '여름밤의 고래', category: '판타지', likes: '12.4K', cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBAlgov4Ndwbkqsdj-Wy320A6sm5eIrOAh0fJ9iql5uxYkUWODJzuvxDJGOarbrHyWZpKki_6W--5-y1C2PHZRmzdsgBb7BLEc8IxTCMXTW9R0hfy7uqjy5U1X7Aihqk1llWQjtgmHQkRnbckz8nBMYbpe4r_WXrVQNutTxX7SutNuluLR0MbYoKoVS6SETBbzSXShKPS2VAUTzYyUUYyHFcm5k7kpBLau2Lk4MiFNQyio7tD96chDlTfKp3NSSvNmq4rM8O8j0oGM' },
-                    { rank: 2, title: '벚꽃이 지는 계절', category: '로맨스', likes: '9.7K', cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBunwmp9gNYdr5DprurqI-56fQqtRXoNlM91FNSmsHjHsLhHzItDBdIf290fXFgrHtz_Wf4JndCfQwlgQBp0iq1dxmfJujPYJoUj233w2XqQHmvo3mJYKWwKDMVw1aQPZbx_aotYrk615BxBUOn3fZdJ1N5H3VQmQTAB_MNJsYQtEsN4orO-G4D6P--xTblP1eapL8dKYZ7UUHzn50Xj7gTK3CSAEGwzl2hH51X4yjPPkr3mdtqYwX0dg1ao_g8ZALzaz3yoTpGwWM' },
-                    { rank: 3, title: '마법사 학원의 비밀', category: '판타지', likes: '8.3K', cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCznlvT7W-W0NUxinTfAkyigdk2z3I-k-uZK5biSPoGv-2D69bAp-MLEgeUx5_bmFFebrWpllo42X0LF3ihgtEq_p51DrgtnqEOxsjsT2H7Q-4z9A8CHXtLdWGVPongYJImv13zsDsLze4Y5uqVGkpuCACb2TG-2iz1K-vbt4oS_rN6GRYPOtDCaDeTYNF5cOuMY590pmj3N-GlXuNg4x60NRJiF503Y7d0x4f_0J72onLQeH8GK5y5bHOU6vlUE5fnCZo9xc1SEig' },
-                    { rank: 4, title: '카페, 오후 3시', category: '힐링', likes: '7.1K', cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBL9C026912DWIR1LG1aQKUHDO0L5tB1PxdJVonj8bxfKQ75IV6uR99DoLyUg5iNVqKW4ev8bK2aL2BlTbVxn229HmaAO9sRDdAPkLWiWlcE1gawXlfOmeRX8WJCPiDsttSWRVJOOhgVWLBXWfS6LVxJ9kjDI9wPvEkD851Ok7e_hSpVr0cTBTFVYvIJLm8XNQzQx_ESFnx3tM27mBrOsK16EdHSGfyOc0zpOhyvCEZWSpb7Y7A8kZ3Gl2NKGhuOZgXcTEJ_E7Pgf0' },
-                    { rank: 5, title: '끝나지 않은 항해', category: '모험', likes: '6.2K', cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC2O_PD7xdQCc_iGfXoKwNrVIurVlo0ugo_weeYOYZOG-Wh7f6vj3_DVFNiSln1HzMbFHhwypEYn9qPXQRQ2x8rytzojL6ot4tX_9mXRZB-OO0IANHl_DZM9OrB17ajZemU93sWq3W66bOlFJdjmkeDtvqCmbG_BQln7wrzg4vFRQrmn0Mqlbt4NOhAIZX_FDgxT1X3R9q6wVpNMIjLbN0ioReZ88c5QTD0GfjDeChjMbk1UZw-N3JIAVoL1fzcD4ansUKeIZxSdXk' }
-                  ].map((book) => (
-                    <div key={book.rank} className="space-y-3 group cursor-pointer text-left" onClick={() => alert(`${book.title} 작품 상세 조회 페이지가 준비 중입니다.`)}>
-                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-xs">
-                        <img 
-                          src={book.cover} 
-                          alt={book.title} 
-                          className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500" 
+                  {weeklyRanking.map((book) => (
+                    <div key={book.id} className="space-y-2.5 group cursor-pointer text-left" onClick={() => navigate(`/friends/${book.id}`)}>
+                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-xs border border-gray-200 group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-white">
+                        <img
+                          src={book.cover}
+                          alt={book.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           referrerPolicy="no-referrer"
                         />
                         <div className="absolute top-2.5 left-2.5 w-6.5 h-6.5 rounded-full bg-[#6B54E7] text-white font-black text-xs flex items-center justify-center shadow-md">
                           {book.rank}
                         </div>
                       </div>
-                      
+
                       <div className="px-1 text-left">
                         <h4 className="text-xs font-extrabold text-[#2F2D59] line-clamp-1 group-hover:text-[#6B54E7] transition-colors">{book.title}</h4>
-                        <p className="text-[10px] text-[#7C769D] font-bold mt-0.5">{book.category}</p>
+                        <button
+                          onClick={e => { e.stopPropagation(); navigate(`/authors/${encodeURIComponent(book.author)}`); }}
+                          className="text-[10px] text-[#7C769D] font-bold mt-0.5 hover:text-[#6B54E7] transition-colors cursor-pointer"
+                        >
+                          {book.author}
+                        </button>
                         <div className="flex items-center gap-0.5 text-red-500 font-extrabold mt-1">
                           <span className="text-[11px]">🔥</span>
-                          <span className="text-[10px] text-[#7C769D] font-extrabold">{book.likes}</span>
+                          <span className="text-[10px] text-[#7C769D] font-extrabold">
+                            {book.likeCount >= 1000 ? `${(book.likeCount / 1000).toFixed(1)}K` : book.likeCount}
+                          </span>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-                
-                <button 
-                  onClick={() => alert('더보기 기능은 준비 중입니다.')}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4.5 w-9 h-9 rounded-full bg-white shadow-lg border border-neutral-100 flex items-center justify-center text-[#2F2D59] hover:bg-[#F3F0FF] hover:scale-105 active:scale-95 transition-all z-10"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
+              )}
+            </div>
+
+            <div className="space-y-4 pt-8 z-10 relative">
+              <div className="flex justify-between items-center">
+                <h2 className="text-base sm:text-lg font-extrabold text-[#2F2D59]">이번 주 신작 TOP5</h2>
               </div>
+
+              {weeklyNewReleases.length > 0 && weeklyNewReleases.length < 5 && (
+                <p className="text-xs text-[#7C769D] font-bold">이번 주 신작은 {weeklyNewReleases.length}권 뿐이에요</p>
+              )}
+
+              {weeklyNewReleases.length === 0 ? (
+                <p className="text-xs text-[#B9B0DC] font-bold py-6 text-center">이번 주 신작이 아직 없습니다</p>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5">
+                  {weeklyNewReleases.map((book) => (
+                    <div key={book.id} className="space-y-2.5 group cursor-pointer text-left" onClick={() => navigate(`/friends/${book.id}`)}>
+                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-xs border border-gray-200 group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-white">
+                        <img
+                          src={book.cover}
+                          alt={book.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-[#6B54E7] text-white font-black text-[10px] shadow-md">
+                          NEW
+                        </div>
+                      </div>
+
+                      <div className="px-1 text-left">
+                        <h4 className="text-xs font-extrabold text-[#2F2D59] line-clamp-1 group-hover:text-[#6B54E7] transition-colors">{book.title}</h4>
+                        <button
+                          onClick={e => { e.stopPropagation(); navigate(`/authors/${encodeURIComponent(book.author)}`); }}
+                          className="text-[10px] text-[#7C769D] font-bold mt-0.5 hover:text-[#6B54E7] transition-colors cursor-pointer"
+                        >
+                          {book.author}
+                        </button>
+                        <div className="flex items-center gap-0.5 text-red-500 font-extrabold mt-1">
+                          <span className="text-[11px]">🔥</span>
+                          <span className="text-[10px] text-[#7C769D] font-extrabold">
+                            {book.likeCount >= 1000 ? `${(book.likeCount / 1000).toFixed(1)}K` : book.likeCount}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {isAuthenticated && (
