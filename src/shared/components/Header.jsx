@@ -39,16 +39,14 @@ export const Header = () => {
   const isCreatePath = path.startsWith('/create');
   const isFriendsOrAuthorsPath = path === '/friends' || path.startsWith('/authors');
 
+  // 로그인 필요 여부는 라우트 가드(ProtectedRoute)가 판단 — 여기선 그냥 이동만 시키면
+  // 비로그인 접근 가능한 경로는 열리고, 아니면 가드가 알아서 /login으로 보낸다(복귀 경로 포함).
   const goTo = (to) => {
-    if (isLoggedIn) {
-      navigate(to);
-    } else {
-      navigate('/login');
-    }
+    navigate(to);
   };
 
   const handleLogoClick = () => {
-    navigate(isLoggedIn ? '/' : '/login');
+    navigate('/');
   };
 
   const onLogoutClick = async () => {
@@ -82,12 +80,8 @@ export const Header = () => {
               {/* Home link */}
               <button
                 onClick={() => {
-                  if (isLoggedIn) {
-                    navigate("/");
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  } else {
-                    navigate("/login");
-                  }
+                  navigate("/");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
                 className={`transition-colors py-1 cursor-pointer hover:text-black ${path === "/" ? "text-black border-b border-black" : ""}`}
               >
@@ -101,13 +95,7 @@ export const Header = () => {
                 onMouseLeave={() => setShowSangsangMenu(false)}
               >
                 <button
-                  onClick={() => {
-                    if (isLoggedIn) {
-                      setShowSangsangMenu(!showSangsangMenu);
-                    } else {
-                      navigate("/login");
-                    }
-                  }}
+                  onClick={() => setShowSangsangMenu(!showSangsangMenu)}
                   className={`transition-colors py-1 cursor-pointer hover:text-black flex items-center gap-1 ${isCreatePath ? "text-black border-b border-black" : ""}`}
                 >
                   <span>상상더하기</span>
@@ -161,13 +149,7 @@ export const Header = () => {
                 onMouseLeave={() => setShowFriendsMenu(false)}
               >
                 <button
-                  onClick={() => {
-                    if (isLoggedIn) {
-                      setShowFriendsMenu(!showFriendsMenu);
-                    } else {
-                      navigate("/login");
-                    }
-                  }}
+                  onClick={() => setShowFriendsMenu(!showFriendsMenu)}
                   className={`transition-colors py-1 cursor-pointer hover:text-black flex items-center gap-1 ${isFriendsOrAuthorsPath ? "text-black border-b border-black" : ""}`}
                 >
                   <span>친구의 서재</span>
