@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { Search, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, X, Trash2, SlidersHorizontal, Eye } from "lucide-react";
+import { Search, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, X, SlidersHorizontal, Eye } from "lucide-react";
 import BookDetailView from "./BookDetailView";
 import { getBooks, getBook, likeBook, unlikeBook } from "../../../api/bookApi";
 import { addComment, addReply } from "../../../api/commentApi";
 import { useAuth } from "../../../shared/context/AuthContext";
-import { addWishlist } from "../../../api/myLibraryApi";
+import { useRequireAuth } from "../../../shared/hooks/useRequireAuth";
+import { addWishlist, deleteWishlist, updateMyWrittenBookDescription, updateMyWrittenBookStatus } from "../../../api/myLibraryApi";
 
 const bookTypeOptions = [
   { label: "전체", value: null },
@@ -57,6 +58,7 @@ export default function FriendsLibraryView() {
   const navigate = useNavigate();
   const { handleToggleBookmark } = useOutletContext();
   const { currentUser } = useAuth();
+  const requireAuth = useRequireAuth();
 
   const [selectedBookType, setSelectedBookType] = useState(null);
   const [sortBy, setSortBy] = useState("latest");
@@ -68,6 +70,34 @@ export default function FriendsLibraryView() {
   const [hasNext, setHasNext] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+
+  const handleUpdateDescription = async (bookId, description) => {
+    try {
+      await updateMyWrittenBookDescription(bookId, description);
+
+      patchBookById(bookId, prev => ({
+        ...prev,
+        description,
+      }));
+    } catch (err) {
+      console.error(err);
+      alert("책 소개 수정에 실패했습니다.");
+    }
+  };
+
+  const handleUpdateStatus = async (bookId, status) => {
+    try {
+      await updateMyWrittenBookStatus(bookId, status);
+
+      patchBookById(bookId, prev => ({
+        ...prev,
+        status,
+      }));
+    } catch (err) {
+      console.error(err);
+      alert("공개 여부 변경에 실패했습니다.");
+    }
+  };
 
   // :bookId가 있으면 상세 화면 — 목록에서 이미 불러온 항목이면 그대로 쓰고,
   // 딥링크/새로고침 등으로 로컬 목록에 없으면 직접 조회. BookDetailView가 기대하는
@@ -140,10 +170,17 @@ export default function FriendsLibraryView() {
     setFetchedBook(prev => (prev && String(prev.id) === String(bookId) ? updater(prev) : prev));
   };
 
+  // 같은 책에 대해 좋아요 요청이 진행 중일 때 중복 클릭으로 재요청되는 것을 막는 락
+  const pendingLikesRef = useRef(new Set());
+
   const handleToggleLike = async (e, bookId) => {
     e.stopPropagation();
+    if (!requireAuth()) return;
+    if (pendingLikesRef.current.has(String(bookId))) return; // 처리 중이면 무시
     const book = books.find(b => String(b.id) === String(bookId)) || fetchedBook;
     if (!book) return;
+
+    pendingLikesRef.current.add(String(bookId));
 
     // 낙관적 업데이트 - API 응답 전에 UI 먼저 반영
     const wasLiked = book.isLikedByMe;
@@ -155,17 +192,32 @@ export default function FriendsLibraryView() {
         await unlikeBook(bookId);
       } else {
         await likeBook(bookId);
-        await addWishlist(bookId);
       }
     } catch (err) {
-      // 실패 시 원복
+      // 좋아요/취소 자체가 실패한 경우에만 원복
       const revert = b => ({ ...b, isLikedByMe: wasLiked, likeCount: wasLiked ? b.likeCount + 1 : b.likeCount - 1, likes: wasLiked ? b.likeCount + 1 : b.likeCount - 1 });
       patchBookById(bookId, revert);
       console.error("좋아요 처리 실패", err);
+      pendingLikesRef.current.delete(String(bookId));
+      return;
+    }
+
+    // 위시리스트 동기화는 별도 실패 단위 - 실패해도 이미 성공한 좋아요 상태는 그대로 둔다
+    try {
+      if (wasLiked) {
+        await deleteWishlist(bookId);
+      } else {
+        await addWishlist(bookId);
+      }
+    } catch (err) {
+      console.error("위시리스트 동기화 실패", err);
+    } finally {
+      pendingLikesRef.current.delete(String(bookId));
     }
   };
 
   const handleDetailAddComment = async (bookId, authorName, textContent) => {
+    if (!requireAuth()) return;
     const res = await addComment(bookId, textContent);
     patchBookById(bookId, (prev) => ({
       ...prev,
@@ -175,6 +227,7 @@ export default function FriendsLibraryView() {
   };
 
   const handleAddReply = async (bookId, parentCommentId, authorName, textContent) => {
+    if (!requireAuth()) return;
     try {
       const res = await addReply(parentCommentId, textContent);
       return res;
@@ -196,10 +249,13 @@ export default function FriendsLibraryView() {
         <BookDetailView
           mode={viewingBook?.mode === "owner" ? "owner" : "viewer"}
           book={viewingBook}
-          onBack={() => navigate(-1)}
+          onBack={() => navigate("/friends")}
+          onUpdateDescription={handleUpdateDescription}
+          onUpdateStatus={handleUpdateStatus}
 
           onStartReading={(book) => navigate(`/books/${book.id}/read`)}
-          onToggleLike={e => handleToggleLike(e, viewingBook.id)}
+          // onToggleLike={e => handleToggleLike(e, viewingBook.id)}
+          onToggleLike={(e, bookId) => handleToggleLike(e, bookId)}
           onToggleBookmark={e => handleToggleBookmark(e, viewingBook.id)}
 
           allBooks={books}

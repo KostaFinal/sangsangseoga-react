@@ -12,7 +12,7 @@ export default function BookStats({ getReadingStats }) {
     const loadStats = async () => {
       try {
         const res = await getReadingStats();
-        setStats(res.data);
+        setStats(res.data.data);
       } catch (err) {
         console.error('독서 통계 조회 실패:', err);
       }

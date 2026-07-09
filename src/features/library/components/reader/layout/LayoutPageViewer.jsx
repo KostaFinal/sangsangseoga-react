@@ -6,11 +6,13 @@ import "./LayoutPageViewer.css";
 const PAGE_WIDTH = 480;
 const PAGE_HEIGHT = 620;
 
+const FONT_SCALE = { sm: 0.85, base: 1, lg: 1.2 };
+
 function sortElements(elements = []) {
   return [...elements].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
 }
 
-function renderElement(element) {
+function renderElement(element, fontScale = 1, isEnglish = false) {
   if (element.type === "image") {
     return (
       <div
@@ -47,7 +49,7 @@ function renderElement(element) {
           top: element.y,
           width: element.w,
           height: element.h,
-          fontSize: `${element.fontSize || 17}px`,
+          fontSize: `${(element.fontSize || 17) * fontScale}px`,
           lineHeight: element.lineHeight || 1.8,
           color: element.color || "#222222",
           backgroundColor: element.backgroundColor || "transparent",
@@ -58,7 +60,7 @@ function renderElement(element) {
           borderRadius: `${element.radius || 0}px`,
           zIndex: element.zIndex || 10,
         }}
-        dangerouslySetInnerHTML={{ __html: element.html }}
+        dangerouslySetInnerHTML={{ __html: (isEnglish ? element.htmlEn : element.htmlKo) ?? element.html }}
       />
     );
   }
@@ -67,9 +69,9 @@ function renderElement(element) {
 }
 
 // react-pageflip은 페이지 엘리먼트에 ref가 꽂혀야 해서 forwardRef로 감싼다.
-const FlipPage = forwardRef(({ page }, ref) => (
+const FlipPage = forwardRef(({ page, fontScale, isEnglish }, ref) => (
   <div className="layout-flip-page" ref={ref} style={{ backgroundColor: page.backgroundColor || "#ffffff" }}>
-    {sortElements(page.elements).map(renderElement)}
+    {sortElements(page.elements).map(el => renderElement(el, fontScale, isEnglish))}
   </div>
 ));
 
@@ -84,7 +86,10 @@ export default function LayoutPageViewer({
   onIndexChange,
   onComplete,
   onLastPageBlocked,
+  fontSize = "base",
+  isEnglish = false,
 }) {
+  const fontScale = FONT_SCALE[fontSize] ?? 1;
   const rawPages = Array.isArray(book.pages)
     ? book.pages
     : [
@@ -111,10 +116,30 @@ export default function LayoutPageViewer({
     : rawPages;
 
   const bookRef = useRef(null);
+  const initializedRef = useRef(false);
   const lastReachableIndex = rawPages.length % 2 === 0
     ? Math.max(0, rawPages.length - 2)
     : rawPages.length - 1;
   const isLast = currentIndex >= lastReachableIndex;
+
+  useEffect(() => {
+    initializedRef.current = false;
+  }, [book.id]);
+
+  useEffect(() => {
+    if (initializedRef.current) return;
+
+    const timer = setTimeout(() => {
+      const api = bookRef.current?.pageFlip();
+      if (!api) return;
+
+      const safeIdx = Math.min(currentIndex || 0, lastReachableIndex);
+      api.turnToPage(safeIdx);
+      initializedRef.current = true;
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [book.id, currentIndex, lastReachableIndex]);
 
   // 마지막 페이지 도달 시 모달 - 렌더링 중 setState 방지를 위해 useEffect 사용
   const prevIsLast = useRef(false);
@@ -142,14 +167,14 @@ export default function LayoutPageViewer({
 
   const goPrev = () => {
     const api = bookRef.current?.pageFlip();
-    if (!api || api.getCurrentPageIndex() === 0) return;
+    if (!api || currentIndex === 0) return;
     api.flipPrev();
   };
 
   const goNext = () => {
     const api = bookRef.current?.pageFlip();
     if (!api) return;
-    if (api.getCurrentPageIndex() >= lastReachableIndex) {
+    if (currentIndex >= lastReachableIndex) {
       onLastPageBlocked?.();
       return;
     }
@@ -179,6 +204,7 @@ export default function LayoutPageViewer({
           maxWidth={PAGE_WIDTH}
           minHeight={390}
           maxHeight={PAGE_HEIGHT}
+          startPage={Math.min(currentIndex, lastReachableIndex)}
           showCover={false}
           usePortrait={false}
           drawShadow={true}
@@ -191,7 +217,7 @@ export default function LayoutPageViewer({
           onFlip={handleFlip}
         >
           {pages.map(page => (
-            <FlipPage key={page.id} page={page} />
+            <FlipPage key={page.id} page={page} fontScale={fontScale} isEnglish={isEnglish} />
           ))}
         </HTMLFlipBook>
       </div>

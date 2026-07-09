@@ -3,25 +3,15 @@ import { motion, AnimatePresence } from "motion/react";
 import { StickyNote, Trash2, Check } from "lucide-react";
 import { getMemo, addMemo, updateMemo, deleteMemo } from "@/src/api/memoApi";
 
-function loadPos(bookId) {
-  try {
-    return JSON.parse(localStorage.getItem(`sangsang_memo_pos_${bookId}`)) || { x: 0, y: 0 };
-  } catch {
-    return { x: 0, y: 0 };
-  }
-}
+const DEFAULT_POS = { x: 0, y: 0 };
 
 export default function MemoStickyNote({ isOpen, bookId, pageKey, memos, setMemos }) {
   const [memoInput, setMemoInput] = useState("");
   const [isEditing, setIsEditing] = useState(false);
-  const [pos, setPos] = useState(() => loadPos(bookId));
+  const [pos, setPos] = useState(DEFAULT_POS);
   const dragState = useRef(null);
 
-  useEffect(() => {
-    setPos(loadPos(bookId));
-  }, [bookId]);
-
-  // 페이지 변경 시 API로 메모 조회
+  // 페이지 변경 시 API로 메모 조회. 이 페이지에 저장된 위치가 있으면 그 위치를, 없으면 기본 위치로 초기화한다.
   useEffect(() => {
     if (!bookId || pageKey === undefined || pageKey === null) return;
     getMemo(bookId, pageKey)
@@ -33,9 +23,11 @@ export default function MemoStickyNote({ isOpen, bookId, pageKey, memos, setMemo
         } else {
           setMemoInput(memos[pageKey] || "");
         }
+        setPos(data?.posX != null && data?.posY != null ? { x: Number(data.posX), y: Number(data.posY) } : DEFAULT_POS);
       })
       .catch(() => {
         setMemoInput(memos[pageKey] || "");
+        setPos(DEFAULT_POS);
       });
     setIsEditing(false);
   }, [pageKey, bookId]);
@@ -44,9 +36,9 @@ export default function MemoStickyNote({ isOpen, bookId, pageKey, memos, setMemo
     try {
       const existing = memos[pageKey];
       if (existing) {
-        await updateMemo(bookId, pageKey, memoInput);
+        await updateMemo(bookId, pageKey, memoInput, pos.x, pos.y);
       } else {
-        await addMemo(bookId, pageKey, memoInput);
+        await addMemo(bookId, pageKey, memoInput, pos.x, pos.y);
       }
       setMemos(prev => ({ ...prev, [pageKey]: memoInput }));
       setIsEditing(false);
@@ -93,7 +85,10 @@ export default function MemoStickyNote({ isOpen, bookId, pageKey, memos, setMemo
     window.removeEventListener("touchmove", handleDragMove);
     window.removeEventListener("touchend", handleDragEnd);
     setPos(current => {
-      localStorage.setItem(`sangsang_memo_pos_${bookId}`, JSON.stringify(current));
+      const existing = memos[pageKey];
+      if (existing) {
+        updateMemo(bookId, pageKey, existing, current.x, current.y).catch(err => console.error("메모 위치 저장 실패", err));
+      }
       return current;
     });
   };

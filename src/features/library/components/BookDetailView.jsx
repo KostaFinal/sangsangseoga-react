@@ -14,9 +14,10 @@ const genreBadge = (genre) => {
   };
   return map[genre] || { cls: "bg-[#e6e2fc] text-[#6b54e7] border-[#d4cdf2]", label: bookTypeToGenre[genre] || genre };
 };
-import { getRecommendations, getBookContents } from "@/src/api/bookApi";
+import { getRecommendations, getBookContents, getBook } from "@/src/api/bookApi";
 import { getComments, updateComment, deleteComment } from "@/src/api/commentApi";
 import { getAuthors, followAuthor, unfollowAuthor } from "@/src/api/authorApi";
+import { getLastReadingPosition, updateReadingProgress, rereadBook } from "@/src/api/myLibraryApi";
 import { mapBookPagesByGenre } from "../utils/mapBookPages";
 
 
@@ -37,6 +38,7 @@ export default function BookDetailView({
   onSelectAuthor,
   mode = "viewer",
   onUpdateDescription,
+  onUpdateStatus,
   currentUser,
 }) {
   const [commentText, setCommentText] = useState("");
@@ -125,6 +127,25 @@ export default function BookDetailView({
       .catch(() => setRecommendations([]));
   }, [book?.id]);
 
+  // 이 책을 이전에 읽은 기록(진행률)이 있는지 조회 - 있으면 "이어읽기", 없으면 "책 펼치기"
+  const [readingPosition, setReadingPosition] = useState(null);
+  useEffect(() => {
+    const bookId = book.bookId || book.id;
+    if (!bookId) return;
+    getLastReadingPosition(bookId)
+      .then(res => setReadingPosition(res.data?.data))
+      .catch(() => setReadingPosition(null));
+  }, [book.id]);
+
+  const [tags, setTags] = useState(book.tags || []);
+  useEffect(() => {
+    const bookId = book.bookId || book.id;
+    if (!bookId) return;
+    getBook(bookId)
+      .then(res => setTags(res.data?.data?.tags || []))
+      .catch(() => setTags([]));
+  }, [book.id]);
+
   useEffect(() => {
     if (!book?.authorId) return;
     getAuthors({ keyword: book.author, size: 20 })
@@ -133,7 +154,7 @@ export default function BookDetailView({
         const matched = items.find(a => String(a.id) === String(book.authorId));
         if (matched) setIsFollowing(!!matched.isFollowedByMe);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [book?.authorId, book?.author]);
 
   const handleToggleFollow = async () => {
@@ -237,8 +258,8 @@ export default function BookDetailView({
   }, [book.id]);
 
   useEffect(() => {
-    getReportedIds("book").then(ids => setIsBookReported(ids.includes(book.id))).catch(() => {});
-    getReportedIds("comment").then(ids => setReportedCommentIds(ids)).catch(() => {});
+    getReportedIds("book").then(ids => setIsBookReported(ids.includes(book.id))).catch(() => { });
+    getReportedIds("comment").then(ids => setReportedCommentIds(ids)).catch(() => { });
   }, [book.id]);
 
   const topLevelComments = comments.filter(c => !c.replyToCommentId);
@@ -389,7 +410,14 @@ export default function BookDetailView({
 
             {/* Tags outline Row 2 - 해시태그 배경 및 글씨 진하게 */}
             <div className="flex flex-wrap gap-2">
-
+              {tags.map(tag => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-lg border border-[#d4cdf2] bg-[#f3f0ff] text-[#5139d6]"
+                >
+                  #{tag}
+                </span>
+              ))}
             </div>
 
             {/* Thick Border Primary CTA button */}
@@ -397,15 +425,30 @@ export default function BookDetailView({
               <button
                 onClick={async () => {
                   const bookId = book.bookId || book.id;
+                  const isCompleted = readingPosition?.readingStatus === "COMPLETED";
+                  const currentPage = isCompleted ? 1 : (readingPosition?.currentPage || 1);
+                  const progress = isCompleted ? 1 : (readingPosition?.progress || 1);
+
+                  try {
+                    if (isCompleted) {
+                      await rereadBook(bookId);
+                    } else {
+                      await updateReadingProgress(bookId, currentPage, progress);
+                    }
+                  } catch (err) {
+                    console.error("읽기 시작 처리 실패", err);
+                  }
 
                   const res = await getBookContents(bookId);
                   const pageItems = res.data?.data?.items || [];
                   const viewerPages = mapBookPagesByGenre(book.bookType, pageItems);
+                  const startPageIndex = Math.max(0, currentPage - 1);
 
                   onStartReading({
                     ...book,
                     id: bookId,
                     bookId,
+                    startPageIndex,
                     pages: viewerPages.length > 0 ? viewerPages : [
                       {
                         id: "page-empty",
@@ -428,8 +471,17 @@ export default function BookDetailView({
                 }}
                 className={getCtaButtonStyle()}
               >
-                책 펼치기 📖
+                {readingPosition?.readingStatus === "COMPLETED"
+                  ? "다시 읽기"
+                  : readingPosition?.progress > 0
+                    ? "이어읽기"
+                    : "책 펼치기"} 📖
               </button>
+              {readingPosition?.readingStatus === "COMPLETED" && (
+                <p className="mt-2 max-w-sm text-center text-xs font-bold text-[#7368a1]">
+                  ✓ 완독 · 다시 펼쳐볼 수 있어요
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -460,9 +512,15 @@ export default function BookDetailView({
                       취소
                     </button>
                     <button
-                      onClick={() => {
-                        onUpdateDescription?.(editDescription);
-                        setIsEditingDescription(false);
+                      onClick={async () => {
+                        try {
+                          await onUpdateDescription?.(book.bookId || book.id, editDescription);
+
+                          setIsEditingDescription(false);
+
+                        } catch (e) {
+                          alert("책 소개 수정에 실패했습니다.");
+                        }
                       }}
                       className="px-4 py-2 rounded-lg bg-[#5139d6] text-white text-xs font-black cursor-pointer"
                     >
@@ -478,12 +536,24 @@ export default function BookDetailView({
                   </p>
 
                   {mode === "owner" && (
-                    <button
-                      onClick={() => setIsEditingDescription(true)}
-                      className="mt-4 px-4 py-2 rounded-lg border-2 border-[#b3a6eb] text-xs font-black text-[#5139d6] hover:bg-[#f3f0ff] bg-white cursor-pointer"
-                    >
-                      책 소개 수정
-                    </button>
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        onClick={() => setIsEditingDescription(true)}
+                        className="px-4 py-2 rounded-lg border-2 border-[#b3a6eb] text-xs font-black text-[#5139d6] hover:bg-[#f3f0ff] bg-white cursor-pointer"
+                      >
+                        책 소개 수정
+                      </button>
+
+                      <button
+                        onClick={async () => {
+                          const nextStatus = book.status === "PUBLISHED" ? "HIDDEN" : "PUBLISHED";
+                          await onUpdateStatus?.(book.bookId || book.id, nextStatus);
+                        }}
+                        className="px-4 py-2 rounded-lg border-2 border-[#b3a6eb] text-xs font-black text-[#3c375e] hover:bg-[#f3f0ff] bg-white cursor-pointer"
+                      >
+                        {book.status === "PUBLISHED" ? "비공개로 변경" : "공개로 변경"}
+                      </button>
+                    </div>
                   )}
                 </>
               )}
@@ -706,11 +776,11 @@ export default function BookDetailView({
                 </div>
               ))
             )}
-          {hasNextComment && (
-            <button onClick={loadMoreComments} className="w-full py-2 text-sm text-[#6b54e7] hover:text-[#5139d6] font-bold border border-[#e6e2fc] rounded-xl hover:bg-[#f3f0ff] transition mt-4">
-              댓글 더보기
-            </button>
-          )}
+            {hasNextComment && (
+              <button onClick={loadMoreComments} className="w-full py-2 text-sm text-[#6b54e7] hover:text-[#5139d6] font-bold border border-[#e6e2fc] rounded-xl hover:bg-[#f3f0ff] transition mt-4">
+                댓글 더보기
+              </button>
+            )}
           </div>
 
           {/* Comment register form box */}

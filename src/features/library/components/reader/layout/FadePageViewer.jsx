@@ -6,11 +6,13 @@ import "./FadePageViewer.css";
 const PAGE_WIDTH = 480;
 const PAGE_HEIGHT = 620;
 
+const FONT_SCALE = { sm: 0.85, base: 1, lg: 1.2 };
+
 function sortElements(elements = []) {
   return [...elements].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
 }
 
-function renderElement(element) {
+function renderElement(element, fontScale = 1, isEnglish = false) {
   if (element.type === "image") {
     return (
       <div
@@ -44,7 +46,7 @@ function renderElement(element) {
         className="fade-page-text"
         style={{
           width: element.w,
-          fontSize: `${element.fontSize || 17}px`,
+          fontSize: `${(element.fontSize || 17) * fontScale}px`,
           lineHeight: element.lineHeight || 1.8,
           color: element.color || "#222222",
           backgroundColor: element.backgroundColor || "transparent",
@@ -55,7 +57,7 @@ function renderElement(element) {
           borderRadius: `${element.radius || 0}px`,
           zIndex: element.zIndex || 10,
         }}
-        dangerouslySetInnerHTML={{ __html: element.html }}
+        dangerouslySetInnerHTML={{ __html: (isEnglish ? element.htmlEn : element.htmlKo) ?? element.html }}
       />
     );
   }
@@ -72,7 +74,10 @@ export default function FadePageViewer({
   onIndexChange,
   onComplete,
   onLastPageBlocked,
+  fontSize = "base",
+  isEnglish = false,
 }) {
+  const fontScale = FONT_SCALE[fontSize] ?? 1;
   const pages = Array.isArray(book.pages)
     ? book.pages
     : [
@@ -147,7 +152,7 @@ export default function FadePageViewer({
               boxSizing: 'border-box',
             }}
           >
-            {sortElements(page?.elements).map(renderElement)}
+            {sortElements(page?.elements).map(el => renderElement(el, fontScale, isEnglish))}
           </motion.div>
         </AnimatePresence>
       </div>

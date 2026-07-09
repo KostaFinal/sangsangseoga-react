@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { subscriptionService } from '../services/subscriptionService';
+import { useRequireAuth } from '../../../shared/hooks/useRequireAuth';
 
 /**
  * Custom Hook: useSubscriptionState
@@ -24,7 +25,9 @@ export const useSubscriptionState = ({
   onResumeSubscription,
   onPlanChanged,
   onSelectPlan,
+  isAuthenticated,
 }) => {
+  const requireAuth = useRequireAuth();
   const [records, setRecords] = useState([]);
   const [isRecordsLoading, setIsRecordsLoading] = useState(false);
   const [recordsError, setRecordsError] = useState('');
@@ -51,6 +54,7 @@ export const useSubscriptionState = ({
   const faqs = subscriptionService.getFaqs();
 
   const loadPayments = useCallback(async () => {
+    if (!isAuthenticated) return;
     setIsRecordsLoading(true);
     setRecordsError('');
     try {
@@ -61,7 +65,7 @@ export const useSubscriptionState = ({
     } finally {
       setIsRecordsLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const loadPlans = useCallback(async () => {
     setIsPlansLoading(true);
@@ -117,6 +121,7 @@ export const useSubscriptionState = ({
   };
 
   const handleSelectPremium = () => {
+    if (!requireAuth()) return;
     if (onSelectPlan) {
       onSelectPlan(selectedPlanType, plans[selectedPlanType]?.price);
     }

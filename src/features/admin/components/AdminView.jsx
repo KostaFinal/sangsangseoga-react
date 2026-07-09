@@ -5,10 +5,6 @@ import {
   Flag,
   BarChart3,
   ChevronRight,
-  Activity,
-  ArrowLeft,
-  ShieldCheck,
-  LayoutDashboard
 } from 'lucide-react';
 import { useAdminState } from '../hooks/useAdminState';
 import { MemberTab } from './MemberTab';
@@ -30,13 +26,18 @@ export const AdminView = ({ initialTab = 'member' }) => {
     setMemberSearchQuery,
     memberStatusFilter,
     setMemberStatusFilter,
+    memberPage,
+    memberTotalCount,
+    memberHasNext,
+    memberPageSize,
+    memberStatusCounts,
+    goToMemberPage,
     selectedUser,
     setSelectedUser,
     userModalOpen,
     setUserModalOpen,
     suspensionReasonText,
     setSuspensionReasonText,
-    filteredUsers,
     handleUpdateUserStatus,
 
     // Reports states
@@ -65,6 +66,7 @@ export const AdminView = ({ initialTab = 'member' }) => {
     currentTrends,
     searchedTokenUsages,
     memberTokenTimelineLogs,
+    tokenSummary,
   } = useAdminState(initialTab);
 
   // 탭 클릭 시 주소창도 함께 갱신 (딥링크는 initialTab으로 진입 시 이미 반영됨)
@@ -74,83 +76,19 @@ export const AdminView = ({ initialTab = 'member' }) => {
   }, [activeTab]);
 
   return (
-    <div id="admin-main-view" className="min-h-screen bg-[#FAF9FF] flex flex-col font-sans text-[#2F2D59] selection:bg-[#6B54E7] selection:text-white pb-20 relative overflow-x-hidden">
-      
-      {/* Top Background Ambient Glows */}
-      <div className="absolute top-10 left-1/4 w-[600px] h-[600px] bg-[#E6E2FC]/30 rounded-full filter blur-[130px] pointer-events-none"></div>
-      <div className="absolute top-40 right-1/4 w-[500px] h-[500px] bg-[#EDF5FF]/40 rounded-full filter blur-[110px] pointer-events-none"></div>
-
-      {/* 1. Header Hero Panel (Slate Dark theme) */}
-      <div className="relative w-full bg-[#110F24] text-white overflow-hidden rounded-b-[2.5rem] shadow-xl border-b border-[#2F2D59]/30 z-10 px-4 py-8 sm:py-12 sm:px-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(107,84,231,0.2),transparent)] pointer-events-none"></div>
-        
-        <div className="w-full space-y-6 sm:space-y-8 relative z-10">
-          
-          {/* Back button and Tag */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <button
-              onClick={() => navigate('/')}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white/90 text-xs font-bold transition-all border border-white/5 active:scale-95 cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>메인 화면으로</span>
-            </button>
-
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-[#6B54E7]/30 text-[#B9B0DC] rounded-full text-xs font-semibold border border-[#6B54E7]/40">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>관리자</span>
-            </div>
-          </div>
-
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-            <div className="text-left space-y-2 max-w-2xl">
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-3">
-                <LayoutDashboard className="w-8 h-8 text-[#835AF1] shrink-0" />
-                <span>관리자 페이지</span>
-              </h2>
-              <p className="text-xs sm:text-sm text-[#B9B0DC] leading-relaxed">
-                작가 계정, 신고, AI 사용량을 관리합니다.
-              </p>
-            </div>
-
-            {/* Quick security status card with glowing effect */}
-            <div className="relative w-full lg:w-auto flex items-center gap-6 bg-white/[0.04] backdrop-blur-md px-6 py-5 rounded-2xl border border-white/10 shrink-0 text-left">
-              <div className="absolute -top-3 -right-3 w-12 h-12 bg-[#6B54E7]/30 rounded-full filter blur-md"></div>
-              
-              <div className="space-y-1">
-                <span className="text-[10px] text-[#B9B0DC] block tracking-wider font-bold uppercase">시스템 상태</span>
-                <span className="text-sm sm:text-base font-black flex items-center gap-1.5 text-emerald-400">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>안정</span>
-                </span>
-              </div>
-              
-              <div className="h-10 w-[1px] bg-white/10"></div>
-              
-              <div className="space-y-1">
-                <span className="text-[10px] text-[#B9B0DC] block tracking-wider font-bold uppercase">대기 중인 신고</span>
-                <span className="text-sm sm:text-base font-extrabold text-white block font-mono">
-                  {reportedBooks.filter(r => r.status === 'pending').length +
-                   reportedComments.filter(r => r.status === 'pending').length +
-                   reportedAuthors.filter(r => r.status === 'pending').length} 건
-                </span>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
+    <div id="admin-main-view" className="min-h-screen bg-[#FAF9FF] flex flex-col font-sans text-[#2F2D59] selection:bg-[#6B54E7] selection:text-white pb-20">
 
       {/* 2. Unified Layout Grid */}
-      <div className="w-full px-4 py-8 sm:px-6 relative z-10">
+      <div className="w-full px-6 pt-6 pb-8 sm:px-10 lg:px-16">
+        <h2 className="text-2xl font-black text-[#110F24] tracking-tight mb-5">관리자 페이지</h2>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Side Unified Navigation Bar (3 Cols) */}
           <aside className="lg:col-span-3 space-y-6 w-full">
             <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E6E2FC]/60 text-left">
               <div className="mb-5 border-b border-[#E6E2FC]/40 pb-4">
-                <span className="text-[9px] font-mono tracking-widest text-[#7C769D] uppercase font-black block">Administrator</span>
-                <h1 className="text-lg font-black text-[#110F24] tracking-tight mt-1">관리 메뉴</h1>
+                <span className="text-[11px] font-mono tracking-widest text-[#7C769D] uppercase font-black block">Administrator</span>
+                <h1 className="text-xl font-black text-[#110F24] tracking-tight mt-1">관리 메뉴</h1>
               </div>
 
               <nav className="space-y-2">
@@ -170,8 +108,8 @@ export const AdminView = ({ initialTab = 'member' }) => {
                         setSelectedReport(null);
                       }}
                       className={`w-full text-left px-4 py-3.5 rounded-2xl transition-all flex items-center justify-between cursor-pointer group ${
-                        isSelected 
-                          ? 'bg-[#6B54E7] text-white shadow-lg shadow-[#6B54E7]/25 hover:opacity-95' 
+                        isSelected
+                          ? 'bg-[#6B54E7] text-white shadow-lg shadow-[#6B54E7]/25 hover:opacity-95'
                           : 'text-[#7C769D] hover:bg-[#E6E2FC]/15 hover:text-[#2F2D59]'
                       }`}
                     >
@@ -180,8 +118,8 @@ export const AdminView = ({ initialTab = 'member' }) => {
                           <IconComp className="w-4 h-4 shrink-0" />
                         </div>
                         <div>
-                          <span className="text-xs font-black block">{tab.name}</span>
-                          <span className={`text-[9px] block ${isSelected ? 'text-[#B9B0DC]' : 'text-[#7C769D]'}`}>{tab.desc}</span>
+                          <span className="text-sm font-black block">{tab.name}</span>
+                          <span className={`text-xs block ${isSelected ? 'text-[#B9B0DC]' : 'text-[#7C769D]'}`}>{tab.desc}</span>
                         </div>
                       </div>
                       <ChevronRight className={`w-4 h-4 transition-transform ${isSelected ? 'translate-x-1 text-white' : 'text-[#B9B0DC] group-hover:translate-x-0.5'}`} />
@@ -190,54 +128,18 @@ export const AdminView = ({ initialTab = 'member' }) => {
                 })}
               </nav>
             </div>
-
-            {/* Quick Stats Panel */}
-            <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E6E2FC]/60 text-left space-y-4">
-              <h3 className="text-[10px] font-black text-[#7C769D] uppercase tracking-widest flex items-center gap-1.5">
-                <Activity className="w-3.5 h-3.5 text-[#6B54E7] animate-pulse" />
-                <span>작가 통계</span>
-              </h3>
-              
-              <div className="space-y-3 pt-1">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-[#7C769D] font-bold">전체 작가 계정</span>
-                  <span className="font-black text-[#110F24] font-mono">1,248 명</span>
-                </div>
-                
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-emerald-600 font-extrabold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 정상 작가
-                  </span>
-                  <span className="font-black text-emerald-600 font-mono">1,210 명</span>
-                </div>
-                
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-amber-500 font-extrabold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> 승인 대기
-                  </span>
-                  <span className="font-black text-amber-500 font-mono">19 명</span>
-                </div>
-                
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-rose-500 font-extrabold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span> 활동 제한
-                  </span>
-                  <span className="font-black text-rose-500 font-mono">11 명</span>
-                </div>
-              </div>
-            </div>
           </aside>
 
           {/* Right Content Sheet (9 Cols) */}
           <main className="lg:col-span-9 space-y-6 w-full">
-            <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E6E2FC]/60 text-left">
-              <div className="border-b border-[#E6E2FC]/40 pb-5 mb-6 text-left">
+            <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E6E2FC]/60 text-left">
+              <div className="border-b border-[#E6E2FC]/40 pb-3.5 mb-4 text-left">
                 <h2 className="text-xl font-black text-[#110F24] tracking-tight">
                   {activeTab === 'member' && '작가 계정 관리'}
                   {activeTab === 'reports' && '신고 관리'}
                   {activeTab === 'tokens' && 'AI 사용량 관리'}
                 </h2>
-                <p className="text-xs text-[#7C769D] mt-1 leading-relaxed">
+                <p className="text-sm text-[#7C769D] mt-1 leading-relaxed">
                   {activeTab === 'member' && '작가 계정 상태와 가입 승인을 관리합니다.'}
                   {activeTab === 'reports' && '접수된 도서, 댓글, 작가 신고를 심사합니다.'}
                   {activeTab === 'tokens' && 'AI 텍스트/이미지 생성 사용량을 확인합니다.'}
@@ -251,13 +153,19 @@ export const AdminView = ({ initialTab = 'member' }) => {
                   setMemberSearchQuery={setMemberSearchQuery}
                   memberStatusFilter={memberStatusFilter}
                   setMemberStatusFilter={setMemberStatusFilter}
+                  memberPage={memberPage}
+                  memberTotalCount={memberTotalCount}
+                  memberHasNext={memberHasNext}
+                  memberPageSize={memberPageSize}
+                  memberStatusCounts={memberStatusCounts}
+                  goToMemberPage={goToMemberPage}
                   selectedUser={selectedUser}
                   setSelectedUser={setSelectedUser}
                   userModalOpen={userModalOpen}
                   setUserModalOpen={setUserModalOpen}
                   suspensionReasonText={suspensionReasonText}
                   setSuspensionReasonText={setSuspensionReasonText}
-                  filteredUsers={filteredUsers}
+                  users={users}
                   handleUpdateUserStatus={handleUpdateUserStatus}
                 />
               )}
@@ -289,6 +197,7 @@ export const AdminView = ({ initialTab = 'member' }) => {
                   searchedTokenUsages={searchedTokenUsages}
                   memberTokenTimelineLogs={memberTokenTimelineLogs}
                   users={users}
+                  tokenSummary={tokenSummary}
                 />
               )}
             </div>

@@ -4,6 +4,7 @@
  */
 
 import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { ShieldAlert, ArrowLeft } from 'lucide-react';
 import { AuthorProfileView, SearchAuthorView } from "./features/authors";
 import { LoginView } from './features/auth/components/LoginView';
 import { SignupView } from './features/auth/components/SignupView';
@@ -41,37 +42,34 @@ import {
 } from './shared/components/MyLibraryLayout';
 
 function ForbiddenPanel() {
-  const { currentUser } = useAuth();
+  const { handleLogout } = useAuth();
   const navigate = useNavigate();
   return (
-    <div className="max-w-md mx-auto my-20 p-8 bg-white border border-neutral-200 rounded-2xl text-left shadow-2xl font-mono text-xs">
-      <div className="flex items-center text-neutral-900 font-extrabold gap-2 text-sm mb-4 uppercase">
-        <span className="w-2.5 h-2.5 rounded-full bg-black animate-pulse"></span>
-        🚨 [403 Forbidden] Access Denied
+    <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
+      <div className="w-16 h-16 rounded-2xl bg-[#F3F0FF] border border-[#E6E2FC] flex items-center justify-center mb-6">
+        <ShieldAlert className="w-7 h-7 text-[#6B54E7]" />
       </div>
-      <p className="text-neutral-900 font-black leading-relaxed mb-3">
-        Spring Security 권한 부족 오류 (ACCESS_DENIED)
-      </p>
-      <div className="bg-neutral-950 text-neutral-300 p-4 leading-loose mb-5 rounded-xl font-sans text-[11px]">
-        <p><span className="text-neutral-500">필요 권한 (Required):</span> <code className="text-white font-mono font-bold">ROLE_ADMIN</code></p>
-        <p><span className="text-neutral-500">현재 계정 (Authenticated):</span> <span className="text-neutral-200">{currentUser.nickname} ({currentUser.email})</span></p>
-        <p><span className="text-neutral-500">부여된 권한 (Granted Authority):</span> <span className="text-red-400 font-mono font-bold">{currentUser.role || 'NONE'}</span></p>
+
+      <div className="space-y-3 max-w-md mx-auto mb-8">
+        <h2 className="text-xl sm:text-2xl font-extrabold text-[#2F2D59]">관리자 권한이 필요합니다</h2>
+        <p className="text-xs sm:text-sm text-[#7C769D] leading-relaxed">
+          이 페이지는 관리자 계정으로 로그인해야 접근할 수 있습니다.
+        </p>
       </div>
-      <p className="text-neutral-500 mb-6 font-sans text-[11.5px] leading-relaxed">
-        해당 API 및 관리자 통제 패널은 최고 관리자 권한을 승인받은 세션만 인가용 토큰을 통해 접속할 수 있습니다. 메인 화면으로 귀가하시거나 어드민 전용 포털을 통해 로그인해 주십시오.
-      </p>
-      <div className="flex gap-2 font-sans">
+
+      <div className="flex gap-3">
         <button
           onClick={() => navigate('/')}
-          className="flex-1 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-xl font-bold text-xs transition-all cursor-pointer"
+          className="px-5 py-3 bg-[#FAF9FF] hover:bg-[#E6E2FC]/40 text-[#6B54E7] border border-[#E6E2FC] text-xs sm:text-sm font-bold rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer"
         >
-          메인 대시보드 대피
+          <ArrowLeft className="w-4 h-4" />
+          <span>홈으로</span>
         </button>
         <button
-          onClick={() => navigate('/login')}
-          className="flex-1 py-3 bg-black hover:bg-neutral-900 text-white rounded-xl font-bold text-xs transition-all cursor-pointer"
+          onClick={async () => { await handleLogout(); navigate('/login'); }}
+          className="px-5 py-3 bg-[#6B54E7] hover:bg-[#5b45d6] text-white text-xs sm:text-sm font-bold rounded-2xl shadow-lg shadow-[#6B54E7]/25 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
         >
-          기존 세션 로그아웃 후 어드민 로그인
+          관리자로 로그인
         </button>
       </div>
     </div>
@@ -80,6 +78,7 @@ function ForbiddenPanel() {
 
 function LoginRoute() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setCurrentUser, setIsAuthenticated, refreshSubscriptionStatus, refreshUsage } = useAuth();
   return (
     <LoginView
@@ -88,7 +87,8 @@ function LoginRoute() {
         setIsAuthenticated(true);
         refreshSubscriptionStatus();
         refreshUsage();
-        navigate('/');
+        const from = location.state?.from;
+        navigate(from ? `${from.pathname}${from.search || ''}` : '/', { replace: true });
       }}
       onNavigateToSignup={() => navigate('/signup')}
       onNavigateToPasswordReset={() => navigate('/password-reset')}
@@ -138,9 +138,10 @@ function SocialAuthRoute() {
 
 function SubscriptionRoute() {
   const navigate = useNavigate();
-  const { isPremium, isSubscriptionCanceled, benefitEndDate, currentPlanType, usage, refreshSubscriptionStatus, refreshUsage } = useAuth();
+  const { isAuthenticated, isPremium, isSubscriptionCanceled, benefitEndDate, currentPlanType, usage, refreshSubscriptionStatus, refreshUsage } = useAuth();
   return (
     <SubscriptionView
+      isAuthenticated={isAuthenticated}
       onSelectPlan={(planType, price) => {
         navigate('/subscription/payment', { state: { subType: planType, price } });
       }}
@@ -231,12 +232,15 @@ function AppInner() {
         {/* 이메일 링크로 접근 — 로그인 여부와 무관하게 토큰 자체가 자격증명 */}
         <Route path="/guardian-consent/:consentId" element={<GuardianConsentView />} />
 
+        {/* 둘러보기는 비로그인도 가능 — 로그인이 필요한 액션은 클릭 시점에 /login으로 유도 */}
+        <Route index element={<MainDashboard />} />
+        <Route path="friends" element={<FriendsLibraryView />} />
+        <Route path="friends/:bookId" element={<FriendsLibraryView />} />
+        <Route path="authors" element={<SearchAuthorView />} />
+        <Route path="authors/:authorName" element={<AuthorProfileView />} />
+        <Route path="subscription" element={<SubscriptionRoute />} />
+
         <Route element={<ProtectedRoute />}>
-          <Route index element={<MainDashboard />} />
-          <Route path="friends" element={<FriendsLibraryView />} />
-          <Route path="friends/:bookId" element={<FriendsLibraryView />} />
-          <Route path="authors" element={<SearchAuthorView />} />
-          <Route path="authors/:authorName" element={<AuthorProfileView />} />
           <Route path="books/:bookId/read" element={<BookReaderPage />} />
 
           <Route path="library" element={<MyLibraryLayout />}>
@@ -252,7 +256,6 @@ function AppInner() {
             <Route path="read/:bookId" element={<MyLibraryReaderRoute />} />
           </Route>
 
-          <Route path="subscription" element={<SubscriptionRoute />} />
           <Route path="subscription/payment" element={<PaymentRoute />} />
           <Route path="profile/edit" element={<ProfileEditRoute />} />
 
@@ -266,10 +269,10 @@ function AppInner() {
           ))}
 
           <Route element={<AdminRoute forbidden={<ForbiddenPanel />} />}>
-            <Route path="admin" element={<AdminView initialTab="member" />} />
-            <Route path="admin/members" element={<AdminView initialTab="member" />} />
-            <Route path="admin/reports" element={<AdminView initialTab="reports" />} />
-            <Route path="admin/tokens" element={<AdminView initialTab="tokens" />} />
+            <Route path="admin" element={<AdminView key="member" initialTab="member" />} />
+            <Route path="admin/members" element={<AdminView key="member" initialTab="member" />} />
+            <Route path="admin/reports" element={<AdminView key="reports" initialTab="reports" />} />
+            <Route path="admin/tokens" element={<AdminView key="tokens" initialTab="tokens" />} />
           </Route>
         </Route>
 
