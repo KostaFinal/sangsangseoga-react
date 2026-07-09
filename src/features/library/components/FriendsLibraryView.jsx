@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { Search, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, X, SlidersHorizontal, Eye } from "lucide-react";
@@ -168,10 +168,16 @@ export default function FriendsLibraryView() {
     setFetchedBook(prev => (prev && String(prev.id) === String(bookId) ? updater(prev) : prev));
   };
 
+  // 같은 책에 대해 좋아요 요청이 진행 중일 때 중복 클릭으로 재요청되는 것을 막는 락
+  const pendingLikesRef = useRef(new Set());
+
   const handleToggleLike = async (e, bookId) => {
     e.stopPropagation();
+    if (pendingLikesRef.current.has(String(bookId))) return; // 처리 중이면 무시
     const book = books.find(b => String(b.id) === String(bookId)) || fetchedBook;
     if (!book) return;
+
+    pendingLikesRef.current.add(String(bookId));
 
     // 낙관적 업데이트 - API 응답 전에 UI 먼저 반영
     const wasLiked = book.isLikedByMe;
@@ -183,13 +189,27 @@ export default function FriendsLibraryView() {
         await unlikeBook(bookId);
       } else {
         await likeBook(bookId);
-        await addWishlist(bookId);
       }
     } catch (err) {
-      // 실패 시 원복
+      // 좋아요/취소 자체가 실패한 경우에만 원복
       const revert = b => ({ ...b, isLikedByMe: wasLiked, likeCount: wasLiked ? b.likeCount + 1 : b.likeCount - 1, likes: wasLiked ? b.likeCount + 1 : b.likeCount - 1 });
       patchBookById(bookId, revert);
       console.error("좋아요 처리 실패", err);
+      pendingLikesRef.current.delete(String(bookId));
+      return;
+    }
+
+    // 위시리스트 동기화는 별도 실패 단위 - 실패해도 이미 성공한 좋아요 상태는 그대로 둔다
+    try {
+      if (wasLiked) {
+        await deleteWishlist(bookId);
+      } else {
+        await addWishlist(bookId);
+      }
+    } catch (err) {
+      console.error("위시리스트 동기화 실패", err);
+    } finally {
+      pendingLikesRef.current.delete(String(bookId));
     }
   };
 
@@ -224,7 +244,7 @@ export default function FriendsLibraryView() {
         <BookDetailView
           mode={viewingBook?.mode === "owner" ? "owner" : "viewer"}
           book={viewingBook}
-          onBack={() => navigate(-1)}
+          onBack={() => navigate("/friends")}
           onUpdateDescription={handleUpdateDescription}
           onUpdateStatus={handleUpdateStatus}
 

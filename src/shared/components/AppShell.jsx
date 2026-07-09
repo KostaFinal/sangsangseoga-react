@@ -11,16 +11,6 @@ export function AppShell() {
   const [books, setBooks] = useState([]);
 
   useEffect(() => {
-    const cachedBooks = localStorage.getItem("sangsang_books");
-    if (cachedBooks) {
-      try {
-        setBooks(JSON.parse(cachedBooks));
-        return;
-      } catch (e) {
-        // 캐시 파싱 실패 시 아래에서 API로 새로 조회
-      }
-    }
-
     (async () => {
       try {
         const res = await getBooks({ size: 100 });
@@ -30,21 +20,15 @@ export function AppShell() {
           coverImage: b.coverImageUrl,
           likes: b.likeCount,
           commentsCount: b.commentCount,
-          genre: bookTypeToGenre[b.genre] || b.genre,
+          genre: bookTypeToGenre[b.bookType] || b.bookType,
           comments: b.comments || [],
         }));
         setBooks(mapped);
-        localStorage.setItem("sangsang_books", JSON.stringify(mapped));
       } catch (err) {
         console.error("책 목록 조회 실패", err);
       }
     })();
   }, []);
-
-  const saveBooksToStorage = updatedBooks => {
-    setBooks(updatedBooks);
-    localStorage.setItem("sangsang_books", JSON.stringify(updatedBooks));
-  };
 
   const handleToggleLike = async (e, bookId) => {
     e.stopPropagation();
@@ -65,7 +49,7 @@ export function AppShell() {
       }
       return b;
     });
-    saveBooksToStorage(updated);
+    setBooks(updated);
   };
 
   const handleToggleBookmark = async (e, bookId) => {
@@ -81,7 +65,7 @@ export function AppShell() {
       console.error("북마크 처리 실패", err);
     }
     const updated = books.map(b => (b.id === bookId ? { ...b, isBookmarked: !b.isBookmarked } : b));
-    saveBooksToStorage(updated);
+    setBooks(updated);
   };
 
   return (

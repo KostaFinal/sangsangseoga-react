@@ -133,7 +133,7 @@ export default function BookDetailView({
     const bookId = book.bookId || book.id;
     if (!bookId) return;
     getLastReadingPosition(bookId)
-      .then(res => setReadingPosition(res.data))
+      .then(res => setReadingPosition(res.data?.data))
       .catch(() => setReadingPosition(null));
   }, [book.id]);
 
