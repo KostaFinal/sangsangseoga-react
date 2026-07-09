@@ -1151,23 +1151,16 @@
     gap: 14px;
   }
 
-  .fairy-square-canvas {
-    width: 430px;
-    height: 555px;
-  }
-
-  .fairy-square-canvas.cover {
-    width: 430px;
-    height: 555px;
-  }
-
-  .fairy-book-stage.spread-mode,
-  .fairy-book-stage.cover-mode {
-    min-height: 555px;
-  }
-
-  .fairy-book-spine {
-    min-height: 555px;
+  /* 캔버스 너비/높이를 직접 줄이면 그 안의 제목/텍스트 박스는 480px 기준 절대좌표(px)로
+     배치돼 있어서 비율이 깨지고 한쪽으로 쏠려 보인다. 다른 반응형 구간(920px, 1100px)과
+     동일하게 부모(.fairy-book-stage)를 통째로 scale해서 내부 요소 비율을 그대로 유지한다.
+     920px 구간의 .fairy-book-stage(단일 클래스) 규칙과 명시도를 맞추기 위해 여기서도
+     .spread-mode/.cover-mode를 붙이지 않는다 — 붙이면 이 규칙이 더 좁은 화면에서도
+     920px 규칙을 덮어써 버린다. */
+  .fairy-book-stage {
+    transform: scale(0.896);
+    transform-origin: top center;
+    margin-bottom: -64px;
   }
 }
 

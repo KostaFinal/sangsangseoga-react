@@ -4,7 +4,8 @@
 //   행에 imageUrl이 있으면 이미지만 있는 페이지, 없으면 글만 있는 페이지로 그대로 1:1 매핑.
 // - 그 외 bookType(NOVEL/POEM/ESSAY/NONFICTION 등): 전부 글만 있는 페이지 (imageUrl은 사용 안 함)
 
-const pageText = (page) => page.contentTextKo || page.contentTextEn || "";
+const koText = (page) => page.contentTextKo || page.contentTextEn || "";
+const enText = (page) => page.contentTextEn || page.contentTextKo || "";
 
 function textOnlyPage(page) {
   return {
@@ -16,14 +17,16 @@ function textOnlyPage(page) {
         type: "text",
         x: 60, y: 50, w: 360, h: 30,
         fontSize: 15, fontWeight: 700, color: "#5139d6",
-        html: page.title,
+        htmlKo: page.title,
+        htmlEn: page.title,
       }] : []),
       {
         id: `text-${page.pageNo}`,
         type: "text",
         x: 60, y: page.title ? 90 : 70, w: 360, h: 500,
         fontSize: 17, lineHeight: 1.85, fontFamily: "serif",
-        html: pageText(page),
+        htmlKo: koText(page),
+        htmlEn: enText(page),
       },
     ],
   };
@@ -51,7 +54,8 @@ function fairyTalePage(page) {
       type: "text",
       x: 50, y: 120, w: 380, h: 380,
       fontSize: 19, lineHeight: 1.9, align: "center", fontWeight: 600,
-      html: pageText(page),
+      htmlKo: koText(page),
+      htmlEn: enText(page),
     }],
   };
 }

@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { addBookmark, removeBookmark, getBookmarks } from "@/src/api/bookApi";
+import { getViewerPreference, updateViewerPreference } from "@/src/api/memberApi";
 import ReaderHeader from "./reader/ReaderHeader";
 import MemoStickyNote from "./reader/MemoStickyNote";
 import LastPageModal from "./reader/LastPageModal";
@@ -24,6 +26,9 @@ const READER_COMPONENTS = {
   knowledge: KnowledgeReaderView,
 };
 
+const FONT_SIZE_TO_SERVER = { sm: "SMALL", base: "MEDIUM", lg: "LARGE" };
+const FONT_SIZE_FROM_SERVER = { SMALL: "sm", MEDIUM: "base", LARGE: "lg" };
+
 export default function BookReaderView({
   book,
   onBack,
@@ -33,7 +38,8 @@ export default function BookReaderView({
   onLayoutChange,
   onSelectRecommended,
   onProgressSave,
-  onCompleteReading
+  onCompleteReading,
+  onExploreLibrary
 }) {
   const readerMode = getReaderMode(book.genre);
 
@@ -43,16 +49,52 @@ export default function BookReaderView({
   const [isMemoOpen, setIsMemoOpen] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showLastPageAlert, setShowLastPageAlert] = useState(false);
-  const [currentPageKey, setCurrentPageKey] = useState(0);
+  const [currentPageKey, setCurrentPageKey] = useState(book.startPageIndex || 0);
   const [bookmarkedPages, setBookmarkedPages] = useState({});
   const [viewType, setViewType] = useState("FLIP");
   const readingStartTimeRef = useRef(Date.now());
 
-  const handleTogglePageBookmark = () => {
+  // 회원의 저장된 뷰어 환경설정(글자 크기/전환 방식)을 최초 진입 시 한 번 불러온다.
+  useEffect(() => {
+    getViewerPreference()
+      .then(res => {
+        const data = res.data?.data;
+        if (data?.viewerFontSize) setFontSize(FONT_SIZE_FROM_SERVER[data.viewerFontSize] || "base");
+        if (data?.viewerViewType) setViewType(data.viewerViewType);
+      })
+      .catch(() => { });
+  }, []);
+
+  const handleSetFontSize = (next) => {
+    setFontSize(next);
+    updateViewerPreference(FONT_SIZE_TO_SERVER[next], null).catch(err => console.error("글자 크기 저장 실패", err));
+  };
+
+  const handleSetViewType = (next) => {
+    setViewType(next);
+    updateViewerPreference(null, next).catch(err => console.error("페이지 전환 방식 저장 실패", err));
+  };
+
+  const handleTogglePageBookmark = async () => {
+    const bookId = book.bookId || book.id;
+    const wasBookmarked = !!bookmarkedPages[currentPageKey];
     setBookmarkedPages(prev => ({
       ...prev,
-      [currentPageKey]: !prev[currentPageKey],
+      [currentPageKey]: !wasBookmarked,
     }));
+    try {
+      if (wasBookmarked) {
+        await removeBookmark(bookId, currentPageKey);
+      } else {
+        await addBookmark(bookId, currentPageKey);
+      }
+    } catch (err) {
+      setBookmarkedPages(prev => ({
+        ...prev,
+        [currentPageKey]: wasBookmarked,
+      }));
+      console.error("북마크 처리 실패", err);
+    }
   };
 
   const [memos, setMemos] = useState({});
@@ -63,34 +105,28 @@ export default function BookReaderView({
 
     const startPage = book.currentPage && book.currentPage > 0
       ? book.currentPage - 1
-      : 0;
+      : book.startPageIndex || 0;
 
     setCurrentPageKey(startPage);
-  }, [book.id, book.currentPage]);
-
-
+    setMemos({});
+  }, [book.id, book.currentPage, book.startPageIndex]);
 
   useEffect(() => {
-    const saved = localStorage.getItem(`sangsang_memos_${book.id}`);
-    if (saved) {
-      try {
-        setMemos(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse saved memos", e);
-      }
-    } else {
-      const defaultMemo = {
-        0: "서서히 밝아오는 푸른 새벽빛과 은은한 책의 묵향이 아름답게 어우러지는 Prologue.",
-        1: "기억을 사랑하는 마음, 너무 좋다.",
-        2: "사유하는 마음의 끝에는 결국 깊은 구원과 아늑한 작별이 기다리고 있는 듯하다.",
-      };
-      setMemos(defaultMemo);
-      localStorage.setItem(`sangsang_memos_${book.id}`, JSON.stringify(defaultMemo));
-    }
-  }, [book.id]);
+    const bookId = book.bookId || book.id;
+    if (!bookId) return;
+
+    getBookmarks(bookId)
+      .then(res => {
+        const pages = res.data?.data || [];
+        setBookmarkedPages(
+          pages.reduce((acc, pageNo) => ({ ...acc, [pageNo]: true }), {})
+        );
+      })
+      .catch(() => setBookmarkedPages({}));
+  }, [book.id, book.bookId]);
 
   if (isCompleted) {
-    return <CompletionScreen book={book} onBack={onBack} onReread={() => setIsCompleted(false)} onSelectRecommended={onSelectRecommended} />;
+    return <CompletionScreen book={book} onBack={onBack} onSelectRecommended={onSelectRecommended} onExploreLibrary={onExploreLibrary} />;
   }
 
   const saveReadingTimeAndBack = async () => {
@@ -128,12 +164,12 @@ export default function BookReaderView({
         fontFamily={fontFamily}
         setFontFamily={setFontFamily}
         fontSize={fontSize}
-        setFontSize={setFontSize}
+        setFontSize={handleSetFontSize}
         isMemoOpen={isMemoOpen}
         setIsMemoOpen={setIsMemoOpen}
         isPageBookmarked={!!bookmarkedPages[currentPageKey]}
         viewType={viewType}
-        setViewType={setViewType}
+        setViewType={handleSetViewType}
       />
 
       <main className="flex-1 flex flex-col items-center justify-center py-6 md:py-12 px-4 md:px-12 relative max-w-7xl mx-auto w-full gap-6">
@@ -153,6 +189,7 @@ export default function BookReaderView({
             onLastPageBlocked={() => setShowLastPageAlert(true)}
             onPageChange={async (pageKey) => {
               setCurrentPageKey(pageKey);
+              setIsMemoOpen(false);
 
               if (onProgressSave) {
                 const currentPage = pageKey + 1;

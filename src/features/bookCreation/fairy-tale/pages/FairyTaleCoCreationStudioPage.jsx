@@ -12,6 +12,7 @@ function FairyTaleCoCreationStudioPage() {
         setSelectedChoiceId,
         customAnswer,
         setCustomAnswer,
+        allowCustomAnswer,
         currentPage,
         pageCount,
         pageButtons,
@@ -20,6 +21,7 @@ function FairyTaleCoCreationStudioPage() {
         isRecommendingAgain,
         canCreateNextScene,
         showFallbackNotice,
+        showNoOptionsNotice,
         handleNextScene,
         handleRecommendAgain,
     } = useFairyTaleCoCreationStudio();
@@ -57,7 +59,7 @@ function FairyTaleCoCreationStudioPage() {
                                             key={item.page}
                                             className={`phase-item ${item.done ? "done" : ""} ${
                                                 item.current ? "current" : ""
-                                            }`}
+                                            } ${item.locked ? "locked" : ""}`}
                                         >
                                             <span className="marker">
                                                 {item.done ? "✓" : item.current ? "●" : "○"}
@@ -81,7 +83,7 @@ function FairyTaleCoCreationStudioPage() {
                                     type="button"
                                     className={`${item.current ? "active" : ""} ${
                                         item.done ? "done" : ""
-                                    }`}
+                                    } ${item.future ? "future" : ""}`}
                                     disabled={item.disabled}
                                     aria-current={item.current ? "step" : undefined}
                                 >
@@ -137,6 +139,12 @@ function FairyTaleCoCreationStudioPage() {
                             </p>
                         )}
 
+                        {showNoOptionsNotice && (
+                            <p style={{ fontWeight: 700, color: "#a97c1f" }}>
+                                AI가 선택지를 제공하지 않았습니다. 직접 입력해 주세요.
+                            </p>
+                        )}
+
                         <div className="friend-grid">
                             {choices.map((choice, index) => (
                                 <button
@@ -157,22 +165,24 @@ function FairyTaleCoCreationStudioPage() {
                             ))}
                         </div>
 
-                        <div className="custom-row">
-                            <label htmlFor="customFriend" className="custom-label">
-                                직접 입력하기
-                            </label>
+                        {allowCustomAnswer && (
+                            <div className="custom-row">
+                                <label htmlFor="customFriend" className="custom-label">
+                                    직접 입력하기
+                                </label>
 
-                            <input
-                                id="customFriend"
-                                type="text"
-                                maxLength={50}
-                                value={customAnswer}
-                                onChange={(e) => setCustomAnswer(e.target.value)}
-                                placeholder="선택지 대신 직접 떠오른 내용을 입력해 주세요"
-                            />
+                                <input
+                                    id="customFriend"
+                                    type="text"
+                                    maxLength={50}
+                                    value={customAnswer}
+                                    onChange={(e) => setCustomAnswer(e.target.value)}
+                                    placeholder="선택지 대신 직접 떠오른 내용을 입력해 주세요"
+                                />
 
-                            <span className="count">{customAnswer.length} / 50</span>
-                        </div>
+                                <span className="count">{customAnswer.length} / 50</span>
+                            </div>
+                        )}
                     </div>
 
                     <div className="bottom-actions" style={{ display: "flex", gap: "12px" }}>

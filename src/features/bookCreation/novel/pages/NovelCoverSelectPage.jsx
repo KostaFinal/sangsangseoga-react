@@ -14,6 +14,9 @@ function NovelCoverSelectPage() {
     title,
     handleConfirmCover,
     handleRegenerate,
+    isGeneratingCover,
+    generatedCoverImageUrl,
+    coverGenerationError,
   } = useNovelCoverSelect();
   return (
     <div className="novel-cover-page">
@@ -102,24 +105,39 @@ function NovelCoverSelectPage() {
             <h2>선택된 표지 미리보기</h2>
 
             <div className="book-preview-wrap">
-              <div className={`book-preview ${selectedCover.themeClass}`}>
-                <div className="book-spine" />
-                <div className="book-front">
-                  <div className="cover-ornament top">✦</div>
-                  <h3>{title}</h3>
-                  <p>{setting.genre || "소설"}</p>
-                  <div className="cover-character">
-                    <span />
+              {generatedCoverImageUrl ? (
+                <img
+                  className="book-preview generated-cover-image"
+                  src={generatedCoverImageUrl}
+                  alt="AI로 생성된 표지 이미지"
+                />
+              ) : (
+                <div className={`book-preview ${selectedCover.themeClass}`}>
+                  <div className="book-spine" />
+                  <div className="book-front">
+                    <div className="cover-ornament top">✦</div>
+                    <h3>{title}</h3>
+                    <p>{setting.genre || "소설"}</p>
+                    <div className="cover-character">
+                      <span />
+                    </div>
+                    <small>당신의 작품</small>
+                    <div className="cover-ornament bottom">✦</div>
                   </div>
-                  <small>당신의 작품</small>
-                  <div className="cover-ornament bottom">✦</div>
                 </div>
-              </div>
+              )}
 
               <div className="selected-badge">
-                선택됨 <span>✓</span>
+                {generatedCoverImageUrl ? "AI 생성됨" : "선택됨"} <span>✓</span>
               </div>
             </div>
+
+            {isGeneratingCover && <p className="cover-guide-text">🪄 AI 표지 이미지를 생성하고 있어요...</p>}
+            {coverGenerationError && (
+              <p className="cover-guide-text" style={{ color: "#d33" }}>
+                {coverGenerationError}
+              </p>
+            )}
 
             <div className="cover-description">
               <strong>{selectedCover.title}</strong>
@@ -166,8 +184,13 @@ function NovelCoverSelectPage() {
           </button>
 
           <div className="cover-bottom-actions">
-            <button type="button" className="regen-btn" onClick={handleRegenerate}>
-              ⟳ 다시 추천받기
+            <button
+              type="button"
+              className="regen-btn"
+              onClick={handleRegenerate}
+              disabled={isGeneratingCover}
+            >
+              {isGeneratingCover ? "🪄 생성 중..." : "⟳ AI 표지 이미지 생성"}
             </button>
 
             <button
