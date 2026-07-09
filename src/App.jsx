@@ -126,12 +126,13 @@ function SocialAuthRoute() {
     <SocialAuthGateway
       selectedProvider={provider}
       onNavigateToLogin={() => navigate('/login')}
-      onSuccess={() => {
-        setCurrentUser({
-          email: 'social.writer@sangsang.com',
-          role: 'USER',
-          nickname: '소셜 작가'
-        });
+      onSuccess={({ pendingGuardianConsent, user } = {}) => {
+        if (pendingGuardianConsent) {
+          // 보호자 동의가 완료되기 전까지는 로그인 상태로 만들지 않고 로그인 화면으로 안내
+          navigate('/login');
+          return;
+        }
+        setCurrentUser(user);
         setIsAuthenticated(true);
         refreshSubscriptionStatus();
         refreshUsage();
