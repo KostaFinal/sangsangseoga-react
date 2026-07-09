@@ -13,6 +13,18 @@ const DEFAULT_USER = {
   profileImage: CURRENT_USER_PROFILE,
 };
 
+// JWT는 memberId(sub)/role만 담고 있어 페이지 새로고침 시 currentUser에 그 두 값만 복원한다.
+// (닉네임/이메일/프로필사진은 로그인 폼 응답으로만 채워지며, 새로고침 후에는 되살릴 방법이 없음)
+const decodeAccessToken = (token) => {
+  try {
+    const payload = token.split('.')[1];
+    const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+};
+
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(DEFAULT_USER);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!getAccessToken());
@@ -48,6 +60,11 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
+    const token = getAccessToken();
+    const decoded = token ? decodeAccessToken(token) : null;
+    if (decoded?.sub) {
+      setCurrentUser(prev => ({ ...prev, memberId: Number(decoded.sub), role: decoded.role || prev.role }));
+    }
     refreshSubscriptionStatus();
     refreshUsage();
   }, []);

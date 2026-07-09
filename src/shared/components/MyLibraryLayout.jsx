@@ -515,6 +515,7 @@ export function MyLibraryReaderRoute() {
       onToggleBookmark={() => onToggleFavorite(readerBook.id)}
       onToggleLike={() => handleLikeBook(readerBook.id)}
       onSelectRecommended={(book) => navigate(`/library/read/${book.id}`)}
+      onExploreLibrary={() => navigate('/friends')}
     />
   );
 }

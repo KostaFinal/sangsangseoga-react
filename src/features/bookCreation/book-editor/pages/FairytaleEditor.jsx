@@ -16,6 +16,8 @@ import HTMLFlipBook from "react-pageflip";
 
 import fairyback from "../../assets/fairyback.png";
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
+import { toBookDraft } from "../../utils/bookDraftMapper";
+import axiosInstance from "../../../../api/axios";
 
 import {
   ChevronLeft,
@@ -59,6 +61,11 @@ const toParagraphHtml = (value = "") => {
 
   return `<p>${escapeHtml(text).replaceAll("\n", "<br>")}</p>`;
 };
+
+const stripHtml = (html) =>
+  String(html || "")
+    .replace(/<[^>]*>/g, "")
+    .trim();
 
 const getTitleFromState = (state) => {
   return (
@@ -110,6 +117,11 @@ const getBodyTextFromStoryPage = (storyPage, imageRow, pageNo) => {
     imageRow?.sceneTitle ||
     `${pageNo}페이지 본문을 입력해 주세요.`
   );
+};
+
+// bodyText의 영어 번역. 에디터 화면에는 표시하지 않고, 저장 시 content_text_en으로만 함께 보낸다.
+const getBodyTextEnFromStoryPage = (storyPage) => {
+  return storyPage?.bodyTextEn || storyPage?.bodyEn || "";
 };
 
 const createEditorPagesFromCreationState = (state) => {
@@ -177,12 +189,14 @@ const createEditorPagesFromCreationState = (state) => {
       ) || storyPages[index];
 
     const bodyText = getBodyTextFromStoryPage(storyPage, imageRow, pageNo);
+    const bodyTextEn = getBodyTextEnFromStoryPage(storyPage);
 
     return {
       id: `p${pageNo}`,
       type: "spread",
       title: `${pageNo} 페이지`,
       pageNo,
+      textEn: bodyTextEn,
       imageType: "PAGE",
       imageStyle: imageRow?.imageStyle || imageStyle,
       image: {
@@ -852,6 +866,8 @@ export default function FairytaleEditor() {
   );
 
   const [pages, setPages] = useState(() => initialPages);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
   const [pageIndex, setPageIndex] = useState(0);
   const [selectedBlock, setSelectedBlock] = useState(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -1025,15 +1041,51 @@ export default function FairytaleEditor() {
     setSelectedBlock(null);
   }, [selectedBlock, patchText, patchImage, patchCover]);
 
-  const handleSave = useCallback(() => {
-    console.log("저장할 페이지 데이터:", pages);
+  const handleSave = useCallback(async () => {
+    const draft = toBookDraft(location.state);
+    const coverPage = pages.find((page) => page.type === "cover");
+    const bodyPages = pages.filter((page) => page.type !== "cover");
 
-    navigate(BOOK_CREATION_ROUTES.FAIRY_TALE.COMPLETE, {
-      state: {
-        ...location.state,
-        pages,
-      },
-    });
+    const requestBody = {
+      bookType: "FAIRY_TALE",
+      authorAgeGroup: draft.meta.writerLevel,
+      readerAgeGroup: draft.meta.readerAge,
+      creationMode: draft.meta.interactionMode,
+      title:
+        stripHtml(coverPage?.text?.html) || draft.setting.title || "제목 없는 동화책",
+      description: draft.setting.storySeed || "",
+      confirmedSettings: JSON.stringify(draft.setting),
+      coverImageUrl: coverPage?.cover?.src || null,
+      pages: bodyPages.map((page) => ({
+        pageNo: page.pageNo,
+        title: page.title,
+        contentTextKo: stripHtml(page.text?.html),
+        contentTextEn: page.textEn || "",
+        imageUrl: page.image?.src || null,
+      })),
+    };
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      const response = await axiosInstance.post("/api/books", requestBody);
+      const bookId = response.data?.data?.bookId;
+
+      navigate(BOOK_CREATION_ROUTES.FAIRY_TALE.COMPLETE, {
+        state: {
+          ...location.state,
+          pages,
+          bookId,
+        },
+      });
+    } catch (error) {
+      setSaveError(
+        error.response?.data?.message || "책 저장에 실패했습니다. 다시 시도해 주세요."
+      );
+    } finally {
+      setIsSaving(false);
+    }
   }, [pages, navigate, location.state]);
 
   const handleAddPage = useCallback(() => {
@@ -1140,10 +1192,17 @@ export default function FairytaleEditor() {
             미리보기
           </button>
 
-          <button type="button" className="fairy-header-btn save" onClick={handleSave}>
+          <button
+            type="button"
+            className="fairy-header-btn save"
+            onClick={handleSave}
+            disabled={isSaving}
+          >
             <Check size={16} />
-            저장
+            {isSaving ? "저장 중..." : "저장"}
           </button>
+
+          {saveError && <p className="fairy-save-state">{saveError}</p>}
         </div>
       </header>
 

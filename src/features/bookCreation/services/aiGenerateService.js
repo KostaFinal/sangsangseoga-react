@@ -281,6 +281,18 @@ export const createImagePrompt = (state, extra, options) =>
 export const createCoverPrompt = (state, extra, options) =>
   generateAiContent("CREATE_COVER_PROMPT", state, extra, options);
 
+// 사용자가 AI 옵션 대신 직접 입력한 문장을 영어로 번역한다. book/설정 draft가 필요 없는
+// 단발성 호출이라 toBookDraft(state) 없이 빈 draft로 호출한다.
+// protagonistName/otherProperNouns를 같이 보내면, 주인공 이름과 철자가 같은 일반 명사(예: "나비"=이름/butterfly)를
+// 실수로 번역하지 않고 이름 그대로 로마자 표기하도록 translate_text.txt가 참고한다.
+export const translateText = (textKo, context = {}, options) =>
+  requestAiGenerate({
+    taskType: "TRANSLATE_TEXT",
+    draft: {},
+    extra: { textKo, ...context },
+    ...options,
+  });
+
 export const makeAiGenerateRequest = toAiGenerateRequest;
 
 export const aiGenerateService = {
@@ -300,5 +312,6 @@ export const aiGenerateService = {
   writeScene,
   createImagePrompt,
   createCoverPrompt,
+  translateText,
   makeAiGenerateRequest,
 };

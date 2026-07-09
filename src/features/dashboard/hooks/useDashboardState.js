@@ -5,6 +5,17 @@ import {
   aiReviewList
 } from '../../../shared/data';
 import { dashboardService } from '../services/dashboardService';
+import { getWeeklyRanking, getWeeklyNewReleases, triggerWeeklyRankingAggregate } from '../../../api/bookApi';
+
+const mapRankItem = (item) => ({
+  rank: item.rankNum,
+  id: item.bookId,
+  title: item.title,
+  author: item.authorNickname,
+  cover: item.coverImageUrl,
+  viewCount: item.viewCount,
+  likeCount: item.likeCount,
+});
 
 /**
  * Custom Hook: useDashboardState
@@ -96,6 +107,37 @@ export const useDashboardState = ({
     dashboardService.getFriendBooks().then(setFriendBooks);
   }, []);
 
+  // 이번 주 인기 랭킹 TOP5 / 이번 주 신작 TOP5
+  const [weeklyRanking, setWeeklyRanking] = useState([]);
+  const [weeklyNewReleases, setWeeklyNewReleases] = useState([]);
+
+  const refetchWeeklyRankings = () => {
+    getWeeklyRanking()
+      .then(res => setWeeklyRanking((res.data?.data?.items || []).map(mapRankItem)))
+      .catch(() => setWeeklyRanking([]));
+    getWeeklyNewReleases()
+      .then(res => setWeeklyNewReleases((res.data?.data?.items || []).map(mapRankItem)))
+      .catch(() => setWeeklyNewReleases([]));
+  };
+
+  useEffect(() => {
+    refetchWeeklyRankings();
+  }, []);
+
+  // [테스트용] 크론과 동일한 주간 랭킹 집계를 즉시 실행하고 목록을 다시 불러옴
+  const [isAggregating, setIsAggregating] = useState(false);
+  const handleTriggerWeeklyRankingAggregate = async () => {
+    setIsAggregating(true);
+    try {
+      await triggerWeeklyRankingAggregate();
+      refetchWeeklyRankings();
+    } catch (err) {
+      console.error("주간 랭킹 수동 집계 실패", err);
+    } finally {
+      setIsAggregating(false);
+    }
+  };
+
   const filteredCabinetBooks = useMemo(
     () => dashboardService.filterCabinetBooks(myCabinetBooks, libraryGenreFilter, librarySearchQuery),
     [myCabinetBooks, libraryGenreFilter, librarySearchQuery]
@@ -126,6 +168,11 @@ export const useDashboardState = ({
     myCabinetBooks,
     friendBooks,
     filteredCabinetBooks,
+
+    weeklyRanking,
+    weeklyNewReleases,
+    isAggregating,
+    handleTriggerWeeklyRankingAggregate,
 
     usage,
     isPremium,

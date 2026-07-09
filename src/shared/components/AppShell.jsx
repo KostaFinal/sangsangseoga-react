@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { getBooks, likeBook, unlikeBook, addBookmark, removeBookmark } from '../../api/bookApi';
+import { useRequireAuth } from '../hooks/useRequireAuth';
 
 const bookTypeToGenre = {
   "NOVEL": "소설", "POEM": "시", "ESSAY": "에세이", "FAIRY_TALE": "동화",
@@ -9,6 +10,7 @@ const bookTypeToGenre = {
 
 export function AppShell() {
   const [books, setBooks] = useState([]);
+  const requireAuth = useRequireAuth();
 
   useEffect(() => {
     (async () => {
@@ -32,6 +34,7 @@ export function AppShell() {
 
   const handleToggleLike = async (e, bookId) => {
     e.stopPropagation();
+    if (!requireAuth()) return;
     const book = books.find(b => b.id === bookId);
     try {
       if (book?.isLikedByMe) {
@@ -54,6 +57,7 @@ export function AppShell() {
 
   const handleToggleBookmark = async (e, bookId) => {
     e.stopPropagation();
+    if (!requireAuth()) return;
     const book = books.find(b => b.id === bookId);
     try {
       if (book?.isBookmarked) {

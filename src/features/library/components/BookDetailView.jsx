@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const bookTypeToGenre = {
   "NOVEL": "소설", "POEM": "시", "ESSAY": "에세이",
@@ -39,6 +39,7 @@ export default function BookDetailView({
   mode = "viewer",
   onUpdateDescription,
   onUpdateStatus,
+  onViewCountSynced,
   currentUser,
 }) {
   const [commentText, setCommentText] = useState("");
@@ -138,11 +139,19 @@ export default function BookDetailView({
   }, [book.id]);
 
   const [tags, setTags] = useState(book.tags || []);
+  // book.id당 한 번만 호출되도록 가드 - getBook은 서버에서 조회수를 올리는 부수효과가 있어서
+  // (StrictMode의 개발 모드 이중 마운트로) 중복 호출되면 조회수가 실제로 2씩 올라간다
+  const viewedBookIdRef = useRef(null);
   useEffect(() => {
     const bookId = book.bookId || book.id;
-    if (!bookId) return;
+    if (!bookId || viewedBookIdRef.current === bookId) return;
+    viewedBookIdRef.current = bookId;
     getBook(bookId)
-      .then(res => setTags(res.data?.data?.tags || []))
+      .then(res => {
+        const data = res.data?.data;
+        setTags(data?.tags || []);
+        if (data?.viewCount != null) onViewCountSynced?.(bookId, data.viewCount);
+      })
       .catch(() => setTags([]));
   }, [book.id]);
 

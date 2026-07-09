@@ -6,7 +6,8 @@ import BookDetailView from "./BookDetailView";
 import { getBooks, getBook, likeBook, unlikeBook } from "../../../api/bookApi";
 import { addComment, addReply } from "../../../api/commentApi";
 import { useAuth } from "../../../shared/context/AuthContext";
-import { addWishlist, updateMyWrittenBookDescription, updateMyWrittenBookStatus } from "../../../api/myLibraryApi";
+import { useRequireAuth } from "../../../shared/hooks/useRequireAuth";
+import { addWishlist, deleteWishlist, updateMyWrittenBookDescription, updateMyWrittenBookStatus } from "../../../api/myLibraryApi";
 
 const bookTypeOptions = [
   { label: "전체", value: null },
@@ -57,6 +58,7 @@ export default function FriendsLibraryView() {
   const navigate = useNavigate();
   const { handleToggleBookmark } = useOutletContext();
   const { currentUser } = useAuth();
+  const requireAuth = useRequireAuth();
 
   const [selectedBookType, setSelectedBookType] = useState(null);
   const [sortBy, setSortBy] = useState("latest");
@@ -173,6 +175,7 @@ export default function FriendsLibraryView() {
 
   const handleToggleLike = async (e, bookId) => {
     e.stopPropagation();
+    if (!requireAuth()) return;
     if (pendingLikesRef.current.has(String(bookId))) return; // 처리 중이면 무시
     const book = books.find(b => String(b.id) === String(bookId)) || fetchedBook;
     if (!book) return;
@@ -214,6 +217,7 @@ export default function FriendsLibraryView() {
   };
 
   const handleDetailAddComment = async (bookId, authorName, textContent) => {
+    if (!requireAuth()) return;
     const res = await addComment(bookId, textContent);
     patchBookById(bookId, (prev) => ({
       ...prev,
@@ -223,6 +227,7 @@ export default function FriendsLibraryView() {
   };
 
   const handleAddReply = async (bookId, parentCommentId, authorName, textContent) => {
+    if (!requireAuth()) return;
     try {
       const res = await addReply(parentCommentId, textContent);
       return res;
@@ -247,6 +252,7 @@ export default function FriendsLibraryView() {
           onBack={() => navigate("/friends")}
           onUpdateDescription={handleUpdateDescription}
           onUpdateStatus={handleUpdateStatus}
+          onViewCountSynced={(id, viewCount) => patchBookById(id, prev => ({ ...prev, viewCount }))}
 
           onStartReading={(book) => navigate(`/books/${book.id}/read`)}
           // onToggleLike={e => handleToggleLike(e, viewingBook.id)}

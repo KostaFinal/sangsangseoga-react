@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, User, Key, ArrowRight, CornerDownRight } from 'lucide-react';
+import { ShieldAlert, CornerDownRight } from 'lucide-react';
 import { useLoginState } from '../hooks/useLoginState';
 
 export const LoginView = ({
@@ -34,88 +34,87 @@ export const LoginView = ({
       <div className="absolute top-0 left-0 w-full h-full bg-[linear-gradient(to_right,#e5e5e5_1px,transparent_1px),linear-gradient(to_bottom,#e5e5e5_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30"></div>
 
       {isAdminMode ? (
-        <div id="admin-login-card" className="max-w-md w-full space-y-8 bg-white border border-[#E6E2FC]/80 rounded-3xl p-8 sm:p-10 z-10 relative shadow-2xl shadow-[#6B54E7]/5">
+        <div id="admin-login-card" className="max-w-md w-full space-y-8 bg-white rounded-3xl p-8 sm:p-10 z-10 relative border border-neutral-200/80 shadow-2xl shadow-neutral-950/[0.03]">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-[#110F24] text-white rounded-2xl mb-4 shadow-md font-bold text-base">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-black text-white font-literata text-2xl mb-4 shadow-md font-extrabold">
               관리
             </div>
-            <h2 className="text-2xl font-bold text-[#110F24] tracking-tight flex items-center justify-center gap-2">
-              <ShieldAlert className="w-5 h-5 text-[#6B54E7]" /> 상상서가 관리자 로그인
+            <h2 className="text-3xl font-literata font-bold text-neutral-900 tracking-tight">
+              상상서가 관리자
             </h2>
-            <p className="mt-2 text-xs text-[#7C769D] font-medium tracking-wide">
-              상상서가 서비스 관리 포털
-            </p>
-          </div>
-
-          <div className="bg-[#FAF9FF] border border-[#E6E2FC]/60 text-[#2F2D59] p-4 rounded-2xl text-xs leading-relaxed text-left space-y-1">
-            <p className="font-bold text-[#6B54E7] flex items-center gap-1">
-              <span>⚠️ 관리자 계정 안내</span>
-            </p>
-            <p className="text-[#7C769D] text-[11px] font-medium leading-normal">
-              사전에 승인된 관리 계정만 로그인이 가능합니다. 일반 사용자는 이전 화면으로 돌아가 주세요.
+            <p className="mt-2 text-sm text-neutral-500 font-sans leading-relaxed">
+              사전에 승인된 관리 계정만 로그인할 수 있습니다.
             </p>
           </div>
 
           {error && (
-            <div className="bg-rose-50 text-rose-700 border border-rose-200 p-3.5 rounded-xl text-xs leading-relaxed text-left font-semibold">
+            <div className="bg-neutral-50 text-neutral-800 border border-neutral-200 p-3 rounded-xl text-xs leading-relaxed text-left font-sans">
               {error}
             </div>
           )}
 
-          <form className="space-y-4 text-left" onSubmit={handleAdminSubmit}>
-            <div className="space-y-4">
+          <form className="mt-6 space-y-4" onSubmit={handleAdminSubmit}>
+            <div className="space-y-4 rounded-md text-left">
               <div>
-                <label className="block text-xs font-bold text-[#7C769D] mb-1.5 uppercase tracking-wider font-sans">
+                <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-sans">
                   관리자 이메일 주소
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]">
-                    <User className="w-4 h-4" />
+                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 text-lg">
+                    mail
                   </span>
                   <input
                     type="email"
                     required
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-[#FAF9FF] hover:bg-neutral-150 focus:bg-white text-xs text-[#110F24] rounded-2xl border border-[#E6E2FC] focus:border-[#6B54E7] focus:outline-none transition-all"
+                    className="w-full pl-11 pr-4 py-3 bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white text-sm text-neutral-900 placeholder-neutral-400 rounded-2xl border border-neutral-200 focus:border-black focus:outline-none transition-all duration-200"
                     placeholder="admin@sangsang.com"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#7C769D] mb-1.5 uppercase tracking-wider font-sans">
+                <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-sans">
                   비밀번호
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]">
-                    <Key className="w-4 h-4" />
+                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 text-lg">
+                    lock
                   </span>
                   <input
                     type="password"
                     required
                     value={adminPassword}
                     onChange={(e) => setAdminPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-[#FAF9FF] hover:bg-neutral-150 focus:bg-white text-xs text-[#110F24] rounded-2xl border border-[#E6E2FC] focus:border-[#6B54E7] focus:outline-none transition-all"
-                    placeholder="••••••••"
+                    className="w-full pl-11 pr-4 py-3 bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white text-sm text-neutral-900 placeholder-neutral-400 rounded-2xl border border-neutral-200 focus:border-black focus:outline-none transition-all duration-200"
+                    placeholder="비밀번호 입력"
                   />
                 </div>
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="w-full py-3.5 bg-[#110F24] hover:bg-black text-white font-bold text-xs tracking-wider uppercase rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
-            >
-              로그인하기 <ArrowRight className="w-4 h-4 text-white" />
-            </button>
+            <div className="pt-2">
+              <button
+                id="admin-login-submit-btn"
+                type="submit"
+                className="group relative w-full flex justify-center py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-900 rounded-2xl text-sm shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
+              >
+                <span className="absolute inset-y-0 left-0 flex items-center pl-4">
+                  <span className="material-symbols-outlined text-white text-lg group-hover:translate-x-0.5 transition-transform">
+                    arrow_forward
+                  </span>
+                </span>
+                로그인하기
+              </button>
+            </div>
           </form>
 
           <div className="text-center pt-2">
             <button
               type="button"
               onClick={exitAdminMode}
-              className="font-bold text-xs text-[#7C769D] hover:text-[#6B54E7] hover:underline tracking-tight flex items-center justify-center gap-1.5 mx-auto transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-black transition-colors mx-auto"
             >
               <CornerDownRight className="w-3.5 h-3.5" /> 일반 작가 로그인으로 돌아가기
             </button>

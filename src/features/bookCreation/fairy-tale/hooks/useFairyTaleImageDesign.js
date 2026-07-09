@@ -330,6 +330,16 @@ export function useFairyTaleImageDesign() {
 
     if (cancelledRef.current) return;
 
+    // 순차 생성 도중 하나라도 실패(또는 프롬프트 없음으로 스킵)하면 collectedImages에 빠져 있다.
+    // 이 경우 "완료" 처리하고 조용히 placeholder 이미지로 저장/이동하지 않고, 여기서 멈춰서
+    // 사용자가 generationError 안내를 보고 "전체 이미지 생성"을 다시 눌러 재시도할 수 있게 한다.
+    const hasFailedImage = Object.keys(collectedImages).length < targets.length;
+    if (hasFailedImage) {
+      setCurrentTeacherMessage("일부 이미지 생성에 실패했어요. 아래 안내를 확인하고 다시 시도해 주세요.");
+      setIsGenerating(false);
+      return;
+    }
+
     setCurrentGenerationLabel("완료");
     setCurrentTeacherMessage("삽화 생성이 완료되었어요. 이제 에디터로 이동할게요.");
 

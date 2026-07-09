@@ -132,6 +132,15 @@ export const getPageBody = (data) => {
   return taskResult?.bodyText || taskResult?.revisedBodyText || "";
 };
 
+// bodyTextEn/revisedBodyTextEn — bodyText/revisedBodyText의 영어 번역. getPageBody와 동일한 패턴.
+export const getPageBodyEn = (data) => {
+  const taskResult = getTaskResult(data);
+  return taskResult?.bodyTextEn || taskResult?.revisedBodyTextEn || "";
+};
+
+// TRANSLATE_TEXT 응답에서 번역된 영어 문장을 꺼낸다(직접 입력 답변 번역용).
+export const getTranslatedText = (data) => getTaskResult(data)?.textEn || "";
+
 export const getNextQuestion = (data) => getTaskResult(data)?.nextQuestion || "";
 
 export const getEditSummary = (data) => getTaskResult(data)?.editSummary || "";

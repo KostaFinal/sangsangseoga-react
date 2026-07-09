@@ -32,6 +32,13 @@ instance.interceptors.response.use(
   async (error) => {
     const { config, response } = error;
 
+    // axios의 기본 error.message("Request failed with status code 400")는
+    // 백엔드가 내려주는 실제 에러 메시지를 가리고 화면에 노출되어 버리므로,
+    // 응답 바디의 message가 있으면 그걸로 덮어써서 호출부가 err.message만 봐도 되게 한다.
+    if (response?.data?.message) {
+      error.message = response.data.message;
+    }
+
     if (!response || response.status !== 401 || config._retry || config.url === "/api/auth/token-refresh") {
       return Promise.reject(error);
     }

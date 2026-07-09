@@ -5,6 +5,7 @@ import ReportModal from "@/src/shared/components/ReportModal";
 import { submitReport, getReportedIds } from "@/src/shared/utils/reports";
 import { getAuthors, followAuthor, unfollowAuthor } from "../../../api/authorApi";
 import { useAuth } from "../../../shared/context/AuthContext";
+import { useRequireAuth } from "../../../shared/hooks/useRequireAuth";
 
 // 장르 뱃지 스타일 - 통일감 있는 팔레트
 const genreBadge = (genre) => {
@@ -25,7 +26,8 @@ export default function AuthorProfileView() {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode") === "owner" ? "owner" : "viewer";
   const { books: allBooks } = useOutletContext();
-  const { currentUser } = useAuth();
+  const { currentUser, isAuthenticated } = useAuth();
+  const requireAuth = useRequireAuth();
   const onSelectBook = (book) => navigate(`/friends/${book.id}`);
   const onBackToDirectory = () => navigate("/authors");
 
@@ -69,7 +71,7 @@ export default function AuthorProfileView() {
   }, [authorName]);
 
   useEffect(() => {
-    if (!effectiveAuthorId) return;
+    if (!effectiveAuthorId || !isAuthenticated) return;
     let cancelled = false;
     getReportedIds("author")
       .then(ids => {
@@ -80,7 +82,7 @@ export default function AuthorProfileView() {
   }, [effectiveAuthorId]);
 
   const handleSubmitReport = async ({ reason, detail }) => {
-    if (!effectiveAuthorId) return;
+    if (!effectiveAuthorId || !requireAuth()) return;
     try {
       await submitReport({ targetType: "author", targetId: effectiveAuthorId, reason, detail });
       setHasReported(true);
@@ -92,7 +94,7 @@ export default function AuthorProfileView() {
   };
 
   const handleToggleFollow = async () => {
-    if (!effectiveAuthorId || followBusy) return;
+    if (!effectiveAuthorId || followBusy || !requireAuth()) return;
     const wasFollowing = isFollowing;
     setFollowBusy(true);
     setIsFollowing(!wasFollowing);

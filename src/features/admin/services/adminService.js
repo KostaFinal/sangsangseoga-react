@@ -1,88 +1,41 @@
 /**
  * Admin Service Layer (어드민 API 연동 서비스)
- * 
+ *
  * TODO: API 연동 필요 (실제 백엔드 API 엔드포인트가 연동되어야 하는 영역입니다.)
  * 현재는 협업 및 페이지 병합을 고려하여 Mock 데이터와 인터페이스가 먼저 설계되어 있으며,
  * 실 배포 시 axios 또는 fetch를 이용한 비동기 통신 코드로 간편하게 대체할 수 있도록 설계되었습니다.
+ *
+ * 신고 관리(getReports/resolveReport), 회원 관리(getUsers/updateUserStatus)는
+ * 실제 백엔드 API로 연동됨. AI 사용량(토큰) 쪽만 아직 mock.
  */
+import api from '../../../api/axios';
 
-// 임시 로컬 메모리 저장소 (Mock Database) - 프로덕션 연동 전까지 데이터 영속성 모방
+// 회원 상태값: 프론트(소문자, MemberTab 필터 기준) <-> 백엔드(대문자 enum) 변환
+const MEMBER_STATUS_TO_UI = { ACTIVE: 'active', PENDING: 'pending', SUSPENDED: 'suspended', DELETED: 'deleted' };
+const MEMBER_STATUS_TO_BACKEND = { active: 'ACTIVE', pending: 'PENDING', suspended: 'SUSPENDED', deleted: 'DELETED' };
+
+const SUBSCRIPTION_PLAN_LABEL = { FREE: '일반', PREMIUM_MONTHLY: '프리미엄(월간)', PREMIUM_YEARLY: '프리미엄(연간)' };
+
+// 백엔드 AdminMemberListItemDto -> 화면(MemberTab)이 기대하는 필드 형태로 변환
+const mapMember = (m) => ({
+  id: m.memberId,
+  nickname: m.nickname,
+  email: m.email,
+  joinDate: m.createdAt ? new Date(m.createdAt).toLocaleDateString('ko-KR') : '-',
+  status: MEMBER_STATUS_TO_UI[m.status] || 'active',
+  role: m.role,
+  plan: m.subscriptionPlan && m.subscriptionPlan !== 'FREE' ? 'PREMIUM' : 'FREE',
+  planLabel: SUBSCRIPTION_PLAN_LABEL[m.subscriptionPlan] || '일반',
+  withdrawnAt: m.withdrawnAt ? new Date(m.withdrawnAt).toLocaleDateString('ko-KR') : null,
+});
+
+// 임시 로컬 메모리 저장소 (Mock Database) - AI 사용량(토큰) 쪽만 아직 여기 의존
 const MOCK_STORAGE_KEYS = {
-  USERS: 'sangsang_admin_users',
-  BOOKS: 'sangsang_admin_reported_books',
-  COMMENTS: 'sangsang_admin_reported_comments',
-  AUTHORS: 'sangsang_admin_reported_authors',
   TOKEN_USAGES: 'sangsang_admin_token_usages',
 };
 
 // 초기 더미/테스트 데이터 로드 헬퍼 (로컬스토리지에 저장하여 실감나는 모의 작업 가능)
 const initializeMockData = () => {
-  if (!localStorage.getItem(MOCK_STORAGE_KEYS.USERS)) {
-    localStorage.setItem(MOCK_STORAGE_KEYS.USERS, JSON.stringify([
-      {
-        id: 'user_001',
-        nickname: '독서하는고양이',
-        email: 'reading_cat@gmail.com',
-        joinDate: '2024.01.12',
-        status: 'active',
-        bookCount: 12,
-        lastLogin: '2026.06.19 10:20',
-        avatarUrl: null,
-        plan: 'PREMIUM',
-        subscriptionStarted: '2026-02-15',
-        subscriptionEnds: '2026-07-15',
-        ageGroup: 'ADULT'
-      },
-      {
-        id: 'user_002',
-        nickname: '별밤지기',
-        email: 'starry_night@naver.com',
-        joinDate: '2023.11.28',
-        status: 'suspended',
-        bookCount: 8,
-        lastLogin: '2026-06-18 17:42',
-        avatarUrl: null,
-        plan: 'FREE',
-        subscriptionStarted: '-',
-        subscriptionEnds: '-',
-        ageGroup: 'MINOR'
-      },
-      {
-        id: 'user_003',
-        nickname: '어그로마스터',
-        email: 'aggro_master@sangsang.com',
-        joinDate: '2024-05-04',
-        status: 'pending',
-        bookCount: 2,
-        lastLogin: '2026-06-11 09:12',
-        avatarUrl: null,
-        plan: 'FREE',
-        subscriptionStarted: '-',
-        subscriptionEnds: '-',
-        ageGroup: 'MINOR_U14'
-      }
-    ]));
-  }
-
-  if (!localStorage.getItem(MOCK_STORAGE_KEYS.BOOKS)) {
-    localStorage.setItem(MOCK_STORAGE_KEYS.BOOKS, JSON.stringify([
-      { id: 'b_rep_01', itemType: 'book', targetId: 'book_101', title: '잔혹한 악당의 대모험', author: '별밤지기', authorEmail: 'starry_night@naver.com', reportCount: 15, reporter: 'infant_guard@naver.com', category: '음란', reason: '어린이 추천 동화 카테고리에 성인 폭력물하고 유혈 묘사가 노출되었습니다.', date: '2026.06.18 14:20', status: 'pending' },
-      { id: 'b_rep_02', itemType: 'book', targetId: 'book_102', title: '비밀번호 해킹 완벽 가이드', author: '모조아티스트', authorEmail: 'mimic@art.com', reportCount: 8, reporter: 'security_audit@korea.com', category: '기타', reason: '해킹 방법 등 유해하고 부적절한 내용을 서술하고 있습니다.', date: '2026.06.17 09:30', status: 'pending' }
-    ]));
-  }
-
-  if (!localStorage.getItem(MOCK_STORAGE_KEYS.COMMENTS)) {
-    localStorage.setItem(MOCK_STORAGE_KEYS.COMMENTS, JSON.stringify([
-      { id: 'c_rep_01', itemType: 'comment', targetId: 'comment_201', title: '“야 이 쓰레기 소설 치워라 광고 보기도 아깝다”', author: '악플마스터', authorEmail: 'aggro_master@sangsang.com', sourceBook: '푸른 달의 소나타', reportCount: 19, reporter: 'kind_reader@gmail.com', category: '욕설', reason: '성희롱 및 무차별 욕설 등 원색적인 모욕성 발언을 수회 기재하여 신고되었습니다.', date: '2026.06.18 20:11', status: 'pending' }
-    ]));
-  }
-
-  if (!localStorage.getItem(MOCK_STORAGE_KEYS.AUTHORS)) {
-    localStorage.setItem(MOCK_STORAGE_KEYS.AUTHORS, JSON.stringify([
-      { id: 'a_rep_01', itemType: 'author', targetId: 'user_002', title: '별밤지기 (계정 위배)', author: '별밤지기', authorEmail: 'starry_night@naver.com', reportCount: 24, reporter: 'original_writer@naver.com', category: '기타', reason: '타인의 동의 없는 이미지를 작가 메인 프로필 및 소설 삽화로 무단 도용하였습니다.', date: '2026.06.19 01:45', status: 'pending' }
-    ]));
-  }
-
   if (!localStorage.getItem(MOCK_STORAGE_KEYS.TOKEN_USAGES)) {
     localStorage.setItem(MOCK_STORAGE_KEYS.TOKEN_USAGES, JSON.stringify([
       { userId: 'user_001', nickname: '독서하는고양이', plan: 'PREMIUM', textUsage: 4850, imgUsage: 1248, totalCredits: 6098, status: 'NORMAL' },
@@ -95,67 +48,55 @@ initializeMockData();
 
 export const adminService = {
   /**
-   * 전체 작가 목록 조회
-   * TODO: API 연동 필요 (GET /api/admin/users)
+   * 전체 작가 목록 조회 (상태 필터/검색어/페이지네이션)
+   * 실 API: GET /api/admin/members
    */
-  getUsers: async () => {
-    const data = localStorage.getItem(MOCK_STORAGE_KEYS.USERS);
-    return data ? JSON.parse(data) : [];
+  getUsers: async ({ status, keyword, page = 0, size = 20 } = {}) => {
+    const res = await api.get('/api/admin/members', {
+      params: {
+        status: status ? (MEMBER_STATUS_TO_BACKEND[status] || status) : undefined,
+        keyword: keyword || undefined,
+        page,
+        size,
+      },
+    });
+    const data = res.data?.data || {};
+    return {
+      items: (data.items || []).map(mapMember),
+      totalCount: data.totalCount || 0,
+      page: data.page ?? page,
+      hasNext: !!data.hasNext,
+    };
   },
 
   /**
    * 작가 계정 상태 변경 (정상 복원, 정지 처리, 탈퇴 등)
-   * TODO: API 연동 필요 (PUT /api/admin/users/:userId/status)
+   * 실 API: PATCH /api/admin/members/:memberId/status
    */
   updateUserStatus: async (userId, status, reason = '') => {
-    const users = JSON.parse(localStorage.getItem(MOCK_STORAGE_KEYS.USERS) || '[]');
-    const updatedUsers = users.map(user => {
-      if (user.id === userId) {
-        return { ...user, status };
-      }
-      return user;
+    const res = await api.patch(`/api/admin/members/${userId}/status`, {
+      status: MEMBER_STATUS_TO_BACKEND[status] || status,
+      reason,
     });
-    localStorage.setItem(MOCK_STORAGE_KEYS.USERS, JSON.stringify(updatedUsers));
-    return true;
+    return res.data?.data;
   },
 
   /**
-   * 통합 신고 항목 리스트 가져오기
-   * TODO: API 연동 필요 (GET /api/admin/reports?type=books|comments|authors)
+   * 미처리 신고 목록 조회 (PENDING 상태, 도서/댓글/작가 통합)
+   * 실 API: GET /api/admin/reports
    */
-  getReports: async (type) => {
-    let key = '';
-    if (type === 'books') key = MOCK_STORAGE_KEYS.BOOKS;
-    else if (type === 'comments') key = MOCK_STORAGE_KEYS.COMMENTS;
-    else if (type === 'authors') key = MOCK_STORAGE_KEYS.AUTHORS;
-
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : [];
+  getReports: async (page = 0, size = 100) => {
+    const res = await api.get('/api/admin/reports', { params: { page, size } });
+    return res.data?.data?.items || [];
   },
 
   /**
-   * 신고 처리 완료 및 제한 조치 이행
-   * TODO: API 연동 필요 (POST /api/admin/reports/:reportId/resolve)
+   * 신고 처리 (actionType: BOOK_HIDE | COMMENT_DELETE | AUTHOR_SUSPEND | REPORT_REJECT)
+   * 실 API: PATCH /api/admin/reports/:reportId
    */
-  resolveReport: async (type, reportId, actionType, resolvedReason = '') => {
-    let key = '';
-    if (type === 'books') key = MOCK_STORAGE_KEYS.BOOKS;
-    else if (type === 'comments') key = MOCK_STORAGE_KEYS.COMMENTS;
-    else if (type === 'authors') key = MOCK_STORAGE_KEYS.AUTHORS;
-
-    const list = JSON.parse(localStorage.getItem(key) || '[]');
-    const updatedList = list.map(item => {
-      if (item.id === reportId) {
-        return { 
-          ...item, 
-          status: actionType === 'execute' ? 'hidden' : 'dismissed', 
-          resolvedReason 
-        };
-      }
-      return item;
-    });
-    localStorage.setItem(key, JSON.stringify(updatedList));
-    return true;
+  resolveReport: async (reportId, actionType, actionReason = '') => {
+    const res = await api.patch(`/api/admin/reports/${reportId}`, { actionType, actionReason });
+    return res.data?.data;
   },
 
   /**
