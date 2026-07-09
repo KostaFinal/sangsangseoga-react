@@ -3,8 +3,10 @@ import ModeSelectSection from '../../components/ModeSelectSection.jsx';
 import EssayFlowStepper from './EssayFlowStepper.jsx';
 import EssayBasicSettingSection, { isEssayBasicSettingReady } from './EssayBasicSettingSection.jsx';
 import { essayModeOptions } from '../data/essayModeOptions.js';
+import { useRequireAuth } from '../../../../shared/hooks/useRequireAuth.js';
 
 export default function EssaySetupStep({ settings, setSettings, goStep, selectEssayMode }) {
+  const requireAuth = useRequireAuth();
   const canGoWork = settings.mode && isEssayBasicSettingReady(settings);
 
   const selectMode = (mode) => {
@@ -32,7 +34,7 @@ export default function EssaySetupStep({ settings, setSettings, goStep, selectEs
           type="button"
           className="essay-primary"
           disabled={!canGoWork}
-          onClick={() => goStep('step2')}
+          onClick={() => { if (!requireAuth()) return; goStep('step2'); }}
         >
           작업실로 이동
         </button>

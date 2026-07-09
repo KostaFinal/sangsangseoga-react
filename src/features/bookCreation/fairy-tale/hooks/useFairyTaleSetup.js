@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
+import { useRequireAuth } from "../../../../shared/hooks/useRequireAuth.js";
 import {
   interactionModes,
   writerLevels,
@@ -9,6 +10,7 @@ import {
 
 export function useFairyTaleSetup() {
   const navigate = useNavigate();
+  const requireAuth = useRequireAuth();
 
   const [writerLevel, setWriterLevel] = useState(null);
   const [interactionMode, setInteractionMode] = useState(null);
@@ -17,6 +19,7 @@ export function useFairyTaleSetup() {
 
   const handleStart = () => {
     if (!isReady) return;
+    if (!requireAuth()) return;
 
     const setupData = {
       bookType: "FAIRY_TALE",

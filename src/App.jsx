@@ -240,6 +240,17 @@ function AppInner() {
         <Route path="authors/:authorName" element={<AuthorProfileView />} />
         <Route path="subscription" element={<SubscriptionRoute />} />
 
+        {/* 각 장르의 첫 설정 화면은 비로그인도 볼 수 있음 — 다음 단계로 넘어가는(실제 생성 시작)
+            시점에 각 장르의 setup 훅에서 requireAuth로 로그인 유도 */}
+        <Route path="create/poem" element={<BookCreationRouter key="poem" initialGenre="poem" />} />
+        <Route path="create/essay" element={<BookCreationRouter key="essay" initialGenre="essay" />} />
+        <Route path="create/nonfiction" element={<BookCreationRouter key="nonfiction" initialGenre="nonfiction" />} />
+        <Route path="create/fairy-tale/*" element={<BookCreationRouter key="fairy-tale" initialGenre="fairy-tale" />} />
+        <Route path="create/novel/*" element={<BookCreationRouter key="novel" initialGenre="novel" />} />
+        {LEGACY_BOOK_CREATION_REDIRECTS.map(({ path, to }) => (
+          <Route key={path} path={path} element={<Navigate to={to} replace />} />
+        ))}
+
         <Route element={<ProtectedRoute />}>
           <Route path="books/:bookId/read" element={<BookReaderPage />} />
 
@@ -258,15 +269,6 @@ function AppInner() {
 
           <Route path="subscription/payment" element={<PaymentRoute />} />
           <Route path="profile/edit" element={<ProfileEditRoute />} />
-
-          <Route path="create/poem" element={<BookCreationRouter key="poem" initialGenre="poem" />} />
-          <Route path="create/essay" element={<BookCreationRouter key="essay" initialGenre="essay" />} />
-          <Route path="create/nonfiction" element={<BookCreationRouter key="nonfiction" initialGenre="nonfiction" />} />
-          <Route path="create/fairy-tale/*" element={<BookCreationRouter key="fairy-tale" initialGenre="fairy-tale" />} />
-          <Route path="create/novel/*" element={<BookCreationRouter key="novel" initialGenre="novel" />} />
-          {LEGACY_BOOK_CREATION_REDIRECTS.map(({ path, to }) => (
-            <Route key={path} path={path} element={<Navigate to={to} replace />} />
-          ))}
 
           <Route element={<AdminRoute forbidden={<ForbiddenPanel />} />}>
             <Route path="admin" element={<AdminView key="member" initialTab="member" />} />
