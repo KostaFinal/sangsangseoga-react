@@ -22,6 +22,7 @@ import {
   getEditSummary,
   getNextQuestion,
   getPageBody,
+  getPageBodyEn,
   isValidPageBody,
 } from "../utils/aiSettingOptions";
 
@@ -201,11 +202,13 @@ export function useFairyTaleChatWriting() {
 
     if (response.ok && isValidPageBody(response.data)) {
       const body = getPageBody(response.data);
+      const bodyEn = getPageBodyEn(response.data);
       const nextQuestion = getNextQuestion(response.data);
       const editSummary = getEditSummary(response.data);
 
       updateCurrentPage({
         body,
+        bodyEn: bodyEn || currentPage.bodyEn,
         status: "WRITING",
         nextQuestion: nextQuestion || currentPage.nextQuestion,
         teacherNote: editSummary || currentPage.teacherNote,

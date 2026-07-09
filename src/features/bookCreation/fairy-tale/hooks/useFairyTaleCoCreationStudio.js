@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { createPagePlan } from "../../services/aiGenerateService";
+import { createPagePlan, translateText } from "../../services/aiGenerateService";
+import { toBookDraft } from "../../utils/bookDraftMapper";
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import { fallbackStudioSetup } from "../data/fairyTaleCoCreationStudioOptions";
-import { getPagePlan, isValidPagePlan, normalizeChoiceOptions } from "../utils/aiSettingOptions";
+import {
+  getPagePlan,
+  getTranslatedText,
+  isValidPagePlan,
+  normalizeChoiceOptions,
+} from "../utils/aiSettingOptions";
 
 const FALLBACK_QUESTION = "다음 장면에서는 어떤 일이 일어날까요?";
 const UNREVEALED_SCENE_TEXT = "아직 공개되지 않은 장면";
@@ -18,7 +24,36 @@ const PHASE_META = [
 const range = (start, end) =>
   Array.from({ length: Math.max(0, end - start + 1) }, (_, index) => start + index);
 
-const makePhaseSections = (pageCount) => {
+// AI가 pagePlan을 이미 내려줬다면(모든 페이지에 phase가 채워져 있다면) 그 실제 phase를 기준으로
+// 연속된 구간을 묶는다 — pageCount만 보고 30/60/80% 지점에서 임의로 나누면 AI가 실제로 설계한
+// 기승전결 구조와 화면 표시가 어긋난다(예: 16페이지가 4/4/4/4가 아니라 5/5/3/3으로 보이는 문제).
+const makePhaseSections = (pageCount, pagePlans = []) => {
+  const sortedPlans = pagePlans
+    .slice()
+    .sort((a, b) => Number(a.pageNo) - Number(b.pageNo));
+  const hasPhaseData =
+    sortedPlans.length === pageCount && sortedPlans.every((plan) => plan.phase);
+
+  if (hasPhaseData) {
+    const sections = [];
+    let current = null;
+
+    sortedPlans.forEach((plan) => {
+      const pageNo = Number(plan.pageNo);
+      const phase = plan.phase;
+
+      if (!current || current.phase !== phase) {
+        const meta = PHASE_META.find((item) => item.phase === phase) || PHASE_META[0];
+        current = { ...meta, phase, pages: [] };
+        sections.push(current);
+      }
+      current.pages.push(pageNo);
+    });
+
+    return sections;
+  }
+
+  // AI 응답이 아직 오지 않은 초기 상태(placeholder)에서만 대략적인 비율로 임시 표시한다.
   const firstEnd = Math.max(1, Math.round(pageCount * 0.3));
   const secondEnd = Math.max(firstEnd + 1, Math.round(pageCount * 0.6));
   const thirdEnd = Math.max(secondEnd + 1, Math.round(pageCount * 0.8));
@@ -48,6 +83,7 @@ const makeInitialPagePlans = (setupData, pageCount) =>
       phase: "",
       title: pageNo === 1 ? seed : `${pageNo}p 장면`,
       summary: pageNo === 1 ? seed : "",
+      summaryEn: "",
       mainEmotion: "",
       imagePromptBase: "",
       question: "",
@@ -64,6 +100,7 @@ const toLocalPagePlan = (aiPage, existingPlan) => ({
   phase: aiPage.phase || existingPlan?.phase || "",
   title: aiPage.sceneTitle || existingPlan?.title || "",
   summary: aiPage.sceneSummary || existingPlan?.summary || "",
+  summaryEn: aiPage.sceneSummaryEn || existingPlan?.summaryEn || "",
   mainEmotion: aiPage.mainEmotion || existingPlan?.mainEmotion || "",
   imagePromptBase: aiPage.imagePromptBase || existingPlan?.imagePromptBase || "",
   question: aiPage.question || "",
@@ -78,6 +115,7 @@ const toAiPageShape = (plan) => ({
   phase: plan.phase,
   sceneTitle: plan.title,
   sceneSummary: plan.summary,
+  sceneSummaryEn: plan.summaryEn,
   mainEmotion: plan.mainEmotion,
   imagePromptBase: plan.imagePromptBase,
   question: plan.question,
@@ -116,6 +154,7 @@ export function useFairyTaleCoCreationStudio() {
   // 최초 전체 pagePlan 생성(마운트 시 1회)과, 페이지별 "다시 추천"의 로딩 상태를 분리해서 관리한다.
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
   const [isRecommendingAgain, setIsRecommendingAgain] = useState(false);
+  const [isTranslatingAnswer, setIsTranslatingAnswer] = useState(false);
   const [planFallbackNotice, setPlanFallbackNotice] = useState(false);
   const [pageFallbackNotice, setPageFallbackNotice] = useState({});
   const [pageRecommendationVersion, setPageRecommendationVersion] = useState({});
@@ -142,13 +181,13 @@ export function useFairyTaleCoCreationStudio() {
 
   const selectedChoice = choices.find((choice) => choice.id === selectedChoiceId);
   const selectedAnswer = customAnswer.trim() || selectedChoice?.title || "";
-  const canCreateNextScene = Boolean(selectedAnswer) && !isLoadingChoiceStep;
+  const canCreateNextScene = Boolean(selectedAnswer) && !isLoadingChoiceStep && !isTranslatingAnswer;
 
   // AI가 pagePlan 전체(12페이지)를 미리 받아둬도, 화면에는 사용자가 아직 진행하지 않은
   // 미래 페이지의 제목/내용을 보여주지 않는다 — currentPage까지 도달한 페이지만 실제 제목을 노출한다.
   const outlineData = useMemo(
     () =>
-      makePhaseSections(pageCount).map((section) => ({
+      makePhaseSections(pageCount, pagePlans).map((section) => ({
         ...section,
         items: section.pages.map((pageNo) => {
           const isRevealed = pageNo <= currentPage;
@@ -267,6 +306,9 @@ export function useFairyTaleCoCreationStudio() {
           prev.map((plan) => (plan.pageNo === pageNo ? toLocalPagePlan(updatedPage, plan) : plan))
         );
         setPageFallbackNotice((prev) => ({ ...prev, [pageNo]: false }));
+        // 다시 추천으로 실제 AI 옵션을 받았다는 건 AI가 다시 정상 응답 중이라는 뜻이므로,
+        // 최초 생성 실패로 켜졌던 전역 폴백 안내도 함께 내려준다.
+        setPlanFallbackNotice(false);
       } else {
         console.warn("AI 다시 추천 실패. 기존 선택지를 유지합니다.", response.message);
         setPageFallbackNotice((prev) => ({ ...prev, [pageNo]: true }));
@@ -286,11 +328,35 @@ export function useFairyTaleCoCreationStudio() {
 
   // AI 재호출 없이, 이미 캐시된 pagePlan 안에서 선택/입력값만 반영하고 다음 페이지로 진행한다.
   // 직접 입력이 있으면(customAnswer) 선택한 옵션(chosenValue)보다 우선한다.
-  const handleNextScene = () => {
+  // 직접 입력은 AI가 만든 문장이 아니라 번역해 둔 영어가 없으므로, 여기서 TRANSLATE_TEXT를
+  // 한 번 호출해 content_text_en을 채운다(AI 옵션을 골랐을 때는 이미 CREATE_PAGE_PLAN이
+  // 내려준 value.summaryEn을 그대로 쓴다).
+  const handleNextScene = async () => {
     if (!selectedAnswer) return;
 
     const chosenValue = selectedChoice?.value;
     const hasCustomAnswer = Boolean(customAnswer.trim());
+
+    let summaryEn = hasCustomAnswer ? "" : chosenValue?.summaryEn || "";
+
+    if (hasCustomAnswer) {
+      setIsTranslatingAnswer(true);
+      try {
+        // 주인공 이름과 철자가 같은 일반 명사(예: "나비")를 실수로 번역하지 않도록,
+        // 이름을 번역 프롬프트에 같이 넘긴다.
+        const protagonistName = toBookDraft(setupData).setting?.protagonistName || "";
+        const translateResponse = await translateText(customAnswer.trim(), { protagonistName });
+        if (translateResponse.ok) {
+          summaryEn = getTranslatedText(translateResponse.data);
+        } else {
+          console.warn("직접 입력 영어 번역 실패. content_text_en 없이 진행합니다.", translateResponse.message);
+        }
+      } catch (error) {
+        console.warn("직접 입력 영어 번역 중 예외 발생. content_text_en 없이 진행합니다.", error);
+      } finally {
+        setIsTranslatingAnswer(false);
+      }
+    }
 
     const nextPagePlans = pagePlans.map((plan) => {
       if (plan.pageNo !== currentPage) return plan;
@@ -301,6 +367,7 @@ export function useFairyTaleCoCreationStudio() {
           ? makeFallbackTitle(selectedAnswer)
           : chosenValue?.sceneTitle || plan.title,
         summary: hasCustomAnswer ? customAnswer.trim() : chosenValue?.summary || plan.summary,
+        summaryEn: summaryEn || plan.summaryEn,
         selectedAnswer,
       };
     });
@@ -331,6 +398,7 @@ export function useFairyTaleCoCreationStudio() {
         sceneTitle: plan.title,
         summary: plan.summary || "",
         body: plan.body || plan.summary || "",
+        bodyEn: plan.summaryEn || "",
         selectedAnswer: plan.selectedAnswer || "",
         status: nextCompletedPageNumbers.includes(plan.pageNo) ? "DONE" : "WAITING",
       }));
@@ -379,6 +447,7 @@ export function useFairyTaleCoCreationStudio() {
     isLoadingChoiceStep,
     isGeneratingPlan,
     isRecommendingAgain,
+    isTranslatingAnswer,
     canCreateNextScene,
     completedPageNumbers,
     pagePlans,

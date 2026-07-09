@@ -19,6 +19,7 @@ function FairyTaleCoCreationStudioPage() {
         isLoadingChoiceStep,
         isGeneratingPlan,
         isRecommendingAgain,
+        isTranslatingAnswer,
         canCreateNextScene,
         showFallbackNotice,
         showNoOptionsNotice,
@@ -202,7 +203,11 @@ function FairyTaleCoCreationStudioPage() {
                             onClick={handleNextScene}
                             disabled={!canCreateNextScene}
                         >
-                            {isLoadingChoiceStep ? "장면 만드는 중..." : "다음 장면 만들기"}
+                            {isTranslatingAnswer
+                                ? "번역하는 중..."
+                                : isLoadingChoiceStep
+                                ? "장면 만드는 중..."
+                                : "다음 장면 만들기"}
                         </button>
                     </div>
                 </section>
