@@ -40,9 +40,13 @@ import {
   Lightbulb
 } from 'lucide-react';
 import { useDashboardState } from '../hooks/useDashboardState';
+import { useAuth } from '../../../shared/context/AuthContext';
+import { useRequireAuth } from '../../../shared/hooks/useRequireAuth';
 
 export const MainDashboard = (props) => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const requireAuth = useRequireAuth();
 
   const {
     isPremium,
@@ -114,6 +118,7 @@ export const MainDashboard = (props) => {
                 </h2>
                 <button
                   onClick={() => {
+                    if (!requireAuth()) return;
                     setGenre('fantasy');
                     setShowAtelierSection(true);
                   }}
@@ -172,6 +177,7 @@ export const MainDashboard = (props) => {
                       } else if (item.name === '교육/지식') {
                         navigate('/create/nonfiction');
                       } else {
+                        if (!requireAuth()) return;
                         setGenre(item.genreKey);
                         setPrompt(item.preset);
                         setShowAtelierSection(true);
@@ -204,6 +210,7 @@ export const MainDashboard = (props) => {
               </div>
             </div>
 
+            {isAuthenticated && (
             <div className="space-y-4 pt-4 z-10 relative">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-1 cursor-pointer group" onClick={() => navigate('/library')}>
@@ -283,6 +290,7 @@ export const MainDashboard = (props) => {
                 </div>
               </div>
             </div>
+            )}
 
             <div className="space-y-4 pt-4 z-10 relative">
               <div className="flex justify-between items-center">
@@ -339,6 +347,7 @@ export const MainDashboard = (props) => {
               </div>
             </div>
 
+            {isAuthenticated && (
             <div className="space-y-5 pt-8 pb-4 z-10 relative">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -454,6 +463,7 @@ export const MainDashboard = (props) => {
                 </button>
               </div>
             </div>
+            )}
 
           </div>
 
