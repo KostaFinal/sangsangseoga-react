@@ -78,6 +78,7 @@ function ForbiddenPanel() {
 
 function LoginRoute() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setCurrentUser, setIsAuthenticated, refreshSubscriptionStatus, refreshUsage } = useAuth();
   return (
     <LoginView
@@ -86,7 +87,8 @@ function LoginRoute() {
         setIsAuthenticated(true);
         refreshSubscriptionStatus();
         refreshUsage();
-        navigate('/');
+        const from = location.state?.from;
+        navigate(from ? `${from.pathname}${from.search || ''}` : '/', { replace: true });
       }}
       onNavigateToSignup={() => navigate('/signup')}
       onNavigateToPasswordReset={() => navigate('/password-reset')}
@@ -136,9 +138,10 @@ function SocialAuthRoute() {
 
 function SubscriptionRoute() {
   const navigate = useNavigate();
-  const { isPremium, isSubscriptionCanceled, benefitEndDate, currentPlanType, usage, refreshSubscriptionStatus, refreshUsage } = useAuth();
+  const { isAuthenticated, isPremium, isSubscriptionCanceled, benefitEndDate, currentPlanType, usage, refreshSubscriptionStatus, refreshUsage } = useAuth();
   return (
     <SubscriptionView
+      isAuthenticated={isAuthenticated}
       onSelectPlan={(planType, price) => {
         navigate('/subscription/payment', { state: { subType: planType, price } });
       }}
@@ -229,12 +232,15 @@ function AppInner() {
         {/* 이메일 링크로 접근 — 로그인 여부와 무관하게 토큰 자체가 자격증명 */}
         <Route path="/guardian-consent/:consentId" element={<GuardianConsentView />} />
 
+        {/* 둘러보기는 비로그인도 가능 — 로그인이 필요한 액션은 클릭 시점에 /login으로 유도 */}
+        <Route index element={<MainDashboard />} />
+        <Route path="friends" element={<FriendsLibraryView />} />
+        <Route path="friends/:bookId" element={<FriendsLibraryView />} />
+        <Route path="authors" element={<SearchAuthorView />} />
+        <Route path="authors/:authorName" element={<AuthorProfileView />} />
+        <Route path="subscription" element={<SubscriptionRoute />} />
+
         <Route element={<ProtectedRoute />}>
-          <Route index element={<MainDashboard />} />
-          <Route path="friends" element={<FriendsLibraryView />} />
-          <Route path="friends/:bookId" element={<FriendsLibraryView />} />
-          <Route path="authors" element={<SearchAuthorView />} />
-          <Route path="authors/:authorName" element={<AuthorProfileView />} />
           <Route path="books/:bookId/read" element={<BookReaderPage />} />
 
           <Route path="library" element={<MyLibraryLayout />}>
@@ -250,7 +256,6 @@ function AppInner() {
             <Route path="read/:bookId" element={<MyLibraryReaderRoute />} />
           </Route>
 
-          <Route path="subscription" element={<SubscriptionRoute />} />
           <Route path="subscription/payment" element={<PaymentRoute />} />
           <Route path="profile/edit" element={<ProfileEditRoute />} />
 

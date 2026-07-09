@@ -24,6 +24,7 @@ export const SubscriptionView = ({
   onResumeSubscription,
   onPlanChanged,
   onSelectPlan,
+  isAuthenticated,
   isPremium,
   isSubscriptionCanceled,
   benefitEndDate,
@@ -55,7 +56,7 @@ export const SubscriptionView = ({
     viewInvoice,
     closeInvoiceModal,
     printInvoice,
-  } = useSubscriptionState({ currentPlanType, onCancelSubscription, onResumeSubscription, onPlanChanged, onSelectPlan });
+  } = useSubscriptionState({ currentPlanType, onCancelSubscription, onResumeSubscription, onPlanChanged, onSelectPlan, isAuthenticated });
 
   const isCurrentBillingPeriod = currentPlanType === (selectedPlanType === 'yearly' ? 'PREMIUM_YEARLY' : 'PREMIUM_MONTHLY');
   // 연간 → 월간 다운그레이드는 서버가 지원하지 않음 (400 DOWNGRADE_NOT_SUPPORTED) — UI에서부터 막아둠
@@ -100,11 +101,17 @@ export const SubscriptionView = ({
                 오늘 사용량
               </h3>
 
-              {!usage && (
+              {!isAuthenticated && (
+                <div className="text-xs text-[#7C769D] font-semibold py-6 text-center bg-[#FAF9FF] border border-dashed border-[#E6E2FC] rounded-xl">
+                  로그인하면 오늘 사용량을 확인할 수 있어요
+                </div>
+              )}
+
+              {isAuthenticated && !usage && (
                 <div className="text-xs text-[#7C769D] font-semibold py-6 text-center">불러오는 중...</div>
               )}
 
-              {usage && (
+              {isAuthenticated && usage && (
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-baseline">
@@ -441,24 +448,30 @@ export const SubscriptionView = ({
                 <span className="text-[10px] text-[#7C769D] font-semibold">최근 {records.length}건</span>
               </div>
 
-              {isRecordsLoading && (
+              {!isAuthenticated && (
+                <div className="text-xs text-[#7C769D] font-semibold py-6 text-center bg-[#FAF9FF] border border-dashed border-[#E6E2FC] rounded-xl">
+                  로그인하면 결제 내역을 확인할 수 있어요
+                </div>
+              )}
+
+              {isAuthenticated && isRecordsLoading && (
                 <div className="text-xs text-[#7C769D] font-semibold py-6 text-center">불러오는 중...</div>
               )}
 
-              {!isRecordsLoading && recordsError && (
+              {isAuthenticated && !isRecordsLoading && recordsError && (
                 <div className="text-xs text-rose-600 font-bold p-3 bg-rose-50 border border-rose-200 rounded-xl">
                   {recordsError}
                 </div>
               )}
 
-              {!isRecordsLoading && !recordsError && records.length === 0 && (
+              {isAuthenticated && !isRecordsLoading && !recordsError && records.length === 0 && (
                 <div className="text-xs text-[#7C769D] font-semibold py-6 text-center bg-[#FAF9FF] border border-dashed border-[#E6E2FC] rounded-xl">
                   아직 결제 내역이 없습니다.
                 </div>
               )}
 
               <div className="divide-y divide-[#E6E2FC]/30 max-h-64 overflow-y-auto pr-1">
-                {!isRecordsLoading && !recordsError && records.map((rec) => (
+                {isAuthenticated && !isRecordsLoading && !recordsError && records.map((rec) => (
                   <div key={rec.id} className="py-3 flex justify-between items-center text-xs text-left">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 bg-[#FAF9FF] rounded-xl flex items-center justify-center border border-[#E6E2FC]/50 text-[#6B54E7] shrink-0">
