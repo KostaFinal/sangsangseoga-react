@@ -64,7 +64,7 @@ export default function AuthorProfileView() {
           setFollowerCount(matched.followerCount);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => { cancelled = true; };
   }, [authorName]);
 
@@ -75,7 +75,7 @@ export default function AuthorProfileView() {
       .then(ids => {
         if (!cancelled) setHasReported(ids.includes(effectiveAuthorId));
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => { cancelled = true; };
   }, [effectiveAuthorId]);
 
@@ -105,6 +105,7 @@ export default function AuthorProfileView() {
         const data = res?.data?.data;
         if (data?.followerCount != null) setFollowerCount(data.followerCount);
       }
+      window.dispatchEvent(new CustomEvent("favorite-author-updated"));
     } catch (err) {
       setIsFollowing(wasFollowing);
       setFollowerCount(prev => (prev == null ? prev : (wasFollowing ? prev + 1 : prev - 1)));
@@ -116,7 +117,7 @@ export default function AuthorProfileView() {
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 md:px-0 py-8 animate-fadeIn font-gowun">
-      
+
       {/* 1. 상단 내비게이션 (요청하신 프로필 왼쪽 위 배치) */}
       <div className="flex items-center gap-4 mb-6">
         <button onClick={onBackToDirectory} className="inline-flex items-center gap-1.5 text-sm text-[#4d4671] hover:text-[#6b54e7] font-bold transition">
@@ -152,9 +153,13 @@ export default function AuthorProfileView() {
                   <button
                     onClick={handleToggleFollow}
                     disabled={!effectiveAuthorId || followBusy}
-                    className={`px-5 py-1.5 rounded-full text-xs font-bold transition duration-300 shadow-xs cursor-pointer border disabled:opacity-50 disabled:cursor-default ${isFollowing ? "bg-[#6b54e7] hover:bg-[#6148e1] text-white border-transparent" : "bg-white text-[#69619a] border-gray-200 hover:text-[#6b54e7] hover:border-[#d4cdf2]"}`}
+                    className={`px-5 py-1.5 rounded-full text-xs font-bold transition duration-300 shadow-xs cursor-pointer border disabled:opacity-50 disabled:cursor-default ${isFollowing
+                        ? "bg-[#6b54e7] hover:bg-[#6148e1] text-white border-transparent"
+                        : "bg-white text-[#69619a] border-gray-200 hover:text-[#6b54e7] hover:border-[#d4cdf2]"
+                      }`}
                   >
                     {isFollowing ? "팔로잉" : "팔로우"}
+
                   </button>
                   <button
                     onClick={() => !hasReported && setIsReportOpen(true)}
@@ -167,7 +172,7 @@ export default function AuthorProfileView() {
                 </div>
               )}
             </div>
-            
+
             {/* 통계 정보 - 가독성을 위해 더 진하게 변경 */}
             <div className="flex items-center gap-8 justify-center sm:justify-start">
               <div className="text-center">
@@ -214,7 +219,7 @@ export default function AuthorProfileView() {
                   {/* 도서 표지 */}
                   <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-[#e3def7] group-hover:shadow-md transition-all duration-300 group-hover:-translate-y-1 bg-[#f8f7ff]">
                     <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src={book.coverImage} alt={book.title} referrerPolicy="no-referrer" />
-                    
+
                     {/* 장르 뱃지 */}
                     <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold border backdrop-blur-sm ${badge.cls}`}>
                       {badge.label}
@@ -252,6 +257,6 @@ export default function AuthorProfileView() {
         targetLabel={`작가 '${authorProfile.name}'`}
         onSubmit={handleSubmitReport}
       />
-    </div>
+    </div >
   );
 }

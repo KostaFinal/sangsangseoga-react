@@ -71,3 +71,29 @@ export const updateMyWrittenBookStatus = (bookId, status) =>
   api.patch(`/api/bookshelves/my-books/${bookId}/description`, {
     description,
   });
+
+// 독서 계획 전체 조회
+export const getReadingPlans = () =>
+  api.get("/api/bookshelves/reading-plans");
+
+// 특정 날짜 독서 계획 조회
+export const getReadingPlansByDate = (planDate) =>
+  api.get("/api/bookshelves/reading-plans/date", {
+    params: { planDate },
+  });
+
+// 독서 계획 등록
+export const createReadingPlan = (payload) =>
+  api.post("/api/bookshelves/reading-plans", payload);
+
+// 독서 계획 수정
+export const updateReadingPlan = (planId, payload) =>
+  api.patch(`/api/bookshelves/reading-plans/${planId}`, payload);
+
+// 독서 계획 삭제
+export const deleteReadingPlan = (planId) =>
+  api.delete(`/api/bookshelves/reading-plans/${planId}`);
+
+// 독서 계획 완료
+export const completeReadingPlan = (planId) =>
+  api.patch(`/api/bookshelves/reading-plans/${planId}/complete`);

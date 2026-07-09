@@ -26,13 +26,7 @@ export function MyLibraryLayout() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Favorite Authors List State
-  const [favoriteAuthors, setFavoriteAuthors] = useState([
-    { id: '1', name: '김마법 작가', genre: '정통 판타지 대모험', likes: 1205, avatar: '🧙', works: '크리스탈 드래곤의 비밀 등', isFavorite: true },
-    { id: '2', name: '이온정 쉐프작가', genre: '따스한 치유계 빵 소설', likes: 980, avatar: '🥐', works: '꿈꾸는 심야 빵집 등', isFavorite: true },
-    { id: '3', name: '초록 그림작가', genre: '몽글몽글 구름 숲 수채화', likes: 1530, avatar: '🎨', works: '구름 숲의 고래, 숲속 요정들 등', isFavorite: true },
-    { id: '4', name: '銀河水 우주작가', genre: '무한한 우주 공상 과학', likes: 712, avatar: '🐳', works: '별을 삼킨 고래 등', isFavorite: false },
-    { id: '5', name: '동백 꽃작가', genre: '사계절 아름다운 자연 일화', likes: 854, avatar: '🌸', works: '구름 숲의 고래 등', isFavorite: false }
-  ]);
+  const [favoriteAuthors, setFavoriteAuthors] = useState([]);
 
   const loadMyLibraryBooks = async () => {
     try {

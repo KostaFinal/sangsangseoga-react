@@ -1,5 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Plus, Check, Trash2, X, Edit3 } from 'lucide-react';
+import {
+  getReadingPlans,
+  createReadingPlan as createReadingPlanApi,
+  updateReadingPlan as updateReadingPlanApi,
+  deleteReadingPlan as deleteReadingPlanApi,
+  completeReadingPlan as completeReadingPlanApi,
+} from '../../api/myLibraryApi';
 
 export default function BookCalendar({ books = [] }) {
   const today = new Date();
@@ -17,6 +24,20 @@ export default function BookCalendar({ books = [] }) {
   });
 
   const [editingPlanId, setEditingPlanId] = useState(null);
+
+  const loadReadingPlans = async () => {
+    try {
+      const res = await getReadingPlans();
+      setReadingPlans(res.data.data || []);
+    } catch (err) {
+      console.error('독서 계획 조회 실패:', err);
+      setReadingPlans([]);
+    }
+  };
+
+  useEffect(() => {
+    loadReadingPlans();
+  }, []);
 
   const monthLabel = `${currentMonth.getFullYear()}년 ${currentMonth.getMonth() + 1}월`;
 
@@ -58,54 +79,34 @@ export default function BookCalendar({ books = [] }) {
     setEditingPlanId(null);
   };
 
-  const createReadingPlan = () => {
-    if (editingPlanId) {
-      const selectedBook = books.find(book => String(book.id) === String(form.bookId));
+  const handleSubmitReadingPlan = async () => {
+    if (!form.bookId) return;
 
-      setReadingPlans(prev =>
-        prev.map(plan =>
-          plan.id === editingPlanId
-            ? {
-              ...plan,
-              bookId: selectedBook?.id || plan.bookId,
-              bookTitle: selectedBook?.title || plan.bookTitle,
-              coverUrl: selectedBook?.coverUrl || selectedBook?.coverImage || plan.coverUrl,
-              planDate: selectedDate,
-              targetPage: form.targetPage,
-              memo: form.memo
-            }
-            : plan
-        )
-      );
-
-      setEditingPlanId(null);
-      setIsPlanModalOpen(false);
-      return;
-    }
-
-
-    const selectedBook = books.find(book => String(book.id) === String(form.bookId));
-
-    if (!selectedBook) return;
-
-    const newPlan = {
-      id: Date.now(),
-      bookId: selectedBook.id,
-      bookTitle: selectedBook.title,
-      coverUrl: selectedBook.coverUrl || selectedBook.coverImage,
+    const payload = {
+      bookId: Number(form.bookId),
       planDate: selectedDate,
-      targetPage: form.targetPage,
-      memo: form.memo,
-      isCompleted: false,
-      completedAt: null
+      targetPage: form.targetPage ? Number(form.targetPage) : null,
+      memo: form.memo
     };
 
-    setReadingPlans(prev => [...prev, newPlan]);
-    setIsPlanModalOpen(false);
+    try {
+      if (editingPlanId) {
+        await updateReadingPlanApi(editingPlanId, payload);
+      } else {
+        await createReadingPlanApi(payload);
+      }
+
+      await loadReadingPlans();
+      setEditingPlanId(null);
+      setIsPlanModalOpen(false);
+    } catch (err) {
+      console.error('독서 계획 저장 실패:', err);
+      alert('독서 계획 저장에 실패했습니다.');
+    }
   };
 
   const openEditModal = (plan) => {
-    setEditingPlanId(plan.id);
+    setEditingPlanId(plan.planId);
     setSelectedDate(plan.planDate);
     setForm({
       bookId: plan.bookId,
@@ -115,18 +116,24 @@ export default function BookCalendar({ books = [] }) {
     setIsPlanModalOpen(true);
   };
 
-  const completeReadingPlan = (planId) => {
-    setReadingPlans(prev =>
-      prev.map(plan =>
-        plan.id === planId
-          ? { ...plan, isCompleted: true, completedAt: new Date().toISOString() }
-          : plan
-      )
-    );
+  const handleCompleteReadingPlan = async (planId) => {
+    try {
+      await completeReadingPlanApi(planId);
+      await loadReadingPlans();
+    } catch (err) {
+      console.error('독서 계획 완료 실패:', err);
+      alert('완료 처리에 실패했습니다.');
+    }
   };
 
-  const deleteReadingPlan = (planId) => {
-    setReadingPlans(prev => prev.filter(plan => plan.id !== planId));
+  const handleDeleteReadingPlan = async (planId) => {
+    try {
+      await deleteReadingPlanApi(planId);
+      await loadReadingPlans();
+    } catch (err) {
+      console.error('독서 계획 삭제 실패:', err);
+      alert('삭제에 실패했습니다.');
+    }
   };
 
   return (
@@ -146,7 +153,7 @@ export default function BookCalendar({ books = [] }) {
           <Plus className="w-4 h-4" />
           계획 추가
         </button>
-        
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-5">
@@ -238,7 +245,7 @@ export default function BookCalendar({ books = [] }) {
             <div className="space-y-3">
               {plansByDate.map(plan => (
                 <div
-                  key={plan.id}
+                  key={plan.planId}
                   className={`border rounded-2xl p-4 transition-all ${plan.isCompleted
                     ? 'bg-lavender-bg/40 border-lavender-border opacity-75'
                     : 'bg-white border-lavender-border hover:border-brand-purple/50 hover:shadow-sm'
@@ -246,9 +253,9 @@ export default function BookCalendar({ books = [] }) {
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex gap-3">
-                      {plan.coverUrl && (
+                      {plan.coverImageUrl && (
                         <img
-                          src={plan.coverUrl}
+                          src={plan.coverImageUrl}
                           alt={plan.bookTitle}
                           className="w-14 h-20 object-cover rounded-xl border border-lavender-border"
                           referrerPolicy="no-referrer"
@@ -276,7 +283,7 @@ export default function BookCalendar({ books = [] }) {
 
                     <div className="flex gap-2 mt-3">
                       <button
-                        onClick={() => completeReadingPlan(plan.id)}
+                        onClick={() => handleCompleteReadingPlan(plan.planId)}
                         disabled={plan.isCompleted}
                         className="flex items-center gap-1.5 bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 font-bold text-xs px-3 py-2 rounded-xl transition-all"
                       >
@@ -293,7 +300,7 @@ export default function BookCalendar({ books = [] }) {
                       </button>
 
                       <button
-                        onClick={() => deleteReadingPlan(plan.id)}
+                        onClick={() => handleDeleteReadingPlan(plan.planId)}
                         className="flex items-center gap-1.5 bg-rose-50 text-rose-500 hover:bg-rose-100 font-bold text-xs px-3 py-2 rounded-xl transition-all"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -326,7 +333,10 @@ export default function BookCalendar({ books = [] }) {
               </h4>
 
               <button
-                onClick={() => setIsPlanModalOpen(false)}
+                onClick={() => {
+                  setEditingPlanId(null);
+                  setIsPlanModalOpen(false);
+                }}
                 className="w-8 h-8 rounded-full border border-lavender-border flex items-center justify-center text-purple-gray-text hover:bg-lavender-bg"
               >
                 <X className="w-4 h-4" />
@@ -338,6 +348,7 @@ export default function BookCalendar({ books = [] }) {
                 <label className="text-[10px] font-bold text-purple-gray-text">책 선택</label>
                 <select
                   value={form.bookId}
+                  disabled={editingPlanId !== null}
                   onChange={(e) => setForm(prev => ({ ...prev, bookId: e.target.value }))}
                   className="mt-1 w-full bg-white border border-lavender-border focus:border-brand-purple rounded-xl px-3 py-2 text-xs outline-none text-navy-purple"
                 >
@@ -391,7 +402,7 @@ export default function BookCalendar({ books = [] }) {
               </button>
 
               <button
-                onClick={createReadingPlan}
+                onClick={handleSubmitReadingPlan}
                 disabled={!form.bookId}
                 className="px-5 py-2 bg-brand-purple hover:bg-brand-dark text-white rounded-full text-xs font-bold disabled:opacity-45 transition-all"
               >

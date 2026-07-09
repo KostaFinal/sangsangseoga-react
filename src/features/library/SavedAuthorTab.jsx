@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
+import { getMyFollowedAuthors, unfollowAuthor } from '../../api/authorApi';
 
 export default function SavedAuthorTab({ favoriteAuthors,
   setFavoriteAuthors,
@@ -12,6 +13,43 @@ export default function SavedAuthorTab({ favoriteAuthors,
   const [newAuthorGenre, setNewAuthorGenre] = useState('');
   const [newAuthorWorks, setNewAuthorWorks] = useState('');
   const [newAuthorAvatar, setNewAuthorAvatar] = useState('👩‍🎨');
+
+  const loadFavoriteAuthors = async () => {
+    try {
+      const res = await getMyFollowedAuthors();
+      const items = res.data.data.items || [];
+
+      const convertedAuthors = items.map(author => ({
+        id: author.id,
+        name: author.nickname,
+        genre: author.introduction || '소개 없음',
+        likes: author.followerCount || 0,
+        profileImageUrl: author.profileImageUrl,
+        avatar: '👤',
+        works: author.representativeWork || '대표작 없음',
+        isFavorite: author.isFollowedByMe,
+      }));
+
+      setFavoriteAuthors(convertedAuthors);
+    } catch (err) {
+      console.error('관심 작가 조회 실패:', err);
+      setFavoriteAuthors([]);
+    }
+  };
+
+  useEffect(() => {
+    loadFavoriteAuthors();
+
+    const reloadFavoriteAuthors = () => {
+      loadFavoriteAuthors();
+    };
+
+    window.addEventListener("favorite-author-updated", reloadFavoriteAuthors);
+
+    return () => {
+      window.removeEventListener("favorite-author-updated", reloadFavoriteAuthors);
+    };
+  }, []);
 
   return (
     <div className="space-y-4 bg-transparent text-navy-purple">
@@ -108,47 +146,67 @@ export default function SavedAuthorTab({ favoriteAuthors,
 
       {/* Authors Display Group split into My Favorites and Recommendations */}
       <div className="space-y-5 select-none">
-
-        {/* Section 1: My Favorites */}
         <div>
-          <h4 className="text-[10px] font-bold text-navy-purple mb-2.5 flex items-center gap-1.5 bg-white border border-lavender-border px-3 py-1.5 rounded-full self-start inline-block">
-            ❤️ 내가 등록한 관심 작가 ({favoriteAuthors.filter(a => a.isFavorite).length})
-          </h4>
+          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {favoriteAuthors.filter(a => a.isFavorite).map((author) => (
               <div
                 key={author.id}
                 onClick={() => onSelectAuthor(author.name)}
-                className="bg-white rounded-2xl border border-lavender-border shadow-sm p-4 flex flex-col justify-between h-[180px] group hover:scale-[1.01] hover:border-brand-purple/50 transition-all cursor-pointer"
+                className="bg-white rounded-2xl border border-lavender-border shadow-sm p-4 flex flex-col justify-between h-[200px] group hover:scale-[1.01] hover:border-brand-purple/50 transition-all cursor-pointer"
               >
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white border border-lavender-border flex items-center justify-center text-xl select-none group-hover:scale-110 transition-all shrink-0 shadow-sm">
-                      {author.avatar}
-                    </div>
-                    <div>
-                      <h4 className="font-plus font-bold text-sm text-navy-purple tracking-tight">{author.name}</h4>
-                      <span className="text-[9px] text-purple-gray-text">{author.genre}</span>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-white border border-lavender-border flex items-center justify-center text-xl select-none group-hover:scale-110 transition-all shrink-0 shadow-sm overflow-hidden">
+                    {author.profileImageUrl ? (
+                      <img
+                        src={author.profileImageUrl}
+                        alt={author.name}
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      author.avatar
+                    )}
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFavoriteAuthors(prev => prev.map(a => a.id === author.id ? { ...a, isFavorite: false } : a));
-                    }}
-                    className="w-7 h-7 rounded-full bg-white border border-lavender-border text-rose-500 flex items-center justify-center text-xs hover:bg-rose-50 transition-all cursor-pointer"
-                    title="관심 작가 취소"
-                  >
-                    ❤️
-                  </button>
+
+                  <div>
+                    <h4 className="font-plus font-bold text-sm text-navy-purple tracking-tight">
+                      {author.name}
+                    </h4>
+                    <span className="text-[9px] text-purple-gray-text">
+                      {author.genre}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="py-1.5">
-                  <p className="text-[10px] text-purple-gray-text">대표작: <strong className="text-navy-purple">{author.works}</strong></p>
+                  <p className="text-[10px] text-purple-gray-text">
+                    대표작: <strong className="text-navy-purple">{author.works}</strong>
+                  </p>
                 </div>
 
-                <div className="flex items-center text-[10px] font-bold text-navy-purple border-t border-lavender-border pt-2.5">
-                  <span className="text-navy-purple">👥 팔로우 수: {author.likes.toLocaleString()}명</span>
+                <div className="flex items-center justify-between border-t border-lavender-border pt-2.5">
+                  <span className="text-[10px] font-bold text-navy-purple">
+                    👥 팔로워 {author.likes.toLocaleString()}명
+                  </span>
+
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+
+                      try {
+                        await unfollowAuthor(author.id);
+                        await loadFavoriteAuthors();
+                      } catch (err) {
+                        console.error('관심 작가 취소 실패:', err);
+                        alert('관심 작가 취소에 실패했습니다.');
+                      }
+                    }}
+                    className="px-5 py-1.5 rounded-full text-xs font-bold transition duration-300 shadow-xs cursor-pointer border bg-[#6b54e7] hover:bg-[#6148e1] text-white border-transparent"
+                  >
+                    팔로잉
+                  </button>
                 </div>
               </div>
             ))}
@@ -160,7 +218,6 @@ export default function SavedAuthorTab({ favoriteAuthors,
             )}
           </div>
         </div>
-
       </div>
     </div>
   );

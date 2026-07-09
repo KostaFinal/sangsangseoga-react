@@ -9,3 +9,7 @@ export const followAuthor = (authorId) => api.post(`/api/authors/${authorId}/fol
 
 // 작가 언팔로우
 export const unfollowAuthor = (authorId) => api.delete(`/api/authors/${authorId}/follows`);
+
+// 내가 팔로우한 관심 작가 목록 조회
+export const getMyFollowedAuthors = () =>
+  api.get("/api/authors/follows/me");

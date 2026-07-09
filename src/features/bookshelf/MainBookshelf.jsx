@@ -1,94 +1,110 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Star, BookOpen, Award, Calendar, MessageSquare, Book, Heart, BarChart2 } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { getMyInfo } from "@/src/api/memberApi";
 
 export default function MainBookshelf({ setActiveTab, onOpenCreateModal }) {
+  const [nickname, setNickname] = useState("");
+
+  useEffect(() => {
+    const fetchMyInfo = async () => {
+      try {
+        const res = await getMyInfo();
+        setNickname(res.data.data.nickname);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchMyInfo();
+  }, []);
+
   // 책꽂이에 꽂힌 책 목록 데이터 (미니멀하고 세련된 프리미엄 화이트 감성 고정)
   const shelfBooks = [
-    { 
-      id: 'wishlist', 
-      title: '읽고 싶은 책', 
-      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm', 
-      textColor: 'text-neutral-800', 
-      icon: Star, 
+    {
+      id: 'wishlist',
+      title: '읽고 싶은 책',
+      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm',
+      textColor: 'text-neutral-800',
+      icon: Star,
       desc: '별 달기',
       coverColor: 'bg-gradient-to-br from-white via-neutral-50 to-neutral-100 text-neutral-900 border-neutral-200 shadow-[4px_16px_36px_rgba(0,0,0,0.12)]',
       pageColor: 'bg-[#fffdfa]',
       subTitle: '마음속에 담아둔 책들이 잠에서 깨어납니다.'
     },
-    { 
-      id: 'reading', 
-      title: '읽는 중', 
-      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm', 
-      textColor: 'text-neutral-800', 
-      icon: BookOpen, 
-      desc: '독서 바', 
+    {
+      id: 'reading',
+      title: '읽는 중',
+      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm',
+      textColor: 'text-neutral-800',
+      icon: BookOpen,
+      desc: '독서 바',
       progress: 65,
       coverColor: 'bg-gradient-to-br from-white via-neutral-50 to-neutral-100 text-neutral-900 border-neutral-200 shadow-[4px_16px_36px_rgba(0,0,0,0.12)]',
       pageColor: 'bg-[#fcfefe]',
       subTitle: '상상의 세계 속에서 이어지는 흥미진진한 여정'
     },
-    { 
-      id: 'finished', 
-      title: '읽기 완료', 
-      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm', 
-      textColor: 'text-neutral-800', 
-      icon: Award, 
+    {
+      id: 'finished',
+      title: '읽기 완료',
+      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm',
+      textColor: 'text-neutral-800',
+      icon: Award,
       desc: '올해 완독',
       coverColor: 'bg-gradient-to-br from-white via-neutral-50 to-neutral-100 text-neutral-900 border-neutral-200 shadow-[4px_16px_36px_rgba(0,0,0,0.12)]',
       pageColor: 'bg-[#fafdfb]',
       subTitle: '지혜의 전당에 수놓인 영광스러운 기록들'
     },
-    { 
-      id: 'stats', 
-      title: '독서 통계', 
-      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm', 
-      textColor: 'text-neutral-800', 
-      icon: BarChart2, 
+    {
+      id: 'stats',
+      title: '독서 통계',
+      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm',
+      textColor: 'text-neutral-800',
+      icon: BarChart2,
       desc: '통계 정원',
       coverColor: 'bg-gradient-to-br from-white via-neutral-50 to-neutral-100 text-neutral-900 border-neutral-200 shadow-[4px_16px_36px_rgba(0,0,0,0.12)]',
       pageColor: 'bg-[#f5f5f5]',
       subTitle: '지성의 성장을 비추는 마법의 별자리표'
     },
-    { 
-      id: 'calendar', 
-      title: '독서 캘린더', 
-      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm', 
-      textColor: 'text-neutral-800', 
-      icon: Calendar, 
+    {
+      id: 'calendar',
+      title: '독서 캘린더',
+      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm',
+      textColor: 'text-neutral-800',
+      icon: Calendar,
       desc: 'MAR',
       coverColor: 'bg-gradient-to-br from-white via-neutral-50 to-neutral-100 text-neutral-900 border-neutral-200 shadow-[4px_16px_36px_rgba(0,0,0,0.12)]',
       pageColor: 'bg-[#fffbfc]',
       subTitle: '하루하루 기록된 꿈과 낭독의 마법 궤적'
     },
-    { 
-      id: 'ai-chat', 
-      title: '독후감', 
-      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm', 
-      textColor: 'text-neutral-800', 
-      icon: MessageSquare, 
+    {
+      id: 'ai-chat',
+      title: '독후감',
+      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm',
+      textColor: 'text-neutral-800',
+      icon: MessageSquare,
       desc: 'AI 사서',
       coverColor: 'bg-gradient-to-br from-white via-neutral-50 to-neutral-100 text-neutral-900 border-neutral-200 shadow-[4px_16px_36px_rgba(0,0,0,0.12)]',
       pageColor: 'bg-[#fdfaff]',
       subTitle: '인공지능 사서와 함께 나누는 상상의 대화'
     },
-    { 
-      id: 'all-books', 
-      title: '내가 쓴 책', 
-      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm', 
-      textColor: 'text-neutral-800', 
-      icon: Book, 
+    {
+      id: 'all-books',
+      title: '내가 쓴 책',
+      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm',
+      textColor: 'text-neutral-800',
+      icon: Book,
       desc: '작품들',
       coverColor: 'bg-gradient-to-br from-white via-neutral-50 to-neutral-100 text-neutral-900 border-neutral-200 shadow-[4px_16px_36px_rgba(0,0,0,0.12)]',
       pageColor: 'bg-[#fffdfc]',
-      subTitle: '지우의 펜 끝에서 탄생한 영원한 마법서들'
     },
-    { 
-      id: 'saved-author', 
-      title: '관심 작가', 
-      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm', 
-      textColor: 'text-neutral-800', 
-      icon: Heart, 
+    {
+      id: 'saved-author',
+      title: '관심 작가',
+      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm',
+      textColor: 'text-neutral-800',
+      icon: Heart,
       desc: '찜 작가',
       coverColor: 'bg-gradient-to-br from-white via-neutral-50 to-neutral-100 text-neutral-900 border-neutral-200 shadow-[4px_16px_36px_rgba(0,0,0,0.12)]',
       pageColor: 'bg-[#fffbfe]',
@@ -113,14 +129,14 @@ export default function MainBookshelf({ setActiveTab, onOpenCreateModal }) {
   return (
     <div className="w-full flex flex-col pt-2 animate-in fade-in duration-500 bg-transparent text-navy-purple relative" id="main-bookshelf-wrapper">
       <div className="flex flex-col w-full" id="bookshelf-workspace-area">
-        
+
         {/* Welcome Header & Simple integrated Stats */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-5 select-none bg-transparent" id="bookshelf-header-container">
           <div>
-            <p className="text-neutral-500 text-xs font-bold mb-0.5 tracking-wide">안녕하세요, 상상이님! ✨</p>
-            <h2 className="font-plus text-3xl font-extrabold text-navy-purple tracking-tight font-serif">상상이의 서재</h2>
+            <p className="text-neutral-500 text-xs font-bold mb-0.5 tracking-wide">안녕하세요, {nickname}님! </p>
+            <h2 className="font-plus text-3xl font-extrabold text-navy-purple tracking-tight font-serif">{nickname}님의 서재</h2>
           </div>
-          
+
         </div>
 
         {/* Magical Bookshelf Interface */}
@@ -134,7 +150,7 @@ export default function MainBookshelf({ setActiveTab, onOpenCreateModal }) {
 
           {/* Outer Frame with elegant borders and deeper shadow for premium light mode */}
           <div className="relative bg-white rounded-3xl border-8 border-lavender-border shadow-[0_12px_40px_-15px_rgba(0,0,0,0.12)] flex items-end justify-center p-6 md:p-8 pb-4 overflow-visible h-[400px]" id="bookshelf-outer-frame">
-            
+
             {/* Animated Books Shelf list */}
             <div className="flex items-end justify-center gap-3 md:gap-6 w-full px-4 max-w-6xl z-20" id="bookshelf-flex-row">
               {shelfBooks.map((book, idx) => {
@@ -144,11 +160,11 @@ export default function MainBookshelf({ setActiveTab, onOpenCreateModal }) {
                     key={book.id}
                     id={`bookshelf-spine-${book.id}`}
                     onClick={() => handleBookClick(book)}
-                    whileHover={{ 
-                      y: -24, 
-                      rotateY: -12, 
-                      scale: 1.04, 
-                      boxShadow: '-12px 20px 40px rgba(0, 0, 0, 0.08)' 
+                    whileHover={{
+                      y: -24,
+                      rotateY: -12,
+                      scale: 1.04,
+                      boxShadow: '-12px 20px 40px rgba(0, 0, 0, 0.08)'
                     }}
                     transition={{ type: 'spring', stiffness: 380, damping: 19 }}
                     className="book-spine relative w-12 sm:w-16 md:w-20 rounded-md flex flex-col justify-between items-center py-6 border border-lavender-border bg-white select-none cursor-pointer transition-all border-l-[6px] border-l-neutral-300"
