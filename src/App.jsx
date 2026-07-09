@@ -102,7 +102,12 @@ function SignupRoute() {
   const { setIsAuthenticated, refreshSubscriptionStatus, refreshUsage } = useAuth();
   return (
     <SignupView
-      onSuccess={() => {
+      onSuccess={({ pendingGuardianConsent } = {}) => {
+        if (pendingGuardianConsent) {
+          // 보호자 동의가 완료되기 전까지는 로그인 상태로 만들지 않고 로그인 화면으로 안내
+          navigate('/login');
+          return;
+        }
         setIsAuthenticated(true);
         refreshSubscriptionStatus();
         refreshUsage();

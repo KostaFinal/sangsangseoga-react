@@ -2,6 +2,7 @@ import * as authApi from '../../../api/authApi';
 import { setTokens, clearTokens } from '../../../api/tokenStorage';
 
 const NICKNAME_PATTERN = /^[0-9A-Za-z가-힣]{2,10}$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const unwrap = (res) => {
   const body = res.data;
@@ -59,8 +60,9 @@ export const authService = {
   },
 
   /** 회원가입 1단계(기본 정보) 유효성 검증 — 백엔드 SignupRequestDto 제약과 동일하게 검증 */
-  validateSignupInfo: ({ email, password, confirmPassword, nickname, agreeTerms }) => {
+  validateSignupInfo: ({ email, password, confirmPassword, nickname, birthdate, agreeTerms }) => {
     if (!email) return '이메일을 입력해 주세요.';
+    if (!EMAIL_PATTERN.test(email)) return '올바른 이메일 형식으로 입력해 주세요.';
     if (!nickname || !NICKNAME_PATTERN.test(nickname)) {
       return '닉네임은 한글/영문/숫자 2~10자로 입력해 주세요.';
     }
@@ -69,6 +71,7 @@ export const authService = {
       return '비밀번호는 영문+숫자+특수문자를 포함하여 8자 이상이어야 합니다.';
     }
     if (password !== confirmPassword) return '입력하신 두 비밀번호가 서로 일치하지 않습니다.';
+    if (!birthdate) return '생년월일을 선택해 주세요.';
     if (!agreeTerms) return '이용약관 및 개인정보 수집 이용 동의는 필수 사항입니다.';
     return null;
   },

@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import { authService } from '../services/authService';
 
-// 개발 환경 전용 테스트 계정 (원클릭 로그인 버튼에서만 사용)
-const DEV_TEST_EMAIL = 'writer@sangsang.com';
-const DEV_TEST_PASSWORD = 'Test1234!';
-
 /**
  * Custom Hook: useLoginState
  *
@@ -57,17 +53,6 @@ export const useLoginState = ({ onSuccess }) => {
     }
   };
 
-  /** 개발 환경 전용: 테스트 계정으로 원클릭 로그인 (실제 /api/auth/login 호출, 실제 토큰 발급) */
-  const handleDevQuickLogin = async () => {
-    try {
-      const user = await authService.login(DEV_TEST_EMAIL, DEV_TEST_PASSWORD, true);
-      setError('');
-      onSuccess(user);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
   return {
     isAdminMode,
     enterAdminMode,
@@ -85,6 +70,5 @@ export const useLoginState = ({ onSuccess }) => {
     error,
     handleUserSubmit,
     handleAdminSubmit,
-    handleDevQuickLogin,
   };
 };

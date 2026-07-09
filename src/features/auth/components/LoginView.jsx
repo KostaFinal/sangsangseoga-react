@@ -26,7 +26,6 @@ export const LoginView = ({
     error,
     handleUserSubmit,
     handleAdminSubmit,
-    handleDevQuickLogin,
   } = useLoginState({ onSuccess });
 
   return (
@@ -48,12 +47,13 @@ export const LoginView = ({
           </div>
 
           {error && (
-            <div className="bg-neutral-50 text-neutral-800 border border-neutral-200 p-3 rounded-xl text-xs leading-relaxed text-left font-sans">
-              {error}
+            <div className="flex items-start gap-1.5 bg-rose-50 text-rose-800 border border-rose-200 p-3 rounded-xl text-xs leading-relaxed text-left font-sans">
+              <span className="material-symbols-outlined text-rose-500 text-sm mt-0.5">error_outline</span>
+              <span>{error}</span>
             </div>
           )}
 
-          <form className="mt-6 space-y-4" onSubmit={handleAdminSubmit}>
+          <form className="mt-6 space-y-4" onSubmit={handleAdminSubmit} noValidate>
             <div className="space-y-4 rounded-md text-left">
               <div>
                 <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-sans">
@@ -132,9 +132,6 @@ export const LoginView = ({
               </div>
 
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-black text-white font-literata text-2xl mb-4 shadow-md font-extrabold">
-                  상
-                </div>
                 <h2 id="login-title" className="text-3xl font-literata font-bold text-neutral-900 tracking-tight">
                   상상서가
                 </h2>
@@ -144,12 +141,13 @@ export const LoginView = ({
               </div>
 
               {error && (
-                <div className="bg-neutral-50 text-neutral-800 border border-neutral-200 p-3 rounded-xl text-xs leading-relaxed text-left font-sans">
-                  {error}
+                <div className="flex items-start gap-1.5 bg-rose-50 text-rose-800 border border-rose-200 p-3 rounded-xl text-xs leading-relaxed text-left font-sans">
+                  <span className="material-symbols-outlined text-rose-500 text-sm mt-0.5">error_outline</span>
+                  <span>{error}</span>
                 </div>
               )}
 
-              <form className="mt-6 space-y-4" onSubmit={handleUserSubmit}>
+              <form className="mt-6 space-y-4" onSubmit={handleUserSubmit} noValidate>
                 <div className="space-y-4 rounded-md text-left">
                   <div>
                     <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-sans">
@@ -270,19 +268,6 @@ export const LoginView = ({
                   </button>
                 </p>
               </div>
-
-              {import.meta.env.DEV && (
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    id="dev-quick-login-btn"
-                    onClick={handleDevQuickLogin}
-                    className="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-dashed border-amber-300 rounded-xl text-xs font-bold tracking-wide transition-all cursor-pointer"
-                  >
-                    🛠 개발용 원클릭 로그인 (writer@sangsang.com)
-                  </button>
-                </div>
-              )}
         </div>
       )}
     </div>

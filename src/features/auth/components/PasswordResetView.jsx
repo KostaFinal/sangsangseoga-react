@@ -170,7 +170,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
               </div>
 
               {validationErrors.length > 0 && (
-                <div className="p-3 bg-neutral-50 text-neutral-950 border border-rose-300 rounded-xl text-xs leading-relaxed font-sans space-y-1">
+                <div className="p-3 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl text-xs leading-relaxed font-sans space-y-1">
                   {validationErrors.map((err, idx) => (
                     <p key={idx} className="flex items-start">
                       <span className="material-symbols-outlined text-rose-500 text-sm mr-1.5 mt-0.5">error_outline</span>
