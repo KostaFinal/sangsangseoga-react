@@ -8,7 +8,7 @@ import { SavedAuthorTab } from '../../features/library';
 import { ReviewWithAI } from '../../features/review';
 import { BookCalendar } from '../../features/calendar';
 import { BookStats } from '../../features/stats';
-import { getBookContents, getMyBooks } from '../../api/bookApi';
+import { getBookContents } from '../../api/bookApi';
 import {
   getWishlist as getWishlistBookshelf,
   getReadingList as getReadingBookshelf,
@@ -18,6 +18,9 @@ import {
   rereadBook as rereadFinishedBook,
   deleteWishlist as removeWishlistBook,
   getReadingStats,
+  getMyWrittenBooks,
+  updateMyWrittenBookStatus,
+  updateMyWrittenBookDescription,
 } from '../../api/myLibraryApi';
 
 export function MyLibraryLayout() {
@@ -34,13 +37,13 @@ export function MyLibraryLayout() {
         getWishlistBookshelf(),
         getReadingBookshelf(),
         getFinishedBookshelf(),
-        getMyBooks(),
+        getMyWrittenBooks(),
       ]);
 
       const wishlistData = wishlistRes.data.data;
       const readingData = readingRes.data.data;
       const finishedData = finishedRes.data.data;
-      const myBooksData = myBooksRes.data?.data?.items || [];
+      const myBooksData = myBooksRes.data?.data || [];
 
       const wishlistBooks = Array.isArray(wishlistData)
         ? wishlistData.map(book => ({
@@ -116,13 +119,13 @@ export function MyLibraryLayout() {
 
       const myWrittenBooks = Array.isArray(myBooksData)
         ? myBooksData.map(book => ({
-          id: book.id,
-          bookId: book.id,
+          id: book.bookId,
+          bookId: book.bookId,
           title: book.title,
           coverUrl: book.coverImageUrl || "/default-book-cover.png",
-          category: book.genre || "기타",
-          bookType: book.genre,
-          genre: book.genre,
+          category: book.category,
+          bookType: book.bookType,
+          genre: book.bookType,
           description: book.description,
           author: book.author || "나",
           progress: 0,
@@ -288,6 +291,29 @@ export function MyLibraryLayout() {
     }
   };
 
+  const handleUpdateStatus = async (bookId, status) => {
+    try {
+      await updateMyWrittenBookStatus(bookId, status);
+
+      setBooks(prev =>
+        prev.map(book =>
+          String(book.id) === String(bookId) ||
+            String(book.bookId) === String(bookId)
+            ? {
+              ...book,
+              status,
+              isPublic: status === "PUBLISHED",
+            }
+            : book
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      alert("공개 여부 변경에 실패했습니다.");
+      throw err;
+    }
+  };
+
   const filteredBooks = books.filter(b =>
     b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -320,6 +346,8 @@ export function MyLibraryLayout() {
     onReread: handleRereadBook,
     onToggleFavorite: handleToggleFavorite,
     onUpdateBook: handleUpdateBook,
+    onUpdateDescription: handleUpdateDescription,
+    onUpdateStatus: handleUpdateStatus,
     handleFairyTaleCreated,
   };
 
@@ -407,7 +435,13 @@ export function MyLibraryAiChatRoute() {
 
 export function MyLibraryAllBooksRoute() {
   const navigate = useNavigate();
-  const { filteredBooks, onOpenViewer, onUpdateBook } = useOutletContext();
+  const {
+    filteredBooks,
+    onOpenViewer,
+    onUpdateBook,
+    onUpdateDescription,
+    onUpdateStatus,
+  } = useOutletContext();
   const onOpenDetail = (book) => {
     const convertedBook = {
       ...book,

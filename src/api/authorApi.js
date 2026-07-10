@@ -11,5 +11,7 @@ export const followAuthor = (authorId) => api.post(`/api/authors/${authorId}/fol
 export const unfollowAuthor = (authorId) => api.delete(`/api/authors/${authorId}/follows`);
 
 // 내가 팔로우한 관심 작가 목록 조회
-export const getMyFollowedAuthors = () =>
-  api.get("/api/authors/follows/me");
+export const getMyFollowedAuthors = ({ page = 1, size = 20 } = {}) =>
+  api.get("/api/authors/follows/me", {
+    params: { page, size },
+  });

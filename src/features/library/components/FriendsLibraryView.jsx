@@ -56,7 +56,11 @@ const genreBadge = (genre) => {
 export default function FriendsLibraryView() {
   const { bookId } = useParams();
   const navigate = useNavigate();
-  const { handleToggleBookmark } = useOutletContext();
+  const {
+    handleToggleBookmark,
+    onUpdateDescription,
+    onUpdateStatus,
+  } = useOutletContext();
   const { currentUser } = useAuth();
   const requireAuth = useRequireAuth();
 
@@ -71,33 +75,7 @@ export default function FriendsLibraryView() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const handleUpdateDescription = async (bookId, description) => {
-    try {
-      await updateMyWrittenBookDescription(bookId, description);
 
-      patchBookById(bookId, prev => ({
-        ...prev,
-        description,
-      }));
-    } catch (err) {
-      console.error(err);
-      alert("책 소개 수정에 실패했습니다.");
-    }
-  };
-
-  const handleUpdateStatus = async (bookId, status) => {
-    try {
-      await updateMyWrittenBookStatus(bookId, status);
-
-      patchBookById(bookId, prev => ({
-        ...prev,
-        status,
-      }));
-    } catch (err) {
-      console.error(err);
-      alert("공개 여부 변경에 실패했습니다.");
-    }
-  };
 
   // :bookId가 있으면 상세 화면 — 목록에서 이미 불러온 항목이면 그대로 쓰고,
   // 딥링크/새로고침 등으로 로컬 목록에 없으면 직접 조회. BookDetailView가 기대하는
@@ -250,8 +228,8 @@ export default function FriendsLibraryView() {
           mode={viewingBook?.mode === "owner" ? "owner" : "viewer"}
           book={viewingBook}
           onBack={() => navigate("/friends")}
-          onUpdateDescription={handleUpdateDescription}
-          onUpdateStatus={handleUpdateStatus}
+          onUpdateDescription={onUpdateDescription}
+          onUpdateStatus={onUpdateStatus}
           onViewCountSynced={(id, viewCount) => patchBookById(id, prev => ({ ...prev, viewCount }))}
 
           onStartReading={(book) => navigate(`/books/${book.id}/read`)}

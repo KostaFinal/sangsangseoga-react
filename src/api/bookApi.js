@@ -32,3 +32,7 @@ export const getMyBooks = () => api.get("/api/books/my");
 
 // [테스트용] 주간 인기 랭킹 즉시 재집계 (크론과 동일 로직을 즉시 실행, 확인 끝나면 제거 예정)
 export const triggerWeeklyRankingAggregate = () => api.post("/api/books/weekly-ranking/aggregate");
+
+// 제작 완료 책 최종 저장
+export const publishBook = (payload) =>
+  api.post("/api/books", payload);

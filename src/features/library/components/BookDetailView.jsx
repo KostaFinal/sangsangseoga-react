@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
+
 const bookTypeToGenre = {
   "NOVEL": "소설", "POEM": "시", "ESSAY": "에세이",
   "FAIRY_TALE": "동화",
@@ -42,6 +43,7 @@ export default function BookDetailView({
   onViewCountSynced,
   currentUser,
 }) {
+  const [localBook, setLocalBook] = useState(book);
   const [commentText, setCommentText] = useState("");
   const [isFollowing, setIsFollowing] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
@@ -51,7 +53,7 @@ export default function BookDetailView({
   const [isBookReported, setIsBookReported] = useState(false);
   const [reportedCommentIds, setReportedCommentIds] = useState([]);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [editDescription, setEditDescription] = useState(book.description || "");
+  const [editDescription, setEditDescription] = useState(localBook.description || "");
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingCommentText, setEditingCommentText] = useState("");
 
@@ -271,6 +273,10 @@ export default function BookDetailView({
     getReportedIds("comment").then(ids => setReportedCommentIds(ids)).catch(() => { });
   }, [book.id]);
 
+  useEffect(() => {
+    setLocalBook(book);
+  }, [book]);
+
   const topLevelComments = comments.filter(c => !c.replyToCommentId);
   const repliesByParent = comments.reduce((acc, c) => {
     if (c.replyToCommentId) {
@@ -350,7 +356,7 @@ export default function BookDetailView({
               <div className={`absolute top-3 left-3 z-20 px-2.5 py-1 text-[10px] rounded shadow-sm tracking-wide ${genreTagStyle}`}>
                 {genreTagText}
               </div>
-              <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" src={book.coverImage} alt={book.title} referrerPolicy="no-referrer" />
+              <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" src={localBook.coverImage} alt={localBook.title} referrerPolicy="no-referrer" />
               <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-transparent pointer-events-none" />
               {/* Cover realistic binder edge shadow */}
               <div className="absolute left-0 top-0 bottom-0 w-2.5 bg-gradient-to-r from-black/25 via-black/10 to-transparent pointer-events-none" />
@@ -361,7 +367,7 @@ export default function BookDetailView({
           <div className="md:col-span-7 flex flex-col space-y-6 text-left">
             <div className="space-y-2">
               <h2 className={getTitleStyle()}>
-                {book.title}
+                {localBook.title}
               </h2>
               {/* 저자 정보 텍스트 선명화 (text-gray-700 -> text-black / font-bold) */}
               <p className="text-[16px] font-black text-black mt-2 pl-[10px]">
@@ -381,7 +387,7 @@ export default function BookDetailView({
             <div className="flex flex-wrap items-center gap-3">
               <button onClick={(e) => onToggleLike(e, book.bookId || book.id)} className="inline-flex items-center gap-1.5 border-2 px-4 py-2 text-xs md:text-sm font-black rounded-lg transition duration-200 border-[#aaa0e3] text-[#3c375e] hover:bg-[#f3f0ff] hover:border-[#5139d6] bg-white cursor-pointer">
                 <Heart className={`w-4 h-4 stroke-[2.5] ${book.isLikedByMe ? "fill-red-500 stroke-red-500 text-red-500" : "text-[#4b4570]"}`} />
-                <span>좋아요 {book.likes.toLocaleString()}</span>
+                <span>좋아요 {localBook.likes.toLocaleString()}</span>
               </button>
 
               {mode !== "owner" && (
@@ -406,7 +412,7 @@ export default function BookDetailView({
 
               {mode !== "owner" && (
                 <button
-                  onClick={() => !isBookReported && handleStartReport("book", book.id, `'${book.title}'`)}
+                  onClick={() => !isBookReported && handleStartReport("book", book.id, `'${localBook.title}'`)}
                   disabled={isBookReported}
                   className="inline-flex items-center gap-1.5 border px-3 py-2 text-xs font-bold rounded-lg transition duration-200 border-gray-300 text-[#7368a1] hover:text-red-700 hover:border-red-300 hover:bg-red-50 bg-white ml-auto disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-[#b9b0dc] disabled:cursor-default cursor-pointer"
                   title="이 작품 신고하기"
@@ -513,7 +519,7 @@ export default function BookDetailView({
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => {
-                        setEditDescription(book.description || "");
+                        setEditDescription(localBook.description || "");
                         setIsEditingDescription(false);
                       }}
                       className="px-4 py-2 rounded-lg border-2 border-[#b3a6eb] text-xs font-black text-[#3c375e] cursor-pointer bg-white"
@@ -523,7 +529,14 @@ export default function BookDetailView({
                     <button
                       onClick={async () => {
                         try {
-                          await onUpdateDescription?.(book.bookId || book.id, editDescription);
+                          await onUpdateDescription?.(
+                            book.bookId || book.id,
+                            editDescription
+                          );
+                          setLocalBook(prev => ({
+                            ...prev,
+                            description: editDescription,
+                          }));
 
                           setIsEditingDescription(false);
 
@@ -541,7 +554,7 @@ export default function BookDetailView({
                 <>
                   {/* 작품소개 글씨 두께 및 선명도 대폭 강화 (text-gray-800 -> text-neutral-950 / font-bold) */}
                   <p className="text-[15px] md:text-[16px] leading-[1.8] text-neutral-950 font-bold whitespace-pre-wrap">
-                    {book.description}
+                    {localBook.description}
                   </p>
 
                   {mode === "owner" && (
@@ -555,12 +568,27 @@ export default function BookDetailView({
 
                       <button
                         onClick={async () => {
-                          const nextStatus = book.status === "PUBLISHED" ? "HIDDEN" : "PUBLISHED";
-                          await onUpdateStatus?.(book.bookId || book.id, nextStatus);
+                          const bookId = localBook.bookId || localBook.id;
+                          const nextStatus =
+                            localBook.status === "PUBLISHED"
+                              ? "HIDDEN"
+                              : "PUBLISHED";
+
+                          try {
+                            await onUpdateStatus?.(bookId, nextStatus);
+
+                            setLocalBook(prev => ({
+                              ...prev,
+                              status: nextStatus,
+                            }));
+                          } catch (e) {
+                            alert("공개 여부 변경에 실패했습니다.");
+                          }
                         }}
-                        className="px-4 py-2 rounded-lg border-2 border-[#b3a6eb] text-xs font-black text-[#3c375e] hover:bg-[#f3f0ff] bg-white cursor-pointer"
                       >
-                        {book.status === "PUBLISHED" ? "비공개로 변경" : "공개로 변경"}
+                        {localBook.status === "PUBLISHED"
+                          ? "비공개로 변경"
+                          : "공개로 변경"}
                       </button>
                     </div>
                   )}
