@@ -15,7 +15,6 @@ export const useSignupState = ({ onSuccess }) => {
   const [nickname, setNickname] = useState('');
   const [birthdate, setBirthdate] = useState('2015-05-15');
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const [agreeMarketing, setAgreeMarketing] = useState(false);
 
   const [step, setStep] = useState('info');
   const [memberId, setMemberId] = useState(null);
@@ -28,11 +27,14 @@ export const useSignupState = ({ onSuccess }) => {
   const [isMinorUnder14, setIsMinorUnder14] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(null);
 
+  // 입력 중인 생년월일 기준으로 실시간으로 계산 — 보호자 동의 안내 문구 표시 여부에 사용
+  const willNeedGuardianConsent = authService.checkIsMinorUnder14(birthdate);
+
   const handleNextOrSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    const validationError = authService.validateSignupInfo({ email, password, confirmPassword, nickname, agreeTerms });
+    const validationError = authService.validateSignupInfo({ email, password, confirmPassword, nickname, birthdate, agreeTerms });
     if (validationError) {
       setError(validationError);
       return;
@@ -81,7 +83,9 @@ export const useSignupState = ({ onSuccess }) => {
 
   const handleModalClose = () => {
     setShowSuccessModal(false);
-    onSuccess();
+    // 만 14세 미만은 보호자 동의가 완료되기 전이므로 로그인 상태로 넘어가면 안 됨 —
+    // 이 경우엔 로그인 화면으로 돌려보내도록 호출부에 알려준다.
+    onSuccess({ pendingGuardianConsent: isMinorUnder14 });
   };
 
   return {
@@ -91,7 +95,6 @@ export const useSignupState = ({ onSuccess }) => {
     nickname, setNickname,
     birthdate, setBirthdate,
     agreeTerms, setAgreeTerms,
-    agreeMarketing, setAgreeMarketing,
     step, setStep,
     guardianEmail, setGuardianEmail,
     guardianName, setGuardianName,
@@ -99,6 +102,7 @@ export const useSignupState = ({ onSuccess }) => {
     isSubmitting,
     showSuccessModal,
     isMinorUnder14,
+    willNeedGuardianConsent,
     showTermsModal, setShowTermsModal,
     handleNextOrSubmit,
     handleGuardianSubmit,

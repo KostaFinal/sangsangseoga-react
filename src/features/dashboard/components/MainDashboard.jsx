@@ -11,8 +11,8 @@ import genreFairyTaleUrl from '../../../assets/images/genre_fairy_tale.jpg';
 import genreNovelUrl from '../../../assets/images/genre_novel.jpg';
 import genrePoemUrl from '../../../assets/images/genre_poem.jpg';
 import genreEssayUrl from '../../../assets/images/genre_essay.jpg';
-import genreInfoUrl from '../../../assets/images/genre_info.jpg';
-import { 
+import logoUrl from '../../../assets/images/sangsangseoga_official_logo_1782313504336.jpg';
+import {
   Sparkles, 
   BookOpen, 
   Heart, 
@@ -41,12 +41,10 @@ import {
 } from 'lucide-react';
 import { useDashboardState } from '../hooks/useDashboardState';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { useRequireAuth } from '../../../shared/hooks/useRequireAuth';
 
 export const MainDashboard = (props) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const requireAuth = useRequireAuth();
 
   const {
     isPremium,
@@ -117,77 +115,40 @@ export const MainDashboard = (props) => {
             </div>
 
             <div className="space-y-5 z-10 relative pt-2">
-              <div className="flex justify-between items-baseline">
-                <h2 className="text-lg sm:text-xl font-extrabold text-[#2F2D59]">
-                  장르별로 시작하기
-                </h2>
-                <button
-                  onClick={() => {
-                    if (!requireAuth()) return;
-                    setGenre('fantasy');
-                    setShowAtelierSection(true);
-                  }}
-                  className="text-xs sm:text-sm font-semibold text-[#6B54E7] hover:text-[#5b45d6] hover:underline flex items-center gap-1 cursor-pointer transition-all"
-                >
-                  <span>전체 장르 보기</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
+              <h2 className="text-lg sm:text-xl font-extrabold text-[#2F2D59]">
+                장르별로 시작하기
+              </h2>
 
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 sm:gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5">
                 {[
-                  { 
-                    name: '동화', 
-                    genreKey: 'fantasy', 
-                    imageUrl: genreFairyTaleUrl, 
+                  {
+                    name: '동화',
+                    imageUrl: genreFairyTaleUrl,
                     desc: '아이와 어른 모두의 마음에 남는 이야기',
-                    preset: '하늘을 유유히 여행하며 무지개빛 단비와 모험을 꾸리는 아기 은하수 고래 고고' 
+                    to: '/create/fairy-tale'
                   },
-                  { 
-                    name: '소설', 
-                    genreKey: 'mystery', 
-                    imageUrl: genreNovelUrl, 
+                  {
+                    name: '소설',
+                    imageUrl: genreNovelUrl,
                     desc: '상상력으로 빚어낸 긴 이야기',
-                    preset: '오래된 시골 기차역 대합실에서 우연히 발견된 오래된 금박 회중시계' 
+                    to: '/create/novel'
                   },
-                  { 
-                    name: '시', 
-                    genreKey: 'historical', 
-                    imageUrl: genrePoemUrl, 
+                  {
+                    name: '시',
+                    imageUrl: genrePoemUrl,
                     desc: '마음을 울리는 짧고 아름다운 문장',
-                    preset: '가을 밤하늘에 흩어지는 은은한 별빛과 그리움에 대한 서정시' 
+                    to: '/create/poem'
                   },
-                  { 
-                    name: '에세이', 
-                    genreKey: 'historical', 
-                    imageUrl: genreEssayUrl, 
+                  {
+                    name: '에세이',
+                    imageUrl: genreEssayUrl,
                     desc: '일상과 생각을 나만의 시선으로',
-                    preset: '오늘 하루 따뜻한 한 잔의 에스프레소가 건네는 조용하고 포근한 위로' 
-                  },
-                  { 
-                    name: '교육/지식', 
-                    genreKey: 'historical', 
-                    imageUrl: genreInfoUrl, 
-                    desc: '지식과 경험을 정리하고 공유해요',
-                    preset: '조선 시대 규장각 학자들이 밤하늘을 관측하며 기록해 둔 비밀 별자리 정보' 
+                    to: '/create/essay'
                   }
                 ].map((item, idx) => (
-                  <div 
-                    key={idx} 
-                    onClick={() => {
-                      if (item.name === '시') {
-                        navigate('/create/poem');
-                      } else if (item.name === '에세이') {
-                        navigate('/create/essay');
-                      } else if (item.name === '교육/지식') {
-                        navigate('/create/nonfiction');
-                      } else {
-                        if (!requireAuth()) return;
-                        setGenre(item.genreKey);
-                        setPrompt(item.preset);
-                        setShowAtelierSection(true);
-                      }
-                    }}
+                  <div
+                    key={idx}
+                    onClick={() => navigate(item.to)}
                     className="bg-white rounded-2xl border border-[#E6E2FC]/40 shadow-xs hover:shadow-md overflow-hidden cursor-pointer group hover:scale-[1.02] transition-all duration-300 flex flex-col h-full"
                   >
                     <div className="aspect-[4/3] w-full overflow-hidden relative">
@@ -314,35 +275,41 @@ export const MainDashboard = (props) => {
               {weeklyRanking.length === 0 ? (
                 <p className="text-xs text-[#B9B0DC] font-bold py-6 text-center">이번 주 랭킹 데이터가 아직 없습니다</p>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-5">
                   {weeklyRanking.map((book) => (
-                    <div key={book.id} className="space-y-2.5 group cursor-pointer text-left" onClick={() => navigate(`/friends/${book.id}`)}>
-                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-xs border border-gray-200 group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-white">
+                    <div key={book.id} onClick={() => navigate(`/friends/${book.id}`)} className="group cursor-pointer">
+                      <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-gray-200 group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-white">
                         <img
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           src={book.cover}
                           alt={book.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           referrerPolicy="no-referrer"
                         />
-                        <div className="absolute top-2.5 left-2.5 w-6.5 h-6.5 rounded-full bg-[#6B54E7] text-white font-black text-xs flex items-center justify-center shadow-md">
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/75 via-transparent to-transparent" />
+                        <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-[#6B54E7] text-white font-black text-[11px] flex items-center justify-center shadow-md border border-white/30">
                           {book.rank}
                         </div>
+                        <div className="absolute bottom-0 inset-x-0 p-3 text-left">
+                          <h4 className="text-white text-[13px] font-semibold leading-tight line-clamp-2 mb-1.5">{book.title}</h4>
+                          <div className="flex items-center gap-2.5 text-white/80 text-[10px]">
+                            <span className="flex items-center gap-1">
+                              <Heart className="w-3.5 h-3.5" />
+                              {book.likeCount >= 1000 ? `${(book.likeCount / 1000).toFixed(1)}k` : book.likeCount}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Eye className="w-3.5 h-3.5" />
+                              {(book.viewCount ?? 0) >= 1000 ? `${(book.viewCount / 1000).toFixed(1)}k` : (book.viewCount ?? 0)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-
-                      <div className="px-1 text-left">
-                        <h4 className="text-xs font-extrabold text-[#2F2D59] line-clamp-1 group-hover:text-[#6B54E7] transition-colors">{book.title}</h4>
+                      <div className="mt-2 text-center">
                         <button
                           onClick={e => { e.stopPropagation(); navigate(`/authors/${encodeURIComponent(book.author)}`); }}
-                          className="text-[10px] text-[#7C769D] font-bold mt-0.5 hover:text-[#6B54E7] transition-colors cursor-pointer"
+                          className="text-[12px] font-medium text-[#2f2d59] hover:text-[#6b54e7] transition-colors cursor-pointer"
                         >
                           {book.author}
                         </button>
-                        <div className="flex items-center gap-0.5 text-red-500 font-extrabold mt-1">
-                          <span className="text-[11px]">🔥</span>
-                          <span className="text-[10px] text-[#7C769D] font-extrabold">
-                            {book.likeCount >= 1000 ? `${(book.likeCount / 1000).toFixed(1)}K` : book.likeCount}
-                          </span>
-                        </div>
                       </div>
                     </div>
                   ))}
@@ -362,35 +329,41 @@ export const MainDashboard = (props) => {
               {weeklyNewReleases.length === 0 ? (
                 <p className="text-xs text-[#B9B0DC] font-bold py-6 text-center">이번 주 신작이 아직 없습니다</p>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-5">
                   {weeklyNewReleases.map((book) => (
-                    <div key={book.id} className="space-y-2.5 group cursor-pointer text-left" onClick={() => navigate(`/friends/${book.id}`)}>
-                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-xs border border-gray-200 group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-white">
+                    <div key={book.id} onClick={() => navigate(`/friends/${book.id}`)} className="group cursor-pointer">
+                      <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-gray-200 group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-white">
                         <img
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           src={book.cover}
                           alt={book.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           referrerPolicy="no-referrer"
                         />
-                        <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-[#6B54E7] text-white font-black text-[10px] shadow-md">
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/75 via-transparent to-transparent" />
+                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold border backdrop-blur-sm bg-[#6b54e7]/90 text-white border-white/30">
                           NEW
                         </div>
+                        <div className="absolute bottom-0 inset-x-0 p-3 text-left">
+                          <h4 className="text-white text-[13px] font-semibold leading-tight line-clamp-2 mb-1.5">{book.title}</h4>
+                          <div className="flex items-center gap-2.5 text-white/80 text-[10px]">
+                            <span className="flex items-center gap-1">
+                              <Heart className="w-3.5 h-3.5" />
+                              {book.likeCount >= 1000 ? `${(book.likeCount / 1000).toFixed(1)}k` : book.likeCount}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Eye className="w-3.5 h-3.5" />
+                              {(book.viewCount ?? 0) >= 1000 ? `${(book.viewCount / 1000).toFixed(1)}k` : (book.viewCount ?? 0)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-
-                      <div className="px-1 text-left">
-                        <h4 className="text-xs font-extrabold text-[#2F2D59] line-clamp-1 group-hover:text-[#6B54E7] transition-colors">{book.title}</h4>
+                      <div className="mt-2 text-center">
                         <button
                           onClick={e => { e.stopPropagation(); navigate(`/authors/${encodeURIComponent(book.author)}`); }}
-                          className="text-[10px] text-[#7C769D] font-bold mt-0.5 hover:text-[#6B54E7] transition-colors cursor-pointer"
+                          className="text-[12px] font-medium text-[#2f2d59] hover:text-[#6b54e7] transition-colors cursor-pointer"
                         >
                           {book.author}
                         </button>
-                        <div className="flex items-center gap-0.5 text-red-500 font-extrabold mt-1">
-                          <span className="text-[11px]">🔥</span>
-                          <span className="text-[10px] text-[#7C769D] font-extrabold">
-                            {book.likeCount >= 1000 ? `${(book.likeCount / 1000).toFixed(1)}K` : book.likeCount}
-                          </span>
-                        </div>
                       </div>
                     </div>
                   ))}
@@ -520,27 +493,16 @@ export const MainDashboard = (props) => {
 
               </div>
 
-      <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 pt-8 border-t border-[#D4CDF2] text-xs text-left text-[#7C769D] space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="w-7 h-7 bg-[#6B54E7] text-white text-xs font-black rounded flex items-center justify-center">상</span>
-            <strong className="text-sm font-bold text-[#2F2D59]">상상서가</strong>
-            <span className="text-[10px] text-[#7C769D]">| AI가 당신의 상상을 멋진 책으로</span>
-          </div>
-
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[#7C769D]">
-            <button onClick={() => alert('이용약관 페이지는 준비 중입니다.')} className="hover:text-[#2F2D59]">이용약관</button>
-            <span>•</span>
-            <button onClick={() => alert('개인정보처리방침 페이지는 준비 중입니다.')} className="hover:text-[#2F2D59] font-bold">개인정보처리방침</button>
-            <span>•</span>
-            <button onClick={() => alert('고객센터 페이지는 준비 중입니다.')} className="hover:text-[#2F2D59]">고객센터</button>
-            <span>•</span>
-            <button onClick={() => alert('공지사항 페이지는 준비 중입니다.')} className="hover:text-[#2F2D59]">공지사항</button>
-          </div>
+      <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 pt-8 border-t border-[#D4CDF2] text-xs text-left text-[#7C769D]">
+        <div className="flex items-center gap-2">
+          <img
+            src={logoUrl}
+            alt="상상서가"
+            referrerPolicy="no-referrer"
+            className="h-8 w-auto object-contain mix-blend-multiply opacity-90"
+          />
+          <span className="text-[10px] text-[#7C769D]">| AI가 당신의 상상을 멋진 책으로</span>
         </div>
-        <p className="text-[10px] text-[#B9B0DC] pt-2">
-          © 2026 SangSangSeoga. All rights reserved. Powered by Google Gemini-3.5 Models.
-        </p>
       </footer>
 
       {showFreeTrialCapModal && (

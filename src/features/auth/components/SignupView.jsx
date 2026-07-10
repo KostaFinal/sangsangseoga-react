@@ -1,5 +1,7 @@
 import React from 'react';
 import { useSignupState } from '../hooks/useSignupState';
+import BirthdatePicker from './BirthdatePicker';
+import GuardianConsentRequestForm from './GuardianConsentRequestForm';
 
 export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
   const {
@@ -9,7 +11,6 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
     nickname, setNickname,
     birthdate, setBirthdate,
     agreeTerms, setAgreeTerms,
-    agreeMarketing, setAgreeMarketing,
     step, setStep,
     guardianEmail, setGuardianEmail,
     guardianName, setGuardianName,
@@ -17,6 +18,7 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
     isSubmitting,
     showSuccessModal,
     isMinorUnder14,
+    willNeedGuardianConsent,
     showTermsModal, setShowTermsModal,
     handleNextOrSubmit,
     handleGuardianSubmit,
@@ -30,9 +32,6 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
 
       <div id="signup-card" className="max-w-md w-full space-y-7 bg-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-neutral-200/80 z-10 relative">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-black text-white font-literata text-xl mb-3 shadow-md font-bold">
-            상
-          </div>
           <h2 id="signup-title" className="text-2xl font-literata font-bold text-neutral-900 tracking-tight">
             상상서가 회원가입
           </h2>
@@ -42,13 +41,14 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
         </div>
 
         {error && (
-          <div className="bg-neutral-50 text-neutral-800 border border-neutral-200 p-3 rounded-xl text-xs leading-relaxed text-left font-sans">
-            {error}
+          <div className="flex items-start gap-1.5 bg-rose-50 text-rose-800 border border-rose-200 p-3 rounded-xl text-xs leading-relaxed text-left font-sans">
+            <span className="material-symbols-outlined text-rose-500 text-sm mt-0.5">error_outline</span>
+            <span>{error}</span>
           </div>
         )}
 
         {step === 'info' ? (
-          <form className="mt-4 space-y-4 text-left font-sans" onSubmit={handleNextOrSubmit}>
+          <form className="mt-4 space-y-4 text-left font-sans" onSubmit={handleNextOrSubmit} noValidate>
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-neutral-600 mb-1">
@@ -116,22 +116,17 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
                 <label className="block text-xs font-bold text-neutral-600 mb-1">
                   생년월일 <span className="text-neutral-900">*</span>
                 </label>
-                <input
-                  id="signup-birthdate"
-                  type="date"
-                  required
-                  value={birthdate}
-                  onChange={(e) => setBirthdate(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white text-sm text-neutral-900 rounded-xl border border-neutral-200 focus:border-black focus:outline-none transition-all duration-200 font-sans"
-                />
-                <div className="mt-2 text-[11px] text-neutral-700 bg-neutral-100 hover:bg-neutral-200/50 border border-neutral-200/60 px-3 py-2 rounded-xl font-sans flex items-start">
-                  <span className="material-symbols-outlined text-xs mr-1.5 mt-0.5 text-neutral-600">info</span>
-                  <span>만 14세 미만의 어린이는 가입 시 보호자의 동의가 필요합니다.</span>
-                </div>
+                <BirthdatePicker value={birthdate} onChange={setBirthdate} />
+                {willNeedGuardianConsent && (
+                  <div className="mt-2 text-[11px] text-neutral-700 bg-neutral-100 hover:bg-neutral-200/50 border border-neutral-200/60 px-3 py-2 rounded-xl font-sans flex items-start">
+                    <span className="material-symbols-outlined text-xs mr-1.5 mt-0.5 text-neutral-600">info</span>
+                    <span>만 14세 미만의 어린이는 가입 시 보호자의 동의가 필요합니다.</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="space-y-2 pt-2.5 border-t border-neutral-200 font-sans">
+            <div className="pt-2.5 border-t border-neutral-200 font-sans">
               <div className="flex items-center justify-between">
                 <label className="flex items-start space-x-2 text-xs text-neutral-500 cursor-pointer font-sans leading-relaxed flex-1">
                   <input
@@ -143,35 +138,12 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
                   />
                   <span>
                     <span className="font-extrabold text-black mr-1">[필수]</span>
-                    이용약관 및 개인정보 수집·이용 동의
+                    이용약관 및 개인정보 수집·이용에 동의합니다
                   </span>
                 </label>
                 <button
                   type="button"
                   onClick={() => setShowTermsModal('service')}
-                  className="text-[10px] text-neutral-400 font-bold hover:text-black underline shrink-0 whitespace-nowrap ml-1.5"
-                >
-                  전문 보기
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <label className="flex items-start space-x-2 text-xs text-neutral-500 cursor-pointer font-sans leading-relaxed flex-1">
-                  <input
-                    id="signup-agree-marketing"
-                    type="checkbox"
-                    checked={agreeMarketing}
-                    onChange={() => setAgreeMarketing(!agreeMarketing)}
-                    className="mt-0.5 w-4 h-4 text-black border-neutral-300 rounded focus:ring-black accent-black"
-                  />
-                  <span>
-                    <span className="font-bold text-neutral-700 mr-1">[선택]</span>
-                    도서 추천 및 유용한 소식 알림 동의
-                  </span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowTermsModal('marketing')}
                   className="text-[10px] text-neutral-400 font-bold hover:text-black underline shrink-0 whitespace-nowrap ml-1.5"
                 >
                   전문 보기
@@ -191,64 +163,15 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
             </div>
           </form>
         ) : (
-          <form className="mt-4 space-y-4 text-left font-sans animate-in fade-in slide-in-from-bottom-2 duration-300" onSubmit={handleGuardianSubmit}>
-            <div className="p-4 bg-neutral-900 text-white rounded-2xl border border-neutral-900 font-sans">
-              <span className="inline-block px-2 py-0.5 bg-neutral-800 text-neutral-100 text-[10px] font-bold rounded mb-1 font-sans">만 14세 미만 보호자 동의</span>
-              <p className="text-xs text-neutral-300 leading-relaxed font-sans font-medium">
-                만 14세 미만 어린이는 가입을 위해 보호자 동의가 필요합니다. 보호자님의 이메일로 가입 확인 메일을 보내 드립니다.
-              </p>
-            </div>
-
-            <div className="space-y-3.5 font-sans">
-              <div>
-                <label className="block text-xs font-bold text-neutral-600 mb-1 font-sans">
-                  보호자 이름 <span className="text-neutral-900">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={guardianName}
-                  onChange={(e) => setGuardianName(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white text-sm text-neutral-900 rounded-xl border border-neutral-200 focus:border-black focus:outline-none transition-all duration-200"
-                  placeholder="보호자 실명 기재"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-neutral-600 mb-1 font-sans">
-                  보호자 이메일 주소 <span className="text-neutral-900">*</span>
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={guardianEmail}
-                  onChange={(e) => setGuardianEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white text-sm text-neutral-900 rounded-xl border border-neutral-200 focus:border-black focus:outline-none transition-all duration-200 font-sans"
-                  placeholder="guardian@email.com"
-                />
-                <p className="mt-1 text-[10px] text-neutral-400 font-sans font-medium">
-                  * 입력하신 이메일로 가입 동의 확인 링크가 전송됩니다.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-12 gap-3 pt-2 font-sans">
-              <button
-                type="button"
-                onClick={() => setStep('info')}
-                className="col-span-4 py-3 px-3 font-semibold text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-xl text-xs transition-colors"
-              >
-                이전으로
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="col-span-8 py-3 px-4 font-bold text-white bg-black hover:bg-neutral-900 rounded-xl text-xs shadow-md transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? '처리 중...' : '동의 이메일 발송 & 가입요청'}
-              </button>
-            </div>
-          </form>
+          <GuardianConsentRequestForm
+            guardianName={guardianName}
+            setGuardianName={setGuardianName}
+            guardianEmail={guardianEmail}
+            setGuardianEmail={setGuardianEmail}
+            onSubmit={handleGuardianSubmit}
+            onBack={() => setStep('info')}
+            isSubmitting={isSubmitting}
+          />
         )}
 
         <div className="text-center pt-2 font-sans">
@@ -295,7 +218,7 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
                 onClick={handleModalClose}
                 className="w-full py-2.5 bg-black hover:bg-neutral-900 text-white text-xs font-semibold rounded-xl tracking-wide transition-colors"
               >
-                상상서가 아틀리에 열기
+                {isMinorUnder14 ? '로그인 화면으로 돌아가기' : '상상서가 아틀리에 열기'}
               </button>
             </div>
           </div>
@@ -307,27 +230,16 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
         <div className="fixed inset-0 bg-neutral-950/70 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
           <div className="bg-white max-w-md w-full rounded-2xl p-6 text-left shadow-2xl space-y-4 border border-neutral-200">
             <h3 className="text-sm font-bold text-neutral-900 uppercase font-mono tracking-wider">
-              {showTermsModal === 'service' ? '상상서가 디지털 서비스 이용 약관 전문' : '개인정보 수집 및 소식 알림 수집 동의서'}
+              이용약관 및 개인정보 수집·이용 안내
             </h3>
-            
+
             <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 text-[11px] text-neutral-500 leading-relaxed font-sans max-h-60 overflow-y-auto space-y-2.5">
-              {showTermsModal === 'service' ? (
-                <>
-                  <p className="font-bold text-black">제 1 조 (목적)</p>
-                  <p>본 약관은 상상서가가 제공하는 인공지능 보조 동화 및 문학책 집필 시스템의 가입 절차, 서비스 이용 범위, 그리고 상호 신뢰 안전 규정을 명확히 안내함을 목적으로 합니다.</p>
-                  <p className="font-bold text-black">제 2 조 (회원 가입식 이메일 인증)</p>
-                  <p>이메일 주소는 아이디 중복 확인 및 혹시 비밀번호를 잊으셨을 때 임시 비밀번호 변경 주소를 안전하게 전달받기 위한 소통 창구로 사용되며 소중히 기밀 보호됩니다. 비밀번호는 현대 기술 표준에 대응하는 고도 암호화를 거치기 때문에 외부 유출로부터 안전하게 보호됩니다.</p>
-                  <p className="font-bold text-black">제 3 조 (어린이 가입 안내)</p>
-                  <p>만 14세 미만 어린이는 가입을 제한하며, 법정대리인(보호자)의 가입 수락 이메일 확인이 완료된 후 비로소 정식 작가 회원으로 활동하실 수 있습니다.</p>
-                </>
-              ) : (
-                <>
-                  <p className="font-bold text-black">1. 개인정보 수집 목적</p>
-                  <p>소중한 문학 초안 원고 안심 백업 보관 제공, '기본 서재' 공간 매칭, 결제 기록 파악, 연령 확인에 따른 보호자 동의 수령.</p>
-                  <p className="font-bold text-black">2. 수집 및 보존 기한</p>
-                  <p>회원 탈퇴 시 보관 데이터는 즉시 삭제됩니다. 다만, 실수에 의한 탈퇴 상황을 대비하여 30일 동안 복구 유예 기간을 두며, 이 유예 장치가 종료되면 온전히 영구 완전 파기됩니다.</p>
-                </>
-              )}
+              <p className="font-bold text-black">1. 서비스 이용</p>
+              <p>이메일과 닉네임은 로그인 및 서비스 이용을 위한 계정 식별 정보로 사용되며, 비밀번호는 암호화되어 저장됩니다.</p>
+              <p className="font-bold text-black">2. 개인정보 수집 및 보관</p>
+              <p>작성한 원고와 서재 데이터를 보관하고, 구독·결제 이력을 관리하는 목적으로 사용됩니다. 회원 탈퇴 시 관련 데이터는 30일의 복구 유예 기간 이후 삭제됩니다.</p>
+              <p className="font-bold text-black">3. 어린이 회원 가입</p>
+              <p>만 14세 미만은 법정대리인(보호자)의 이메일 동의 절차를 완료해야 정식으로 가입됩니다.</p>
             </div>
 
             <div className="pt-2 text-right">

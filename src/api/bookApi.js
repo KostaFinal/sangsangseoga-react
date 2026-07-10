@@ -9,6 +9,9 @@ export const getBook = (bookId) => api.get(`/api/books/${bookId}`);
  
 // 책 본문 조회
 export const getBookContents = (bookId) => api.get(`/api/books/${bookId}/contents`);
+
+// 책 읽기 시작 시 조회수 증가
+export const increaseViewCount = (bookId) => api.post(`/api/books/${bookId}/view`);
  
 // 책 추천
 export const getRecommendations = (bookId, size = 3) =>

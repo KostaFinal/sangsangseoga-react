@@ -18,12 +18,11 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
   // Navigation tabs: 'basic' (기본 정보 설정) | 'guardian' (학부모 안심 동의)
   const [activeTab, setActiveTab] = useState('basic');
 
-  // Basic Profile States
-  const [nickname, setNickname] = useState(currentUser?.nickname || '상상의작가');
-  const [originalNickname, setOriginalNickname] = useState(currentUser?.nickname || '상상의작가');
+  // Basic Profile States — 마운트 시 loadMyProfile()이 실제 값으로 채운다
+  const [nickname, setNickname] = useState(currentUser?.nickname || '');
   const [isNicknameChecked, setIsNicknameChecked] = useState(true);
-  const [nicknameCheckMsg, setNicknameCheckMsg] = useState({ text: '현재 적용된 중복 없는 안전한 필명입니다.', isError: false });
-  const [profileImage, setProfileImage] = useState(currentUser?.profileImage || currentUser?.profile || CURRENT_USER_PROFILE);
+  const [nicknameCheckMsg, setNicknameCheckMsg] = useState({ text: '', isError: false });
+  const [profileImage, setProfileImage] = useState(currentUser?.profileImageUrl || CURRENT_USER_PROFILE);
 
   // Password Modification States
   const [currentPassword, setCurrentPassword] = useState('');
@@ -31,35 +30,15 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [showPwText, setShowPwText] = useState(false);
 
-  // Minor Under 14 specific Parent Email
-  const [isMinor, setIsMinor] = useState(currentUser?.ageGroup === 'MINOR_U14' || currentUser?.birthdate === '2015-05-15' || true); // Default true for simulation
-  const [guardianEmail, setGuardianEmail] = useState(currentUser?.guardianEmail || 'parent@guardian.com');
-  const [originalGuardianEmail, setOriginalGuardianEmail] = useState('parent@guardian.com');
+  // Minor Under 14 specific Parent Email — 실제 프로필 조회 전까지는 알 수 없으므로 false로 시작
+  const [isMinor, setIsMinor] = useState(false);
+  const [guardianEmail, setGuardianEmail] = useState('');
   const [guardianEmailEditMode, setGuardianEmailEditMode] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
 
-  // Connected Minor account stats (for Guardian view)
-  const [connectedMinors, setConnectedMinors] = useState([
-    {
-      id: 'minor_781',
-      name: '김상상 (자녀)',
-      email: 'child.sangsang@gmail.com',
-      birthdate: '2015-05-15',
-      booksCount: 5,
-      subscription: '프리미엄 정기 요금제',
-      status: 'ACTIVE', // ACTIVE | SUSPENDED
-      joinedDate: '2026-03-12'
-    },
-    {
-      id: 'minor_920',
-      name: '박상상 (자녀)',
-      email: 'kid.sangsang@daum.net',
-      birthdate: '2017-08-25',
-      booksCount: 1,
-      subscription: '무료 새싹 작가회',
-      status: 'ACTIVE',
-      joinedDate: '2026-05-19'
-    }
-  ]);
+  // Connected Minor accounts (보호자 기준 — 실제 연결된 자녀가 있을 때만 의미 있음)
+  const [connectedMinors, setConnectedMinors] = useState([]);
+  const [isConnectedMinorsLoading, setIsConnectedMinorsLoading] = useState(false);
   const [showWithdrawConsentModal, setShowWithdrawConsentModal] = useState(false);
   const [selectedMinorToWithdraw, setSelectedMinorToWithdraw] = useState(null);
   const [withdrawPasswordConfirm, setWithdrawPasswordConfirm] = useState('');
@@ -69,6 +48,24 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
   const [pendingConsents, setPendingConsents] = useState([]);
   const [isPendingConsentsLoading, setIsPendingConsentsLoading] = useState(false);
   const [pendingConsentsError, setPendingConsentsError] = useState('');
+
+  // "보호자 동의" 탭은 본인이 미성년자이거나 실제로 연결된/대기 중인 자녀가 있을 때만 노출
+  const showGuardianTab = isMinor || connectedMinors.length > 0 || pendingConsents.length > 0;
+
+  const loadMyProfile = useCallback(async () => {
+    setIsProfileLoading(true);
+    try {
+      const profile = await profileService.getMyProfile();
+      setNickname(profile.nickname);
+      setProfileImage(profile.profileImageUrl || CURRENT_USER_PROFILE);
+      setIsMinor(profile.isMinor);
+      setGuardianEmail(profile.guardianEmail);
+    } catch (err) {
+      // 조회 실패 시 로그인 응답에 있던 값으로라도 유지
+    } finally {
+      setIsProfileLoading(false);
+    }
+  }, []);
 
   const loadPendingConsents = useCallback(async () => {
     setIsPendingConsentsLoading(true);
@@ -83,11 +80,25 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (activeTab === 'guardian') {
-      loadPendingConsents();
+  const loadConnectedMinors = useCallback(async () => {
+    setIsConnectedMinorsLoading(true);
+    try {
+      const list = await profileService.getConnectedMinors();
+      setConnectedMinors(list);
+    } catch (err) {
+      // 보호자가 아닌 계정이면 실패할 수 있음 — 조용히 빈 목록 유지
+    } finally {
+      setIsConnectedMinorsLoading(false);
     }
-  }, [activeTab, loadPendingConsents]);
+  }, []);
+
+  // 마운트 시 내 프로필과 보호자 관련 데이터를 함께 조회해서, "보호자 동의" 탭을
+  // 보여줘야 하는지(showGuardianTab) 처음부터 정확히 판단할 수 있게 한다.
+  useEffect(() => {
+    loadMyProfile();
+    loadPendingConsents();
+    loadConnectedMinors();
+  }, [loadMyProfile, loadPendingConsents, loadConnectedMinors]);
 
   // Account Withdrawal States
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -111,18 +122,18 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
   const handleNicknameChange = (value) => {
     setNickname(value);
     setIsNicknameChecked(false);
-    setNicknameCheckMsg({ text: '필명이 바뀌었습니다. 우측 중복 확인을 다시 이행해 주세요.', isError: true });
+    setNicknameCheckMsg({ text: '필명이 바뀌었습니다. 중복 확인을 다시 진행해 주세요.', isError: true });
   };
 
   // Real-time Nickname Duplicate Check
   const handleCheckNicknameDuplicate = async () => {
-    const { available, message } = await profileService.checkNicknameAvailability(nickname);
-    setNicknameCheckMsg({ text: message, isError: !available });
-    setIsNicknameChecked(available);
-    if (!available) {
-      triggerToast('이미 등록된 필명입니다. 다른 닉네임을 설정하십시오.');
-    } else {
-      triggerToast('필명 중복 확인이 완료되었습니다!');
+    try {
+      const { available, message } = await profileService.checkNicknameAvailability(nickname);
+      setNicknameCheckMsg({ text: message, isError: !available });
+      setIsNicknameChecked(available);
+    } catch (err) {
+      setNicknameCheckMsg({ text: err.message, isError: true });
+      setIsNicknameChecked(false);
     }
   };
 
@@ -131,7 +142,7 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     e.preventDefault();
 
     if (!isNicknameChecked) {
-      triggerToast('닉네임 중복 체크를 먼저 진행해 주세요.');
+      triggerToast('닉네임 중복 확인을 먼저 진행해 주세요.');
       return;
     }
 
@@ -141,17 +152,27 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
       return;
     }
 
-    await profileService.updateProfile({ nickname, profileImage });
+    try {
+      await profileService.updateProfile({ nickname, profileImage });
 
-    triggerToast('내 소중한 가입 정보 및 알림 수신 상태를 성공적으로 개정하였습니다.');
-    setOriginalNickname(nickname);
-    setOriginalGuardianEmail(guardianEmail);
-    setGuardianEmailEditMode(false);
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmNewPassword('');
-    if (onUpdateProfile) {
-      onUpdateProfile({ nickname, profileImage });
+      if (newPassword) {
+        await profileService.changePassword(currentPassword, newPassword);
+      }
+
+      if (isMinor && guardianEmailEditMode) {
+        await profileService.updateGuardianEmail(guardianEmail);
+      }
+
+      triggerToast('프로필이 저장되었습니다.');
+      setGuardianEmailEditMode(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      if (onUpdateProfile) {
+        onUpdateProfile({ nickname, profileImage });
+      }
+    } catch (err) {
+      triggerToast(err.message);
     }
   };
 
@@ -179,28 +200,21 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     setShowWithdrawConsentModal(true);
   };
 
-  // Handle Parent Consent Withdrawal for Child
+  // Handle Parent Consent Withdrawal for Child — 비밀번호 검증은 서버가 수행
   const handleWithdrawConsentSubmit = async (e) => {
     e.preventDefault();
     setWithdrawError('');
 
-    if (!profileService.verifyAccountPassword(withdrawPasswordConfirm)) {
-      setWithdrawError('비밀번호 검증에 실패했습니다. 올바른 학부모 계정 암호를 입력해 주세요.');
-      return;
-    }
+    if (!selectedMinorToWithdraw) return;
 
-    if (selectedMinorToWithdraw) {
-      await profileService.withdrawGuardianConsent(selectedMinorToWithdraw.id);
-      setConnectedMinors(prev =>
-        prev.map(minor =>
-          minor.id === selectedMinorToWithdraw.id
-            ? { ...minor, status: 'SUSPENDED', booksCount: 0, subscription: '동의 철회됨 / 계정 정지' }
-            : minor
-        )
-      );
+    try {
+      await profileService.withdrawGuardianConsent(selectedMinorToWithdraw.id, withdrawPasswordConfirm);
+      setConnectedMinors(prev => prev.filter(minor => minor.id !== selectedMinorToWithdraw.id));
       setShowWithdrawConsentModal(false);
       setWithdrawPasswordConfirm('');
-      triggerToast(`${selectedMinorToWithdraw.name} 자녀 계정의 서비스 동의가 철회 및 비활성화 처리되었습니다.`);
+      triggerToast(`${selectedMinorToWithdraw.name} 계정의 보호자 동의가 철회되었습니다.`);
+    } catch (err) {
+      setWithdrawError(err.message);
     }
   };
 
@@ -210,19 +224,19 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     setWithdrawErrorMsg('');
 
     if (!agreeWithdrawTerms) {
-      setWithdrawErrorMsg('탈퇴 약관 유의사항 및 연관 유실 데이터 인지 동의란에 체크가 필요합니다.');
+      setWithdrawErrorMsg('안내 사항 확인 및 동의 체크박스를 선택해 주세요.');
       return;
     }
 
     if (!withdrawConfirmPw) {
-      setWithdrawErrorMsg('본인 계정의 비밀번호를 기재해 주십시오.');
+      setWithdrawErrorMsg('본인 계정의 비밀번호를 입력해 주세요.');
       return;
     }
 
     setIsWithdrawing(true);
     try {
       await profileService.withdrawMembership(withdrawConfirmPw, bookDisposalMethod);
-      triggerToast('상상서가 회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.');
+      triggerToast('회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.');
 
       setTimeout(() => {
         setShowWithdrawModal(false);
@@ -239,7 +253,7 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     try {
       await profileService.decideGuardianConsent(consent.consentId, 'REJECTED');
       setPendingConsents(prev => prev.filter(c => c.consentId !== consent.consentId));
-      triggerToast(`자녀의 가입 동의를 반려 처리하여, ${consent.nickname} 어린이의 가입 요청은 중단 처리되었습니다.`);
+      triggerToast(`${consent.nickname} 어린이의 가입 요청을 반려했습니다.`);
     } catch (err) {
       triggerToast(err.message);
     }
@@ -249,20 +263,8 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     try {
       await profileService.decideGuardianConsent(consent.consentId, 'APPROVED');
       setPendingConsents(prev => prev.filter(c => c.consentId !== consent.consentId));
-      setConnectedMinors(prev => [
-        {
-          id: `minor_${consent.memberId}`,
-          name: `${consent.nickname} (자녀)`,
-          email: consent.email,
-          birthdate: consent.birthDate,
-          booksCount: 0,
-          subscription: '무료 새싹 작가 플랜 (기본 무료체험 1회 지급)',
-          status: 'ACTIVE',
-          joinedDate: '방금 전 동의함',
-        },
-        ...prev,
-      ]);
-      triggerToast(`🎉 동의 확인 성공! ${consent.nickname} 어린이의 가입이 체결되어 책방 창작 활동이 승인되었습니다.`);
+      triggerToast(`${consent.nickname} 어린이의 가입 동의가 승인되었습니다.`);
+      loadConnectedMinors();
     } catch (err) {
       triggerToast(err.message);
     }
@@ -270,6 +272,8 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
 
   return {
     activeTab, setActiveTab,
+    showGuardianTab,
+    isProfileLoading,
 
     nickname,
     isNicknameChecked,
@@ -289,6 +293,7 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     guardianEmailEditMode, setGuardianEmailEditMode,
 
     connectedMinors,
+    isConnectedMinorsLoading,
 
     pendingConsents,
     isPendingConsentsLoading,

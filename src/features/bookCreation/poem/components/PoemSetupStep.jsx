@@ -3,8 +3,10 @@ import ModeSelectSection from '../../components/ModeSelectSection.jsx';
 import PoemFlowStepper from './PoemFlowStepper.jsx';
 import PoemBasicSettingSection, { isPoemBasicSettingReady } from './PoemBasicSettingSection.jsx';
 import { poemModeOptions } from '../data/poemModeOptions.js';
+import { useRequireAuth } from '../../../../shared/hooks/useRequireAuth.js';
 
 export default function PoemSetupStep({ settings, setSettings, setCurrentView }) {
+  const requireAuth = useRequireAuth();
   const canGoWork = isPoemBasicSettingReady(settings);
 
   const selectMode = (mode) => {
@@ -35,7 +37,7 @@ export default function PoemSetupStep({ settings, setSettings, setCurrentView })
           type="button"
           className="primary"
           disabled={!canGoWork}
-          onClick={() => setCurrentView('step2')}
+          onClick={() => { if (!requireAuth()) return; setCurrentView('step2'); }}
         >
           작업실로 이동
         </button>

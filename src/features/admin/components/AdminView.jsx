@@ -11,6 +11,7 @@ import { MemberTab } from './MemberTab';
 import { ReportsTab } from './ReportsTab';
 import { ReportDetailModal } from './ReportDetailModal';
 import { TokensTab } from './TokensTab';
+import { Toast } from '../../../shared/components/Toast';
 
 const TAB_TO_PATH = { member: 'members', reports: 'reports', tokens: 'tokens' };
 
@@ -19,7 +20,11 @@ export const AdminView = ({ initialTab = 'member' }) => {
   const {
     activeTab,
     setActiveTab,
-    
+
+    // 공용 에러/성공 피드백
+    toast,
+    clearToast,
+
     // Member states
     users,
     memberSearchQuery,
@@ -216,6 +221,10 @@ export const AdminView = ({ initialTab = 'member' }) => {
         setReportRejectReason={setReportRejectReason}
         handleResolveReport={handleResolveReport}
       />
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={clearToast} />
+      )}
     </div>
   );
 };

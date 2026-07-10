@@ -15,7 +15,7 @@ const genreBadge = (genre) => {
   };
   return map[genre] || { cls: "bg-[#e6e2fc] text-[#6b54e7] border-[#d4cdf2]", label: bookTypeToGenre[genre] || genre };
 };
-import { getRecommendations, getBookContents, getBook } from "@/src/api/bookApi";
+import { getRecommendations, getBookContents, getBook, increaseViewCount } from "@/src/api/bookApi";
 import { getComments, updateComment, deleteComment } from "@/src/api/commentApi";
 import { getAuthors, followAuthor, unfollowAuthor } from "@/src/api/authorApi";
 import { getLastReadingPosition, updateReadingProgress, rereadBook } from "@/src/api/myLibraryApi";
@@ -141,8 +141,7 @@ export default function BookDetailView({
   }, [book.id]);
 
   const [tags, setTags] = useState(book.tags || []);
-  // book.id당 한 번만 호출되도록 가드 - getBook은 서버에서 조회수를 올리는 부수효과가 있어서
-  // (StrictMode의 개발 모드 이중 마운트로) 중복 호출되면 조회수가 실제로 2씩 올라간다
+  // book.id당 한 번만 호출되도록 가드 (StrictMode 개발 모드 이중 마운트로 인한 중복 요청 방지)
   const viewedBookIdRef = useRef(null);
   useEffect(() => {
     const bookId = book.bookId || book.id;
@@ -152,7 +151,6 @@ export default function BookDetailView({
       .then(res => {
         const data = res.data?.data;
         setTags(data?.tags || []);
-        if (data?.viewCount != null) onViewCountSynced?.(bookId, data.viewCount);
       })
       .catch(() => setTags([]));
   }, [book.id]);
@@ -453,6 +451,14 @@ export default function BookDetailView({
                   } catch (err) {
                     console.error("읽기 시작 처리 실패", err);
                   }
+
+                  // 책을 펼쳐 읽기 시작하는 시점에만 조회수 반영
+                  increaseViewCount(bookId)
+                    .then(res => {
+                      const viewCount = res.data?.data;
+                      if (viewCount != null) onViewCountSynced?.(bookId, viewCount);
+                    })
+                    .catch(() => {});
 
                   const res = await getBookContents(bookId);
                   const pageItems = res.data?.data?.items || [];

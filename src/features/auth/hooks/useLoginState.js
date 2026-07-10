@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import { authService } from '../services/authService';
 
-// 개발 환경 전용 테스트 계정 (원클릭 로그인 버튼에서만 사용)
-const DEV_TEST_EMAIL = 'writer@sangsang.com';
-const DEV_TEST_PASSWORD = 'Test1234!';
-
 /**
  * Custom Hook: useLoginState
  *
@@ -19,6 +15,7 @@ export const useLoginState = ({ onSuccess }) => {
   const [adminPassword, setAdminPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
+  const [socialInfoMessage, setSocialInfoMessage] = useState('');
 
   const enterAdminMode = () => {
     setIsAdminMode(true);
@@ -57,15 +54,49 @@ export const useLoginState = ({ onSuccess }) => {
     }
   };
 
-  /** 개발 환경 전용: 테스트 계정으로 원클릭 로그인 (실제 /api/auth/login 호출, 실제 토큰 발급) */
-  const handleDevQuickLogin = async () => {
-    try {
-      const user = await authService.login(DEV_TEST_EMAIL, DEV_TEST_PASSWORD, true);
-      setError('');
-      onSuccess(user);
-    } catch (err) {
-      setError(err.message);
+  /** 소셜 로그인을 팝업 창으로 열고, 팝업이 postMessage로 결과를 보내오면 처리 */
+  const handleSocialLogin = (provider) => {
+    setError('');
+    setSocialInfoMessage('');
+
+    const width = 480;
+    const height = 800;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+    const popup = window.open(
+      `/login/social/${provider}`,
+      'sangsang-social-login',
+      `width=${width},height=${height},left=${left},top=${top}`
+    );
+
+    if (!popup) {
+      setError('팝업이 차단되었습니다. 브라우저의 팝업 차단을 해제한 뒤 다시 시도해 주세요.');
+      return;
     }
+
+    const handleMessage = (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type !== 'SOCIAL_AUTH_RESULT') return;
+
+      window.removeEventListener('message', handleMessage);
+      clearInterval(popupWatcher);
+
+      const { pendingGuardianConsent, user } = event.data.payload || {};
+      if (pendingGuardianConsent) {
+        setSocialInfoMessage('보호자님 이메일로 동의 안내를 보냈습니다. 보호자님이 승인하시면 로그인할 수 있습니다.');
+        return;
+      }
+      onSuccess(user);
+    };
+    window.addEventListener('message', handleMessage);
+
+    // 사용자가 팝업을 그냥 닫아버린 경우 리스너를 정리
+    const popupWatcher = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(popupWatcher);
+        window.removeEventListener('message', handleMessage);
+      }
+    }, 500);
   };
 
   return {
@@ -83,8 +114,9 @@ export const useLoginState = ({ onSuccess }) => {
     rememberMe,
     setRememberMe,
     error,
+    socialInfoMessage,
     handleUserSubmit,
     handleAdminSubmit,
-    handleDevQuickLogin,
+    handleSocialLogin,
   };
 };
