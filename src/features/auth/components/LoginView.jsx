@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, CornerDownRight } from 'lucide-react';
+import { ShieldAlert, CornerDownRight, MessageCircle } from 'lucide-react';
 import { useLoginState } from '../hooks/useLoginState';
 
 export const LoginView = ({
@@ -7,7 +7,6 @@ export const LoginView = ({
   onNavigateToSignup,
   onQuickNavigate,
   onNavigateToPasswordReset,
-  onNavigateToSocial
 }) => {
   const {
     isAdminMode,
@@ -24,8 +23,10 @@ export const LoginView = ({
     rememberMe,
     setRememberMe,
     error,
+    socialInfoMessage,
     handleUserSubmit,
     handleAdminSubmit,
+    handleSocialLogin,
   } = useLoginState({ onSuccess });
 
   return (
@@ -239,21 +240,28 @@ export const LoginView = ({
                 <div className="mt-4 grid grid-cols-2 gap-2.5 text-xs">
                   <button
                     type="button"
-                    onClick={() => onNavigateToSocial('kakao')}
-                    className="flex flex-col items-center justify-center py-2 px-1 rounded-xl border border-neutral-200/80 bg-[#FEE500] hover:bg-[#ECD300] text-[#191919] font-sans font-semibold cursor-pointer transition-all shadow-xs"
+                    onClick={() => handleSocialLogin('kakao')}
+                    className="flex items-center justify-center gap-1.5 py-2.5 px-1 rounded-xl border border-neutral-200/80 bg-[#FEE500] hover:bg-[#ECD300] text-[#191919] font-sans font-semibold cursor-pointer transition-all shadow-xs"
                   >
-                    <span className="w-2 h-2 bg-amber-950 rounded-full mb-1"></span>
-                    카카오
+                    <MessageCircle className="w-4 h-4 fill-[#191919]" strokeWidth={0} />
+                    <span>카카오</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => onNavigateToSocial('naver')}
-                    className="flex flex-col items-center justify-center py-2 px-1 rounded-xl border border-[#03C75A]/20 bg-[#03C75A] hover:bg-[#02A64B] text-white font-sans font-semibold cursor-pointer transition-all shadow-xs"
+                    onClick={() => handleSocialLogin('naver')}
+                    className="flex items-center justify-center gap-1.5 py-2.5 px-1 rounded-xl border border-[#03C75A]/20 bg-[#03C75A] hover:bg-[#02A64B] text-white font-sans font-semibold cursor-pointer transition-all shadow-xs"
                   >
-                    <span className="w-2 h-2 bg-white rounded-full mb-1"></span>
-                    네이버
+                    <span className="flex items-center justify-center w-4 h-4 rounded-[3px] bg-white text-[#03C75A] text-[10px] font-black leading-none">N</span>
+                    <span>네이버</span>
                   </button>
                 </div>
+
+                {socialInfoMessage && (
+                  <div className="mt-3 flex items-start gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 p-3 rounded-xl text-xs leading-relaxed text-left">
+                    <span className="material-symbols-outlined text-emerald-600 text-sm mt-0.5">mark_email_read</span>
+                    <span>{socialInfoMessage}</span>
+                  </div>
+                )}
               </div>
 
               <div className="text-center pt-2">

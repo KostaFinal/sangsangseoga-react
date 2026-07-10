@@ -92,7 +92,6 @@ function LoginRoute() {
       }}
       onNavigateToSignup={() => navigate('/signup')}
       onNavigateToPasswordReset={() => navigate('/password-reset')}
-      onNavigateToSocial={(provider) => navigate(`/login/social/${provider}`)}
     />
   );
 }
@@ -119,25 +118,20 @@ function SignupRoute() {
 }
 
 function SocialAuthRoute() {
-  const navigate = useNavigate();
   const { provider } = useParams();
-  const { setCurrentUser, setIsAuthenticated, refreshSubscriptionStatus, refreshUsage } = useAuth();
+  // 이 라우트는 팝업 창 안에서만 렌더된다 — 결과를 opener(로그인 화면)에게 postMessage로
+  // 전달하고 팝업을 닫는다. 실제 로그인 상태 반영은 opener 쪽(useLoginState)에서 처리.
+  const postResultAndClose = (payload) => {
+    if (window.opener) {
+      window.opener.postMessage({ type: 'SOCIAL_AUTH_RESULT', payload }, window.location.origin);
+    }
+    window.close();
+  };
   return (
     <SocialAuthGateway
       selectedProvider={provider}
-      onNavigateToLogin={() => navigate('/login')}
-      onSuccess={({ pendingGuardianConsent, user } = {}) => {
-        if (pendingGuardianConsent) {
-          // 보호자 동의가 완료되기 전까지는 로그인 상태로 만들지 않고 로그인 화면으로 안내
-          navigate('/login');
-          return;
-        }
-        setCurrentUser(user);
-        setIsAuthenticated(true);
-        refreshSubscriptionStatus();
-        refreshUsage();
-        navigate('/');
-      }}
+      onNavigateToLogin={() => window.close()}
+      onSuccess={(result) => postResultAndClose(result)}
     />
   );
 }

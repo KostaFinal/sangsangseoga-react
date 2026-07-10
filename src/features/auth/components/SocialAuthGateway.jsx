@@ -22,12 +22,12 @@ export const SocialAuthGateway = ({ selectedProvider, onNavigateToLogin, onSucce
   const providerLabel = PROVIDER_LABEL[selectedProvider] || selectedProvider;
 
   return (
-    <div id="social-auth-container" className="min-h-screen bg-neutral-100 flex items-center justify-center py-10 px-4 sm:px-6 relative font-sans text-neutral-900 overflow-hidden">
+    <div id="social-auth-container" className="min-h-screen bg-neutral-100 flex items-start justify-center pt-10 pb-24 px-4 sm:px-6 relative font-sans text-neutral-900 overflow-x-hidden">
       <div className="absolute top-10 left-10 w-80 h-80 bg-neutral-950 rounded-full blur-[120px] opacity-[0.04]"></div>
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-neutral-300 rounded-full blur-[140px] opacity-[0.08]"></div>
 
       <div className="w-full max-w-md z-10 space-y-6">
-        <div className="bg-white rounded-3xl border border-neutral-200 shadow-xl overflow-hidden p-6 sm:p-8">
+        <div className="bg-white rounded-3xl border border-neutral-200 shadow-xl p-6 sm:p-8">
           {(phase === 'redirecting' || phase === 'processing') && (
             <div className="text-center py-10 space-y-3">
               <div className="w-12 h-12 rounded-full border-2 border-black border-t-transparent animate-spin mx-auto"></div>
@@ -49,7 +49,7 @@ export const SocialAuthGateway = ({ selectedProvider, onNavigateToLogin, onSucce
                 onClick={onNavigateToLogin}
                 className="w-full py-3 bg-black hover:bg-neutral-900 text-white text-xs font-bold rounded-2xl transition-colors cursor-pointer"
               >
-                로그인 화면으로 돌아가기
+                닫기
               </button>
             </div>
           )}
@@ -126,7 +126,7 @@ export const SocialAuthGateway = ({ selectedProvider, onNavigateToLogin, onSucce
                 onClick={handleGuardianSentDone}
                 className="w-full py-3 bg-black hover:bg-neutral-900 text-white text-xs font-bold rounded-2xl transition-colors cursor-pointer"
               >
-                로그인 화면으로 돌아가기
+                닫기
               </button>
             </div>
           )}
