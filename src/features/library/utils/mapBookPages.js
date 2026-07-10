@@ -41,7 +41,7 @@ function fairyTalePage(page) {
       elements: [{
         id: `image-${page.pageNo}`,
         type: "image",
-        x: 40, y: 60, w: 400, h: 500, radius: 20,
+        x: 0, y: 0, w: 480, h: 620,
         src: page.imageUrl,
       }],
     };

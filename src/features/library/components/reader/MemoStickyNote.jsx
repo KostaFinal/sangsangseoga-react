@@ -105,7 +105,7 @@ export default function MemoStickyNote({ isOpen, bookId, pageKey, memos, setMemo
           animate={{ opacity: 1, scale: 1, rotate: 2, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, rotate: -4, y: 15 }}
           transition={{ type: "spring", stiffness: 200, damping: 20 }}
-          className="w-[190px] sm:w-[230px] bg-[#fef9c3] p-4.5 rounded-sm shadow-[0_12px_24px_rgba(0,0,0,0.08),inset_0_2px_4px_rgba(255,255,255,0.6)] border border-yellow-200 select-text font-serif text-xs md:text-sm text-yellow-950 flex flex-col"
+          className="w-[190px] sm:w-[230px] bg-[#fef9c3] p-4.5 rounded-sm shadow-[0_12px_24px_rgba(0,0,0,0.08),inset_0_2px_4px_rgba(255,255,255,0.6)] border border-yellow-200 select-text font-gowun text-xs md:text-sm text-yellow-950 flex flex-col"
         >
           <div
             onMouseDown={handleDragStart}
@@ -114,7 +114,7 @@ export default function MemoStickyNote({ isOpen, bookId, pageKey, memos, setMemo
             title="드래그해서 메모 위치를 옮길 수 있어요"
           />
 
-          <div className="flex justify-between text-[9px] font-mono font-bold tracking-widest text-[#854d0e]/60 mb-2 mt-1 uppercase select-none">
+          <div className="flex justify-between text-xs font-mono font-bold tracking-widest text-[#5a2e0a] mb-2 mt-1 uppercase select-none">
             <span className="flex items-center gap-1">
               <StickyNote className="w-3 h-3" />
               사색 한 줄 메모
@@ -134,14 +134,14 @@ export default function MemoStickyNote({ isOpen, bookId, pageKey, memos, setMemo
                     handleSave();
                   }
                 }}
-                className="w-full bg-transparent border-b border-[#a16207]/30 focus:border-[#a16207] focus:outline-none resize-none font-sans text-xs text-yellow-900 leading-normal"
+                className="w-full bg-transparent border-b border-[#a16207]/30 focus:border-[#a16207] focus:outline-none resize-none font-gowun text-xs text-yellow-950 leading-normal"
                 placeholder="가슴 깊은 울림을 남겨보세요..."
                 rows={2}
               />
             ) : (
               <p
                 onClick={() => setIsEditing(true)}
-                className="cursor-pointer hover:bg-yellow-105/30 p-1 rounded transition-colors text-pretty leading-relaxed text-[#713f12] font-medium font-serif italic text-xs"
+                className="cursor-pointer hover:bg-yellow-105/30 p-1 rounded transition-colors text-pretty leading-relaxed text-[#5a2e0a] font-bold font-gowun text-xs"
                 title="클릭하여 메모 수정"
               >
                 {memos[pageKey] || "여기를 터치해 가슴 속 사색을 고이고이 적어보셔요..."}
@@ -151,7 +151,7 @@ export default function MemoStickyNote({ isOpen, bookId, pageKey, memos, setMemo
 
           <div className="flex justify-between items-center mt-2 pt-2 border-t border-[#854d0e]/10 select-none">
             {memos[pageKey] ? (
-              <button onClick={handleDelete} className="p-1 text-[#854d0e]/50 hover:text-red-600 transition" title="메모 지우기">
+              <button onClick={handleDelete} className="p-1 text-[#854d0e]/80 hover:text-red-600 transition" title="메모 지우기">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             ) : (
@@ -163,7 +163,7 @@ export default function MemoStickyNote({ isOpen, bookId, pageKey, memos, setMemo
                 <Check className="w-3 h-3" /> 저장
               </button>
             ) : (
-              <button onClick={() => setIsEditing(true)} className="text-[9px] font-bold text-[#854d0e]/60 hover:text-[#854d0e] hover:bg-[#854d0e]/5 px-2 py-1 rounded">
+              <button onClick={() => setIsEditing(true)} className="text-xs font-bold text-[#854d0e] hover:text-[#5a2e0a] hover:bg-[#854d0e]/5 px-2 py-1 rounded">
                 수정하기 →
               </button>
             )}

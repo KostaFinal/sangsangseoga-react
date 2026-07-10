@@ -275,35 +275,41 @@ export const MainDashboard = (props) => {
               {weeklyRanking.length === 0 ? (
                 <p className="text-xs text-[#B9B0DC] font-bold py-6 text-center">이번 주 랭킹 데이터가 아직 없습니다</p>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-5">
                   {weeklyRanking.map((book) => (
-                    <div key={book.id} className="space-y-2.5 group cursor-pointer text-left" onClick={() => navigate(`/friends/${book.id}`)}>
-                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-xs border border-gray-200 group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-white">
+                    <div key={book.id} onClick={() => navigate(`/friends/${book.id}`)} className="group cursor-pointer">
+                      <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-gray-200 group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-white">
                         <img
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           src={book.cover}
                           alt={book.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           referrerPolicy="no-referrer"
                         />
-                        <div className="absolute top-2.5 left-2.5 w-6.5 h-6.5 rounded-full bg-[#6B54E7] text-white font-black text-xs flex items-center justify-center shadow-md">
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/75 via-transparent to-transparent" />
+                        <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-[#6B54E7] text-white font-black text-[11px] flex items-center justify-center shadow-md border border-white/30">
                           {book.rank}
                         </div>
+                        <div className="absolute bottom-0 inset-x-0 p-3 text-left">
+                          <h4 className="text-white text-[13px] font-semibold leading-tight line-clamp-2 mb-1.5">{book.title}</h4>
+                          <div className="flex items-center gap-2.5 text-white/80 text-[10px]">
+                            <span className="flex items-center gap-1">
+                              <Heart className="w-3.5 h-3.5" />
+                              {book.likeCount >= 1000 ? `${(book.likeCount / 1000).toFixed(1)}k` : book.likeCount}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Eye className="w-3.5 h-3.5" />
+                              {(book.viewCount ?? 0) >= 1000 ? `${(book.viewCount / 1000).toFixed(1)}k` : (book.viewCount ?? 0)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-
-                      <div className="px-1 text-left">
-                        <h4 className="text-xs font-extrabold text-[#2F2D59] line-clamp-1 group-hover:text-[#6B54E7] transition-colors">{book.title}</h4>
+                      <div className="mt-2 text-center">
                         <button
                           onClick={e => { e.stopPropagation(); navigate(`/authors/${encodeURIComponent(book.author)}`); }}
-                          className="text-[10px] text-[#7C769D] font-bold mt-0.5 hover:text-[#6B54E7] transition-colors cursor-pointer"
+                          className="text-[12px] font-medium text-[#2f2d59] hover:text-[#6b54e7] transition-colors cursor-pointer"
                         >
                           {book.author}
                         </button>
-                        <div className="flex items-center gap-0.5 text-red-500 font-extrabold mt-1">
-                          <span className="text-[11px]">🔥</span>
-                          <span className="text-[10px] text-[#7C769D] font-extrabold">
-                            {book.likeCount >= 1000 ? `${(book.likeCount / 1000).toFixed(1)}K` : book.likeCount}
-                          </span>
-                        </div>
                       </div>
                     </div>
                   ))}
@@ -323,35 +329,41 @@ export const MainDashboard = (props) => {
               {weeklyNewReleases.length === 0 ? (
                 <p className="text-xs text-[#B9B0DC] font-bold py-6 text-center">이번 주 신작이 아직 없습니다</p>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-5">
                   {weeklyNewReleases.map((book) => (
-                    <div key={book.id} className="space-y-2.5 group cursor-pointer text-left" onClick={() => navigate(`/friends/${book.id}`)}>
-                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-xs border border-gray-200 group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-white">
+                    <div key={book.id} onClick={() => navigate(`/friends/${book.id}`)} className="group cursor-pointer">
+                      <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-gray-200 group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-white">
                         <img
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           src={book.cover}
                           alt={book.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           referrerPolicy="no-referrer"
                         />
-                        <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-[#6B54E7] text-white font-black text-[10px] shadow-md">
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/75 via-transparent to-transparent" />
+                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold border backdrop-blur-sm bg-[#6b54e7]/90 text-white border-white/30">
                           NEW
                         </div>
+                        <div className="absolute bottom-0 inset-x-0 p-3 text-left">
+                          <h4 className="text-white text-[13px] font-semibold leading-tight line-clamp-2 mb-1.5">{book.title}</h4>
+                          <div className="flex items-center gap-2.5 text-white/80 text-[10px]">
+                            <span className="flex items-center gap-1">
+                              <Heart className="w-3.5 h-3.5" />
+                              {book.likeCount >= 1000 ? `${(book.likeCount / 1000).toFixed(1)}k` : book.likeCount}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Eye className="w-3.5 h-3.5" />
+                              {(book.viewCount ?? 0) >= 1000 ? `${(book.viewCount / 1000).toFixed(1)}k` : (book.viewCount ?? 0)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-
-                      <div className="px-1 text-left">
-                        <h4 className="text-xs font-extrabold text-[#2F2D59] line-clamp-1 group-hover:text-[#6B54E7] transition-colors">{book.title}</h4>
+                      <div className="mt-2 text-center">
                         <button
                           onClick={e => { e.stopPropagation(); navigate(`/authors/${encodeURIComponent(book.author)}`); }}
-                          className="text-[10px] text-[#7C769D] font-bold mt-0.5 hover:text-[#6B54E7] transition-colors cursor-pointer"
+                          className="text-[12px] font-medium text-[#2f2d59] hover:text-[#6b54e7] transition-colors cursor-pointer"
                         >
                           {book.author}
                         </button>
-                        <div className="flex items-center gap-0.5 text-red-500 font-extrabold mt-1">
-                          <span className="text-[11px]">🔥</span>
-                          <span className="text-[10px] text-[#7C769D] font-extrabold">
-                            {book.likeCount >= 1000 ? `${(book.likeCount / 1000).toFixed(1)}K` : book.likeCount}
-                          </span>
-                        </div>
                       </div>
                     </div>
                   ))}

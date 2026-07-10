@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import BookReaderView from './BookReaderView';
 import { getBook, getBookContents } from '../../../api/bookApi';
-import { updateReadingProgress, completeReading } from '../../../api/myLibraryApi';
+import { updateReadingProgress, completeReading, getLastReadingPosition } from '../../../api/myLibraryApi';
 import { mapBookPagesByGenre } from '../utils/mapBookPages';
 
 const EMPTY_PAGES = [
@@ -23,7 +23,17 @@ export default function BookReaderPage() {
   const { books, handleToggleLike, handleToggleBookmark } = useOutletContext();
   const [fetchedBook, setFetchedBook] = useState(null);
   const [readerBook, setReaderBook] = useState(null);
+  const [readingPosition, setReadingPosition] = useState(null);
   const book = books.find(b => String(b.id) === String(bookId)) || fetchedBook;
+
+  // 이어읽기 진입점 - 예전에 읽던 위치가 있으면 그 페이지부터, 완독한 책이면 처음부터 열어야 함
+  useEffect(() => {
+    setReadingPosition(null);
+    if (!bookId) return;
+    getLastReadingPosition(bookId)
+      .then(res => setReadingPosition(res.data?.data))
+      .catch(() => setReadingPosition(null));
+  }, [bookId]);
 
   // AppShell의 books는 최초 100권 스냅샷이라 그 밖의 책은 목록에 없을 수 있음 —
   // 없으면 직접 상세 조회로 폴백 (친구의 서재 검색/필터/페이지네이션 결과 등)
@@ -90,11 +100,16 @@ export default function BookReaderPage() {
     }
   };
 
+  // 완독한 책을 다시 열면 처음부터, 그 외에는 마지막으로 읽던 페이지부터 이어읽기
+  const resumeCurrentPage = readingPosition?.readingStatus === "COMPLETED"
+    ? 1
+    : (readingPosition?.currentPage || 1);
+
   return (
     <div className="fixed inset-0 z-50 bg-[#f3f0ff] overflow-y-auto animate-in fade-in duration-200">
       <BookReaderView
         key={readerBook.id}
-        book={readerBook}
+        book={{ ...readerBook, currentPage: resumeCurrentPage }}
         books={books}
         onBack={() => { navigate(-1); document.body.style.overflow = "unset"; }}
         onToggleBookmark={e => handleToggleBookmark(e, readerBook.id)}

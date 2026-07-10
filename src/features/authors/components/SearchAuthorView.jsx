@@ -24,12 +24,12 @@ export default function SearchAuthorView() {
         keyword: search.trim() || undefined,
         sort: sortBy,
         page: currentPage,
-        size: 20,
+        size: 8,
       });
       const data = res.data.data;
       setAuthors(data.items);
       setTotalCount(data.totalCount);
-      setTotalPages(Math.ceil(data.totalCount / 20) || 1);
+      setTotalPages(Math.ceil(data.totalCount / 8) || 1);
     } catch (err) {
       console.error("작가 목록 조회 실패", err);
     } finally {
@@ -59,11 +59,10 @@ export default function SearchAuthorView() {
   });
 
   return (
-    <div className="w-full max-w-2xl mx-auto py-4">
+    <div className="w-full max-w-5xl mx-auto py-4">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-[#2f2d59] mb-1">작가 소개</h2>
-        <p className="text-sm text-[#b9b0dc]">상상서가의 작가들을 만나보세요</p>
-        <p className="text-xs text-[#b9b0dc] mt-0.5">총 {totalCount}명의 작가</p>
+        <p className="text-sm text-[#5c5480]">상상서가의 작가들을 만나보세요</p>
       </div>
 
       <AuthorSearchSortBar
@@ -78,7 +77,7 @@ export default function SearchAuthorView() {
           <div className="w-8 h-8 border-4 border-[#6b54e7] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10">
           {authors.map(author => (
             <AuthorStatCard
               key={author.id}
@@ -87,18 +86,18 @@ export default function SearchAuthorView() {
             />
           ))}
           {authors.length === 0 && (
-            <p className="text-center text-[#b9b0dc] text-sm py-16">검색 결과가 없습니다</p>
+            <p className="col-span-full text-center text-[#b9b0dc] text-sm py-16">검색 결과가 없습니다</p>
           )}
         </div>
       )}
 
       {/* 페이지네이션 */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-1.5 mt-12">
+        <div className="flex items-center justify-center gap-1.5 mt-16">
           <button
             onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e6e2fc] text-[#7c769d] hover:border-[#6b54e7] hover:text-[#6b54e7] disabled:opacity-30 disabled:pointer-events-none transition-all"
+            className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-[#c4b5fd] text-[#5c5480] hover:border-[#6b54e7] hover:text-[#6b54e7] disabled:opacity-30 disabled:pointer-events-none transition-all"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -106,9 +105,9 @@ export default function SearchAuthorView() {
             <button
               key={p}
               onClick={() => handlePageChange(p)}
-              className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${currentPage === p
-                ? "bg-[#6b54e7] text-white shadow-sm"
-                : "text-[#7c769d] hover:bg-[#f3f0ff] hover:text-[#6b54e7]"
+              className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium border-2 transition-all ${currentPage === p
+                ? "bg-[#6b54e7] text-white border-[#6b54e7] shadow-sm"
+                : "text-[#5c5480] border-[#c4b5fd] hover:border-[#6b54e7] hover:text-[#6b54e7]"
               }`}
             >
               {p}
@@ -117,7 +116,7 @@ export default function SearchAuthorView() {
           <button
             onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e6e2fc] text-[#7c769d] hover:border-[#6b54e7] hover:text-[#6b54e7] disabled:opacity-30 disabled:pointer-events-none transition-all"
+            className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-[#c4b5fd] text-[#5c5480] hover:border-[#6b54e7] hover:text-[#6b54e7] disabled:opacity-30 disabled:pointer-events-none transition-all"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

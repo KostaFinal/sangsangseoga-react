@@ -96,7 +96,7 @@ export default function CompletionScreen({ book, onBack, onSelectRecommended, on
                       </span>
                       <span className="flex items-center gap-1">
                         <Eye className="w-3.5 h-3.5" />
-                        {rec.viewCount ?? 0}
+                        {(rec.viewCount ?? 0) >= 1000 ? `${(rec.viewCount / 1000).toFixed(1)}k` : (rec.viewCount ?? 0)}
                       </span>
                     </div>
                   </div>

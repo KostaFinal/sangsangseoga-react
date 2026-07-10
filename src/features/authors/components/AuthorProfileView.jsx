@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams, useOutletContext } from "react-router-dom";
-import { ArrowRight, Heart, MessageSquare, Flag, ArrowLeft } from "lucide-react";
+import { ArrowRight, Heart, MessageSquare, Eye, Flag, ArrowLeft } from "lucide-react";
 import ReportModal from "@/src/shared/components/ReportModal";
 import { submitReport, getReportedIds } from "@/src/shared/utils/reports";
 import { getAuthors, followAuthor, unfollowAuthor } from "../../../api/authorApi";
@@ -25,7 +25,7 @@ export default function AuthorProfileView() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode") === "owner" ? "owner" : "viewer";
-  const { books: allBooks } = useOutletContext();
+  const { books: allBooks, handleToggleLike } = useOutletContext();
   const { currentUser, isAuthenticated } = useAuth();
   const requireAuth = useRequireAuth();
   const onSelectBook = (book) => navigate(`/friends/${book.id}`);
@@ -218,33 +218,35 @@ export default function AuthorProfileView() {
               const badge = genreBadge(book.genre);
               return (
                 <div key={book.id} onClick={() => onSelectBook(book)} className="group cursor-pointer">
-                  {/* 도서 표지 */}
-                  <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-[#e3def7] group-hover:shadow-md transition-all duration-300 group-hover:-translate-y-1 bg-[#f8f7ff]">
-                    <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src={book.coverImage} alt={book.title} referrerPolicy="no-referrer" />
-
-                    {/* 장르 뱃지 */}
+                  {/* 도서 표지 - friendsLibraryView와 동일한 카드 포맷 */}
+                  <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-gray-200 group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-white">
+                    <img
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      src={book.coverImage}
+                      alt={book.title}
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/75 via-transparent to-transparent" />
                     <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold border backdrop-blur-sm ${badge.cls}`}>
                       {badge.label}
                     </div>
-
-                    {/* 소셜 정보 */}
-                    <div className="absolute bottom-2 left-0 right-0 px-2 flex items-center gap-2 text-white font-bold bg-black/20 py-1 text-[10px] backdrop-blur-[1px]">
-                      <span className="flex items-center gap-0.5 ml-1">
-                        <Heart className="w-2.5 h-2.5 fill-white/80" />
-                        {book.likes >= 1000 ? `${(book.likes / 1000).toFixed(1)}k` : book.likes}
-                      </span>
-                      <span className="flex items-center gap-0.5">
-                        <MessageSquare className="w-2.5 h-2.5 fill-white/80" />
-                        {book.commentsCount}
-                      </span>
+                    <div className="absolute bottom-0 inset-x-0 p-3 text-left">
+                      <h4 className="text-white text-[13px] font-semibold leading-tight line-clamp-2 mb-1.5">{book.title}</h4>
+                      <div className="flex items-center gap-2.5 text-white/80 text-[10px]">
+                        <button onClick={e => handleToggleLike(e, book.id)} className="flex items-center gap-1 hover:text-white transition cursor-pointer">
+                          <Heart className={`w-3.5 h-3.5 ${book.isLikedByMe ? "fill-red-400 stroke-red-400" : ""}`} />
+                          {book.likes >= 1000 ? `${(book.likes / 1000).toFixed(1)}k` : book.likes}
+                        </button>
+                        <span className="flex items-center gap-1">
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          {book.commentsCount}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Eye className="w-3.5 h-3.5" />
+                          {(book.viewCount ?? 0) >= 1000 ? `${(book.viewCount / 1000).toFixed(1)}k` : (book.viewCount ?? 0)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* 제목 정보 - 더 또렷하고 선명한 검은색 적용 */}
-                  <div className="mt-2.5 px-0.5">
-                    <p className="text-[14px] font-bold text-[#110f24] leading-tight line-clamp-1 group-hover:text-[#6b54e7] transition-colors">
-                      {book.title}
-                    </p>
                   </div>
                 </div>
               );

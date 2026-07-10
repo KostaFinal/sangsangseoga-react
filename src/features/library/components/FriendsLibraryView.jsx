@@ -64,6 +64,18 @@ export default function FriendsLibraryView() {
   const [sortBy, setSortBy] = useState("latest");
   const [keyword, setKeyword] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(e.target)) {
+        setIsSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const [books, setBooks] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -282,30 +294,48 @@ export default function FriendsLibraryView() {
           {/* ── 필터 바 ── */}
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#b9b0dc]" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b54e7]" />
               <input
-                className="w-full bg-[#f8f7ff] border border-[#e6e2fc] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#2f2d59] placeholder:text-[#b9b0dc] focus:outline-none focus:border-[#6b54e7] focus:bg-white transition-all"
+                className="w-full bg-white border-2 border-[#c4b5fd] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#2f2d59] placeholder:text-[#7c769d] focus:outline-none focus:border-[#6b54e7] transition-all"
                 placeholder="제목, 작가 검색"
                 type="text"
                 value={keyword}
                 onChange={e => { setKeyword(e.target.value); setCurrentPage(1); }}
               />
               {keyword && (
-                <button onClick={() => { setKeyword(""); setCurrentPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#b9b0dc] hover:text-[#7c769d]">
+                <button onClick={() => { setKeyword(""); setCurrentPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7c769d] hover:text-[#2f2d59]">
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
 
-            <div className="relative">
-              <select
-                value={sortBy}
-                onChange={e => { setSortBy(e.target.value); setCurrentPage(1); }}
-                className="appearance-none bg-[#f8f7ff] border border-[#e6e2fc] rounded-xl pl-4 pr-8 py-2.5 text-sm text-[#2f2d59] focus:outline-none focus:border-[#6b54e7] cursor-pointer transition-all"
+            <div className="relative" ref={sortDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsSortOpen(prev => !prev)}
+                className="w-full sm:w-auto flex items-center justify-between gap-3 bg-white border-2 border-[#c4b5fd] rounded-xl pl-4 pr-3 py-2.5 text-sm text-[#2f2d59] hover:border-[#6b54e7] focus:outline-none transition-all cursor-pointer"
               >
-                {sortOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-              <SlidersHorizontal className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#b9b0dc] pointer-events-none" />
+                <span>{sortOptions.find(o => o.value === sortBy)?.label}</span>
+                <SlidersHorizontal className="w-3.5 h-3.5 text-[#6b54e7] shrink-0" />
+              </button>
+
+              {isSortOpen && (
+                <div className="absolute right-0 mt-2 w-full bg-white border-2 border-[#c4b5fd] rounded-xl shadow-lg overflow-hidden z-20">
+                  {sortOptions.map(o => (
+                    <button
+                      key={o.value}
+                      type="button"
+                      onClick={() => { setSortBy(o.value); setCurrentPage(1); setIsSortOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer ${sortBy === o.value
+                        ? "bg-[#6b54e7] text-white font-semibold"
+                        : "text-[#2f2d59] hover:bg-[#f3f0ff]"
+                        }`}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -315,17 +345,14 @@ export default function FriendsLibraryView() {
               <button
                 key={opt.label}
                 onClick={() => { setSelectedBookType(opt.value); setCurrentPage(1); }}
-                className={`shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all duration-200 cursor-pointer ${selectedBookType === opt.value
+                className={`shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium border-2 transition-all duration-200 cursor-pointer ${selectedBookType === opt.value
                   ? "bg-[#6b54e7] text-white border-[#6b54e7] shadow-sm shadow-[#6b54e7]/20"
-                  : "bg-white text-[#7c769d] border-[#e6e2fc] hover:border-[#6b54e7]/40 hover:text-[#6b54e7]"
+                  : "bg-white text-[#5c5480] border-[#c4b5fd] hover:border-[#6b54e7] hover:text-[#6b54e7]"
                   }`}
               >
                 {opt.label}
               </button>
             ))}
-            <span className="shrink-0 ml-auto text-xs text-[#b9b0dc] whitespace-nowrap">
-              총 {totalCount}권
-            </span>
           </div>
 
           {/* ── 책 그리드 ── */}
@@ -352,7 +379,7 @@ export default function FriendsLibraryView() {
                         alt={book.title}
                         referrerPolicy="no-referrer"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/75 via-transparent to-transparent" />
                       <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold border backdrop-blur-sm ${badge.cls}`}>
                         {badge.label}
                       </div>
@@ -369,7 +396,7 @@ export default function FriendsLibraryView() {
                           </span>
                           <span className="flex items-center gap-1">
                             <Eye className="w-3.5 h-3.5" />
-                            {book.viewCount ?? 0}
+                            {(book.viewCount ?? 0) >= 1000 ? `${(book.viewCount / 1000).toFixed(1)}k` : (book.viewCount ?? 0)}
                           </span>
                         </div>
                       </div>
@@ -394,7 +421,7 @@ export default function FriendsLibraryView() {
               <button
                 onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e6e2fc] text-[#7c769d] hover:border-[#6b54e7] hover:text-[#6b54e7] disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-[#c4b5fd] text-[#5c5480] hover:border-[#6b54e7] hover:text-[#6b54e7] disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -402,9 +429,9 @@ export default function FriendsLibraryView() {
                 <button
                   key={p}
                   onClick={() => handlePageChange(p)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-all cursor-pointer ${currentPage === p
-                    ? "bg-[#6b54e7] text-white shadow-sm shadow-[#6b54e7]/30"
-                    : "text-[#7c769d] hover:bg-[#f3f0ff] hover:text-[#6b54e7]"
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium border-2 transition-all cursor-pointer ${currentPage === p
+                    ? "bg-[#6b54e7] text-white border-[#6b54e7] shadow-sm shadow-[#6b54e7]/30"
+                    : "text-[#5c5480] border-[#c4b5fd] hover:border-[#6b54e7] hover:text-[#6b54e7]"
                     }`}
                 >
                   {p}
@@ -413,7 +440,7 @@ export default function FriendsLibraryView() {
               <button
                 onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e6e2fc] text-[#7c769d] hover:border-[#6b54e7] hover:text-[#6b54e7] disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-[#c4b5fd] text-[#5c5480] hover:border-[#6b54e7] hover:text-[#6b54e7] disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
