@@ -65,6 +65,13 @@ export const useAdminState = (initialTab = 'member') => {
   const [tokenUsages, setTokenUsages] = useState([]);
   const [activeTimeline, setActiveTimeline] = useState([]);
 
+  // ==========================================
+  // 공용 에러 피드백 (Toast)
+  // ==========================================
+  const [toast, setToast] = useState(null); // { message, type: 'error' | 'success' }
+  const triggerToast = (message, type = 'error') => setToast({ message, type });
+  const clearToast = () => setToast(null);
+
   // ------------------------------------------
   // API 데이터 로드 (Data Fetching Life Cycle)
   // ------------------------------------------
@@ -122,7 +129,7 @@ export const useAdminState = (initialTab = 'member') => {
       const fetchedTokenUsages = await adminService.getTokenUsages();
       setTokenUsages(fetchedTokenUsages);
     } catch (err) {
-      // TODO: 백엔드 에러 바인딩 및 얼럿 브릿지
+      triggerToast(err.message || '관리자 데이터를 불러오지 못했습니다.');
     }
   };
 
@@ -214,8 +221,9 @@ export const useAdminState = (initialTab = 'member') => {
       }
 
       setSuspensionReasonText('운영 정책 위반 의심 (저작권 침해 또는 욕설 도배)');
+      triggerToast('회원 상태가 변경되었습니다.', 'success');
     } catch (err) {
-      // TODO: 백엔드 상태 갱신 에러 처리
+      triggerToast(err.message || '회원 상태 변경에 실패했습니다.');
     }
   };
 
@@ -242,8 +250,9 @@ export const useAdminState = (initialTab = 'member') => {
       setReportRejectReason('');
       setReportModalOpen(false);
       setSelectedReport(null);
+      triggerToast('신고가 처리되었습니다.', 'success');
     } catch (err) {
-      // TODO: 백엔드 신고처리 거부 핸들링
+      triggerToast(err.message || '신고 처리에 실패했습니다.');
     }
   };
 
@@ -299,6 +308,10 @@ export const useAdminState = (initialTab = 'member') => {
   return {
     activeTab,
     setActiveTab,
+
+    // 공용 에러/성공 피드백
+    toast,
+    clearToast,
 
     // 회원 관리 인터페이스
     users,
