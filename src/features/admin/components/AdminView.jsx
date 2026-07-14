@@ -4,6 +4,7 @@ import {
   Users,
   Flag,
   BarChart3,
+  History,
   ChevronRight,
 } from 'lucide-react';
 import { useAdminState } from '../hooks/useAdminState';
@@ -11,9 +12,10 @@ import { MemberTab } from './MemberTab';
 import { ReportsTab } from './ReportsTab';
 import { ReportDetailModal } from './ReportDetailModal';
 import { TokensTab } from './TokensTab';
+import { ActionLogsTab } from './ActionLogsTab';
 import { Toast } from '../../../shared/components/Toast';
 
-const TAB_TO_PATH = { member: 'members', reports: 'reports', tokens: 'tokens' };
+const TAB_TO_PATH = { member: 'members', reports: 'reports', tokens: 'tokens', actionLogs: 'action-logs' };
 
 export const AdminView = ({ initialTab = 'member' }) => {
   const navigate = useNavigate();
@@ -48,6 +50,8 @@ export const AdminView = ({ initialTab = 'member' }) => {
     // Reports states
     reportSubTab,
     setReportSubTab,
+    reportStatusFilter,
+    setReportStatusFilter,
     reportModalOpen,
     setReportModalOpen,
     reportRejectReason,
@@ -57,7 +61,22 @@ export const AdminView = ({ initialTab = 'member' }) => {
     reportedBooks,
     reportedComments,
     reportedAuthors,
+    reportPage,
+    reportTotalCount,
+    reportHasNext,
+    reportPageSize,
+    goToReportPage,
     handleResolveReport,
+
+    // Action logs states
+    actionLogs,
+    actionLogPage,
+    actionLogTotalCount,
+    actionLogHasNext,
+    actionLogPageSize,
+    actionLogActionTypeFilter,
+    setActionLogActionTypeFilter,
+    goToActionLogPage,
 
     // Tokens states
     tokenTrendUnit,
@@ -100,7 +119,8 @@ export const AdminView = ({ initialTab = 'member' }) => {
                 {[
                   { id: 'member', name: '작가 계정 관리', icon: Users, desc: '계정 상태 변경' },
                   { id: 'reports', name: '신고 관리', icon: Flag, desc: '신고 심사' },
-                  { id: 'tokens', name: 'AI 사용량 관리', icon: BarChart3, desc: 'AI 사용량 분석' }
+                  { id: 'tokens', name: 'AI 사용량 관리', icon: BarChart3, desc: 'AI 사용량 분석' },
+                  { id: 'actionLogs', name: '처리 이력', icon: History, desc: '관리자 조치 로그' }
                 ].map((tab) => {
                   const IconComp = tab.icon;
                   const isSelected = activeTab === tab.id;
@@ -143,11 +163,13 @@ export const AdminView = ({ initialTab = 'member' }) => {
                   {activeTab === 'member' && '작가 계정 관리'}
                   {activeTab === 'reports' && '신고 관리'}
                   {activeTab === 'tokens' && 'AI 사용량 관리'}
+                  {activeTab === 'actionLogs' && '처리 이력'}
                 </h2>
                 <p className="text-sm text-[#7C769D] mt-1 leading-relaxed">
                   {activeTab === 'member' && '작가 계정 상태와 가입 승인을 관리합니다.'}
                   {activeTab === 'reports' && '접수된 도서, 댓글, 작가 신고를 심사합니다.'}
                   {activeTab === 'tokens' && 'AI 텍스트/이미지 생성 사용량을 확인합니다.'}
+                  {activeTab === 'actionLogs' && '관리자가 처리한 신고 조치 이력을 최신순으로 확인합니다.'}
                 </p>
               </div>
 
@@ -179,12 +201,19 @@ export const AdminView = ({ initialTab = 'member' }) => {
                 <ReportsTab
                   reportSubTab={reportSubTab}
                   setReportSubTab={setReportSubTab}
+                  reportStatusFilter={reportStatusFilter}
+                  setReportStatusFilter={setReportStatusFilter}
                   selectedReport={selectedReport}
                   setSelectedReport={setSelectedReport}
                   setReportModalOpen={setReportModalOpen}
                   reportedBooks={reportedBooks}
                   reportedComments={reportedComments}
                   reportedAuthors={reportedAuthors}
+                  reportPage={reportPage}
+                  reportTotalCount={reportTotalCount}
+                  reportHasNext={reportHasNext}
+                  reportPageSize={reportPageSize}
+                  goToReportPage={goToReportPage}
                 />
               )}
 
@@ -203,6 +232,19 @@ export const AdminView = ({ initialTab = 'member' }) => {
                   memberTokenTimelineLogs={memberTokenTimelineLogs}
                   users={users}
                   tokenSummary={tokenSummary}
+                />
+              )}
+
+              {activeTab === 'actionLogs' && (
+                <ActionLogsTab
+                  actionLogs={actionLogs}
+                  actionLogPage={actionLogPage}
+                  actionLogTotalCount={actionLogTotalCount}
+                  actionLogHasNext={actionLogHasNext}
+                  actionLogPageSize={actionLogPageSize}
+                  actionLogActionTypeFilter={actionLogActionTypeFilter}
+                  setActionLogActionTypeFilter={setActionLogActionTypeFilter}
+                  goToActionLogPage={goToActionLogPage}
                 />
               )}
             </div>
