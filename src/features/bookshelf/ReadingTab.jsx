@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 
-const GENRES = ["전체", "소설", "시", "에세이", "동화", "지식정보"];
+const GENRES = ["전체", "소설", "시", "에세이", "동화"];
 
 export default function ReadingTab({ filteredBooks, onOpenViewer, onOpenDetail }) {
   const [selectedGenre, setSelectedGenre] = useState('전체');
@@ -12,21 +12,30 @@ export default function ReadingTab({ filteredBooks, onOpenViewer, onOpenDetail }
     ? readingBooks
     : readingBooks.filter(b => b.category === selectedGenre);
 
-  // Helper to determine natural mock read dates based on book ID
-  const getRecentReadDate = (book) => {
-    if (book.lastReadDate) return book.lastReadDate;
-    const dates = {
-      'reading_space': '2026.06.25',
-      'reading_time': '2026.06.24',
-    };
-    return dates[book.id] || '2026.06.25';
+  const formatRecentReadDate = (recentReadAt) => {
+    if (!recentReadAt) return '-';
+
+    const date = new Date(recentReadAt);
+
+    if (Number.isNaN(date.getTime())) {
+      return '-';
+    }
+
+    return new Intl.DateTimeFormat('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(date);
   };
 
   return (
     <div className="space-y-4 bg-transparent text-navy-purple">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-        <div>
-          <h3 className="font-plus text-xl font-black text-navy-purple">현재 읽고 있는 책</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-plus text-xl font-black text-navy-purple">읽고 있는 책</h3>
+          <span className="px-2.5 py-1 rounded-full bg-brand-purple/10 text-brand-purple text-xs font-bold">
+            {readingBooks.length}권
+          </span>
         </div>
       </div>
 
@@ -36,18 +45,15 @@ export default function ReadingTab({ filteredBooks, onOpenViewer, onOpenDetail }
           <button
             key={genre}
             onClick={() => setSelectedGenre(genre)}
-            className={`shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all duration-200 cursor-pointer ${
-              selectedGenre === genre
-                ? "bg-brand-purple text-white border-brand-purple shadow-sm shadow-brand-purple/20"
-                : "bg-white text-purple-gray-text border-lavender-border hover:border-brand-purple/40 hover:text-brand-purple"
-            }`}
+            className={`shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all duration-200 cursor-pointer ${selectedGenre === genre
+              ? "bg-brand-purple text-white border-brand-purple shadow-sm shadow-brand-purple/20"
+              : "bg-white text-purple-gray-text border-lavender-border hover:border-brand-purple/40 hover:text-brand-purple"
+              }`}
           >
             {genre}
           </button>
         ))}
-        <span className="shrink-0 ml-auto text-xs text-purple-gray-text whitespace-nowrap">
-          총 {genreFilteredBooks.length}권
-        </span>
+        
       </div>
 
       {genreFilteredBooks.length === 0 ? (
@@ -57,8 +63,8 @@ export default function ReadingTab({ filteredBooks, onOpenViewer, onOpenDetail }
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {genreFilteredBooks.map(book => (
-            <div 
-              key={book.id} 
+            <div
+              key={book.id}
               id={`readingbook-${book.id}`}
               onClick={() => onOpenDetail(book)}
               className="bg-white rounded-2xl border border-lavender-border shadow-sm p-4 flex flex-col justify-between h-[235px] hover:shadow-md hover:border-brand-purple/50 transition-all group cursor-pointer"
@@ -74,7 +80,7 @@ export default function ReadingTab({ filteredBooks, onOpenViewer, onOpenDetail }
                     글쓴이: {book.author}
                   </p>
                   <p className="text-[9px] text-brand-purple font-medium mt-0.5">
-                    최근 읽음: {getRecentReadDate(book)}
+                    최근 읽음: {formatRecentReadDate(book.recentReadAt)}
                   </p>
                   <span className="text-[9px] font-bold text-navy-purple bg-white border border-lavender-border px-2 py-0.5 rounded-md mt-1 inline-block">진행 {Math.min(book.pages, Math.max(1, Math.round((book.progress / 100) * book.pages)))} / {book.pages}쪽</span>
                 </div>

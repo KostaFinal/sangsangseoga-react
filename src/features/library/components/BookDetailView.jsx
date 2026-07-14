@@ -275,6 +275,10 @@ export default function BookDetailView({
     setLocalBook(book);
   }, [book]);
 
+  useEffect(() => {
+    setEditDescription(localBook.description || "");
+  }, [localBook.description]);
+
   const topLevelComments = comments.filter(c => !c.replyToCommentId);
   const repliesByParent = comments.reduce((acc, c) => {
     if (c.replyToCommentId) {
@@ -284,13 +288,13 @@ export default function BookDetailView({
   }, {});
 
   const isPoetry = false;
-  const isFairytale = book.genre === "동화";
+  const isFairytale = localBook.genre === "동화";
 
   // Card themes
   const cardBgClass = isPoetry ? "bg-[#fdfbf7] border border-[#e8dfcb] shadow-sm" : "bg-white border border-[#e6e2fc] shadow-sm";
 
   // Accent badge text and background for the cover banner
-  const badge = genreBadge(book.genre);
+  const badge = genreBadge(localBook.genre);
   const genreTagText = badge.label;
   const genreTagStyle = badge.cls;
 
@@ -370,8 +374,8 @@ export default function BookDetailView({
               {/* 저자 정보 텍스트 선명화 (text-gray-700 -> text-black / font-bold) */}
               <p className="text-[16px] font-black text-black mt-2 pl-[10px]">
                 저자:{" "}
-                <span onClick={() => onSelectAuthor(book.author, mode === "owner")} className={`font-black underline decoration-2 cursor-pointer transition duration-150 ${isPoetry ? "text-amber-950 hover:text-black" : "text-[#5139d6] hover:text-[#25158a]"}`} title={`${book.author} 작가소개 보기`}>
-                  {book.author}
+                <span onClick={() => onSelectAuthor(localBook.author, mode === "owner")} className={`font-black underline decoration-2 cursor-pointer transition duration-150 ${isPoetry ? "text-amber-950 hover:text-black" : "text-[#5139d6] hover:text-[#25158a]"}`} title={`${localBook.author} 작가소개 보기`}>
+                  {localBook.author}
                 </span>
               </p>
             </div>
@@ -384,7 +388,7 @@ export default function BookDetailView({
             {/* Likes heart and follow button block - 회색빛에서 뚜렷한 색상 대비로 변경 */}
             <div className="flex flex-wrap items-center gap-3">
               <button onClick={(e) => onToggleLike(e, book.bookId || book.id)} className="inline-flex items-center gap-1.5 border-2 px-4 py-2 text-xs md:text-sm font-black rounded-lg transition duration-200 border-[#aaa0e3] text-[#3c375e] hover:bg-[#f3f0ff] hover:border-[#5139d6] bg-white cursor-pointer">
-                <Heart className={`w-4 h-4 stroke-[2.5] ${book.isLikedByMe ? "fill-red-500 stroke-red-500 text-red-500" : "text-[#4b4570]"}`} />
+                <Heart className={`w-4 h-4 stroke-[2.5] ${localBook.isLikedByMe ? "fill-red-500 stroke-red-500 text-red-500" : "text-[#4b4570]"}`} />
                 <span>좋아요 {localBook.likes.toLocaleString()}</span>
               </button>
 
@@ -458,7 +462,7 @@ export default function BookDetailView({
                       const viewCount = res.data?.data;
                       if (viewCount != null) onViewCountSynced?.(bookId, viewCount);
                     })
-                    .catch(() => {});
+                    .catch(() => { });
 
                   const res = await getBookContents(bookId);
                   const pageItems = res.data?.data?.items || [];
@@ -535,18 +539,40 @@ export default function BookDetailView({
                     <button
                       onClick={async () => {
                         try {
+                          const bookId = book.bookId || book.id;
+
                           await onUpdateDescription?.(
-                            book.bookId || book.id,
+                            bookId,
                             editDescription
                           );
-                          setLocalBook(prev => ({
-                            ...prev,
-                            description: editDescription,
-                          }));
+
+                          const res = await getBook(bookId);
+                          const latestBook = res.data?.data;
+
+                          if (latestBook) {
+                            setLocalBook(prev => ({
+                              ...prev,
+                              ...latestBook,
+                              coverImage:
+                                latestBook.coverImageUrl ||
+                                prev.coverImage ||
+                                "/default-book-cover.png",
+                              likes:
+                                latestBook.likeCount ??
+                                prev.likes ??
+                                0,
+                              genre:
+                                bookTypeToGenre[latestBook.bookType] ||
+                                latestBook.bookType ||
+                                prev.genre,
+                            }));
+
+                            setEditDescription(latestBook.description || "");
+                          }
 
                           setIsEditingDescription(false);
-
                         } catch (e) {
+                          console.error("책 소개 수정 실패", e);
                           alert("책 소개 수정에 실패했습니다.");
                         }
                       }}

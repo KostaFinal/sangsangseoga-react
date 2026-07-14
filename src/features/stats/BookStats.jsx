@@ -81,8 +81,8 @@ export default function BookStats({ getReadingStats }) {
             data={data}
             cx="50%"
             cy="50%"
-            innerRadius={58}
-            outerRadius={86}
+            innerRadius={75}
+            outerRadius={120}
             paddingAngle={5}
             dataKey="value"
             label={({ name, value }) => `${name} ${value}권`}
