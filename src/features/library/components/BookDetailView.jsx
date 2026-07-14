@@ -42,6 +42,7 @@ export default function BookDetailView({
   onUpdateStatus,
   onViewCountSynced,
   currentUser,
+  scrollToCommentId,
 }) {
   const [localBook, setLocalBook] = useState(book);
   const [commentText, setCommentText] = useState("");
@@ -282,6 +283,36 @@ export default function BookDetailView({
     }
     return acc;
   }, {});
+
+  // 신고 대상 확인 등으로 특정 댓글을 딥링크한 경우, 해당 댓글까지 스크롤 이동 + 하이라이트
+  // (커서 기반 페이지네이션이라 대상이 아직 안 불러와진 페이지에 있으면 자동으로 더보기를 반복 호출)
+  const [highlightedCommentId, setHighlightedCommentId] = useState(null);
+  const [commentNotFound, setCommentNotFound] = useState(false);
+  const isAutoLoadingMoreRef = useRef(false);
+  useEffect(() => {
+    if (!scrollToCommentId) return;
+    const target = comments.find(c => String(c.id) === String(scrollToCommentId));
+    if (!target) {
+      if (hasNextComment && !isAutoLoadingMoreRef.current) {
+        isAutoLoadingMoreRef.current = true;
+        loadMoreComments().finally(() => { isAutoLoadingMoreRef.current = false; });
+      } else if (comments.length > 0) {
+        setCommentNotFound(true);
+      }
+      return;
+    }
+    setCommentNotFound(false);
+    if (target.replyToCommentId != null) {
+      setExpandedReplyIds(prev => prev.includes(target.replyToCommentId) ? prev : [...prev, target.replyToCommentId]);
+    }
+    const el = document.getElementById(`comment-${scrollToCommentId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightedCommentId(scrollToCommentId);
+      const timer = setTimeout(() => setHighlightedCommentId(null), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [scrollToCommentId, comments, hasNextComment, expandedReplyIds]);
 
   const isPoetry = false;
   const isFairytale = book.genre === "동화";
@@ -640,6 +671,12 @@ export default function BookDetailView({
             독자들의 따스한 사색
           </h3>
 
+          {commentNotFound && (
+            <p className="text-sm font-bold text-[#7C769D] bg-[#FAF9FF] border border-[#E6E2FC] rounded-xl px-4 py-3">
+              이미 삭제되었거나 존재하지 않는 댓글입니다.
+            </p>
+          )}
+
           {/* Comments feed list layout */}
           <div className="space-y-5 pr-1">
             {topLevelComments.length === 0 ? (
@@ -648,7 +685,11 @@ export default function BookDetailView({
               </p>
             ) : (
               topLevelComments.map((comment, index) => (
-                <div key={comment.id || index} className={`pb-5 border-b border-[#b3a6eb] last:border-none last:pb-0 ${reportedCommentIds.includes(comment.id) ? "opacity-50" : ""}`}>
+                <div
+                  key={comment.id || index}
+                  id={`comment-${comment.id}`}
+                  className={`pb-5 border-b border-[#b3a6eb] last:border-none last:pb-0 transition-all rounded-xl ${reportedCommentIds.includes(comment.id) ? "opacity-50" : ""} ${highlightedCommentId != null && String(highlightedCommentId) === String(comment.id) ? "ring-2 ring-[#6b54e7] bg-[#f3f0ff] -mx-3 px-3 py-2" : ""}`}
+                >
                   <div className="flex gap-4 items-start">
                     <div className={getCommentAvatarStyle()}>
                       {(comment.nickname || comment.user || "?").charAt(0)}
@@ -737,7 +778,11 @@ export default function BookDetailView({
                         return (
                           <div className="mt-3 pl-4 space-y-3">
                             {isExpanded && replies.map((reply, rIdx) => (
-                              <div key={reply.id || rIdx} className={`flex gap-2 items-start ${reportedCommentIds.includes(reply.id) ? "opacity-50" : ""}`}>
+                              <div
+                                key={reply.id || rIdx}
+                                id={`comment-${reply.id}`}
+                                className={`flex gap-2 items-start transition-all rounded-lg ${reportedCommentIds.includes(reply.id) ? "opacity-50" : ""} ${highlightedCommentId != null && String(highlightedCommentId) === String(reply.id) ? "ring-2 ring-[#6b54e7] bg-[#f3f0ff] -mx-2 px-2 py-1.5" : ""}`}
+                              >
                                 <div className="w-7 h-7 rounded-full bg-neutral-200 border border-black/5 flex items-center justify-center text-black font-black text-[11px] shrink-0">
                                   {(reply.nickname || reply.user || "?").charAt(0)}
                                 </div>
