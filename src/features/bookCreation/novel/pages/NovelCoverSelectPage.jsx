@@ -2,6 +2,10 @@ import scenarioBg from "../../assets/scenario-bg.png";
 import { useNovelCoverSelect } from "../hooks/useNovelCoverSelect";
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 
+// 이전 단계(연출 회의)에서 건너뛴 값은 "미정" 문자열 그대로 넘어오므로, 표지 화면 자체 기본값
+// (판타지/몽환적/문학적 등)으로 대신 보여주려면 "미정"도 "값 없음"으로 취급해야 한다.
+const isSet = (value) => Boolean(value) && value !== "미정";
+
 function NovelCoverSelectPage() {
   const {
     coverOptions,
@@ -12,6 +16,9 @@ function NovelCoverSelectPage() {
     setSelectedCoverId,
     selectedCover,
     title,
+    isLoadingConcepts,
+    conceptFallbackNotice,
+    handleRegenerateConcepts,
     handleConfirmCover,
     handleRegenerate,
     isGeneratingCover,
@@ -78,17 +85,17 @@ function NovelCoverSelectPage() {
               <h3>톤 & 키워드</h3>
 
               <div className="keyword-list">
-                <span>{setting.genre || "판타지"}</span>
-                <span>{setting.directing?.mood || "몽환적"}</span>
-                <span>{setting.directing?.style || "문학적"}</span>
+                <span>{isSet(setting.genre) ? setting.genre : "판타지"}</span>
+                <span>{isSet(setting.directing?.mood) ? setting.directing.mood : "몽환적"}</span>
+                <span>{isSet(setting.directing?.style) ? setting.directing.style : "문학적"}</span>
               </div>
             </div>
 
             <div className="intro-box">
               <h3>작품 한줄 소개</h3>
               <p>
-                {setting.protagonist?.split(",")[0] || "주인공"}이 운명을
-                넘어, 세계의 진실을 마주하는 이야기.
+                {isSet(setting.protagonist) ? setting.protagonist.split(",")[0] : "주인공"}
+                이 운명을 넘어, 세계의 진실을 마주하는 이야기.
               </p>
             </div>
 
@@ -104,15 +111,20 @@ function NovelCoverSelectPage() {
           <section className="selected-cover-panel">
             <h2>선택된 표지 미리보기</h2>
 
-            <div className="book-preview-wrap">
+            <div className="cover-book-preview-wrap">
               {generatedCoverImageUrl ? (
-                <img
-                  className="book-preview generated-cover-image"
-                  src={generatedCoverImageUrl}
-                  alt="AI로 생성된 표지 이미지"
-                />
+                <div className="cover-book-preview cover-generated-wrap">
+                  <img
+                    className="cover-generated-image"
+                    src={generatedCoverImageUrl}
+                    alt="AI로 생성된 표지 이미지"
+                  />
+                  <div className="cover-generated-title-overlay">
+                    <h3>{title}</h3>
+                  </div>
+                </div>
               ) : (
-                <div className={`book-preview ${selectedCover.themeClass}`}>
+                <div className={`cover-book-preview ${selectedCover.themeClass}`}>
                   <div className="book-spine" />
                   <div className="book-front">
                     <div className="cover-ornament top">✦</div>
@@ -148,10 +160,23 @@ function NovelCoverSelectPage() {
           <aside className="cover-options-panel">
             <div className="cover-options-title">
               <h2>추천 표지 시안</h2>
-              <span>AI 추천 {coverOptions.length}종</span>
+              <button
+                type="button"
+                className="cover-concepts-regen-btn"
+                onClick={handleRegenerateConcepts}
+                disabled={isLoadingConcepts}
+              >
+                {isLoadingConcepts ? "AI가 생각 중..." : "↻ 다시 추천"}
+              </button>
             </div>
 
-            <div className="cover-option-grid">
+            {conceptFallbackNotice && !isLoadingConcepts && (
+              <p className="cover-fallback-notice">
+                AI 추천을 불러오지 못해 기본 시안을 보여드리고 있어요.
+              </p>
+            )}
+
+            <div className={`cover-option-grid ${isLoadingConcepts ? "loading" : ""}`}>
               {coverOptions.map((cover) => (
                 <button
                   key={cover.id}
@@ -160,6 +185,7 @@ function NovelCoverSelectPage() {
                     selectedCoverId === cover.id ? "active" : ""
                   }`}
                   onClick={() => setSelectedCoverId(cover.id)}
+                  disabled={isLoadingConcepts}
                 >
                   <div className={`cover-thumbnail ${cover.themeClass}`}>
                     <h3>{title}</h3>
@@ -197,15 +223,12 @@ function NovelCoverSelectPage() {
               type="button"
               className="confirm-cover-btn"
               onClick={handleConfirmCover}
+              disabled={isGeneratingCover}
             >
               ✨ 이 표지로 확정
             </button>
           </div>
         </section>
-
-        <p className="cover-guide-text">
-          표지는 나중에 프로젝트 설정에서 언제든 변경할 수 있습니다.
-        </p>
       </main>
     </div>
   );

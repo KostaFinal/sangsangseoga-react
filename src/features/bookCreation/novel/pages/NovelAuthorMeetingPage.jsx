@@ -7,15 +7,24 @@ function NovelAuthorMeetingPage() {
     optionalAgenda,
     activeAgenda,
     answer,
-    setAnswer,
+    handleAnswerChange,
     minutes,
     allAgenda,
     isCompletedAgenda,
     requiredCompletedCount,
     totalCompletedCount,
     canStartWriting,
+    isRecommending,
+    recommendFailed,
+    emptyAnswerNotice,
+    currentExamples,
+    isLoadingExamples,
+    showExamples,
+    exampleFailed,
     handleAgendaClick,
     handleAiRecommend,
+    handleToggleExamples,
+    handleSelectExample,
     handleNext,
     handleStartWriting,
   } = useNovelAuthorMeeting();
@@ -133,21 +142,72 @@ function NovelAuthorMeetingPage() {
 
               <textarea
                 value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
+                onChange={(e) => handleAnswerChange(e.target.value)}
                 placeholder="내용을 입력하거나 AI 추천을 받아보세요."
               />
 
+              {recommendFailed && (
+                <p className="meeting-fallback-notice">
+                  AI 추천을 불러오지 못했어요. 다시 시도하거나 직접 입력해 주세요.
+                </p>
+              )}
+
+              {emptyAnswerNotice && (
+                <p className="meeting-fallback-notice">
+                  내용을 먼저 입력하거나 AI 추천을 받아보세요.
+                </p>
+              )}
+
               <div className="meeting-actions">
-                <button type="button" className="sub-btn">
-                  👁 예시 보기
+                <button
+                  type="button"
+                  className="sub-btn"
+                  onClick={handleToggleExamples}
+                  disabled={isLoadingExamples}
+                >
+                  {isLoadingExamples
+                    ? "예시 불러오는 중..."
+                    : showExamples
+                    ? "예시 닫기"
+                    : "👁 예시 보기"}
                 </button>
-                <button type="button" className="sub-btn" onClick={handleAiRecommend}>
-                  ✨ AI 추천
+                <button
+                  type="button"
+                  className="sub-btn"
+                  onClick={handleAiRecommend}
+                  disabled={isRecommending}
+                >
+                  {isRecommending ? "AI 추천 중..." : "✨ AI 추천"}
                 </button>
-                <button type="button" className="next-btn" onClick={handleNext}>
+                <button
+                  type="button"
+                  className="next-btn"
+                  onClick={handleNext}
+                  disabled={isRecommending || isLoadingExamples}
+                >
                   다음 →
                 </button>
               </div>
+
+              {showExamples && (
+                <div className="meeting-example-list">
+                  {exampleFailed && currentExamples.length === 0 && (
+                    <p className="meeting-fallback-notice">
+                      예시를 불러오지 못했어요. 다시 시도해 주세요.
+                    </p>
+                  )}
+                  {currentExamples.map((text, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      className="meeting-example-item"
+                      onClick={() => handleSelectExample(text)}
+                    >
+                      {text}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
 

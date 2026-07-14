@@ -1,3 +1,4 @@
+import scenarioBg from "../../assets/scenario-bg.png";
 import { useNovelScenarioBuilder } from "../hooks/useNovelScenarioBuilder";
 
 const getAgendaIcon = (label) => {
@@ -24,15 +25,20 @@ function NovelScenarioBuilderPage() {
     selectedRecommendationIndex,
     selectedAgenda,
     selectedIndex,
+    currentRecommendations,
     completedCount,
     progressPercent,
     isAllComplete,
+    isLoadingOptions,
+    loadingHint,
+    showFallbackNotice,
     handleAgendaClick,
     handleSelectRecommendation,
     handleCustomTextChange,
     handleResetCurrent,
     handlePreviousAgenda,
     handleNextAgenda,
+    handleRecommendAgain,
     handleConfirm,
   } = useNovelScenarioBuilder();
 
@@ -43,7 +49,7 @@ function NovelScenarioBuilderPage() {
   };
 
   return (
-    <div className="novel-builder-page">
+    <div className="novel-builder-page" style={{ "--novel-builder-bg": `url(${scenarioBg})` }}>
       <main className="novel-builder-shell">
         <section className="novel-builder-layout">
           {/* 왼쪽 안건 목록 */}
@@ -124,43 +130,66 @@ function NovelScenarioBuilderPage() {
             </div>
 
             <section className="novel-recommendation-area">
-              <p className="novel-section-label">AI 추천 안건</p>
+              <div className="novel-section-label-row">
+                <p className="novel-section-label">AI 추천 안건</p>
 
-              <div className="novel-recommendation-grid">
-                {selectedAgenda.recommendations.map((recommendation, index) => {
-                  const isSelected = selectedRecommendationIndex === index;
-
-                  return (
-                    <button
-                      key={`${selectedAgenda.key}-${recommendation.title}`}
-                      type="button"
-                      className={`novel-recommendation-card ${
-                        isSelected ? "selected" : ""
-                      }`}
-                      onClick={() =>
-                        handleSelectRecommendation(recommendation, index)
-                      }
-                    >
-                      <span className="recommend-icon">
-                        {getRecommendIcon(index)}
-                      </span>
-
-                      <span className="recommend-check">
-                        {isSelected ? "✓" : ""}
-                      </span>
-
-                      <strong>{recommendation.title}</strong>
-                      <p>{recommendation.text}</p>
-
-                      <div className="novel-tag-row">
-                        {recommendation.tags.map((tag) => (
-                          <span key={tag}>{tag}</span>
-                        ))}
-                      </div>
-                    </button>
-                  );
-                })}
+                <button
+                  type="button"
+                  className="novel-ghost-button small"
+                  onClick={handleRecommendAgain}
+                  disabled={isLoadingOptions}
+                >
+                  ↻ 다시 추천
+                </button>
               </div>
+
+              {showFallbackNotice && !isLoadingOptions && (
+                <p className="novel-fallback-notice">
+                  AI 추천을 불러오지 못해 기본 추천을 보여드려요.
+                </p>
+              )}
+
+              {isLoadingOptions ? (
+                <p className="novel-loading-hint">
+                  {loadingHint || "AI가 추천을 만드는 중이에요..."}
+                </p>
+              ) : (
+                <div className="novel-recommendation-grid">
+                  {currentRecommendations.map((recommendation, index) => {
+                    const isSelected = selectedRecommendationIndex === index;
+
+                    return (
+                      <button
+                        key={`${selectedAgenda.key}-${recommendation.title}`}
+                        type="button"
+                        className={`novel-recommendation-card ${
+                          isSelected ? "selected" : ""
+                        }`}
+                        onClick={() =>
+                          handleSelectRecommendation(recommendation, index)
+                        }
+                      >
+                        <span className="recommend-icon">
+                          {getRecommendIcon(index)}
+                        </span>
+
+                        <span className="recommend-check">
+                          {isSelected ? "✓" : ""}
+                        </span>
+
+                        <strong>{recommendation.title}</strong>
+                        <p>{recommendation.text}</p>
+
+                        <div className="novel-tag-row">
+                          {recommendation.tags.map((tag) => (
+                            <span key={tag}>{tag}</span>
+                          ))}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </section>
 
             <section className="novel-custom-input-area">

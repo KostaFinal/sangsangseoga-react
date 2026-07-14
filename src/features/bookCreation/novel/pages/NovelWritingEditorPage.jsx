@@ -1,25 +1,62 @@
+import { useState } from "react";
+
 import scenarioBg from "../../assets/scenario-bg.png";
 import { useNovelWritingEditor } from "../hooks/useNovelWritingEditor";
+import {
+  independentBasicActions,
+  independentMoreActions,
+  independentPrimaryAction,
+} from "../data/novelWritingEditorOptions";
 
 function NovelWritingEditorPage() {
   const {
     setting,
+    isGuidedWritingLevel,
+    isIndependentWritingLevel,
     scenes,
     currentSceneId,
     setCurrentSceneId,
     selectedSentence,
-    setSelectedSentence,
     currentScene,
     currentSceneIndex,
     updateCurrentScene,
-    handleAddScene,
-    handleSave,
+    handleTextareaSelect,
     handleNextScene,
     handlePrevScene,
     handleAiAction,
     handleComplete,
+    assistSuggestion,
+    isAssisting,
+    assistError,
+    handleAssistAction,
+    handleRegenerateSuggestion,
+    handleCancelSuggestion,
+    handleApplySuggestion,
   } = useNovelWritingEditor();
+  const [showMoreActions, setShowMoreActions] = useState(false);
+  const [showFullSetting, setShowFullSetting] = useState(false);
   const isLastScene = scenes.length > 0 && currentSceneIndex === scenes.length - 1;
+  const hasSelection = Boolean(selectedSentence.trim());
+
+  const primaryAction = currentScene?.content?.trim()
+    ? independentPrimaryAction.filled
+    : independentPrimaryAction.empty;
+
+  const resolveApplyMode = (insertionMode) => {
+    if (insertionMode !== "replaceParagraphOrSelection") return insertionMode;
+    return assistSuggestion?.context?.usedSelectionRange
+      ? "replaceSelection"
+      : "replaceParagraph";
+  };
+
+  const applyLabel = (insertionMode) => {
+    const mode = resolveApplyMode(insertionMode);
+    if (mode === "insertEmpty") return "적용";
+    if (mode === "append") return "본문 뒤에 추가";
+    if (mode === "replaceSelection") return "선택 영역과 교체";
+    if (mode === "replaceParagraph") return "현재 문단과 교체";
+    return "적용";
+  };
 
   if (!currentScene) {
     return (
@@ -38,14 +75,7 @@ function NovelWritingEditorPage() {
               <div>
                 <span>현재 장면</span>
                 <h1>장면 데이터를 불러오지 못했습니다.</h1>
-                <p>새 장면을 추가하면 이어서 편집할 수 있습니다.</p>
               </div>
-            </div>
-
-            <div className="editor-bottom-actions">
-              <button type="button" className="save-btn" onClick={handleAddScene}>
-                장면 추가
-              </button>
             </div>
           </section>
         </main>
@@ -67,9 +97,6 @@ function NovelWritingEditorPage() {
         <aside className="scene-list-panel">
           <div className="panel-title-row">
             <h2>장면 목록</h2>
-            <button type="button" onClick={handleAddScene}>
-              ＋ 장면 추가
-            </button>
           </div>
 
           <div className="scene-list">
@@ -145,9 +172,19 @@ function NovelWritingEditorPage() {
           <div className="editor-field manuscript-editor-field">
             <div className="editor-label-row">
               <label>본문</label>
-              <button type="button" onClick={() => handleAiAction("continue")}>
-                ✦ AI 초안
-              </button>
+              {isGuidedWritingLevel ? (
+                <button type="button" onClick={() => handleAiAction("continue")}>
+                  ✦ AI 초안
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleAssistAction(primaryAction.actionType)}
+                  disabled={isAssisting}
+                >
+                  ✦ {primaryAction.label}
+                </button>
+              )}
             </div>
 
             <div className="mini-toolbar">
@@ -164,13 +201,7 @@ function NovelWritingEditorPage() {
             <textarea
               value={currentScene.content}
               onChange={(e) => updateCurrentScene("content", e.target.value)}
-              onMouseUp={(e) => {
-                const selected = e.currentTarget.value.substring(
-                  e.currentTarget.selectionStart,
-                  e.currentTarget.selectionEnd
-                );
-                setSelectedSentence(selected);
-              }}
+              onSelect={isIndependentWritingLevel ? handleTextareaSelect : undefined}
               placeholder="AI 초안이 없으면 직접 작성하거나 오른쪽 AI 집필 보조를 사용해보세요."
             />
 
@@ -187,10 +218,6 @@ function NovelWritingEditorPage() {
               disabled={currentSceneIndex === 0}
             >
               ← 이전 장면
-            </button>
-
-            <button type="button" className="save-btn" onClick={handleSave}>
-              ☁ 임시 저장
             </button>
 
             <button
@@ -218,48 +245,175 @@ function NovelWritingEditorPage() {
             <SummaryItem label="전개 속도" value={setting.directing?.pace} />
             <SummaryItem label="금지 요소" value={setting.directing?.avoid} />
 
-            <button type="button">전체 설정 보기</button>
+            {showFullSetting && (
+              <>
+                <SummaryItem label="이야기 씨앗" value={setting.storySeed} />
+                <SummaryItem label="장르" value={setting.genre} />
+                <SummaryItem label="주인공" value={setting.protagonist} />
+                <SummaryItem label="배경" value={setting.background} />
+                <SummaryItem label="갈등" value={setting.conflict} />
+                <SummaryItem label="결말 방향" value={setting.ending} />
+              </>
+            )}
+
+            <button type="button" onClick={() => setShowFullSetting((prev) => !prev)}>
+              {showFullSetting ? "기본 설정 접기" : "전체 설정 보기"}
+            </button>
           </section>
 
           <section className="selected-text-card">
             <h3>선택한 문장</h3>
             <p>
-              {selectedSentence.trim()
+              {hasSelection
                 ? `"${selectedSentence.trim()}"`
                 : "본문에서 문장을 드래그하면 여기에 표시됩니다."}
             </p>
+            {isIndependentWritingLevel && (
+              <p className="assist-scope-hint">
+                {hasSelection
+                  ? "선택 영역을 기준으로 AI가 도와드립니다."
+                  : "현재 문단 또는 작성된 내용의 다음 부분을 기준으로 도와드립니다."}
+              </p>
+            )}
           </section>
 
-          <section className="ai-request-card">
-            <h3>무엇을 도와드릴까요?</h3>
+          {isGuidedWritingLevel ? (
+            <section className="ai-request-card">
+              <h3>무엇을 도와드릴까요?</h3>
 
-            <div className="ai-request-grid">
-              <button type="button" onClick={() => handleAiAction("continue")}>
-                ✒ 이어쓰기
-              </button>
-              <button type="button" onClick={() => handleAiAction("tone")}>
-                🪶 문체 수정
-              </button>
-              <button type="button">⚡ 긴장감 높이기</button>
-              <button type="button">🌙 묘사 추가</button>
-              <button type="button">💬 대사 추가</button>
-              <button type="button" onClick={() => handleAiAction("rewrite")}>
-                📄 장면 다시쓰기
-              </button>
-            </div>
+              <div className="ai-request-grid">
+                <button type="button" onClick={() => handleAiAction("continue")}>
+                  ✒ 이어쓰기
+                </button>
+                <button type="button" onClick={() => handleAiAction("tone")}>
+                  🪶 문체 수정
+                </button>
+                <button type="button">⚡ 긴장감 높이기</button>
+                <button type="button">🌙 묘사 추가</button>
+                <button type="button">💬 대사 추가</button>
+                <button type="button" onClick={() => handleAiAction("rewrite")}>
+                  📄 장면 다시쓰기
+                </button>
+              </div>
 
-            <button
-              type="button"
-              className="wide-ai-btn"
-              onClick={() => handleAiAction("check")}
-            >
-              🔍 개연성 검사
-            </button>
+              <button
+                type="button"
+                className="wide-ai-btn"
+                onClick={() => handleAiAction("check")}
+              >
+                🔍 개연성 검사
+              </button>
 
-            <button type="button" className="wide-ai-btn">
-              ✅ 설정과 비교
-            </button>
-          </section>
+              <button type="button" className="wide-ai-btn">
+                ✅ 설정과 비교
+              </button>
+            </section>
+          ) : (
+            <section className="ai-request-card">
+              <h3>무엇을 도와드릴까요?</h3>
+
+              <div className="ai-request-grid">
+                {independentBasicActions.map((action) => (
+                  <button
+                    key={action.actionType}
+                    type="button"
+                    disabled={
+                      isAssisting || (action.requiresSelection && !hasSelection)
+                    }
+                    title={
+                      action.requiresSelection && !hasSelection
+                        ? "수정할 문장을 먼저 선택해 주세요."
+                        : undefined
+                    }
+                    onClick={() => handleAssistAction(action.actionType)}
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+
+              {!hasSelection && (
+                <p className="assist-selection-hint">
+                  수정할 문장을 먼저 선택해 주세요.
+                </p>
+              )}
+
+              <button
+                type="button"
+                className="wide-ai-btn"
+                onClick={() => setShowMoreActions((prev) => !prev)}
+              >
+                {showMoreActions ? "더보기 닫기 ▲" : "더보기 ▼"}
+              </button>
+
+              {showMoreActions && (
+                <div className="ai-request-grid ai-request-more-grid">
+                  {independentMoreActions.map((action) => (
+                    <button
+                      key={action.actionType}
+                      type="button"
+                      disabled={
+                        isAssisting || (action.requiresSelection && !hasSelection)
+                      }
+                      title={
+                        action.requiresSelection && !hasSelection
+                          ? "수정할 문장을 먼저 선택해 주세요."
+                          : undefined
+                      }
+                      onClick={() => handleAssistAction(action.actionType)}
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {isAssisting && (
+                <p className="assist-loading-note">AI가 작성 중입니다...</p>
+              )}
+
+              {assistError && !isAssisting && (
+                <p className="assist-error-note">
+                  AI 응답을 받지 못했어요. 다시 시도해 주세요.
+                </p>
+              )}
+
+              {assistSuggestion && (
+                <div className="assist-suggestion-card">
+                  <h3>AI 제안</h3>
+                  <p className="assist-suggestion-text">{assistSuggestion.text}</p>
+
+                  <div className="assist-suggestion-actions">
+                    {assistSuggestion.actionType === "CHECK_SCENE_COHERENCE" ? (
+                      <button type="button" onClick={handleCancelSuggestion}>
+                        닫기
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className="wide-ai-btn"
+                          onClick={() =>
+                            handleApplySuggestion(
+                              resolveApplyMode(assistSuggestion.insertionMode)
+                            )
+                          }
+                        >
+                          {applyLabel(assistSuggestion.insertionMode)}
+                        </button>
+                        <button type="button" onClick={handleRegenerateSuggestion}>
+                          다시 추천
+                        </button>
+                        <button type="button" onClick={handleCancelSuggestion}>
+                          취소
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
 
           <p className="ai-helper-note">
             문장을 선택하면 AI가 더 정확하게 수정 방향을 잡을 수 있어요.
@@ -280,7 +434,3 @@ function SummaryItem({ label, value }) {
 }
 
 export default NovelWritingEditorPage;
-
-
-
-

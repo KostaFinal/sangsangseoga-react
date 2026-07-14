@@ -9,8 +9,11 @@ function NovelScenarioSelectPage() {
     setSelectedScenarioId,
     selectedScenario,
     selectedFilters,
+    isLoadingScenarios,
+    scenarioFallbackNotice,
     handleStart,
     handleFilterSelect,
+    handleRegenerate,
   } = useNovelScenarioSelect();
   return (
     <div className="novel-scenario-page">
@@ -104,10 +107,26 @@ function NovelScenarioSelectPage() {
           <section className="scenario-list-panel">
             <div className="panel-title-row">
               <h2>시나리오 카드 목록</h2>
-              <span>{scenarios.length}개의 추천안</span>
+              <div className="scenario-list-actions">
+                <span>{scenarios.length}개의 추천안</span>
+                <button
+                  type="button"
+                  className="scenario-regenerate-btn"
+                  onClick={handleRegenerate}
+                  disabled={isLoadingScenarios}
+                >
+                  {isLoadingScenarios ? "AI가 생각 중..." : "↻ 다시 추천"}
+                </button>
+              </div>
             </div>
 
-            <div className="scenario-card-list">
+            {scenarioFallbackNotice && !isLoadingScenarios && (
+              <p className="scenario-fallback-notice">
+                AI 추천을 불러오지 못해 기본 시나리오를 보여드리고 있어요. 다시 추천을 눌러 재시도해 주세요.
+              </p>
+            )}
+
+            <div className={`scenario-card-list ${isLoadingScenarios ? "loading" : ""}`}>
               {scenarios.map((scenario) => (
                 <button
                   key={scenario.id}
@@ -115,6 +134,7 @@ function NovelScenarioSelectPage() {
                   className={`scenario-card ${selectedScenarioId === scenario.id ? "selected" : ""
                     }`}
                   onClick={() => setSelectedScenarioId(scenario.id)}
+                  disabled={isLoadingScenarios}
                 >
                   <div className="scenario-card-top">
                     <span>SCENARIO {scenario.id}</span>
@@ -159,7 +179,12 @@ function NovelScenarioSelectPage() {
             <SummaryItem label="주인공" value={selectedScenario?.protagonist} />
             <SummaryItem label="갈등" value={selectedScenario?.conflict} />
 
-            <button type="button" className="scenario-start-btn" onClick={handleStart}>
+            <button
+              type="button"
+              className="scenario-start-btn"
+              onClick={handleStart}
+              disabled={isLoadingScenarios}
+            >
               세부 수정으로 이동 →
             </button>
           </aside>

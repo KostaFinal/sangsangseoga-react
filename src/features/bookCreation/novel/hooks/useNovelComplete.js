@@ -11,6 +11,7 @@ export function useNovelComplete() {
   const setting = data.setting || fallbackData.setting;
   const scenes = data.scenes || fallbackData.scenes;
   const cover = data.cover || fallbackData.cover;
+  const coverImageUrl = data.coverImageUrl || null;
 
   const title = setting.storySeed || "제목 없는 소설";
   const protagonist = setting.protagonist || "미정";
@@ -25,11 +26,7 @@ export function useNovelComplete() {
   }, 0);
 
   const handleGoLibrary = () => {
-    alert("내 서재 페이지는 이후 연결하면 됩니다.");
-  };
-
-  const handleSavePdf = () => {
-    alert("PDF 저장 기능은 이후 백엔드 또는 jsPDF와 연결하면 됩니다.");
+    navigate("/library");
   };
 
   const handleShare = () => {
@@ -44,6 +41,7 @@ export function useNovelComplete() {
     setting,
     scenes,
     cover,
+    coverImageUrl,
     title,
     protagonist,
     genre,
@@ -53,7 +51,6 @@ export function useNovelComplete() {
     volume,
     totalCharacters,
     handleGoLibrary,
-    handleSavePdf,
     handleShare,
     handleNewNovel,
   };
