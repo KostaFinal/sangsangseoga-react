@@ -1,5 +1,5 @@
 import React from 'react';
-import { PenTool, BookOpen, TrendingUp, BarChart3, Sliders, Search, AlertTriangle } from 'lucide-react';
+import { PenTool, BookOpen, Sliders, Search, AlertTriangle } from 'lucide-react';
 
 export const TokensTab = ({
   tokenTrendUnit,
@@ -13,18 +13,15 @@ export const TokensTab = ({
   currentTrends,
   searchedTokenUsages,
   memberTokenTimelineLogs,
-  users,
   tokenSummary
 }) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200 text-left">
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {[
           { title: '누적 텍스트 생성량', value: `${(tokenSummary.totalTextUsage / 1000).toFixed(1)}k`, desc: '자', icon: PenTool },
           { title: '누적 이미지 생성량', value: `${tokenSummary.totalImageUsage.toLocaleString()}`, desc: '장', icon: BookOpen },
-          { title: '구독 회원 비율', value: `${tokenSummary.premiumRatio}%`, desc: '전체 회원 기준', icon: TrendingUp },
-          { title: '무료 회원 비율', value: `${tokenSummary.freeRatio}%`, desc: '전체 회원 기준', icon: BarChart3 }
         ].map((card, idx) => {
           const Icon = card.icon;
           return (

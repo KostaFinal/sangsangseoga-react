@@ -430,19 +430,12 @@ export const useAdminState = (initialTab = 'member') => {
     };
   }, [selectedTokenUser, activeTimeline]);
 
-  // AI 리소스 요약 카드용 집계치 (전체 회원 기준 실데이터)
+  // AI 리소스 요약 카드용 집계치
   const tokenSummary = useMemo(() => {
     const totalTextUsage = tokenUsages.reduce((sum, u) => sum + (u.textUsage || 0), 0);
     const totalImageUsage = tokenUsages.reduce((sum, u) => sum + (u.imgUsage || 0), 0);
-    const premiumUserCount = users.filter(u => u.plan === 'PREMIUM').length;
-    const premiumRatio = users.length ? Math.round((premiumUserCount / users.length) * 1000) / 10 : 0;
-    return {
-      totalTextUsage,
-      totalImageUsage,
-      premiumRatio,
-      freeRatio: Math.round((100 - premiumRatio) * 10) / 10,
-    };
-  }, [tokenUsages, users]);
+    return { totalTextUsage, totalImageUsage };
+  }, [tokenUsages]);
 
   return {
     activeTab,

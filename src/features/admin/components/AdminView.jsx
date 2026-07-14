@@ -230,7 +230,6 @@ export const AdminView = ({ initialTab = 'member' }) => {
                   currentTrends={currentTrends}
                   searchedTokenUsages={searchedTokenUsages}
                   memberTokenTimelineLogs={memberTokenTimelineLogs}
-                  users={users}
                   tokenSummary={tokenSummary}
                 />
               )}
