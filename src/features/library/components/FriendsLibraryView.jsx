@@ -58,11 +58,7 @@ export default function FriendsLibraryView() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const scrollToCommentId = searchParams.get("commentId");
-  const {
-    handleToggleBookmark,
-    onUpdateDescription,
-    onUpdateStatus,
-  } = useOutletContext();
+  const { handleToggleBookmark } = useOutletContext();
   const { currentUser } = useAuth();
   const requireAuth = useRequireAuth();
 
@@ -242,8 +238,23 @@ export default function FriendsLibraryView() {
           mode={viewingBook?.mode === "owner" ? "owner" : "viewer"}
           book={viewingBook}
           onBack={() => navigate("/friends")}
-          onUpdateDescription={onUpdateDescription}
-          onUpdateStatus={onUpdateStatus}
+          onUpdateDescription={async (bookId, description) => {
+            await updateMyWrittenBookDescription(bookId, description);
+
+            patchBookById(bookId, prev => ({
+              ...prev,
+              description,
+            }));
+          }}
+
+          onUpdateStatus={async (bookId, status) => {
+            await updateMyWrittenBookStatus(bookId, status);
+
+            patchBookById(bookId, prev => ({
+              ...prev,
+              status,
+            }));
+          }}
           onViewCountSynced={(id, viewCount) => patchBookById(id, prev => ({ ...prev, viewCount }))}
           scrollToCommentId={scrollToCommentId}
 

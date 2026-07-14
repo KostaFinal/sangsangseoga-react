@@ -135,16 +135,14 @@ export default function BookReaderView({
         (Date.now() - readingStartTimeRef.current) / 1000 / 60
       );
 
-      if (minutes > 0) {
-        const totalPages = book.pages?.length || book.pageCount || 1;
+      const totalPages = book.pages?.length || book.pageCount || 1;
 
-        await onProgressSave(
-          book.bookId || book.id,
-          currentPageKey + 1,
-          totalPages,
-          minutes
-        );
-      }
+      await onProgressSave(
+        book.bookId || book.id,
+        currentPageKey + 1,
+        totalPages,
+        minutes
+      );
     }
 
     onBack?.();

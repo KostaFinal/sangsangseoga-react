@@ -7,14 +7,26 @@ export default function WishlistTab({ filteredBooks, onOpenDetail, onToggleFavor
   return (
     <div className="space-y-4 bg-transparent text-navy-purple">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 select-none">
-        <div>
-          <h3 className="font-plus text-xl font-black text-navy-purple">읽고 싶은 책 리스트</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="font-plus text-xl font-black text-navy-purple">
+            읽고 싶은 책 
+          </h3>
+
+          <span className="px-2.5 py-1 rounded-full bg-brand-purple/10 text-brand-purple text-xs font-bold">
+            {
+              filteredBooks.filter(
+                b =>
+                  b.isFavorite &&
+                  (wishlistCategory === 'all' || b.category === wishlistCategory)
+              ).length
+            }권
+          </span>
         </div>
       </div>
 
       {/* 장르 카테고리 필터 탭 */}
       <div className="flex gap-2 pb-1 overflow-x-auto select-none no-scrollbar">
-        {['all', '소설', '시', '에세이', '동화', '지식정보'].map((cat) => (
+        {['all', '소설', '시', '에세이', '동화'].map((cat) => (
           <button
             key={cat}
             onClick={() => setWishlistCategory(cat)}

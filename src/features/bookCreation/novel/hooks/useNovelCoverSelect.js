@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
-import { coverOptions, fallbackData } from "../data/novelCoverSelectOptions";
-import { createCoverPrompt } from "../../services/aiGenerateService";
+import { coverOptions as fallbackCoverOptions, fallbackData } from "../data/novelCoverSelectOptions";
+import { createCoverPrompt, createCoverConcepts } from "../../services/aiGenerateService";
 import {
   requestGenerateImage,
   extractImageUrl,
@@ -20,22 +20,78 @@ export function useNovelCoverSelect() {
   const setting = data.setting || fallbackData.setting;
   const scenes = data.scenes || [];
 
+  // 4개 그라데이션 팔레트(themeClass)는 고정으로 재활용하고, title/description만 이야기에
+  // 맞춰 AI가 채운다. AI 응답이 없거나 실패하면 novelCoverSelectOptions.js의 고정값을 그대로 쓴다.
+  const [coverOptions, setCoverOptions] = useState(fallbackCoverOptions);
   const [selectedCoverId, setSelectedCoverId] = useState(1);
+  const [isLoadingConcepts, setIsLoadingConcepts] = useState(false);
+  const [conceptFallbackNotice, setConceptFallbackNotice] = useState(false);
+  const [shownConceptTitles, setShownConceptTitles] = useState([]);
+
   const [isGeneratingCover, setIsGeneratingCover] = useState(false);
   const [generatedCoverImageUrl, setGeneratedCoverImageUrl] = useState(null);
   const [coverGenerationError, setCoverGenerationError] = useState(null);
+
+  const hasRequestedInitialConcepts = useRef(false);
 
   const selectedCover = useMemo(() => {
     return (
       coverOptions.find((cover) => cover.id === selectedCoverId) ||
       coverOptions[0]
     );
-  }, [selectedCoverId]);
+  }, [coverOptions, selectedCoverId]);
 
   const title = setting.storySeed || "제목 없는 소설";
 
+  const requestCoverConcepts = async (excludeTitles) => {
+    setIsLoadingConcepts(true);
+    setConceptFallbackNotice(false);
+
+    const response = await createCoverConcepts(
+      { ...setting, bookType: "NOVEL" },
+      { cardCount: fallbackCoverOptions.length, excludeTitles }
+    );
+
+    // Spring 응답은 { data: { result: <Python envelope> } } 형태이고,
+    // Python envelope 자체의 result가 { concepts: [...] }를 담고 있다.
+    const concepts = response.ok ? response.data?.data?.result?.result?.concepts : null;
+
+    setIsLoadingConcepts(false);
+
+    if (!Array.isArray(concepts) || concepts.length === 0) {
+      setConceptFallbackNotice(true);
+      if (!response.ok) {
+        console.warn("CREATE_COVER_CONCEPTS failed:", response.message);
+      }
+      return;
+    }
+
+    const nextOptions = fallbackCoverOptions.map((base, index) => ({
+      ...base,
+      title: concepts[index]?.title || base.title,
+      description: concepts[index]?.description || base.description,
+    }));
+
+    setCoverOptions(nextOptions);
+    setShownConceptTitles((prev) => [...prev, ...nextOptions.map((option) => option.title)]);
+    setSelectedCoverId(nextOptions[0].id);
+  };
+
+  useEffect(() => {
+    // StrictMode 개발 모드 이중 마운트 때문에 초기 요청이 두 번 나가지 않도록 막는다.
+    if (hasRequestedInitialConcepts.current) return;
+    hasRequestedInitialConcepts.current = true;
+    requestCoverConcepts([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleRegenerateConcepts = () => {
+    requestCoverConcepts(shownConceptTitles);
+  };
+
   const handleConfirmCover = () => {
     const payload = {
+      bookType: "NOVEL",
       setting,
       scenes,
       cover: selectedCover,
@@ -60,6 +116,7 @@ export function useNovelCoverSelect() {
     try {
       const promptState = {
         ...data,
+        bookType: "NOVEL",
         images: { ...(data.images || {}) },
       };
 
@@ -116,6 +173,9 @@ export function useNovelCoverSelect() {
     setSelectedCoverId,
     selectedCover,
     title,
+    isLoadingConcepts,
+    conceptFallbackNotice,
+    handleRegenerateConcepts,
     handleConfirmCover,
     handleRegenerate,
     isGeneratingCover,

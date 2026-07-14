@@ -47,8 +47,8 @@ export function MyLibraryLayout() {
 
       const wishlistBooks = Array.isArray(wishlistData)
         ? wishlistData.map(book => ({
-          id: book.bookId,
-          bookId: book.bookId,
+          id: book.id,
+          bookId: book.id,
           title: book.title,
           coverUrl: book.coverImageUrl || "/default-book-cover.png",
           category: book.category,
@@ -82,6 +82,8 @@ export function MyLibraryLayout() {
           currentPage: book.currentPage || 1,
           pageCount: book.pageCount || 1,
           pages: book.pageCount || 1,
+          readingStatus: book.readingStatus,
+          recentReadAt: book.recentReadAt,
           isFavorite: false,
           totalViews: 0,
           totalLikes: 0,
@@ -212,6 +214,7 @@ export function MyLibraryLayout() {
               currentPage,
               progress,
               readingTime: (book.readingTime || 0) + readingTime,
+              recentReadAt: new Date().toISOString(),
             }
             : book
         )
@@ -277,7 +280,8 @@ export function MyLibraryLayout() {
 
       setBooks(prev =>
         prev.map(book =>
-          String(book.id) === String(bookId)
+          String(book.id) === String(bookId) ||
+            String(book.bookId) === String(bookId)
             ? {
               ...book,
               description,
@@ -288,6 +292,7 @@ export function MyLibraryLayout() {
     } catch (err) {
       console.error(err);
       alert("책 소개 수정에 실패했습니다.");
+      throw err;
     }
   };
 

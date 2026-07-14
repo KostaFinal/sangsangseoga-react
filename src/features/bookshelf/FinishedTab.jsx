@@ -42,8 +42,14 @@ export default function FinishedTab({ filteredBooks, onOpenViewer, onReread, set
   return (
     <div className="space-y-4 bg-transparent text-navy-purple">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 select-none">
-        <div>
-          <h3 className="font-plus text-xl font-black text-navy-purple">완독의 전당</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="font-plus text-xl font-black text-navy-purple">
+            모두 읽은 책
+          </h3>
+
+          <span className="px-2.5 py-1 rounded-full bg-brand-purple/10 text-brand-purple text-xs font-bold">
+            {finishedBooks.length}권
+          </span>
         </div>
       </div>
 
@@ -61,9 +67,7 @@ export default function FinishedTab({ filteredBooks, onOpenViewer, onReread, set
             {genre}
           </button>
         ))}
-        <span className="shrink-0 ml-auto text-xs text-purple-gray-text whitespace-nowrap">
-          총 {genreFilteredBooks.length}권
-        </span>
+
       </div>
 
       {genreFilteredBooks.length === 0 ? (

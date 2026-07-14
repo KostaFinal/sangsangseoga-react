@@ -526,18 +526,8 @@
   padding: clamp(18px, 2vw, 28px) clamp(16px, 2vw, 32px) 64px !important;
 }
 
-.novel-confirm-page .confirm-layout {
-  width: 100% !important;
-  grid-template-columns:
-    minmax(240px, 300px)
-    minmax(0, 1fr)
-    minmax(260px, 330px) !important;
-  gap: clamp(14px, 1.4vw, 20px) !important;
-}
-
-.novel-confirm-page .directing-progress-panel,
-.novel-confirm-page .directing-chat-panel,
-.novel-confirm-page .live-minutes-panel {
+.novel-confirm-page .confirm-sidebar-panel,
+.novel-confirm-page .directing-chat-panel {
   min-width: 0;
   min-height: calc(100dvh - var(--app-header-height) - 250px) !important;
 }
@@ -576,6 +566,7 @@
   .novel-studio-page .novel-main,
   .novel-builder-layout,
   .novel-confirm-page .confirm-layout,
+  .novel-confirm-page .confirm-step-row,
   .novel-editor-page .novel-editor-layout {
     grid-template-columns: 1fr !important;
   }
@@ -583,9 +574,8 @@
   .novel-agenda-panel,
   .novel-meeting-panel,
   .novel-summary-panel,
-  .novel-confirm-page .directing-progress-panel,
+  .novel-confirm-page .confirm-sidebar-panel,
   .novel-confirm-page .directing-chat-panel,
-  .novel-confirm-page .live-minutes-panel,
   .novel-editor-page .scene-list-panel,
   .novel-editor-page .manuscript-panel,
   .novel-editor-page .ai-writing-panel {
