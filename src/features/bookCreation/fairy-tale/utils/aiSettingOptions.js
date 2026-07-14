@@ -95,6 +95,22 @@ export const isValidOptionsResponse = (data, stepKey) => {
   });
 };
 
+// 소설(NOVEL) 전용 판정 유틸. protagonist를 포함한 모든 단계의 value가 문자열이라
+// isValidOptionsResponse의 protagonist 객체 특례(FAIRY_TALE 전용)를 적용하면 안 된다.
+export const isValidNovelOptionsResponse = (data, stepKey) => {
+  const question = getChoiceQuestion(data);
+  const options = normalizeChoiceOptions(getChoiceOptions(data), stepKey);
+
+  if (!question || options.length === 0) return false;
+
+  return options.every((option) => {
+    if (!(option.title || option.label) || option.value === undefined || option.value === null) {
+      return false;
+    }
+    return typeof option.value === "string" ? option.value.trim() !== "" : true;
+  });
+};
+
 export const FALLBACK_NOTICE_TEXT = "AI 추천을 불러오지 못해 기본 선택지를 보여드려요.";
 
 // CHAT/FREE 전용: envelope 최상위 status/missingFields, taskResult.setting을 꺼낸다.

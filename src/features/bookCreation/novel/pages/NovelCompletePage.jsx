@@ -5,6 +5,7 @@ function NovelCompletePage() {
   const {
     scenes,
     cover,
+    coverImageUrl,
     title,
     protagonist,
     genre,
@@ -14,7 +15,6 @@ function NovelCompletePage() {
     volume,
     totalCharacters,
     handleGoLibrary,
-    handleSavePdf,
     handleNewNovel,
   } = useNovelComplete();
   return (
@@ -66,22 +66,35 @@ function NovelCompletePage() {
 
           <section className="complete-book-panel">
             <div className="book-display-wrap">
-              <div className={`complete-book ${cover.themeClass || ""}`}>
-                <div className="complete-book-spine" />
-                <div className="complete-book-front">
-                  <div className="book-ornament top">✦</div>
-
-                  <p className="book-subtitle">제국이 숨긴 진실을 찾아서</p>
-                  <h2>{title}</h2>
-                  <p className="book-type">당신의 장편 판타지 소설</p>
-
-                  <div className="book-character">
-                    <span />
+              {coverImageUrl ? (
+                <div className="complete-book complete-book-generated">
+                  <img
+                    className="complete-book-generated-image"
+                    src={coverImageUrl}
+                    alt="AI로 생성된 표지 이미지"
+                  />
+                  <div className="complete-book-title-overlay">
+                    <h2>{title}</h2>
                   </div>
-
-                  <div className="book-ornament bottom">✦</div>
                 </div>
-              </div>
+              ) : (
+                <div className={`complete-book ${cover.themeClass || ""}`}>
+                  <div className="complete-book-spine" />
+                  <div className="complete-book-front">
+                    <div className="book-ornament top">✦</div>
+
+                    <p className="book-subtitle">제국이 숨긴 진실을 찾아서</p>
+                    <h2>{title}</h2>
+                    <p className="book-type">당신의 장편 판타지 소설</p>
+
+                    <div className="book-character">
+                      <span />
+                    </div>
+
+                    <div className="book-ornament bottom">✦</div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="complete-title-block">
@@ -107,44 +120,12 @@ function NovelCompletePage() {
                 한 편의 소설로 완성되었어요.
               </p>
             </section>
-
-            <section className="next-suggestion-card">
-              <h3>다음 단계 제안</h3>
-
-              {/* <button type="button" onClick={handleShare}>
-                <span>🔗</span>
-                <div>
-                  <strong>작품을 공유해보세요</strong>
-                  <p>SNS로 멋진 작품을 자랑해보세요.</p>
-                </div>
-              </button> */}
-
-              <button type="button">
-                <span>💬</span>
-                <div>
-                  <strong>AI에게 후기를 받아보세요</strong>
-                  <p>작품에 대한 감상평을 들어보세요.</p>
-                </div>
-              </button>
-
-              <button type="button">
-                <span>✨</span>
-                <div>
-                  <strong>속편 아이디어 얻기</strong>
-                  <p>AI가 추천하는 다음 이야기를 확인해보세요.</p>
-                </div>
-              </button>
-            </section>
           </aside>
         </section>
 
         <section className="complete-actions">
-          <button type="button" onClick={handleGoLibrary}>
+          <button type="button" className="primary" onClick={handleGoLibrary}>
             📚 내 서재로 이동
-          </button>
-
-          <button type="button" className="primary" onClick={handleSavePdf}>
-            ⬇ PDF로 저장
           </button>
 
           {/* <button type="button" onClick={handleShare}>

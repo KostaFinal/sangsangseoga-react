@@ -1,4 +1,5 @@
 import { toAiGenerateRequest, toBookDraft } from "../utils/bookDraftMapper";
+import { getTaskResult } from "../fairy-tale/utils/aiSettingOptions";
 
 const AI_GENERATE_URL = "http://localhost:8080/api/ai/generate";
 const AI_GENERATE_STREAM_URL = "http://localhost:8080/api/ai/generate/stream";
@@ -39,12 +40,18 @@ const extractMessage = (data, fallback) => {
   return data.message || data.detail || data.error || fallback;
 };
 
+// Spring 응답은 { success, data: { bookId, stage, result: <Python envelope> } } 형태이고,
+// Python envelope 자체의 result가 taskType별 실제 결과(scenes/pages/bodyText 등)를 담고 있다.
+// getTaskResult가 이 이중 래핑을 전부 풀어서 taskType별 result 객체에 바로 닿게 해준다.
+// (예전엔 한 겹만 풀어서 scenes/pages/bodyText를 못 읽고 항상 fallback 텍스트로 빠졌었다.)
 export const extractGeneratedText = (data) => {
-  const result = data?.result || data?.data?.result || data;
+  const result = getTaskResult(data);
 
   if (!result || typeof result === "string") return result || "";
 
   const generated =
+    result.bodyText ||
+    result.revisedBodyText ||
     result.text ||
     result.body ||
     result.content ||
@@ -64,12 +71,12 @@ export const extractGeneratedText = (data) => {
 };
 
 export const extractGeneratedPages = (data) => {
-  const result = data?.result || data?.data?.result || data;
+  const result = getTaskResult(data);
   return Array.isArray(result?.pages) ? result.pages : [];
 };
 
 export const extractGeneratedScenes = (data) => {
-  const result = data?.result || data?.data?.result || data;
+  const result = getTaskResult(data);
   return Array.isArray(result?.scenes) ? result.scenes : [];
 };
 
@@ -260,6 +267,14 @@ export const collectSetting = (state, extra, options) =>
 export const createSettingOptions = (state, extra, options) =>
   generateAiContent("CREATE_SETTING_OPTIONS", state, extra, options);
 
+// 소설 선택형(CHOICE) 모드 첫 화면: 완성된 시나리오 카드 여러 개를 한 번에 생성한다.
+export const createScenarioCards = (state, extra, options) =>
+  generateAiContent("CREATE_SCENARIO_CARDS", state, extra, options);
+
+// 표지 선택 화면의 "추천 표지 시안" 카드 여러 개(이름+한 줄 설명)를 이야기에 맞게 생성한다.
+export const createCoverConcepts = (state, extra, options) =>
+  generateAiContent("CREATE_COVER_CONCEPTS", state, extra, options);
+
 export const createPagePlan = (state, extra, options) =>
   generateAiContent("CREATE_PAGE_PLAN", state, extra, options);
 
@@ -274,6 +289,10 @@ export const createScenePlan = (state, extra, options) =>
 
 export const writeScene = (state, extra, options) =>
   generateAiContent("WRITE_SCENE", state, extra, options);
+
+// 청소년/성인(창작 보조 모드) 전용: 장면 전체가 아니라 문장/문단/선택 영역 단위로만 짧게 보조한다.
+export const writeSceneSegment = (state, extra, options) =>
+  generateAiContent("WRITE_SCENE_SEGMENT", state, extra, options);
 
 export const createImagePrompt = (state, extra, options) =>
   generateAiContent("CREATE_IMAGE_PROMPT", state, extra, options);
@@ -305,11 +324,14 @@ export const aiGenerateService = {
   normalizeSetting,
   collectSetting,
   createSettingOptions,
+  createScenarioCards,
+  createCoverConcepts,
   createPagePlan,
   writePage,
   rewritePage,
   createScenePlan,
   writeScene,
+  writeSceneSegment,
   createImagePrompt,
   createCoverPrompt,
   translateText,

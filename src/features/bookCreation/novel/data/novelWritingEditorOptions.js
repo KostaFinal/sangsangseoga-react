@@ -1,3 +1,83 @@
+// 미취학/초등 저학년/초등 고학년: AI가 장면 전체를 적극적으로 써주는 기존 방식 유지.
+export const GUIDED_WRITER_LEVELS = [
+  "PRESCHOOL",
+  "LOWER_ELEMENTARY",
+  "UPPER_ELEMENTARY",
+];
+
+// 청소년/성인: 사용자가 직접 쓰고, AI는 문장/문단/선택 영역 단위로만 보조.
+export const INDEPENDENT_WRITER_LEVELS = ["TEEN", "ADULT"];
+
+// 본문이 비어 있을 때와 이미 있을 때 같은 버튼 자리에 다른 라벨/actionType을 쓴다.
+export const independentPrimaryAction = {
+  empty: {
+    actionType: "SUGGEST_OPENING_SENTENCE",
+    label: "시작 문장 제안",
+    insertionMode: "insertEmpty",
+  },
+  filled: {
+    actionType: "SUGGEST_NEXT_PARAGRAPH",
+    label: "다음 문단 제안",
+    insertionMode: "append",
+  },
+};
+
+// 창작 보조 모드 기본 노출 버튼 (더보기 아님).
+export const independentBasicActions = [
+  {
+    actionType: "SUGGEST_NEXT_SENTENCE",
+    label: "다음 문장 제안",
+    requiresSelection: false,
+    insertionMode: "append",
+  },
+  {
+    actionType: "REFINE_SELECTED_TEXT",
+    label: "선택 문장 다듬기",
+    requiresSelection: true,
+    insertionMode: "replaceSelection",
+  },
+];
+
+// 창작 보조 모드 "더보기" 영역 버튼.
+export const independentMoreActions = [
+  {
+    actionType: "STYLE_SELECTED_TEXT",
+    label: "선택 문장 문체 수정",
+    requiresSelection: true,
+    insertionMode: "replaceSelection",
+  },
+  {
+    actionType: "INCREASE_PARAGRAPH_TENSION",
+    label: "현재 문단 긴장감 높이기",
+    requiresSelection: false,
+    insertionMode: "replaceParagraphOrSelection",
+  },
+  {
+    actionType: "ENHANCE_PARAGRAPH_DESCRIPTION",
+    label: "현재 문단 묘사 보강",
+    requiresSelection: false,
+    insertionMode: "replaceParagraphOrSelection",
+  },
+  {
+    actionType: "ADD_DIALOGUE_TO_PARAGRAPH",
+    label: "현재 문단 대사 추가",
+    requiresSelection: false,
+    insertionMode: "replaceParagraphOrSelection",
+  },
+  {
+    actionType: "REWRITE_SELECTED_TEXT",
+    label: "선택 영역 다시쓰기",
+    requiresSelection: true,
+    insertionMode: "replaceSelection",
+  },
+  {
+    actionType: "CHECK_SCENE_COHERENCE",
+    label: "현재 장면 개연성 검사",
+    requiresSelection: false,
+    insertionMode: "reportOnly",
+  },
+];
+
 export const fallbackSetting = {
   storySeed: "별을 삼킨 소년",
   genre: "다크 판타지",
