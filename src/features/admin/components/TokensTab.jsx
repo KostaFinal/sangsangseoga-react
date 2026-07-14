@@ -164,9 +164,8 @@ export const TokensTab = ({
                 <div className="text-right flex items-center space-x-4">
                   <div>
                     <p className="text-sm text-[#2F2D59] font-mono font-black">
-                      {(usage.textUsage / 10).toFixed(0)}k 자 <span className="text-xs text-[#7C769D] font-normal">({usage.imgUsage}장)</span>
+                      {usage.textUsage.toLocaleString()}자 <span className="text-xs text-[#7C769D] font-normal">({usage.imgUsage}장)</span>
                     </p>
-                    <span className="text-xs text-[#7C769D] font-semibold block mt-0.5">누적 포인트: {usage.totalCredits.toLocaleString()}</span>
                   </div>
 
                   {usage.status === 'ABNORMAL' ? (
@@ -209,7 +208,7 @@ export const TokensTab = ({
             <div className="space-y-3 pt-2 text-left">
               <div className="flex items-center justify-between border-b border-[#E6E2FC]/30 pb-2">
                 <span className="text-sm font-black text-[#2F2D59]">
-                  {users.find(u => u.id === selectedTokenUser)?.nickname || '조사 대상'} 회원 사용 이력
+                  {searchedTokenUsages.find(u => u.userId === selectedTokenUser)?.nickname || '조사 대상'} 회원 사용 이력
                 </span>
                 <button
                   onClick={() => setSelectedTokenUser(null)}
@@ -225,9 +224,8 @@ export const TokensTab = ({
                     <span className="absolute -left-7 top-1 w-2.5 h-2.5 rounded-full bg-[#6B54E7] border border-white"></span>
                     <div className="flex justify-between text-xs">
                       <span className="text-[#7C769D] font-mono">{log.date}</span>
-                      <span className="font-mono font-black text-[#2F2D59]">{log.credits} pt</span>
+                      <span className="font-mono font-black text-[#2F2D59]">{log.usage === 'image' ? '이미지 생성' : 'AI 텍스트 생성'}</span>
                     </div>
-                    <p className="font-bold text-[#110F24] mt-0.5">{log.action}</p>
                     <p className="text-xs text-[#7C769D] font-mono mt-0.5">산출량: {log.amount}</p>
                   </div>
                 ))}
