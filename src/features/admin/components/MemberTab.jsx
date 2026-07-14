@@ -146,6 +146,8 @@ export const MemberTab = ({
                           >
                             정지
                           </button>
+                        ) : user.status === 'pending' ? (
+                          <span className="text-xs font-bold text-[#7C769D]">보호자 동의 대기 중</span>
                         ) : (
                           <button
                             onClick={() => handleUpdateUserStatus(user.id, 'active')}
@@ -254,17 +256,24 @@ export const MemberTab = ({
               <span>정지해도 구독은 자동 해지되지 않습니다. 유료 회원은 별도 확인이 필요합니다.</span>
             </div>
 
-            <div className="space-y-2 pt-1 text-left">
-              <label className="block text-xs font-black text-[#7C769D] uppercase tracking-wider">변경 사유</label>
-              <input
-                type="text"
-                value={suspensionReasonText}
-                onChange={(e) => setSuspensionReasonText(e.target.value)}
-                placeholder="상태를 변경하는 상세 사유를 입력해 주세요."
-                className="w-full px-4 py-2.5 bg-[#FAF9FF] text-sm text-[#2F2D59] border border-[#E6E2FC] focus:border-[#6B54E7] focus:bg-white focus:outline-none rounded-xl"
-              />
-            </div>
+            {selectedUser.status === 'pending' ? (
+              <div className="p-3.5 bg-[#FAF9FF] border border-[#E6E2FC] rounded-xl text-xs leading-relaxed text-[#7C769D]">
+                만 14세 미만 회원의 보호자 이메일 동의 대기 상태입니다. 보호자가 이메일로 받은 링크에서 직접 승인/거절하며, 관리자가 대신 승인할 수 없습니다.
+              </div>
+            ) : (
+              <div className="space-y-2 pt-1 text-left">
+                <label className="block text-xs font-black text-[#7C769D] uppercase tracking-wider">변경 사유</label>
+                <input
+                  type="text"
+                  value={suspensionReasonText}
+                  onChange={(e) => setSuspensionReasonText(e.target.value)}
+                  placeholder="상태를 변경하는 상세 사유를 입력해 주세요."
+                  className="w-full px-4 py-2.5 bg-[#FAF9FF] text-sm text-[#2F2D59] border border-[#E6E2FC] focus:border-[#6B54E7] focus:bg-white focus:outline-none rounded-xl"
+                />
+              </div>
+            )}
 
+            {selectedUser.status !== 'pending' && (
             <div className="grid grid-cols-2 gap-3 pt-4 border-t border-[#E6E2FC]/40 font-sans">
               {selectedUser.status === 'active' ? (
                 <>
@@ -299,6 +308,7 @@ export const MemberTab = ({
                 </button>
               )}
             </div>
+            )}
           </div>
         </div>
       )}
