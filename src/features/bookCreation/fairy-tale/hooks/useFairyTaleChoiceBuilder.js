@@ -262,6 +262,7 @@ export function useFairyTaleChoiceBuilder() {
 
     if (isLastStep) {
       requestGuardRef.current = true;
+      setIsLoadingChoiceStep(true);
 
       const finalData = normalizeFairyTaleDraftState(makeFinalData(), {
         creationMode: "CHOICE",
@@ -283,6 +284,7 @@ export function useFairyTaleChoiceBuilder() {
       });
 
       requestGuardRef.current = false;
+      setIsLoadingChoiceStep(false);
       return;
     }
 
