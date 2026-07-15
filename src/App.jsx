@@ -275,6 +275,7 @@ function AppInner() {
             <Route path="admin/members" element={<AdminView key="member" initialTab="member" />} />
             <Route path="admin/reports" element={<AdminView key="reports" initialTab="reports" />} />
             <Route path="admin/tokens" element={<AdminView key="tokens" initialTab="tokens" />} />
+            <Route path="admin/action-logs" element={<AdminView key="actionLogs" initialTab="actionLogs" />} />
           </Route>
         </Route>
 

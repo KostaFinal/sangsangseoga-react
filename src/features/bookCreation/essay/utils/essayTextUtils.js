@@ -1,4 +1,8 @@
-const PAGE_LIMIT = 620;
+// 책 뷰어(LayoutPageViewer/mapBookPages.js)는 본문을 폭 360px·높이 500px 고정 박스에
+// overflow:hidden으로 그린다. fontSize 17px·lineHeight 1.85 기준으로 그 박스에 실제로
+// 들어가는 건 15줄(약 260자) 정도이므로, 그 이상으로 나누면 뷰어에서 뒷부분이 잘려 보인다.
+// 여기 숫자를 늘리려면 반드시 mapBookPages.js의 본문 박스 높이도 같이 늘려야 한다.
+const PAGE_LIMIT = 260;
 
 export function createId() {
   return globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `${Date.now()}-${Math.random()}`;

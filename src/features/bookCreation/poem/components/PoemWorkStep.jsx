@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PoemFlowStepper from './PoemFlowStepper.jsx';
 import { answerQuestions, POEM_EDIT_DIRECTION_CHOICES } from '../data/poemQuestions.js';
-import { getGeneratedPoemText, getFreeRequestedText, joinPoemText, polishFreeInput, getFreeContinuationText, getFreeRevisionText, getAnswerRevisionText, getContentBase, getTitleIdeas } from '../utils/poemTextUtils.js';
+import { joinPoemText, polishFreeInput, getContentBase, getTitleIdeas } from '../utils/poemTextUtils.js';
 
 
 export default function PoemWorkStep({
@@ -27,6 +27,10 @@ export default function PoemWorkStep({
   deletePoem,
   setCurrentView,
   requestViewChange,
+  isGenerating,
+  generationNotice,
+  requestFreePoemText,
+  requestPoemRevision,
 }) {
   const mode = settings.mode || 'answer';
   const isAnswerMode = mode === 'answer';
@@ -98,42 +102,37 @@ export default function PoemWorkStep({
     });
   };
 
-  const applyFreeAction = (action) => {
+  const applyFreeAction = async (action) => {
     const input = String(poem.freeRequest || '').trim();
     const base = getContentBase(poem.content);
-    const hasBase = base.trim().length > 0;
-    let addition = '';
 
-    if (action === 'raw') {
+    if (action === 'raw' || action === 'polish') {
       if (!input) return;
-      addition = input;
-    }
+      const addition = action === 'polish' ? polishFreeInput(input) : input;
+      if (!addition.trim()) return;
 
-    if (action === 'polish') {
-      if (!input) return;
-      addition = polishFreeInput(input);
+      saveFreeUndoSnapshot();
+      setFreeRedoSnapshot(null);
+      setFreeAction(action);
+      const title = poem.title === '아직 제목이 없어요' ? getTitleIdeas(settings, poem)[0] : poem.title;
+      updatePoem({
+        title,
+        content: joinPoemText(base, addition),
+        freeRequest: '',
+        generationSource: `free-${action}`,
+      });
+      setVariant((v) => v + 1);
+      return;
     }
 
     if (action === 'ask') {
-      if (hasBase) {
-        addition = getFreeContinuationText(base, input, settings, variant);
-      } else {
-        addition = getFreeRequestedText(input, settings, variant);
+      saveFreeUndoSnapshot();
+      setFreeAction(action);
+      const result = await requestFreePoemText();
+      if (result.ok) {
+        setFreeRedoSnapshot(null);
       }
     }
-
-    if (!addition.trim()) return;
-    saveFreeUndoSnapshot();
-    setFreeRedoSnapshot(null);
-    setFreeAction(action);
-    const title = poem.title === '아직 제목이 없어요' ? getTitleIdeas(settings, poem)[0] : poem.title;
-    updatePoem({
-      title,
-      content: joinPoemText(base, addition),
-      freeRequest: '',
-      generationSource: `free-${action}`,
-    });
-    setVariant((v) => v + 1);
   };
 
   const undoFreeAction = () => {
@@ -199,17 +198,17 @@ export default function PoemWorkStep({
     setFreeRedoSnapshot(null);
   };
 
-  const applyFreeEdit = () => {
+  const applyFreeEdit = async () => {
     const selected = freeSelectedText;
     const request = freeEditRequest.trim();
     if (!selected.trim() || !request) return;
-    const edited = getFreeRevisionText(selected, request);
-    if (!edited) return;
     saveFreeUndoSnapshot();
-    setFreeRedoSnapshot(null);
-    updatePoem({ content: poem.content.replace(selected, edited), generationSource: 'free-edit' });
-    setFreeSelectedText('');
-    setFreeEditRequest('');
+    const result = await requestPoemRevision({ selectedText: selected, editRequest: request });
+    if (result.ok) {
+      setFreeRedoSnapshot(null);
+      setFreeSelectedText('');
+      setFreeEditRequest('');
+    }
   };
 
   const closeFreeEditMode = () => {
@@ -253,14 +252,14 @@ export default function PoemWorkStep({
   };
 
 
-  const applyAnswerEdit = () => {
+  const applyAnswerEdit = async () => {
     const selected = answerSelectedText;
     if (!selected || !answerEditRequest.trim()) return;
-    const edited = getAnswerRevisionText(selected, answerEditRequest);
-    if (!edited) return;
-    updatePoem({ content: poem.content.replace(selected, edited) });
-    setAnswerSelectedText('');
-    setAnswerEditRequest('');
+    const result = await requestPoemRevision({ selectedText: selected, editRequest: answerEditRequest });
+    if (result.ok) {
+      setAnswerSelectedText('');
+      setAnswerEditRequest('');
+    }
   };
 
   const closeAnswerEditMode = () => {
@@ -389,10 +388,10 @@ export default function PoemWorkStep({
                     <div className="mini-nav edit-actions">
                       <button
                         className="primary small"
-                        disabled={!answerSelectedText.trim() || !answerEditRequest.trim()}
+                        disabled={!answerSelectedText.trim() || !answerEditRequest.trim() || isGenerating}
                         onClick={applyAnswerEdit}
                       >
-                        수정하기
+                        {isGenerating ? '수정 중...' : '수정하기'}
                       </button>
                       <button className="ghost small" onClick={closeAnswerEditMode}>닫기</button>
                     </div>
@@ -443,11 +442,13 @@ export default function PoemWorkStep({
                       ) : safeQuestionIndex < answerQuestions.length - 1 ? (
                         <button className="primary small" disabled={!q.optional && !String(answers[q.key] || '').trim()} onClick={goNextAnswer}>다음</button>
                       ) : (
-                        <button className="primary small" disabled={!answerReady} onClick={makeAnswerPoem}>시 만들기</button>
+                        <button className="primary small" disabled={!answerReady || isGenerating} onClick={makeAnswerPoem}>
+                          {isGenerating ? '만드는 중...' : '시 만들기'}
+                        </button>
                       )}
                       <button className="ghost small danger" onClick={resetGuidedWork}>초기화</button>
-                      <button className="primary small" onClick={poemGenerated ? regenerateAnswerPoem : makeAll}>
-                        {poemGenerated ? 'AI 전체 재생성' : 'AI 전체 만들기'}
+                      <button className="primary small" disabled={isGenerating} onClick={poemGenerated ? regenerateAnswerPoem : makeAll}>
+                        {isGenerating ? '만드는 중...' : poemGenerated ? 'AI 전체 재생성' : 'AI 전체 만들기'}
                       </button>
                     </div>
                   </>
@@ -465,6 +466,8 @@ export default function PoemWorkStep({
                   ))}
                 </div>
               )}
+
+              {generationNotice && <p className="ai-generation-notice">{generationNotice}</p>}
             </>
           )}
 
@@ -491,10 +494,10 @@ export default function PoemWorkStep({
                     <div className="mini-nav edit-actions free-edit-actions">
                       <button
                         className="primary small"
-                        disabled={!freeSelectedText.trim() || !freeEditRequest.trim()}
+                        disabled={!freeSelectedText.trim() || !freeEditRequest.trim() || isGenerating}
                         onClick={applyFreeEdit}
                       >
-                        선택 부분 수정
+                        {isGenerating ? '수정 중...' : '선택 부분 수정'}
                       </button>
                       <button className="ghost small" onClick={closeFreeEditMode}>닫기</button>
                     </div>
@@ -539,8 +542,8 @@ export default function PoemWorkStep({
                       >
                         {freeHasContent ? 'AI가 다듬어 이어 붙이기' : 'AI가 다듬어 넣기'}
                       </button>
-                      <button className="primary small" disabled={!canUseAiRequest} onClick={() => applyFreeAction('ask')}>
-                        AI에게 요청하기
+                      <button className="primary small" disabled={!canUseAiRequest || isGenerating} onClick={() => applyFreeAction('ask')}>
+                        {isGenerating ? '요청하는 중...' : 'AI에게 요청하기'}
                       </button>
                       <button className="ghost small" disabled={!freeHasContent} onClick={() => setFreeEditMode(true)}>
                         수정하기
@@ -569,6 +572,8 @@ export default function PoemWorkStep({
                   </div>
                 </div>
               )}
+
+              {generationNotice && <p className="ai-generation-notice">{generationNotice}</p>}
             </>
           )}
         </aside>

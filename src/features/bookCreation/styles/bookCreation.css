@@ -2360,6 +2360,12 @@
   font-size: 28px;
 }
 
+/* 이어지는 페이지는 제목을 보여주지 않되, 첫 페이지와 같은 자리를 차지해서
+   본문(<p>) 시작 위치가 페이지마다 흔들리지 않게 한다. */
+.poem-page-title-slot {
+  visibility: hidden;
+}
+
 .essay-book-page p {
   margin: 0;
   white-space: pre-wrap;
@@ -6800,6 +6806,13 @@
   box-shadow: 0 0 0 3px rgba(124, 58, 237, .11);
 }
 
+.preview-image-error {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e0453f;
+}
+
 .preview-request-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -7608,4 +7621,15 @@
   .essay-only-shell .essay-mode-grid.two-mode-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.ai-generation-notice {
+  margin: 8px 0 0;
+  padding: 10px 14px;
+  border: 1px dashed #cfc3ff;
+  border-radius: 14px;
+  background: #fff;
+  color: #6d4aff;
+  font-size: 12px;
+  font-weight: 700;
 }

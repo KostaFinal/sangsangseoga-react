@@ -38,6 +38,8 @@ export default function EssayWorkStep(props) {
     selectFromTextarea,
     goStep,
     resetEssay,
+    isGenerating,
+    generationNotice,
   } = props;
   const isGuided = settings.mode === "guided";
   const isFree = settings.mode === "free";
@@ -289,13 +291,13 @@ export default function EssayWorkStep(props) {
                   <button
                     type="button"
                     className="essay-primary"
-                    disabled={!canStartGuided}
+                    disabled={!canStartGuided || isGenerating}
                     onClick={() => {
                       writeGuidedStep();
                       setHideGuidedAfterCreate(false);
                     }}
                   >
-                    에세이 만들기
+                    {isGenerating ? "만드는 중..." : "에세이 만들기"}
                   </button>
                 )}
                   <button
@@ -376,10 +378,10 @@ export default function EssayWorkStep(props) {
                     <button
                       type="button"
                       className="essay-primary"
-                      disabled={!selectedText || !revisionRequest}
+                      disabled={!selectedText || !revisionRequest || isGenerating}
                       onClick={applyRevision}
                     >
-                      수정하기
+                      {isGenerating ? "수정 중..." : "수정하기"}
                     </button>
                     <button
                       type="button"
@@ -468,9 +470,10 @@ export default function EssayWorkStep(props) {
                             <button
                               type="button"
                               className="essay-primary"
+                              disabled={isGenerating}
                               onClick={askAi}
                             >
-                              AI에게 요청하기
+                              {isGenerating ? "요청하는 중..." : "AI에게 요청하기"}
                             </button>
                             <button
                               type="button"
@@ -520,6 +523,7 @@ export default function EssayWorkStep(props) {
             </div>
           )}
 
+          {generationNotice && <p className="ai-generation-notice">{generationNotice}</p>}
           {summaryMemo}
         </aside>
       </div>

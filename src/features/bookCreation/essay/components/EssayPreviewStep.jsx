@@ -1,25 +1,6 @@
 import React, { useState } from "react";
 import EssayFlowStepper from "./EssayFlowStepper.jsx";
-
-const createPreviewImageUrl = ({ title, subtitle }) => {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420">
-      <defs>
-        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#fbf7ff"/>
-          <stop offset="100%" stop-color="#e8ddff"/>
-        </linearGradient>
-      </defs>
-      <rect width="640" height="420" rx="34" fill="url(#bg)"/>
-      <rect x="70" y="72" width="500" height="276" rx="28" fill="#ffffff" opacity=".62"/>
-      <path d="M142 274 C214 196, 278 320, 386 224 S514 210, 544 146" fill="none" stroke="#7c3aed" stroke-width="11" stroke-linecap="round" opacity=".28"/>
-      <text x="50%" y="47%" text-anchor="middle" font-family="Pretendard, Arial, sans-serif" font-size="34" font-weight="800" fill="#5b21b6">${title}</text>
-      <text x="50%" y="60%" text-anchor="middle" font-family="Pretendard, Arial, sans-serif" font-size="20" font-weight="700" fill="#81719c">${subtitle}</text>
-    </svg>
-  `;
-
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-};
+import { requestGenerateImage, extractImageUrl } from "../../services/imageGenerateService.js";
 
 const getEssayPagePrompt = (pageNumber, content) => (
   `선택한 ${pageNumber}쪽의 에세이 내용과 분위기에 어울리는 차분한 삽화를 만들어줘.\n\n${content || ''}`
@@ -32,12 +13,16 @@ export default function EssayPreviewStep({
   setActivePreviewPage,
   goStep,
   setShowCompleteModal,
+  coverImage,
+  setCoverImage,
+  pageImages,
+  setPageImages,
 }) {
   const [panelMode, setPanelMode] = useState("idle");
   const [selectedIllustrationPage, setSelectedIllustrationPage] = useState(null);
   const [imagePrompt, setImagePrompt] = useState("");
-  const [coverImage, setCoverImage] = useState(null);
-  const [pageImages, setPageImages] = useState({});
+  const [isRequestingImage, setIsRequestingImage] = useState(false);
+  const [imageError, setImageError] = useState("");
 
   const spreadStart = Math.floor(activePreviewPage / 2) * 2;
   const left = pages[spreadStart];
@@ -66,23 +51,42 @@ export default function EssayPreviewStep({
   const cancelImageRequest = () => {
     setPanelMode("idle");
     setImagePrompt("");
+    setImageError("");
   };
 
-  const completeImageRequest = () => {
-    if (panelMode === "coverRequest") {
-      setCoverImage({
-        url: createPreviewImageUrl({ title: "에세이 표지", subtitle: "임시 이미지" }),
-        prompt: imagePrompt,
-      });
+  const completeImageRequest = async () => {
+    const isCoverRequest = panelMode === "coverRequest";
+    if (!isCoverRequest && !selectedIllustrationPage) return;
+
+    setIsRequestingImage(true);
+    setImageError("");
+
+    const response = await requestGenerateImage({
+      promptText: imagePrompt,
+      imageType: isCoverRequest ? "COVER" : "PAGE",
+      pageNo: isCoverRequest ? null : selectedIllustrationPage,
+      aspectRatio: "3:4",
+    });
+
+    setIsRequestingImage(false);
+
+    if (!response.ok) {
+      setImageError(response.message || "이미지 생성에 실패했어요. 다시 시도해 주세요.");
+      return;
     }
 
-    if (panelMode === "illustrationRequest" && selectedIllustrationPage) {
+    const imageUrl = extractImageUrl(response.data);
+    if (!imageUrl) {
+      setImageError("이미지 URL을 받지 못했어요. 다시 시도해 주세요.");
+      return;
+    }
+
+    if (isCoverRequest) {
+      setCoverImage({ url: imageUrl, prompt: imagePrompt });
+    } else {
       setPageImages((prev) => ({
         ...prev,
-        [selectedIllustrationPage]: {
-          url: createPreviewImageUrl({ title: `${selectedIllustrationPage}쪽 삽화`, subtitle: "임시 이미지" }),
-          prompt: imagePrompt,
-        },
+        [selectedIllustrationPage]: { url: imageUrl, prompt: imagePrompt },
       }));
     }
 
@@ -140,10 +144,14 @@ export default function EssayPreviewStep({
             value={imagePrompt}
             onChange={(event) => setImagePrompt(event.target.value)}
             aria-label={isCoverRequest ? "표지 이미지 요청문" : "삽화 이미지 요청문"}
+            disabled={isRequestingImage}
           />
+          {imageError && <p className="preview-image-error">{imageError}</p>}
           <div className="preview-request-actions">
-            <button type="button" className="essay-primary" onClick={completeImageRequest}>생성하기</button>
-            <button type="button" className="essay-ghost" onClick={cancelImageRequest}>취소</button>
+            <button type="button" className="essay-primary" onClick={completeImageRequest} disabled={isRequestingImage}>
+              {isRequestingImage ? "생성 중…" : "생성하기"}
+            </button>
+            <button type="button" className="essay-ghost" onClick={cancelImageRequest} disabled={isRequestingImage}>취소</button>
           </div>
         </div>
       );

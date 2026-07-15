@@ -172,7 +172,11 @@ function FairyTaleChoiceBuilderPage() {
                 onClick={handleNextStep}
                 disabled={isLoadingChoiceStep}
               >
-                {isLastStep ? "설정 확인하기 →" : "다음 단계 →"}
+                {isLoadingChoiceStep && isLastStep
+                  ? "확인하는 중..."
+                  : isLastStep
+                  ? "설정 확인하기 →"
+                  : "다음 단계 →"}
               </button>
             </div>
           </section>

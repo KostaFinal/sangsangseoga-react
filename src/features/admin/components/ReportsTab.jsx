@@ -1,27 +1,63 @@
 import React from 'react';
-import { AlertCircle, MessageSquare, BookOpen, User, Flag, ChevronRight, Calendar } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { AlertCircle, MessageSquare, BookOpen, User, Flag, ChevronRight, ChevronLeft, Calendar, ExternalLink } from 'lucide-react';
+
+const STATUS_TABS = [
+  { key: 'PENDING', label: '미처리' },
+  { key: 'RESOLVED', label: '처리완료' },
+  { key: 'REJECTED', label: '반려됨' },
+];
 
 export const ReportsTab = ({
   reportSubTab,
   setReportSubTab,
+  reportStatusFilter,
+  setReportStatusFilter,
   selectedReport,
   setSelectedReport,
   setReportModalOpen,
   reportedBooks,
   reportedComments,
-  reportedAuthors
+  reportedAuthors,
+  reportPage,
+  reportTotalCount,
+  reportHasNext,
+  reportPageSize,
+  goToReportPage,
 }) => {
   const currentList = reportSubTab === 'books' ? reportedBooks :
     reportSubTab === 'comments' ? reportedComments : reportedAuthors;
+  const totalPages = Math.max(1, Math.ceil(reportTotalCount / reportPageSize));
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200 text-left">
+      {/* Status Filter Tabs (처리 상태 기준, 서버 페이지네이션) */}
+      <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
+        {STATUS_TABS.map((sTab) => {
+          const isSelected = reportStatusFilter === sTab.key;
+          return (
+            <button
+              key={sTab.key}
+              onClick={() => setReportStatusFilter(sTab.key)}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-bold shrink-0 transition-all cursor-pointer ${
+                isSelected
+                  ? 'bg-[#110F24] text-white shadow-sm'
+                  : 'bg-[#FAF9FF] text-[#7C769D] hover:bg-[#E6E2FC]/40 hover:text-[#2F2D59]'
+              }`}
+            >
+              <span>{sTab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Secondary Report Type Selector Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
         {[
-          { id: 'books', name: '도서 신고', count: reportedBooks.filter(r => r.status === 'pending').length, icon: BookOpen },
-          { id: 'comments', name: '댓글 신고', count: reportedComments.filter(r => r.status === 'pending').length, icon: MessageSquare },
-          { id: 'authors', name: '작가 신고', count: reportedAuthors.filter(r => r.status === 'pending').length, icon: User }
+          { id: 'books', name: '도서 신고', count: reportedBooks.length, icon: BookOpen },
+          { id: 'comments', name: '댓글 신고', count: reportedComments.length, icon: MessageSquare },
+          { id: 'authors', name: '작가 신고', count: reportedAuthors.length, icon: User }
         ].map((sTab) => {
           const Icon = sTab.icon;
           const isSelected = reportSubTab === sTab.id;
@@ -68,10 +104,7 @@ export const ReportsTab = ({
           }
 
           return [...currentList]
-            .sort((a, b) => {
-              const pendingDiff = (b.status === 'pending' ? 1 : 0) - (a.status === 'pending' ? 1 : 0);
-              return pendingDiff !== 0 ? pendingDiff : new Date(b.createdAt) - new Date(a.createdAt);
-            })
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
             .map((item) => {
               const isSelected = selectedReport?.id === item.id;
               return (
@@ -141,6 +174,20 @@ export const ReportsTab = ({
                       <span className="text-sm font-black text-[#2F2D59]">{item.reporterNickname}</span>
                     </div>
 
+                    {/* 신고 대상 확인 (도서/작가/댓글 원본으로 바로 이동) */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (item.targetPath) navigate(item.targetPath);
+                      }}
+                      disabled={!item.targetPath}
+                      title={item.targetPath ? '신고 대상으로 이동' : '대상 정보를 불러오는 중입니다'}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold border border-[#E6E2FC] text-[#6B54E7] bg-white hover:bg-[#FAF9FF] disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer shrink-0"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>신고 대상 확인</span>
+                    </button>
+
                     {/* Status badge */}
                     <div className="shrink-0 min-w-[70px] text-center">
                       <span className={`inline-block w-full px-2.5 py-1 rounded-full text-xs font-bold border ${
@@ -163,6 +210,31 @@ export const ReportsTab = ({
             })
         })()}
       </div>
+
+      {/* Pagination (전체 신고 기준, 서버 사이드) */}
+      {reportTotalCount > 0 && (
+        <div className="flex items-center justify-between px-1 py-1">
+          <span className="text-sm text-[#7C769D] font-semibold">
+            {reportPage + 1} / {totalPages} 페이지
+          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => goToReportPage(reportPage - 1)}
+              disabled={reportPage === 0}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#E6E2FC] text-[#7C769D] hover:border-[#6B54E7] hover:text-[#6B54E7] disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => goToReportPage(reportPage + 1)}
+              disabled={!reportHasNext}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#E6E2FC] text-[#7C769D] hover:border-[#6B54E7] hover:text-[#6B54E7] disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

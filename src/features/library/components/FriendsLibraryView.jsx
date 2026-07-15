@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useNavigate, useOutletContext } from "react-router-dom";
+import { useParams, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { Search, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, X, SlidersHorizontal, Eye } from "lucide-react";
 import BookDetailView from "./BookDetailView";
@@ -56,6 +56,8 @@ const genreBadge = (genre) => {
 export default function FriendsLibraryView() {
   const { bookId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const scrollToCommentId = searchParams.get("commentId");
   const { handleToggleBookmark } = useOutletContext();
   const { currentUser } = useAuth();
   const requireAuth = useRequireAuth();
@@ -276,6 +278,7 @@ export default function FriendsLibraryView() {
           }}
 
           onViewCountSynced={(id, viewCount) => patchBookById(id, prev => ({ ...prev, viewCount }))}
+          scrollToCommentId={scrollToCommentId}
 
           onStartReading={(book) => navigate(`/books/${book.id}/read`)}
           // onToggleLike={e => handleToggleLike(e, viewingBook.id)}
