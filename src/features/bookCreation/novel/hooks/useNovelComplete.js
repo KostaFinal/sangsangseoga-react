@@ -12,6 +12,7 @@ export function useNovelComplete() {
   const scenes = data.scenes || fallbackData.scenes;
   const cover = data.cover || fallbackData.cover;
   const coverImageUrl = data.coverImageUrl || null;
+  const bookId = data.bookId || null;
 
   const title = setting.storySeed || "제목 없는 소설";
   const protagonist = setting.protagonist || "미정";
@@ -42,6 +43,7 @@ export function useNovelComplete() {
     scenes,
     cover,
     coverImageUrl,
+    bookId,
     title,
     protagonist,
     genre,

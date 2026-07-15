@@ -1,5 +1,13 @@
 import { toAiGenerateRequest, toBookDraft } from "../utils/bookDraftMapper";
 import { getTaskResult } from "../fairy-tale/utils/aiSettingOptions";
+import { getAccessToken } from "../../../api/tokenStorage";
+
+// fetch()는 axiosInstance와 달리 인터셉터가 없어 Authorization 헤더를 직접 붙여야 한다.
+// 이게 빠져있으면 로그인 여부와 무관하게 서버가 항상 401(UNAUTHORIZED)을 반환한다.
+const authHeaders = () => {
+  const token = getAccessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 const AI_GENERATE_URL = "http://localhost:8080/api/ai/generate";
 const AI_GENERATE_STREAM_URL = "http://localhost:8080/api/ai/generate/stream";
@@ -70,6 +78,18 @@ export const extractGeneratedText = (data) => {
   return "";
 };
 
+// extractGeneratedText(한글)의 영어 버전. WRITE_SCENE의 bodyTextEn, REWRITE_SCENE의
+// revisedBodyTextEn, TRANSLATE_TEXT의 textEn을 모두 같은 함수로 커버한다.
+export const extractGeneratedTextEn = (data) => {
+  const result = getTaskResult(data);
+
+  if (!result || typeof result === "string") return "";
+
+  const generated = result.bodyTextEn || result.revisedBodyTextEn || result.textEn || "";
+
+  return typeof generated === "string" ? generated : "";
+};
+
 export const extractGeneratedPages = (data) => {
   const result = getTaskResult(data);
   return Array.isArray(result?.pages) ? result.pages : [];
@@ -115,6 +135,7 @@ export const requestAiGenerate = async ({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...authHeaders(),
       },
       body: JSON.stringify(requestBody),
       signal,
@@ -189,6 +210,7 @@ export const requestAiGenerateStream = async ({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...authHeaders(),
       },
       body: JSON.stringify(requestBody),
       signal,
@@ -319,6 +341,7 @@ export const aiGenerateService = {
   requestAiGenerateStream,
   generateAiContent,
   extractGeneratedText,
+  extractGeneratedTextEn,
   extractGeneratedPages,
   extractGeneratedScenes,
   normalizeSetting,

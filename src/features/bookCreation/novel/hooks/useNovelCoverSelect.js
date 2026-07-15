@@ -11,6 +11,8 @@ import {
   extractAiMessage,
   extractCoverPrompt,
 } from "../../services/imageGenerateService";
+import { publishBook } from "../../../../api/bookApi";
+import { splitScenesIntoPageRequests } from "../utils/novelPageSplitter";
 
 export function useNovelCoverSelect() {
   const navigate = useNavigate();
@@ -32,7 +34,14 @@ export function useNovelCoverSelect() {
   const [generatedCoverImageUrl, setGeneratedCoverImageUrl] = useState(null);
   const [coverGenerationError, setCoverGenerationError] = useState(null);
 
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState(null);
+  const isPublishingRef = useRef(false);
+
   const hasRequestedInitialConcepts = useRef(false);
+  // isGeneratingCover(state)만으로 막으면 재렌더링 전에 온 두 번째 클릭이 새어 들어가
+  // Replicate에 동시 요청 2건이 나가버린다(둘 중 하나가 429/오류로 500 응답). ref로 즉시 잠근다.
+  const isGeneratingCoverRef = useRef(false);
 
   const selectedCover = useMemo(() => {
     return (
@@ -41,7 +50,7 @@ export function useNovelCoverSelect() {
     );
   }, [coverOptions, selectedCoverId]);
 
-  const title = setting.storySeed || "제목 없는 소설";
+  const [title, setTitle] = useState(() => setting.storySeed || "제목 없는 소설");
 
   const requestCoverConcepts = async (excludeTitles) => {
     setIsLoadingConcepts(true);
@@ -89,26 +98,61 @@ export function useNovelCoverSelect() {
     requestCoverConcepts(shownConceptTitles);
   };
 
-  const handleConfirmCover = () => {
-    const payload = {
-      bookType: "NOVEL",
-      setting,
-      scenes,
-      cover: selectedCover,
-      coverImageUrl: generatedCoverImageUrl,
-    };
+  // 소설 내부 데이터는 scene(장면) 단위로 다루고, 화면/상태 명칭도 scenes를 그대로 쓴다.
+  // 공통 발행 API(BookPublishRequestDto.PageRequest)는 pages[]만 받으므로, 발행 직전 이 지점에서만
+  // scenes를 pages[] 형식으로 변환한다(소설을 페이지 구조로 바꾸는 게 아니라 API 경계 호환 변환).
+  // 장면 본문이 리더 한 페이지보다 길면 splitScenesIntoPageRequests가 여러 행으로 쪼개
+  // pageNo가 실제 화면에 보이는 페이지 수와 일치하도록 만든다(가장 큰 글씨 기준으로 계산해
+  // 글자 크기를 줄여도 잘리지 않음).
+  const buildNovelPublishPayload = () => ({
+    bookType: "NOVEL",
+    authorAgeGroup: setting.writerLevel || "TEEN",
+    readerAgeGroup: setting.writerLevel || "TEEN",
+    creationMode: setting.interactionMode || "MIXED",
+    title,
+    description: [setting.genre, setting.protagonist].filter(Boolean).join(" · ") || title,
+    confirmedSettings: JSON.stringify(setting),
+    coverImageUrl: generatedCoverImageUrl,
+    pages: splitScenesIntoPageRequests(scenes),
+  });
 
-    console.log("표지 확정 데이터:", payload);
+  const handleConfirmCover = async () => {
+    if (isPublishingRef.current) return;
+    isPublishingRef.current = true;
 
-    navigate(BOOK_CREATION_ROUTES.NOVEL.COMPLETE, {
-      state: payload,
-    });
+    setIsPublishing(true);
+    setPublishError(null);
+
+    try {
+      const requestBody = buildNovelPublishPayload();
+      const response = await publishBook(requestBody);
+      const bookId = response.data?.data?.bookId;
+
+      navigate(BOOK_CREATION_ROUTES.NOVEL.COMPLETE, {
+        state: {
+          bookType: "NOVEL",
+          setting,
+          scenes,
+          cover: selectedCover,
+          coverImageUrl: generatedCoverImageUrl,
+          bookId,
+        },
+      });
+    } catch (error) {
+      setPublishError(
+        error.response?.data?.message || "소설 저장에 실패했습니다. 다시 시도해 주세요."
+      );
+    } finally {
+      setIsPublishing(false);
+      isPublishingRef.current = false;
+    }
   };
 
   // 표지 프롬프트(Gemini) 생성 → 표지 이미지(Replicate) 생성 2단계로 실제 API를 호출한다.
   // DB/S3 저장은 하지 않고, 생성된 imageUrl은 이 화면의 state에만 보관해 미리보기로 표시한다.
   const handleRegenerate = async () => {
-    if (isGeneratingCover) return;
+    if (isGeneratingCoverRef.current) return;
+    isGeneratingCoverRef.current = true;
 
     setIsGeneratingCover(true);
     setCoverGenerationError(null);
@@ -161,6 +205,7 @@ export function useNovelCoverSelect() {
       setGeneratedCoverImageUrl(imageUrl);
     } finally {
       setIsGeneratingCover(false);
+      isGeneratingCoverRef.current = false;
     }
   };
 
@@ -173,6 +218,7 @@ export function useNovelCoverSelect() {
     setSelectedCoverId,
     selectedCover,
     title,
+    setTitle,
     isLoadingConcepts,
     conceptFallbackNotice,
     handleRegenerateConcepts,
@@ -181,5 +227,7 @@ export function useNovelCoverSelect() {
     isGeneratingCover,
     generatedCoverImageUrl,
     coverGenerationError,
+    isPublishing,
+    publishError,
   };
 }

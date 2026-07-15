@@ -16,6 +16,7 @@ function NovelCoverSelectPage() {
     setSelectedCoverId,
     selectedCover,
     title,
+    setTitle,
     isLoadingConcepts,
     conceptFallbackNotice,
     handleRegenerateConcepts,
@@ -24,6 +25,8 @@ function NovelCoverSelectPage() {
     isGeneratingCover,
     generatedCoverImageUrl,
     coverGenerationError,
+    isPublishing,
+    publishError,
   } = useNovelCoverSelect();
   return (
     <div className="novel-cover-page">
@@ -75,7 +78,17 @@ function NovelCoverSelectPage() {
             <h2>✦ 표지 정보 ✦</h2>
 
             <div className="cover-info-box">
-              <InfoRow label="작품 제목" value={title} />
+              <div className="cover-info-row">
+                <span>작품 제목</span>
+                <input
+                  type="text"
+                  className="cover-title-input"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  maxLength={50}
+                  placeholder="제목을 입력하세요"
+                />
+              </div>
               <InfoRow label="장르" value={setting.genre} />
               <InfoRow label="주인공" value={setting.protagonist} />
               <InfoRow label="배경" value={setting.background} />
@@ -223,11 +236,17 @@ function NovelCoverSelectPage() {
               type="button"
               className="confirm-cover-btn"
               onClick={handleConfirmCover}
-              disabled={isGeneratingCover}
+              disabled={isGeneratingCover || isPublishing}
             >
-              ✨ 이 표지로 확정
+              {isPublishing ? "💾 저장하는 중..." : "✨ 이 표지로 확정"}
             </button>
           </div>
+
+          {publishError && (
+            <p className="cover-guide-text" style={{ color: "#d33" }}>
+              {publishError}
+            </p>
+          )}
         </section>
       </main>
     </div>
