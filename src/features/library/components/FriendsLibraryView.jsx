@@ -7,7 +7,7 @@ import { getBooks, getBook, likeBook, unlikeBook } from "../../../api/bookApi";
 import { addComment, addReply } from "../../../api/commentApi";
 import { useAuth } from "../../../shared/context/AuthContext";
 import { useRequireAuth } from "../../../shared/hooks/useRequireAuth";
-import { addWishlist, deleteWishlist, updateMyWrittenBookDescription, updateMyWrittenBookStatus } from "../../../api/myLibraryApi";
+import { addWishlist, deleteWishlist, updateMyWrittenBookDescription, updateMyWrittenBookStatus, updateMyWrittenBookTags, deleteMyWrittenBook, } from "../../../api/myLibraryApi";
 
 const bookTypeOptions = [
   { label: "전체", value: null },
@@ -251,8 +251,30 @@ export default function FriendsLibraryView() {
             patchBookById(bookId, prev => ({
               ...prev,
               status,
+              isPublic: status === "PUBLISHED",
             }));
           }}
+
+          onUpdateTags={async (bookId, tags) => {
+            await updateMyWrittenBookTags(bookId, tags);
+
+            patchBookById(bookId, prev => ({
+              ...prev,
+              tags,
+            }));
+          }}
+
+          onDeleteBook={async (bookId) => {
+            await deleteMyWrittenBook(bookId);
+
+            setBooks(prev =>
+              prev.filter(book => String(book.id) !== String(bookId))
+            );
+
+            setFetchedBook(null);
+            navigate("/library/my-books");
+          }}
+
           onViewCountSynced={(id, viewCount) => patchBookById(id, prev => ({ ...prev, viewCount }))}
 
           onStartReading={(book) => navigate(`/books/${book.id}/read`)}
