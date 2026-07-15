@@ -67,7 +67,7 @@ export const updateMyWrittenBookStatus = (bookId, status) =>
     status,
   });
 
-  export const updateMyWrittenBookDescription = (bookId, description) =>
+export const updateMyWrittenBookDescription = (bookId, description) =>
   api.patch(`/api/bookshelves/my-books/${bookId}/description`, {
     description,
   });
@@ -97,3 +97,11 @@ export const deleteReadingPlan = (planId) =>
 // 독서 계획 완료
 export const completeReadingPlan = (planId) =>
   api.patch(`/api/bookshelves/reading-plans/${planId}/complete`);
+
+export const updateMyWrittenBookTags = (bookId, tags) =>
+  api.patch(`/api/bookshelves/my-books/${bookId}/tags`, {
+    tags,
+  });
+
+export const deleteMyWrittenBook = (bookId) =>
+  api.delete(`/api/bookshelves/my-books/${bookId}`);

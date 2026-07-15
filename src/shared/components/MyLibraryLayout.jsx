@@ -21,6 +21,7 @@ import {
   getMyWrittenBooks,
   updateMyWrittenBookStatus,
   updateMyWrittenBookDescription,
+  deleteMyWrittenBook,
 } from '../../api/myLibraryApi';
 
 export function MyLibraryLayout() {
@@ -40,10 +41,10 @@ export function MyLibraryLayout() {
         getMyWrittenBooks(),
       ]);
 
-      const wishlistData = wishlistRes.data.data;
-      const readingData = readingRes.data.data;
-      const finishedData = finishedRes.data.data;
-      const myBooksData = myBooksRes.data?.data || [];
+      const wishlistData = wishlistRes.data.data || [];
+      const readingData = readingRes.data.data || [];
+      const finishedData = finishedRes.data.data || [];
+      const myBooksData = myBooksRes.data?.data?.content || [];
 
       const wishlistBooks = Array.isArray(wishlistData)
         ? wishlistData.map(book => ({
@@ -260,6 +261,25 @@ export function MyLibraryLayout() {
     setBooks((prev) => prev.map((b) => (b.id === updatedBook.id ? { ...b, ...updatedBook } : b)));
   };
 
+  const handleDeleteBook = async (bookId) => {
+    try {
+      await deleteMyWrittenBook(bookId);
+
+      setBooks(prev =>
+        prev.filter(
+          book =>
+            String(book.bookId || book.id) !== String(bookId)
+        )
+      );
+
+      navigate("/library/all-books");
+    } catch (err) {
+      console.error(err);
+      alert("책 삭제에 실패했습니다.");
+      throw err;
+    }
+  };
+
   const handleToggleFavorite = async (bookId) => {
     try {
       await removeWishlistBook(bookId);
@@ -353,6 +373,7 @@ export function MyLibraryLayout() {
     onUpdateBook: handleUpdateBook,
     onUpdateDescription: handleUpdateDescription,
     onUpdateStatus: handleUpdateStatus,
+    onDeleteBook: handleDeleteBook,
     handleFairyTaleCreated,
   };
 
@@ -440,13 +461,13 @@ export function MyLibraryAiChatRoute() {
 
 export function MyLibraryAllBooksRoute() {
   const navigate = useNavigate();
+
   const {
     filteredBooks,
     onOpenViewer,
-    onUpdateBook,
-    onUpdateDescription,
-    onUpdateStatus,
+    onDeleteBook,
   } = useOutletContext();
+
   const onOpenDetail = (book) => {
     const convertedBook = {
       ...book,
@@ -457,17 +478,20 @@ export function MyLibraryAllBooksRoute() {
       isBookmarked: book.isFavorite || false,
       comments: book.reviews || [],
       commentsCount: book.reviews?.length || 0,
-      mode: 'owner',
+      mode: "owner",
     };
-    navigate(`/friends/${convertedBook.id}`, { state: { book: convertedBook } });
+
+    navigate(`/friends/${convertedBook.id}`, {
+      state: { book: convertedBook },
+    });
   };
+
   return (
     <MyBookTab
       filteredBooks={filteredBooks}
       onOpenViewer={onOpenViewer}
-      setActiveTab={(tab) => navigate(tabToLibraryPath(tab))}
-      onUpdateBook={onUpdateBook}
       onOpenDetail={onOpenDetail}
+      onDeleteBook={onDeleteBook}
     />
   );
 }

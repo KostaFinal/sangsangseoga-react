@@ -40,6 +40,8 @@ export default function BookDetailView({
   mode = "viewer",
   onUpdateDescription,
   onUpdateStatus,
+  onUpdateTags,
+  onDeleteBook,
   onViewCountSynced,
   currentUser,
   scrollToCommentId,
@@ -57,6 +59,11 @@ export default function BookDetailView({
   const [editDescription, setEditDescription] = useState(localBook.description || "");
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingCommentText, setEditingCommentText] = useState("");
+  const [isEditingTags, setIsEditingTags] = useState(false);
+  const [editTags, setEditTags] = useState(book.tags || []);
+  const [newTag, setNewTag] = useState("");
+  const [isSavingTags, setIsSavingTags] = useState(false);
+  const [isDeletingBook, setIsDeletingBook] = useState(false);
 
   const handleStartReport = (type, id, label) => setReportTarget({ type, id, label });
   const handleSubmitReport = async ({ reason, detail }) => {
@@ -368,6 +375,134 @@ export default function BookDetailView({
     return "w-10 h-10 rounded-full bg-[#1e1d3b] border border-black/5 flex items-center justify-center text-[#ffd9b6] font-black text-sm shadow-inner shrink-0";
   };
 
+  const normalizeTag = (value) =>
+    value.trim().replace(/^#/, "").trim();
+
+  const handleAddTag = () => {
+    const normalizedTag = normalizeTag(newTag);
+
+    if (!normalizedTag) {
+      return;
+    }
+
+    if (normalizedTag.length > 50) {
+      alert("태그는 50자 이하로 입력해 주세요.");
+      return;
+    }
+
+    if (editTags.includes(normalizedTag)) {
+      alert("이미 등록된 태그입니다.");
+      return;
+    }
+
+    if (editTags.length >= 10) {
+      alert("태그는 최대 10개까지 등록할 수 있습니다.");
+      return;
+    }
+
+    setEditTags(prev => [...prev, normalizedTag]);
+    setNewTag("");
+  };
+
+  const handleChangeTag = (index, value) => {
+    const normalizedValue = value.replace(/^#/, "");
+
+    setEditTags(prev =>
+      prev.map((tag, tagIndex) =>
+        tagIndex === index ? normalizedValue : tag
+      )
+    );
+  };
+
+  const handleDeleteTag = (index) => {
+    setEditTags(prev =>
+      prev.filter((_, tagIndex) => tagIndex !== index)
+    );
+  };
+
+  const handleCancelTagEdit = () => {
+    setEditTags(tags);
+    setNewTag("");
+    setIsEditingTags(false);
+  };
+
+  const handleSaveTags = async () => {
+    const bookId = localBook.bookId || localBook.id;
+
+    const normalizedTags = editTags
+      .map(normalizeTag)
+      .filter(Boolean)
+      .filter((tag, index, array) =>
+        array.indexOf(tag) === index
+      );
+
+    if (normalizedTags.some(tag => tag.length > 50)) {
+      alert("태그는 50자 이하로 입력해 주세요.");
+      return;
+    }
+
+    if (normalizedTags.length > 10) {
+      alert("태그는 최대 10개까지 등록할 수 있습니다.");
+      return;
+    }
+
+    try {
+      setIsSavingTags(true);
+
+      await onUpdateTags?.(bookId, normalizedTags);
+
+      setTags(normalizedTags);
+
+      setLocalBook(prev => ({
+        ...prev,
+        tags: normalizedTags,
+      }));
+
+      setEditTags(normalizedTags);
+      setNewTag("");
+      setIsEditingTags(false);
+    } catch (error) {
+      console.error("태그 수정 실패", error);
+      alert("태그 수정에 실패했습니다.");
+    } finally {
+      setIsSavingTags(false);
+    }
+  };
+
+  useEffect(() => {
+    setEditTags(tags);
+  }, [tags]);
+
+  useEffect(() => {
+    setIsEditingTags(false);
+    setNewTag("");
+  }, [book.id]);
+
+  const handleDeleteBook = async () => {
+    if (isDeletingBook) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "정말 이 책을 삭제하시겠습니까?\n삭제된 책은 목록에서 더 이상 보이지 않습니다."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const bookId = localBook.bookId || localBook.id;
+
+    try {
+      setIsDeletingBook(true);
+
+      await onDeleteBook?.(bookId);
+    } catch (error) {
+      console.error("책 삭제 실패", error);
+      alert("책 삭제에 실패했습니다.");
+      setIsDeletingBook(false);
+    }
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 md:px-0 py-4 animate-fadeIn font-gowun">
@@ -457,15 +592,118 @@ export default function BookDetailView({
             </div>
 
             {/* Tags outline Row 2 - 해시태그 배경 및 글씨 진하게 */}
-            <div className="flex flex-wrap gap-2">
-              {tags.map(tag => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-lg border border-[#d4cdf2] bg-[#f3f0ff] text-[#5139d6]"
-                >
-                  #{tag}
-                </span>
-              ))}
+            <div className="space-y-3">
+              {!isEditingTags ? (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    {tags.length > 0 ? (
+                      tags.map(tag => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-lg border border-[#d4cdf2] bg-[#f3f0ff] text-[#5139d6]"
+                        >
+                          #{tag}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs font-bold text-[#7368a1]">
+                        등록된 태그가 없습니다.
+                      </span>
+                    )}
+                  </div>
+
+                  {mode === "owner" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditTags(tags);
+                        setIsEditingTags(true);
+                      }}
+                      className="text-xs font-black text-[#5139d6] hover:underline cursor-pointer"
+                    >
+                      태그 편집
+                    </button>
+                  )}
+                </>
+              ) : (
+                <div className="rounded-xl border-2 border-[#d4cdf2] bg-[#faf9ff] p-4 space-y-3">
+                  <div className="space-y-2">
+                    {editTags.map((tag, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2"
+                      >
+                        <span className="text-sm font-black text-[#5139d6]">
+                          #
+                        </span>
+
+                        <input
+                          type="text"
+                          maxLength={50}
+                          value={tag}
+                          onChange={e =>
+                            handleChangeTag(index, e.target.value)
+                          }
+                          className="flex-1 rounded-lg border border-[#b3a6eb] bg-white px-3 py-2 text-xs font-bold text-[#2f2d59] outline-none focus:border-[#5139d6]"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTag(index)}
+                          className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-black text-red-600 hover:bg-red-50 cursor-pointer"
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      maxLength={50}
+                      value={newTag}
+                      onChange={e => setNewTag(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddTag();
+                        }
+                      }}
+                      placeholder="새 태그 입력"
+                      className="flex-1 rounded-lg border border-[#b3a6eb] bg-white px-3 py-2 text-xs font-bold text-[#2f2d59] outline-none focus:border-[#5139d6]"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleAddTag}
+                      className="rounded-lg bg-[#ede9ff] px-4 py-2 text-xs font-black text-[#5139d6] hover:bg-[#ddd6fe] cursor-pointer"
+                    >
+                      추가
+                    </button>
+                  </div>
+
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCancelTagEdit}
+                      disabled={isSavingTags}
+                      className="rounded-lg border-2 border-[#b3a6eb] bg-white px-4 py-2 text-xs font-black text-[#3c375e] cursor-pointer disabled:opacity-50"
+                    >
+                      취소
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleSaveTags}
+                      disabled={isSavingTags}
+                      className="rounded-lg bg-[#5139d6] px-4 py-2 text-xs font-black text-white hover:bg-[#3b25b8] cursor-pointer disabled:opacity-50"
+                    >
+                      {isSavingTags ? "저장 중..." : "저장"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Thick Border Primary CTA button */}
@@ -621,7 +859,7 @@ export default function BookDetailView({
                   </p>
 
                   {mode === "owner" && (
-                    <div className="mt-4 flex gap-2">
+                    <div className="mt-4 flex flex-wrap items-center gap-3">
                       <button
                         onClick={() => setIsEditingDescription(true)}
                         className="px-4 py-2 rounded-lg border-2 border-[#b3a6eb] text-xs font-black text-[#5139d6] hover:bg-[#f3f0ff] bg-white cursor-pointer"
@@ -629,29 +867,60 @@ export default function BookDetailView({
                         책 소개 수정
                       </button>
 
-                      <button
-                        onClick={async () => {
-                          const bookId = localBook.bookId || localBook.id;
-                          const nextStatus =
-                            localBook.status === "PUBLISHED"
-                              ? "HIDDEN"
-                              : "PUBLISHED";
+                      <div className="flex items-center gap-2">
+                        <label
+                          htmlFor="book-status"
+                          className="text-xs font-black text-[#3c375e]"
+                        >
+                          공개 여부
+                        </label>
 
-                          try {
-                            await onUpdateStatus?.(bookId, nextStatus);
+                        <select
+                          id="book-status"
+                          value={localBook.status || "PUBLISHED"}
+                          onChange={async (e) => {
+                            const bookId = localBook.bookId || localBook.id;
+                            const previousStatus = localBook.status || "PUBLISHED";
+                            const nextStatus = e.target.value;
 
                             setLocalBook(prev => ({
                               ...prev,
                               status: nextStatus,
                             }));
-                          } catch (e) {
-                            alert("공개 여부 변경에 실패했습니다.");
-                          }
-                        }}
+
+                            try {
+                              await onUpdateStatus?.(bookId, nextStatus);
+                            } catch (error) {
+                              console.error("공개 여부 변경 실패", error);
+
+                              setLocalBook(prev => ({
+                                ...prev,
+                                status: previousStatus,
+                              }));
+                            }
+                          }}
+                          className="rounded-lg border-2 border-[#b3a6eb] bg-white px-3 py-2 text-xs font-black text-[#5139d6] outline-none focus:border-[#5139d6]"
+                        >
+                          <option value="PUBLISHED">공개</option>
+                          <option value="HIDDEN">비공개</option>
+                        </select>
+
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[10px] font-black ${localBook.status === "HIDDEN"
+                            ? "bg-gray-100 text-gray-600"
+                            : "bg-[#ede9ff] text-[#5139d6]"
+                            }`}
+                        >
+                          {localBook.status === "HIDDEN" ? "비공개" : "공개 중"}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleDeleteBook}
+                        disabled={isDeletingBook}
+                        className="ml-auto px-4 py-2 rounded-lg border-2 border-red-200 bg-white text-xs font-black text-red-600 hover:bg-red-50 hover:border-red-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {localBook.status === "PUBLISHED"
-                          ? "비공개로 변경"
-                          : "공개로 변경"}
+                        {isDeletingBook ? "삭제 중..." : "책 삭제"}
                       </button>
                     </div>
                   )}

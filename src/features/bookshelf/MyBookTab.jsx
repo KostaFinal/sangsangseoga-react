@@ -1,38 +1,9 @@
-import React, { useState } from 'react';
-import { Sparkles, ChevronRight, X, Edit2, Save, BookOpen, Clock, Tag, FileText, Award, Calendar } from 'lucide-react';
+import { Sparkles, ChevronRight } from 'lucide-react';
 
-export default function AllBooksTab({ filteredBooks,
+export default function MyBookTab({ filteredBooks,
   onOpenViewer,
-  setActiveTab,
-  onUpdateBook,
+  onDeleteBook,
   onOpenDetail }) {
-  const [selectedBook, setSelectedBook] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({
-    description: ''
-  });
-
-  const handleOpenDetail = (book) => {
-    setSelectedBook(book);
-    setEditForm({
-      description: book.description
-    });
-    setIsEditing(false);
-  };
-
-  const handleSaveEdit = (e) => {
-    e.preventDefault();
-
-
-    const updated = {
-      ...selectedBook,
-      description: editForm.description
-    };
-
-    onUpdateBook(updated);
-    setSelectedBook(updated);
-    setIsEditing(false);
-  };
 
   const myBooks = filteredBooks.filter(
     (b) => b.isMyWrittenBook
@@ -77,18 +48,41 @@ export default function AllBooksTab({ filteredBooks,
 
               <div className="flex gap-2 mt-3">
                 <button
+                  type="button"
                   onClick={() => onOpenDetail(book)}
                   className="px-3.5 py-2 bg-lavender-bg hover:bg-lavender-card text-brand-purple font-bold text-xs rounded-full cursor-pointer transition-all flex items-center justify-center gap-1 border border-lavender-border"
-                  title="도서 정보 조회 및 수정"
                 >
                   상세 & 수정 🔍
                 </button>
+
                 <button
-                  onClick={() => onOpenViewer(book.id)}
-                  id={`open-user-book-${book.id}`}
+                  type="button"
+                  onClick={() => onOpenViewer(book.bookId || book.id)}
                   className="flex-grow py-2 bg-brand-purple hover:bg-brand-dark text-white font-bold text-xs rounded-full cursor-pointer transition-all flex items-center justify-center gap-1 shadow-sm"
                 >
-                  읽어보기 <ChevronRight className="w-3 h-3" />
+                  읽어보기
+                  <ChevronRight className="w-3 h-3" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const confirmed = window.confirm(
+                      `"${book.title}" 책을 삭제하시겠습니까?\n삭제 후 내가 쓴 책 목록에서 보이지 않습니다.`
+                    );
+
+                    if (!confirmed) return;
+
+                    try {
+                      await onDeleteBook(book.bookId || book.id);
+                    } catch (error) {
+                      console.error("책 삭제 실패", error);
+                      alert("책 삭제에 실패했습니다.");
+                    }
+                  }}
+                  className="px-3 py-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 font-bold text-xs rounded-full cursor-pointer transition-all"
+                >
+                  삭제
                 </button>
               </div>
             </div>
@@ -105,146 +99,6 @@ export default function AllBooksTab({ filteredBooks,
           </div>
         )}
       </div>
-
-      {/* Book Detail & Edit Modal */}
-      {selectedBook && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl border border-lavender-border shadow-2xl max-w-2xl w-full overflow-hidden animate-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="bg-lavender-bg px-6 py-4 border-b border-lavender-border flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-brand-purple" />
-                <h4 className="font-serif font-black text-navy-purple text-base">
-                  {isEditing ? '내 이야기 수정하기 🧙' : '도서 상세 정보 📖'}
-                </h4>
-              </div>
-              <button
-                onClick={() => setSelectedBook(null)}
-                className="w-8 h-8 rounded-full bg-white hover:bg-lavender-bg text-navy-purple border border-lavender-border flex items-center justify-center cursor-pointer transition-all"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6">
-              {isEditing ? (
-                <form onSubmit={handleSaveEdit} className="space-y-4">
-                  <div>
-                    <label className="text-[10px] font-extrabold text-navy-purple block mb-1">
-                      책 소개
-                    </label>
-                    <textarea
-                      rows={5}
-                      value={editForm.description}
-                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                      className="w-full bg-white border border-lavender-border rounded-xl p-3.5 text-xs text-navy-purple outline-none resize-none tracking-wide font-medium focus:border-brand-purple focus:ring-1 focus:ring-brand-purple transition-all leading-relaxed"
-                      placeholder="책 소개를 입력하세요"
-                    />
-                  </div>
-
-
-
-                  <div className="flex justify-end gap-2.5 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(false)}
-                      className="px-4 py-2 bg-white border border-lavender-border text-navy-purple rounded-full text-xs font-bold shadow-sm hover:bg-lavender-bg transition-all cursor-pointer"
-                    >
-                      취소
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-5 py-2 bg-brand-purple hover:bg-brand-dark text-white rounded-full text-xs font-bold shadow-md transition-all flex items-center gap-1 cursor-pointer"
-                    >
-                      <Save className="w-3.5 h-3.5" /> 저장하기
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
-                  {/* Left Side cover banner */}
-                  <div className="md:col-span-5 bg-lavender-bg/40 rounded-2xl p-4 flex flex-col justify-between border border-lavender-border shadow-inner relative min-h-[240px]">
-                    <div className="mx-auto my-auto relative w-32 h-44 rounded-xl shadow-lg border border-lavender-border overflow-hidden bg-white">
-                      <img src={selectedBook.coverUrl} className="w-full h-full object-cover" alt="Cover detail" referrerPolicy="no-referrer" />
-                      <div className="absolute top-2 right-2 bg-brand-purple text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow">
-                        {selectedBook.magicLevel || 'Lv. 1'}
-                      </div>
-                    </div>
-
-                    <div className="flex justify-center gap-2 mt-4">
-                      <span className="text-[9px] font-extrabold px-2.5 py-1 bg-white border border-lavender-border text-brand-purple rounded-full shadow-xs">
-                        {selectedBook.category}
-                      </span>
-                      <span className="text-[9px] font-extrabold px-2.5 py-1 bg-white border border-lavender-border text-navy-purple rounded-full shadow-xs">
-                        {selectedBook.readingTime || '10분'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Right Side metadata display */}
-                  <div className="md:col-span-7 flex flex-col justify-between">
-                    <div className="space-y-4">
-                      <div>
-                        <span className="text-[10px] font-extrabold text-brand-purple flex items-center gap-1">
-                          <Tag className="w-3 h-3" /> {selectedBook.author} 님의 작품
-                        </span>
-                        <h3 className="font-serif font-black text-navy-purple text-lg mt-1 tracking-tight">
-                          {selectedBook.title}
-                        </h3>
-                      </div>
-
-                      <div className="bg-lavender-bg/30 p-3.5 rounded-xl border border-dashed border-lavender-border">
-                        <span className="text-[9px] font-extrabold text-navy-purple block mb-1 flex items-center gap-1">
-                          <FileText className="w-3 h-3 text-brand-purple" /> 상상 시놉시스 (줄거리)
-                        </span>
-                        <p className="text-xs text-purple-gray-text leading-relaxed font-medium">
-                          {selectedBook.description || '이 책은 별도의 줄거리 요약이 정의되지 않은 무한한 우주의 신비로운 이야기입니다.'}
-                        </p>
-                      </div>
-
-                      {/* Info Row parameters */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-white border border-lavender-border rounded-xl p-2.5 text-center flex items-center justify-between px-3.5">
-                          <span className="text-[10px] font-bold text-purple-gray-text flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-indigo-400" /> 완독 시간
-                          </span>
-                          <span className="text-xs font-bold text-navy-purple">{selectedBook.readingTime || '10분'}</span>
-                        </div>
-                        <div className="bg-white border border-lavender-border rounded-xl p-2.5 text-center flex items-center justify-between px-3.5">
-                          <span className="text-[10px] font-bold text-purple-gray-text flex items-center gap-1">
-                            <Award className="w-3 h-3 text-amber-500" /> 총 분량
-                          </span>
-                          <span className="text-xs font-bold text-navy-purple">{selectedBook.pages || 15}쪽</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2.5 mt-6 pt-4 border-t border-lavender-border">
-                      <button
-                        onClick={() => setIsEditing(true)}
-                        className="px-4 py-2 bg-white border border-lavender-border text-navy-purple rounded-full text-xs font-bold shadow-sm hover:bg-lavender-bg transition-all cursor-pointer flex items-center gap-1"
-                      >
-                        <Edit2 className="w-3 h-3 text-brand-purple" /> 정보 수정
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          onOpenViewer(selectedBook.id);
-                          setSelectedBook(null);
-                        }}
-                        className="flex-grow py-2 bg-brand-purple hover:bg-brand-dark text-white font-bold text-xs rounded-full cursor-pointer transition-all flex items-center justify-center gap-1 shadow-sm"
-                      >
-                        이 책 지금 읽어보기 <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
