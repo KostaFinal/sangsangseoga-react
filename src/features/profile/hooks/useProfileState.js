@@ -23,6 +23,7 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
   const [isNicknameChecked, setIsNicknameChecked] = useState(true);
   const [nicknameCheckMsg, setNicknameCheckMsg] = useState({ text: '', isError: false });
   const [profileImage, setProfileImage] = useState(currentUser?.profileImageUrl || CURRENT_USER_PROFILE);
+  const [introduction, setIntroduction] = useState('');
 
   // Password Modification States
   const [currentPassword, setCurrentPassword] = useState('');
@@ -58,6 +59,7 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
       const profile = await profileService.getMyProfile();
       setNickname(profile.nickname);
       setProfileImage(profile.profileImageUrl || CURRENT_USER_PROFILE);
+      setIntroduction(profile.introduction);
       setIsMinor(profile.isMinor);
       setGuardianEmail(profile.guardianEmail);
     } catch (err) {
@@ -103,7 +105,6 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
   // Account Withdrawal States
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawConfirmPw, setWithdrawConfirmPw] = useState('');
-  const [bookDisposalMethod, setBookDisposalMethod] = useState('PRIVATE'); // 'PRIVATE' (비공개 전환) | 'DELETE' (즉각 완전 삭제)
   const [agreeWithdrawTerms, setAgreeWithdrawTerms] = useState(false);
   const [withdrawErrorMsg, setWithdrawErrorMsg] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -137,12 +138,38 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     }
   };
 
-  // Handles updating basic profile details
-  const handleSaveProfile = async (e) => {
+  // 기본 정보(필명/자기소개/프로필사진/보호자 이메일) 저장 — 비밀번호와 별개로 저장
+  const handleSaveBasicInfo = async (e) => {
     e.preventDefault();
 
     if (!isNicknameChecked) {
       triggerToast('닉네임 중복 확인을 먼저 진행해 주세요.');
+      return;
+    }
+
+    try {
+      await profileService.updateProfile({ nickname, profileImage, introduction });
+
+      if (isMinor && guardianEmailEditMode) {
+        await profileService.updateGuardianEmail(guardianEmail);
+      }
+
+      triggerToast('프로필이 저장되었습니다.');
+      setGuardianEmailEditMode(false);
+      if (onUpdateProfile) {
+        onUpdateProfile({ nickname, profileImage, introduction });
+      }
+    } catch (err) {
+      triggerToast(err.message);
+    }
+  };
+
+  // 비밀번호 변경 — 기본 정보와 별개로 저장
+  const handleSavePassword = async (e) => {
+    e.preventDefault();
+
+    if (!newPassword) {
+      triggerToast('변경할 새 비밀번호를 입력해 주세요.');
       return;
     }
 
@@ -153,37 +180,27 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     }
 
     try {
-      await profileService.updateProfile({ nickname, profileImage });
-
-      if (newPassword) {
-        await profileService.changePassword(currentPassword, newPassword);
-      }
-
-      if (isMinor && guardianEmailEditMode) {
-        await profileService.updateGuardianEmail(guardianEmail);
-      }
-
-      triggerToast('프로필이 저장되었습니다.');
-      setGuardianEmailEditMode(false);
+      await profileService.changePassword(currentPassword, newPassword);
+      triggerToast('비밀번호가 변경되었습니다.');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmNewPassword('');
-      if (onUpdateProfile) {
-        onUpdateProfile({ nickname, profileImage });
-      }
     } catch (err) {
       triggerToast(err.message);
     }
   };
 
-  const handleProfileImageFileChange = (e) => {
+  const handleProfileImageFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setProfileImage(event.target.result);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const uploadedUrl = await profileService.uploadProfileImage(file);
+      setProfileImage(uploadedUrl);
+    } catch (err) {
+      triggerToast(err.message);
+    } finally {
+      e.target.value = '';
+    }
   };
 
   const openWithdrawModal = () => {
@@ -235,7 +252,7 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
 
     setIsWithdrawing(true);
     try {
-      await profileService.withdrawMembership(withdrawConfirmPw, bookDisposalMethod);
+      await profileService.withdrawMembership(withdrawConfirmPw);
       triggerToast('회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.');
 
       setTimeout(() => {
@@ -279,6 +296,7 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     isNicknameChecked,
     nicknameCheckMsg,
     profileImage, setProfileImage,
+    introduction, setIntroduction,
     handleNicknameChange,
     handleCheckNicknameDuplicate,
     handleProfileImageFileChange,
@@ -308,7 +326,6 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
 
     showWithdrawModal, setShowWithdrawModal,
     withdrawConfirmPw, setWithdrawConfirmPw,
-    bookDisposalMethod, setBookDisposalMethod,
     agreeWithdrawTerms, setAgreeWithdrawTerms,
     withdrawErrorMsg,
     isWithdrawing,
@@ -319,7 +336,8 @@ export const useProfileState = ({ currentUser, onUpdateProfile, onLogout }) => {
     handleApproveGuardianRequest,
 
     toastMessage,
-    handleSaveProfile,
+    handleSaveBasicInfo,
+    handleSavePassword,
 
     avatarPresets: AVATAR_PRESETS,
   };

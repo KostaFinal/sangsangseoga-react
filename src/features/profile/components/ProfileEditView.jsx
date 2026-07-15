@@ -28,6 +28,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
     isNicknameChecked,
     nicknameCheckMsg,
     profileImage, setProfileImage,
+    introduction, setIntroduction,
     handleNicknameChange,
     handleCheckNicknameDuplicate,
     handleProfileImageFileChange,
@@ -57,7 +58,6 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
 
     showWithdrawModal, setShowWithdrawModal,
     withdrawConfirmPw, setWithdrawConfirmPw,
-    bookDisposalMethod, setBookDisposalMethod,
     agreeWithdrawTerms, setAgreeWithdrawTerms,
     withdrawErrorMsg,
     isWithdrawing,
@@ -68,7 +68,8 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
     handleApproveGuardianRequest,
 
     toastMessage,
-    handleSaveProfile,
+    handleSaveBasicInfo,
+    handleSavePassword,
 
     avatarPresets,
   } = useProfileState({ currentUser, onUpdateProfile, onLogout });
@@ -133,7 +134,8 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
 
         {/* TAB 1: BASIC INFO */}
         {activeTab === 'basic' && (
-          <form onSubmit={handleSaveProfile} className="w-full">
+          <div className="w-full space-y-5">
+          <form onSubmit={handleSaveBasicInfo} className="w-full">
             <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E6E2FC]/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-5">
 
                 {/* 1. Profile photo (left) + Nickname (right), balanced side by side */}
@@ -225,85 +227,26 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                       )}
                       <span className="font-bold">{nicknameCheckMsg.text}</span>
                     </div>
-                  </div>
-                </div>
 
-                {/* 2. Password change inputs with current pass requirement */}
-                <div className="border-t border-[#E6E2FC]/40 pt-5 space-y-3 text-left">
-                  <div className="border-b border-[#E6E2FC]/40 pb-3 flex flex-wrap justify-between items-center gap-2">
-                    <div>
-                      <h3 className="text-sm font-black text-[#2F2D59] flex items-center gap-2">
-                        <span className="w-1.5 h-3 bg-[#6B54E7] rounded-full"></span>
-                        <span>비밀번호 변경</span>
-                      </h3>
-                      <p className="text-xs text-[#7C769D] mt-1 text-left">정기적으로 비밀번호를 변경해 계정을 안전하게 보호하세요.</p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setShowPwText(!showPwText)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#FAF9FF] hover:bg-[#E6E2FC]/20 border border-[#E6E2FC] rounded-lg text-[11px] font-bold text-[#7C769D] hover:text-[#2F2D59] transition-all cursor-pointer"
-                    >
-                      {showPwText ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                      <span>{showPwText ? '숨기기' : '보기'}</span>
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-extrabold text-[#7C769D]">
-                        현재 비밀번호 <span className="text-rose-500">*</span>
+                    {/* 자기소개 */}
+                    <div className="pt-2">
+                      <label className="block text-xs font-extrabold text-[#7C769D] uppercase tracking-wider">
+                        자기소개
                       </label>
-                      <div className="relative">
-                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Lock className="w-3.5 h-3.5" /></span>
-                        <input
-                          type={showPwText ? 'text' : 'password'}
-                          value={currentPassword}
-                          onChange={(e) => setCurrentPassword(e.target.value)}
-                          className="w-full pl-10 pr-3 py-2.5 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
-                          placeholder="현재 비밀번호"
-                        />
-                      </div>
+                      <textarea
+                        value={introduction}
+                        onChange={(e) => setIntroduction(e.target.value)}
+                        rows={4}
+                        maxLength={300}
+                        placeholder="독자들에게 보여질 간단한 소개를 작성해보세요."
+                        className="mt-1.5 w-full px-4 py-2.5 bg-[#FAF9FF] hover:bg-neutral-100/50 focus:bg-white text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC] resize-none"
+                      />
+                      <div className="text-right text-[10px] text-[#7C769D] mt-1">{introduction.length}/300</div>
                     </div>
-
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-extrabold text-[#7C769D]">새 비밀번호</label>
-                      <div className="relative">
-                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Key className="w-3.5 h-3.5" /></span>
-                        <input
-                          type={showPwText ? 'text' : 'password'}
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          className="w-full pl-10 pr-3 py-2.5 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
-                          placeholder="새 비밀번호"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-extrabold text-[#7C769D]">새 비밀번호 확인</label>
-                      <div className="relative">
-                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Key className="w-3.5 h-3.5" /></span>
-                        <input
-                          type={showPwText ? 'text' : 'password'}
-                          value={confirmNewPassword}
-                          onChange={(e) => setConfirmNewPassword(e.target.value)}
-                          className="w-full pl-10 pr-3 py-2.5 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
-                          placeholder="새 비밀번호 확인"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-[#FAF9FF] rounded-xl p-3 border border-[#E6E2FC]/60 text-[11px] text-[#7C769D] flex items-start gap-2 mt-2 text-left">
-                    <ShieldAlert className="w-4 h-4 text-[#6B54E7] shrink-0 mt-0.5" />
-                    <p>
-                      비밀번호를 변경하려면 현재 비밀번호를 함께 입력해 주세요.
-                    </p>
                   </div>
                 </div>
 
-                {/* 3. Minor-specific Parent Email setup section */}
+                {/* 2. Minor-specific Parent Email setup section */}
                 {isMinor && (
                   <div className="border-t border-[#E6E2FC]/40 pt-5 space-y-3 text-left">
                     <div className="border-b border-[#E6E2FC]/40 pb-3 flex justify-between items-center flex-wrap gap-2">
@@ -356,7 +299,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                   </div>
                 )}
 
-                {/* Saved changes & navigation buttons in base card */}
+                {/* Save button + 회원 탈퇴 (기본 정보 폼 전용) */}
                 <div className="pt-5 border-t border-[#E6E2FC]/40 flex flex-col sm:flex-row justify-between items-center gap-3">
                   <button
                     type="button"
@@ -367,26 +310,103 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                     <span>회원 탈퇴</span>
                   </button>
 
-                  <div className="flex gap-2.5 w-full sm:w-auto font-sans">
-                    <button
-                      type="button"
-                      onClick={onNavigateHome}
-                      className="flex-1 sm:flex-none px-4 py-2.5 bg-[#FAF9FF] hover:bg-[#E6E2FC]/30 text-[#6B54E7] border border-[#E6E2FC]/60 text-xs font-black rounded-xl transition-all cursor-pointer"
-                    >
-                      취소
-                    </button>
-
-                    <button
-                      type="submit"
-                      className="flex-1 sm:flex-none px-5 py-2.5 bg-gradient-to-r from-[#5179E6] to-[#6B54E7] hover:opacity-95 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-[#6B54E7]/10 cursor-pointer"
-                    >
-                      저장
-                    </button>
-                  </div>
+                  <button
+                    type="submit"
+                    className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-[#5179E6] to-[#6B54E7] hover:opacity-95 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-[#6B54E7]/10 cursor-pointer"
+                  >
+                    기본 정보 저장
+                  </button>
                 </div>
 
             </div>
           </form>
+
+          {/* FORM 2: 비밀번호 변경 — 기본 정보와 독립적으로 저장 */}
+          <form onSubmit={handleSavePassword} className="w-full">
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E6E2FC]/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-3 text-left">
+              <div className="border-b border-[#E6E2FC]/40 pb-3 flex flex-wrap justify-between items-center gap-2">
+                <div>
+                  <h3 className="text-sm font-black text-[#2F2D59] flex items-center gap-2">
+                    <span className="w-1.5 h-3 bg-[#6B54E7] rounded-full"></span>
+                    <span>비밀번호 변경</span>
+                  </h3>
+                  <p className="text-xs text-[#7C769D] mt-1 text-left">정기적으로 비밀번호를 변경해 계정을 안전하게 보호하세요.</p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowPwText(!showPwText)}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#FAF9FF] hover:bg-[#E6E2FC]/20 border border-[#E6E2FC] rounded-lg text-[11px] font-bold text-[#7C769D] hover:text-[#2F2D59] transition-all cursor-pointer"
+                >
+                  {showPwText ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  <span>{showPwText ? '숨기기' : '보기'}</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-extrabold text-[#7C769D]">
+                    현재 비밀번호 <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Lock className="w-3.5 h-3.5" /></span>
+                    <input
+                      type={showPwText ? 'text' : 'password'}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
+                      placeholder="현재 비밀번호"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-extrabold text-[#7C769D]">새 비밀번호</label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Key className="w-3.5 h-3.5" /></span>
+                    <input
+                      type={showPwText ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
+                      placeholder="새 비밀번호"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-extrabold text-[#7C769D]">새 비밀번호 확인</label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Key className="w-3.5 h-3.5" /></span>
+                    <input
+                      type={showPwText ? 'text' : 'password'}
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
+                      placeholder="새 비밀번호 확인"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-[#FAF9FF] rounded-xl p-3 border border-[#E6E2FC]/60 text-[11px] text-[#7C769D] flex items-start gap-2 mt-2 text-left">
+                <ShieldAlert className="w-4 h-4 text-[#6B54E7] shrink-0 mt-0.5" />
+                <p>
+                  비밀번호를 변경하려면 현재 비밀번호를 함께 입력해 주세요.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-[#E6E2FC]/40 flex justify-end">
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-[#5179E6] to-[#6B54E7] hover:opacity-95 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-[#6B54E7]/10 cursor-pointer"
+                >
+                  비밀번호 변경
+                </button>
+              </div>
+            </div>
+          </form>
+          </div>
         )}
 
         {/* TAB 2: GUARDIAN PORTAL (학부모 안심 동의) */}
@@ -675,60 +695,11 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
             </h3>
 
             <div className="text-xs text-[#7C769D] leading-relaxed font-sans bg-[#FAF9FF] p-4 rounded-2xl border border-[#E6E2FC] space-y-3">
-              <h4 className="font-black text-rose-600">탈퇴 시 다음 사항이 적용됩니다:</h4>
+              <h4 className="font-black text-rose-600">탈퇴 시 다음과 같이 처리됩니다:</h4>
 
               <div className="space-y-1.5 pl-1 leading-relaxed text-left">
-                <p><strong>1. 구독 종료:</strong> 프리미엄 구독은 즉시 종료되며 잔여 기간에 대한 환불은 없습니다.</p>
-                <p><strong>2. 댓글/독후감:</strong> 작성한 댓글과 독후감은 삭제되지 않고 <strong>'알 수 없는 작가'</strong>로 표시됩니다.</p>
-                <p><strong>3. 서재 초기화:</strong> 위시리스트와 서재 목록은 모두 삭제됩니다.</p>
-                <p><strong>4. 재가입 제한:</strong> 탈퇴 후 30일간은 동일 이메일로 재가입할 수 없으며, 이후 모든 데이터가 영구 삭제됩니다.</p>
-              </div>
-            </div>
-
-            {/* Radio options for public book disposal method */}
-            <div className="space-y-2.5 border-t border-b border-[#E6E2FC] py-3">
-              <span className="block text-xs font-extrabold text-[#2F2D59] uppercase tracking-wider">
-                출간한 작품 처리 방법 선택 <span className="text-rose-500">*</span>
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer select-none transition-all ${
-                  bookDisposalMethod === 'PRIVATE'
-                    ? 'border-[#6B54E7] bg-[#E6E2FC]/10 ring-1 ring-[#6B54E7]/30'
-                    : 'border-[#E6E2FC] hover:bg-[#FAF9FF]'
-                }`}>
-                  <input
-                    type="radio"
-                    name="bookDisposal"
-                    value="PRIVATE"
-                    checked={bookDisposalMethod === 'PRIVATE'}
-                    onChange={() => setBookDisposalMethod('PRIVATE')}
-                    className="mt-0.5 accent-[#6B54E7]"
-                  />
-                  <div className="space-y-0.5 text-xs text-left">
-                    <p className="font-black text-[#2F2D59]">비공개 보관</p>
-                    <p className="text-[10px] text-[#7C769D] font-sans leading-normal">공개 목록에서 내리고 30일간 비공개로 보관합니다.</p>
-                  </div>
-                </label>
-
-                <label className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer select-none transition-all ${
-                  bookDisposalMethod === 'DELETE'
-                    ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                    : 'border-[#E6E2FC] hover:bg-[#FAF9FF]'
-                }`}>
-                  <input
-                    type="radio"
-                    name="bookDisposal"
-                    value="DELETE"
-                    checked={bookDisposalMethod === 'DELETE'}
-                    onChange={() => setBookDisposalMethod('DELETE')}
-                    className="mt-0.5 accent-rose-600"
-                  />
-                  <div className="space-y-0.5 text-xs text-left">
-                    <p className="font-black text-rose-950">즉시 영구 삭제</p>
-                    <p className="text-[10px] text-rose-800 font-sans leading-normal">작성한 모든 작품을 복구할 수 없게 즉시 삭제합니다.</p>
-                  </div>
-                </label>
+                <p><strong>1. 계정 비활성화:</strong> 즉시 로그아웃되며, 탈퇴 상태로 전환되어 재로그인이 제한됩니다.</p>
+                <p><strong>2. 데이터 보존:</strong> 작성하신 책·댓글 등 데이터는 삭제되지 않고 그대로 보존됩니다. 재가입이나 계정 복구가 필요하면 고객센터로 문의해 주세요.</p>
               </div>
             </div>
 

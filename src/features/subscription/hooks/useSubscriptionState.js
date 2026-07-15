@@ -36,7 +36,6 @@ export const useSubscriptionState = ({
   const [showCancelSuccess, setShowCancelSuccess] = useState(false);
   const [printSuccess, setPrintSuccess] = useState(false);
   const [selectedPlanType, setSelectedPlanType] = useState('monthly');
-  const [openFaqId, setOpenFaqId] = useState(1);
   const [isResuming, setIsResuming] = useState(false);
   const [isChangingPlan, setIsChangingPlan] = useState(false);
   const [changePlanError, setChangePlanError] = useState('');
@@ -50,8 +49,6 @@ export const useSubscriptionState = ({
 
   const [plans, setPlans] = useState({});
   const [isPlansLoading, setIsPlansLoading] = useState(false);
-
-  const faqs = subscriptionService.getFaqs();
 
   const loadPayments = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -83,10 +80,6 @@ export const useSubscriptionState = ({
     loadPayments();
     loadPlans();
   }, [loadPayments, loadPlans]);
-
-  const toggleFaq = (id) => {
-    setOpenFaqId(openFaqId === id ? null : id);
-  };
 
   const openCancelConfirm = () => setShowCancelConfirm(true);
   const closeCancelConfirm = () => setShowCancelConfirm(false);
@@ -163,14 +156,11 @@ export const useSubscriptionState = ({
     showCancelSuccess, setShowCancelSuccess,
     printSuccess, setPrintSuccess,
     selectedPlanType, setSelectedPlanType,
-    openFaqId,
-    faqs,
     plans,
     isPlansLoading,
     isResuming,
     isChangingPlan,
     changePlanError,
-    toggleFaq,
     openCancelConfirm,
     closeCancelConfirm,
     confirmCancelSubscription,

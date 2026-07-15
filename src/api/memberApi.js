@@ -1,7 +1,7 @@
 import api from "./axios";
 
-export const withdrawMember = (password, bookPolicy) =>
-  api.delete("/api/members/me", { data: { password, bookPolicy } });
+export const withdrawMember = (password) =>
+  api.delete("/api/members/me", { data: { password } });
 
 export const getViewerPreference = () => api.get("/api/members/me/viewer-preference");
 export const updateViewerPreference = (viewerFontSize, viewerViewType) =>
@@ -10,9 +10,9 @@ export const updateViewerPreference = (viewerFontSize, viewerViewType) =>
 /** 내 프로필 상세 조회 (닉네임/프로필사진/생년월일/보호자 이메일 등) */
 export const getMyInfo = () => api.get("/api/members/me");
 
-/** 닉네임/프로필사진 저장 */
-export const updateMyProfile = ({ nickname, profileImageUrl }) =>
-  api.put("/api/members/me", { nickname, profileImageUrl });
+/** 닉네임/프로필사진/자기소개 저장 */
+export const updateMyProfile = ({ nickname, profileImageUrl, introduction }) =>
+  api.put("/api/members/me", { nickname, profileImageUrl, introduction });
 
 /** 닉네임 중복 확인 */
 export const checkNicknameAvailability = (nickname) =>
@@ -32,3 +32,12 @@ export const getConnectedMinors = () => api.get("/api/members/me/guardian/minors
 /** 자녀 계정에 대한 보호자 동의 철회 (본인 비밀번호로 검증) */
 export const withdrawGuardianConsent = (minorId, password) =>
   api.post(`/api/members/me/guardian/${minorId}/withdraw`, { password });
+
+/** 프로필 사진 업로드 (multipart/form-data) — 반환된 profileImageUrl을 updateMyProfile로 별도 저장해야 실제 반영됨 */
+export const uploadProfileImage = (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.post('/api/members/me/profile-image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
