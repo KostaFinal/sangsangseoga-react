@@ -117,6 +117,9 @@ export const ReportDetailModal = ({
               <p className="text-xs text-[#B9B0DC] font-normal border-t border-white/10 pt-1.5 mt-1.5">
                 <strong className="text-white block text-xs uppercase tracking-wider mb-0.5">상세 처리 사유:</strong>
                 “ {selectedReport.resolvedReason} ”
+                {selectedReport.resolvedByNickname && (
+                  <span className="block text-[#7C769D] mt-1">처리자: {selectedReport.resolvedByNickname}</span>
+                )}
               </p>
             )}
           </div>

@@ -81,8 +81,10 @@ export const AdminView = ({ initialTab = 'member' }) => {
     // Tokens states
     tokenTrendUnit,
     setTokenTrendUnit,
-    tokenSortPeriod,
-    setTokenSortPeriod,
+    trendYear,
+    trendMonth,
+    goToPrevTrendPeriod,
+    goToNextTrendPeriod,
     tokenSearchQuery,
     setTokenSearchQuery,
     selectedTokenUser,
@@ -221,8 +223,10 @@ export const AdminView = ({ initialTab = 'member' }) => {
                 <TokensTab
                   tokenTrendUnit={tokenTrendUnit}
                   setTokenTrendUnit={setTokenTrendUnit}
-                  tokenSortPeriod={tokenSortPeriod}
-                  setTokenSortPeriod={setTokenSortPeriod}
+                  trendYear={trendYear}
+                  trendMonth={trendMonth}
+                  goToPrevTrendPeriod={goToPrevTrendPeriod}
+                  goToNextTrendPeriod={goToNextTrendPeriod}
                   tokenSearchQuery={tokenSearchQuery}
                   setTokenSearchQuery={setTokenSearchQuery}
                   selectedTokenUser={selectedTokenUser}
