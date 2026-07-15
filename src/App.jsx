@@ -13,6 +13,7 @@ import { PaymentView } from './features/subscription/components/PaymentView';
 import { SubscriptionView } from './features/subscription/components/SubscriptionView';
 import { AdminView } from './features/admin/components/AdminView';
 import { ProfileEditView } from './features/profile/components/ProfileEditView';
+import { NotificationsView } from './features/dashboard/components/NotificationsView';
 import { PasswordResetView } from './features/auth/components/PasswordResetView';
 import { BookCreationRouter } from './features/bookCreation';
 import { LEGACY_BOOK_CREATION_REDIRECTS } from './features/bookCreation/routes/MemberCreationRoutes';
@@ -79,7 +80,7 @@ function ForbiddenPanel() {
 function LoginRoute() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setCurrentUser, setIsAuthenticated, refreshSubscriptionStatus, refreshUsage } = useAuth();
+  const { setCurrentUser, setIsAuthenticated, refreshSubscriptionStatus, refreshUsage, refreshNotifications, refreshProfile } = useAuth();
   return (
     <LoginView
       onSuccess={(userInfo) => {
@@ -87,6 +88,8 @@ function LoginRoute() {
         setIsAuthenticated(true);
         refreshSubscriptionStatus();
         refreshUsage();
+        refreshNotifications();
+        refreshProfile();
         const from = location.state?.from;
         navigate(from ? `${from.pathname}${from.search || ''}` : '/', { replace: true });
       }}
@@ -98,7 +101,7 @@ function LoginRoute() {
 
 function SignupRoute() {
   const navigate = useNavigate();
-  const { setIsAuthenticated, refreshSubscriptionStatus, refreshUsage } = useAuth();
+  const { setIsAuthenticated, refreshSubscriptionStatus, refreshUsage, refreshNotifications, refreshProfile } = useAuth();
   return (
     <SignupView
       onSuccess={({ pendingGuardianConsent } = {}) => {
@@ -110,6 +113,8 @@ function SignupRoute() {
         setIsAuthenticated(true);
         refreshSubscriptionStatus();
         refreshUsage();
+        refreshNotifications();
+        refreshProfile();
         navigate('/');
       }}
       onNavigateToLogin={() => navigate('/login')}
@@ -198,6 +203,18 @@ function ProfileEditRoute() {
   );
 }
 
+function NotificationsRoute() {
+  const { notifications, markAllNotificationsRead } = useAuth();
+  return (
+    <div className="max-w-4xl mx-auto py-12">
+      <NotificationsView
+        notifications={notifications}
+        onMarkAllAsRead={markAllNotificationsRead}
+      />
+    </div>
+  );
+}
+
 function PasswordResetRoute() {
   const navigate = useNavigate();
   return <PasswordResetView onNavigateToLogin={() => navigate('/login')} />;
@@ -269,6 +286,7 @@ function AppInner() {
 
           <Route path="subscription/payment" element={<PaymentRoute />} />
           <Route path="profile/edit" element={<ProfileEditRoute />} />
+          <Route path="notifications" element={<NotificationsRoute />} />
 
           <Route element={<AdminRoute forbidden={<ForbiddenPanel />} />}>
             <Route path="admin" element={<AdminView key="member" initialTab="member" />} />
