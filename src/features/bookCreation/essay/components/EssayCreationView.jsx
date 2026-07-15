@@ -48,6 +48,12 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
     resetEssay,
     selectEssayMode,
     moveToMyBooks,
+    isGenerating,
+    generationNotice,
+    coverImage,
+    setCoverImage,
+    pageImages,
+    setPageImages,
   } = useEssayCreationState({ initialView, onGoToMyBooks, onBookComplete });
 
   return (
@@ -96,6 +102,8 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
             selectFromTextarea={selectFromTextarea}
             goStep={goStep}
             resetEssay={resetEssay}
+            isGenerating={isGenerating}
+            generationNotice={generationNotice}
           />
         )}
         {view === 'step3' && (
@@ -106,6 +114,10 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
             setActivePreviewPage={setActivePreviewPage}
             goStep={goStep}
             setShowCompleteModal={setShowCompleteModal}
+            coverImage={coverImage}
+            setCoverImage={setCoverImage}
+            pageImages={pageImages}
+            setPageImages={setPageImages}
           />
         )}
       </main>

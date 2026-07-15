@@ -41,6 +41,14 @@ export default function PoemApp({ onSwitchGenre, initialView = 'step1', onGoToMy
     updateCurrentPoemAnswers,
     updateCurrentPoemFreeRequest,
     completeAndMove,
+    isGenerating,
+    generationNotice,
+    requestFreePoemText,
+    requestPoemRevision,
+    coverImage,
+    setCoverImage,
+    pageImages,
+    setPageImages,
   } = usePoemCreationState({ initialView, onGoToMyBooks, onBookComplete });
 
   return (
@@ -77,6 +85,10 @@ export default function PoemApp({ onSwitchGenre, initialView = 'step1', onGoToMy
             deletePoem={deletePoem}
             setCurrentView={setCurrentView}
             requestViewChange={requestViewChange}
+            isGenerating={isGenerating}
+            generationNotice={generationNotice}
+            requestFreePoemText={requestFreePoemText}
+            requestPoemRevision={requestPoemRevision}
           />
         )}
         {currentView === 'step3' && (
@@ -87,6 +99,10 @@ export default function PoemApp({ onSwitchGenre, initialView = 'step1', onGoToMy
             updatePoemById={updatePoemById}
             requestViewChange={requestViewChange}
             setShowCompleteModal={setShowCompleteModal}
+            coverImage={coverImage}
+            setCoverImage={setCoverImage}
+            pageImages={pageImages}
+            setPageImages={setPageImages}
           />
         )}
       </main>

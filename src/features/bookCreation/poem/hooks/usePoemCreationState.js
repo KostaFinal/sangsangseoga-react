@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   createPreviewPages,
+  getContentBase,
   getGeneratedPoemText,
   getTitleIdeas,
+  joinPoemText,
 } from '../utils/poemTextUtils.js';
+import { generatePoem, rewritePoemSelection, toReaderAge } from '../services/poemCreationService.js';
+import { publishBook } from '../../../../api/bookApi.js';
 
 const defaultSettings = {
   mode: '',
@@ -48,13 +52,21 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
   const [showBackModal, setShowBackModal] = useState(false);
   const [pendingView, setPendingView] = useState(null);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationNotice, setGenerationNotice] = useState('');
+  const [aiTitleIdeas, setAiTitleIdeas] = useState([]);
+  const [coverImage, setCoverImage] = useState(null);
+  const [pageImages, setPageImages] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const historyReadyRef = useRef(false);
   const isPopNavigationRef = useRef(false);
 
   const poem = poems[activePoem] || poems[0];
   const answers = poem?.answers || defaultAnswers;
   const previewPages = useMemo(() => createPreviewPages(poems), [poems]);
-  const titleIdeas = useMemo(() => getTitleIdeas(settings, poem), [settings, poem]);
+  const localTitleIdeas = useMemo(() => getTitleIdeas(settings, poem), [settings, poem]);
+  const titleIdeas = aiTitleIdeas.length ? aiTitleIdeas : localTitleIdeas;
   const guardedSteps = ['step2', 'step3'];
   const shouldGuardNavigation = guardedSteps.includes(currentView);
 
@@ -99,6 +111,11 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
     setActivePreviewPage((prev) => Math.min(prev, Math.max(0, previewPages.length - 1)));
   }, [previewPages.length]);
 
+  useEffect(() => {
+    setAiTitleIdeas([]);
+    setGenerationNotice('');
+  }, [poem?.id]);
+
   const updatePoem = (patch) => {
     setPoems((prev) => prev.map((item, index) => (index === activePoem ? { ...item, ...patch } : item)));
   };
@@ -107,29 +124,70 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
     setPoems((prev) => prev.map((item) => (item.id === poemId ? { ...item, ...patch } : item)));
   };
 
-  const makePoem = (nextPatch = {}, options = {}) => {
-    const nextPoem = { ...poem, ...nextPatch };
+  // 로컬 규칙 기반 폴백 — AI 호출이 실패했을 때만 사용한다.
+  const fallbackToLocalPoem = (nextPoem, source) => {
     const text = getGeneratedPoemText(settings, nextPoem, settings.mode || 'answer', variant);
     const title = poem.title === '아직 제목이 없어요' ? getTitleIdeas(settings, nextPoem)[0] : poem.title;
+    updatePoem({ title, content: text, generationSource: source });
+    setVariant((v) => v + 1);
+    setGenerationNotice('AI 응답을 불러오지 못해 기본 문장으로 채웠어요.');
+  };
+
+  // 답변형 "시 만들기"/"AI 전체 재생성" — draft.setting.mode를 ANSWER로 보내 answers 기반 시 전체를 생성한다.
+  const makePoem = async (nextPatch = {}, options = {}) => {
+    const nextPoem = { ...poem, ...nextPatch };
+    setIsGenerating(true);
+    setGenerationNotice('');
+
+    const response = await generatePoem({ settings, poem: nextPoem, isContinuation: false });
+
+    if (!response.ok) {
+      fallbackToLocalPoem(nextPoem, options.generationSource || settings.mode || 'answer');
+      setIsGenerating(false);
+      return;
+    }
+
+    const title = poem.title === '아직 제목이 없어요' ? response.title || getTitleIdeas(settings, nextPoem)[0] : poem.title;
+    setAiTitleIdeas(response.titleIdeas || []);
     updatePoem({
       ...nextPatch,
       title,
-      content: text,
+      content: response.content,
       generationSource: options.generationSource || settings.mode || 'answer',
     });
     setVariant((v) => v + 1);
+    setIsGenerating(false);
   };
 
-  const makeBasicOnlyPoem = () => {
+  // "AI 전체 만들기" — 질문 답변 없이 기본 설정(주제/스타일/분위기/분량)만으로 시를 생성한다.
+  // Python 프롬프트는 ANSWER 모드에서 answers 필수 입력을 요구하므로, 여기서는 FREE 모드로 보내
+  // freeRequest를 비워 topic 기반 자유 생성 경로를 탄다.
+  const makeBasicOnlyPoem = async () => {
     const basePoem = {
       ...poem,
       answers: { ...defaultAnswers },
       freeRequest: '',
     };
-    const text = getGeneratedPoemText(settings, basePoem, settings.mode || 'answer', variant);
-    const title = poem.title === '아직 제목이 없어요' ? getTitleIdeas(settings, basePoem)[0] : poem.title;
-    updatePoem({ title, content: text, generationSource: 'basic' });
+    setIsGenerating(true);
+    setGenerationNotice('');
+
+    const response = await generatePoem({
+      settings: { ...settings, mode: 'free' },
+      poem: basePoem,
+      isContinuation: false,
+    });
+
+    if (!response.ok) {
+      fallbackToLocalPoem(basePoem, 'basic');
+      setIsGenerating(false);
+      return;
+    }
+
+    const title = poem.title === '아직 제목이 없어요' ? response.title || getTitleIdeas(settings, basePoem)[0] : poem.title;
+    setAiTitleIdeas(response.titleIdeas || []);
+    updatePoem({ title, content: response.content, generationSource: 'basic' });
     setVariant((v) => v + 1);
+    setIsGenerating(false);
   };
 
   const updateCurrentPoemAnswers = (nextAnswers) => {
@@ -142,6 +200,60 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
 
   const makeAll = () => {
     makeBasicOnlyPoem();
+  };
+
+  // 자유형 "AI에게 요청하기" — 기존 본문이 있으면 이어쓰기(isContinuation), 없으면 새로 생성한다.
+  const requestFreePoemText = async () => {
+    const base = getContentBase(poem.content);
+    const isContinuation = base.trim().length > 0;
+
+    setIsGenerating(true);
+    setGenerationNotice('');
+
+    const response = await generatePoem({ settings, poem, isContinuation });
+
+    setIsGenerating(false);
+
+    if (!response.ok) {
+      setGenerationNotice('AI 응답을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+      return { ok: false };
+    }
+
+    if (!isContinuation) {
+      setAiTitleIdeas(response.titleIdeas || []);
+    }
+
+    const title = poem.title === '아직 제목이 없어요' ? response.title || getTitleIdeas(settings, poem)[0] : poem.title;
+    const nextContent = isContinuation ? joinPoemText(base, response.content) : response.content;
+
+    updatePoem({
+      title,
+      content: nextContent,
+      freeRequest: '',
+      generationSource: 'free-ask',
+    });
+    setVariant((v) => v + 1);
+    return { ok: true };
+  };
+
+  // 답변형/자유형 공용 "수정하기" — 선택된 부분만 AI로 다시 쓴다.
+  const requestPoemRevision = async ({ selectedText, editRequest }) => {
+    if (!selectedText.trim() || !editRequest.trim()) return { ok: false };
+
+    setIsGenerating(true);
+    setGenerationNotice('');
+
+    const response = await rewritePoemSelection({ settings, poem, selectedText, editRequest });
+
+    setIsGenerating(false);
+
+    if (!response.ok || !response.revisedText) {
+      setGenerationNotice('AI 응답을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+      return { ok: false };
+    }
+
+    updatePoem({ content: poem.content.replace(selectedText, response.revisedText) });
+    return { ok: true };
   };
 
   const resetStep3 = () => {
@@ -199,38 +311,50 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
     setActivePoem((prev) => Math.max(0, prev - 1));
   };
 
-  const createCoverUrl = (label, bookTitle) => `data:image/svg+xml;utf8,${encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
-      <rect width="640" height="360" fill="#f3efff"/>
-      <rect x="64" y="48" width="512" height="264" rx="28" fill="#ffffff" opacity="0.9"/>
-      <text x="320" y="146" text-anchor="middle" font-size="42" font-weight="800" fill="#6d4aff">${label}</text>
-      <text x="320" y="208" text-anchor="middle" font-size="28" font-weight="700" fill="#2f2859">${bookTitle || '상상서가'}</text>
-    </svg>
-  `)}`;
-
-  const createCompletedBook = () => {
-    const joinedContent = poems.map((item) => item.content).filter(Boolean).join('\n\n');
+  const buildPublishPayload = () => {
     const bookTitle = poems.length > 1 ? `${poems[0]?.title || '나의 시'} 외 ${poems.length - 1}편` : poems[0]?.title || '나의 시집';
-    const description = joinedContent
-      ? `${joinedContent.slice(0, 180)}${joinedContent.length > 180 ? '…' : ''}`
-      : `${poems.length}편의 시가 담긴 시집입니다.`;
+    // description은 본문 발췌가 아니라 작품 소개문이다. 실제 시 내용을 그대로 잘라 넣지 않는다.
+    const description = `주제: ${settings.topic || '자유 주제'} / 분위기: ${settings.mood || '자유로운 감성'} / ${settings.style || '자유시'} ${poems.length}편`;
+    const readerAge = toReaderAge(settings.authorAge);
 
     return {
-      id: `manual-poem-${Date.now()}`,
+      bookType: 'POEM',
+      authorAgeGroup: readerAge,
+      readerAgeGroup: readerAge,
+      creationMode: settings.mode === 'free' ? 'FREE' : 'ANSWER',
       title: bookTitle,
-      author: settings.author || settings.authorName || '지우',
-      category: '나만의 AI 창작',
       description,
-      readingTime: `${Math.max(1, Math.ceil(joinedContent.length / 400))}분`,
-      pages: Math.max(1, previewPages.length),
-      magicLevel: 'Lv. 1',
-      isPublic: true,
-      coverUrl: createCoverUrl('POEM', bookTitle),
+      confirmedSettings: JSON.stringify(settings),
+      coverImageUrl: coverImage?.url || null,
+      pages: previewPages.map((page) => ({
+        pageNo: page.pageNumber,
+        // book_page.title은 항상 비워둔다 — 페이지별 제목은 뷰어가 아니라 book.title(표지)로만 노출한다.
+        title: null,
+        contentTextKo: page.content,
+        contentTextEn: '',
+        imageUrl: pageImages[page.pageNumber]?.url || null,
+      })),
     };
   };
 
-  const completeAndMove = () => {
-    const book = createCompletedBook();
+  const completeAndMove = async () => {
+    setIsSaving(true);
+    setSaveError('');
+
+    let requestBody;
+    let bookId;
+
+    try {
+      requestBody = buildPublishPayload();
+      const response = await publishBook(requestBody);
+      bookId = response.data?.data?.bookId;
+    } catch (error) {
+      setSaveError(error.response?.data?.message || '책 저장에 실패했습니다. 다시 시도해 주세요.');
+      setIsSaving(false);
+      return;
+    }
+
+    const book = { id: bookId, title: requestBody.title, coverUrl: requestBody.coverImageUrl };
     const payload = {
       genre: 'poem',
       book,
@@ -240,6 +364,7 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
       targetComponent: 'AllBooksTab',
     };
 
+    setIsSaving(false);
     setShowCompleteModal(false);
     onBookComplete?.(book);
     onGoToMyBooks?.(payload);
@@ -287,5 +412,15 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
     updateCurrentPoemAnswers,
     updateCurrentPoemFreeRequest,
     completeAndMove,
+    isGenerating,
+    generationNotice,
+    requestFreePoemText,
+    requestPoemRevision,
+    coverImage,
+    setCoverImage,
+    pageImages,
+    setPageImages,
+    isSaving,
+    saveError,
   };
 }

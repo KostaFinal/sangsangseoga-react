@@ -1,38 +1,29 @@
 import React, { useState } from 'react';
 import PoemFlowStepper from './PoemFlowStepper.jsx';
-
-const createPreviewImageUrl = ({ title, subtitle }) => {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420">
-      <defs>
-        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#f7f2ff"/>
-          <stop offset="100%" stop-color="#e9ddff"/>
-        </linearGradient>
-      </defs>
-      <rect width="640" height="420" rx="34" fill="url(#bg)"/>
-      <circle cx="104" cy="82" r="48" fill="#ffffff" opacity=".72"/>
-      <circle cx="540" cy="328" r="72" fill="#ffffff" opacity=".45"/>
-      <path d="M118 292 C212 214, 272 338, 382 236 S532 214, 562 144" fill="none" stroke="#8b5cf6" stroke-width="12" stroke-linecap="round" opacity=".34"/>
-      <text x="50%" y="48%" text-anchor="middle" font-family="Pretendard, Arial, sans-serif" font-size="34" font-weight="800" fill="#5140c6">${title}</text>
-      <text x="50%" y="60%" text-anchor="middle" font-family="Pretendard, Arial, sans-serif" font-size="20" font-weight="700" fill="#7d6fb0">${subtitle}</text>
-    </svg>
-  `;
-
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-};
+import { requestGenerateImage, extractImageUrl } from '../../services/imageGenerateService.js';
 
 const getPoemPagePrompt = (page) => {
   const content = page?.content || '';
   return `선택한 ${page?.pageNumber || ''}쪽의 시 내용과 분위기에 어울리는 감성적인 삽화를 만들어줘.\n\n${content}`.trim();
 };
 
-export default function PoemPreviewStep({ previewPages, activePreviewPage, setActivePreviewPage, updatePoemById, requestViewChange, setShowCompleteModal }) {
+export default function PoemPreviewStep({
+  previewPages,
+  activePreviewPage,
+  setActivePreviewPage,
+  updatePoemById,
+  requestViewChange,
+  setShowCompleteModal,
+  coverImage,
+  setCoverImage,
+  pageImages,
+  setPageImages,
+}) {
   const [panelMode, setPanelMode] = useState('idle');
   const [selectedIllustrationPage, setSelectedIllustrationPage] = useState(null);
   const [imagePrompt, setImagePrompt] = useState('');
-  const [coverImage, setCoverImage] = useState(null);
-  const [pageImages, setPageImages] = useState({});
+  const [isRequestingImage, setIsRequestingImage] = useState(false);
+  const [imageError, setImageError] = useState('');
 
   const spreadStart = Math.floor(activePreviewPage / 2) * 2;
   const leftPage = previewPages[spreadStart];
@@ -67,23 +58,42 @@ export default function PoemPreviewStep({ previewPages, activePreviewPage, setAc
   const cancelImageRequest = () => {
     setPanelMode('idle');
     setImagePrompt('');
+    setImageError('');
   };
 
-  const completeImageRequest = () => {
-    if (panelMode === 'coverRequest') {
-      setCoverImage({
-        url: createPreviewImageUrl({ title: '시집 표지', subtitle: '임시 이미지' }),
-        prompt: imagePrompt,
-      });
+  const completeImageRequest = async () => {
+    const isCoverRequest = panelMode === 'coverRequest';
+    if (!isCoverRequest && !selectedPage) return;
+
+    setIsRequestingImage(true);
+    setImageError('');
+
+    const response = await requestGenerateImage({
+      promptText: imagePrompt,
+      imageType: isCoverRequest ? 'COVER' : 'PAGE',
+      pageNo: isCoverRequest ? null : selectedPage.pageNumber,
+      aspectRatio: '3:4',
+    });
+
+    setIsRequestingImage(false);
+
+    if (!response.ok) {
+      setImageError(response.message || '이미지 생성에 실패했어요. 다시 시도해 주세요.');
+      return;
     }
 
-    if (panelMode === 'illustrationRequest' && selectedPage) {
+    const imageUrl = extractImageUrl(response.data);
+    if (!imageUrl) {
+      setImageError('이미지 URL을 받지 못했어요. 다시 시도해 주세요.');
+      return;
+    }
+
+    if (isCoverRequest) {
+      setCoverImage({ url: imageUrl, prompt: imagePrompt });
+    } else {
       setPageImages((prev) => ({
         ...prev,
-        [selectedPage.pageNumber]: {
-          url: createPreviewImageUrl({ title: `${selectedPage.pageNumber}쪽 삽화`, subtitle: '임시 이미지' }),
-          prompt: imagePrompt,
-        },
+        [selectedPage.pageNumber]: { url: imageUrl, prompt: imagePrompt },
       }));
     }
 
@@ -141,10 +151,14 @@ export default function PoemPreviewStep({ previewPages, activePreviewPage, setAc
             value={imagePrompt}
             onChange={(event) => setImagePrompt(event.target.value)}
             aria-label={isCoverRequest ? '표지 이미지 요청문' : '삽화 이미지 요청문'}
+            disabled={isRequestingImage}
           />
+          {imageError && <p className="preview-image-error">{imageError}</p>}
           <div className="preview-request-actions">
-            <button type="button" className="essay-primary" onClick={completeImageRequest}>생성하기</button>
-            <button type="button" className="essay-ghost" onClick={cancelImageRequest}>취소</button>
+            <button type="button" className="essay-primary" onClick={completeImageRequest} disabled={isRequestingImage}>
+              {isRequestingImage ? '생성 중…' : '생성하기'}
+            </button>
+            <button type="button" className="essay-ghost" onClick={cancelImageRequest} disabled={isRequestingImage}>취소</button>
           </div>
         </div>
       );
@@ -206,7 +220,7 @@ export default function PoemPreviewStep({ previewPages, activePreviewPage, setAc
             {leftPage ? (
               <>
                 {selectedIllustrationPage === leftPage.pageNumber && <em className="selected-page-badge">선택됨</em>}
-                {!leftPage.isContinued && <h2>{leftPage.title}</h2>}
+                <h2 className={leftPage.isContinued ? 'poem-page-title-slot' : ''}>{leftPage.title}</h2>
                 <p>{leftPage.content}</p>
                 {renderPageIllustration(leftPage)}
                 <span>{leftPage.pageNumber}</span>
@@ -222,7 +236,7 @@ export default function PoemPreviewStep({ previewPages, activePreviewPage, setAc
             {rightPage ? (
               <>
                 {selectedIllustrationPage === rightPage.pageNumber && <em className="selected-page-badge">선택됨</em>}
-                {!rightPage.isContinued && rightPage.poemId !== leftPage?.poemId && <h2>{rightPage.title}</h2>}
+                <h2 className={(rightPage.isContinued || rightPage.poemId === leftPage?.poemId) ? 'poem-page-title-slot' : ''}>{rightPage.title}</h2>
                 <p>{rightPage.content}</p>
                 {renderPageIllustration(rightPage)}
                 <span>{rightPage.pageNumber}</span>

@@ -13,6 +13,8 @@ import {
   splitPages,
   getDisplayTitle,
 } from '../utils/essayTextUtils.js';
+import { generateEssay, rewriteEssaySelection, toReaderAge } from '../services/essayCreationService.js';
+import { publishBook } from '../../../../api/bookApi.js';
 
 const createInitialSettings = () => ({
   mode: '',
@@ -42,8 +44,15 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
   const [variant, setVariant] = useState(0);
   const [activePreviewPage, setActivePreviewPage] = useState(0);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationNotice, setGenerationNotice] = useState('');
+  const [aiTitle, setAiTitle] = useState('');
+  const [coverImage, setCoverImage] = useState(null);
+  const [pageImages, setPageImages] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
-  const title = getDisplayTitle(settings, answers, content);
+  const title = aiTitle || getDisplayTitle(settings, answers, content);
   const pages = useMemo(() => splitPages(content), [content]);
 
   const updateContent = (next) => {
@@ -107,6 +116,8 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     setFreeRedoSnapshot(null);
     setVariant(0);
     setActivePreviewPage(0);
+    setAiTitle('');
+    setGenerationNotice('');
   };
 
   const selectEssayMode = (mode) => {
@@ -117,11 +128,24 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     });
   };
 
-  const writeGuidedStep = () => {
+  const writeGuidedStep = async () => {
     const requiredReady = QUESTIONS.every((item) => item.optional || hasText(answers[item.key]));
     if (!requiredReady) return;
 
-    const next = makeOpeningEssay(settings, answers, variant);
+    setIsGenerating(true);
+    setGenerationNotice('');
+
+    const response = await generateEssay({ settings, answers, content: '', workInput: '', isContinuation: false });
+
+    let next;
+    if (response.ok) {
+      next = response.content;
+      setAiTitle(response.title || '');
+    } else {
+      next = makeOpeningEssay(settings, answers, variant);
+      setGenerationNotice('AI 응답을 불러오지 못해 기본 문장으로 채웠어요.');
+    }
+
     updateContent(next);
     setGuidedComplete(true);
     setQuestionIndex(QUESTIONS.length - 1);
@@ -130,6 +154,7 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     setGuidedEditMode(false);
     setWorkInput('');
     setVariant((prev) => prev + 1);
+    setIsGenerating(false);
   };
 
   const recommendGuidedAnswer = () => {
@@ -156,28 +181,60 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     setWorkInput('');
   };
 
-  const askAi = () => {
+  const askAi = async () => {
     saveFreeUndoSnapshot();
-    if (!hasText(content)) {
-      const next = makeFreeEssay(settings, workInput, variant);
-      updateContent(next);
+    const isContinuation = hasText(content);
+
+    setIsGenerating(true);
+    setGenerationNotice('');
+
+    const response = await generateEssay({ settings, answers, content, workInput, isContinuation });
+
+    if (response.ok) {
+      if (isContinuation) {
+        updateContent(joinText(content, response.content));
+      } else {
+        updateContent(response.content);
+        setAiTitle(response.title || '');
+      }
     } else {
-      const next = makeContinuation(content, workInput, settings, variant);
-      updateContent(joinText(content, next));
+      setGenerationNotice('AI 응답을 불러오지 못해 기본 문장으로 채웠어요.');
+      if (isContinuation) {
+        const next = makeContinuation(content, workInput, settings, variant);
+        updateContent(joinText(content, next));
+      } else {
+        const next = makeFreeEssay(settings, workInput, variant);
+        updateContent(next);
+      }
     }
+
     setWorkInput('');
     setVariant((prev) => prev + 1);
+    setIsGenerating(false);
   };
 
-  const applyRevision = () => {
-    if (!selectedText) return;
-    const replacement = reviseSelection(selectedText, revisionRequest);
-    if (!replacement) return;
+  const applyRevision = async () => {
+    if (!selectedText || !revisionRequest.trim()) return;
     saveFreeUndoSnapshot();
-    const next = content.replace(selectedText, replacement);
-    updateContent(next);
-    setSelectedText('');
-    setRevisionRequest('');
+
+    setIsGenerating(true);
+    setGenerationNotice('');
+
+    const response = await rewriteEssaySelection({ settings, selectedText, editRequest: revisionRequest });
+
+    let replacement = response.ok ? response.revisedText : '';
+    if (!replacement) {
+      replacement = reviseSelection(selectedText, revisionRequest);
+      if (!response.ok) setGenerationNotice('AI 응답을 불러오지 못해 기본 문장으로 다듬었어요.');
+    }
+
+    if (replacement) {
+      updateContent(content.replace(selectedText, replacement));
+      setSelectedText('');
+      setRevisionRequest('');
+    }
+
+    setIsGenerating(false);
   };
 
   const selectFromTextarea = (event) => {
@@ -191,36 +248,48 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const createCoverUrl = (label, bookTitle) => `data:image/svg+xml;utf8,${encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
-      <rect width="640" height="360" fill="#f3efff"/>
-      <rect x="64" y="48" width="512" height="264" rx="28" fill="#ffffff" opacity="0.9"/>
-      <text x="320" y="146" text-anchor="middle" font-size="42" font-weight="800" fill="#6d4aff">${label}</text>
-      <text x="320" y="208" text-anchor="middle" font-size="28" font-weight="700" fill="#2f2859">${bookTitle || '상상서가'}</text>
-    </svg>
-  `)}`;
-
-  const createCompletedBook = () => {
-    const description = hasText(content)
-      ? `${clean(content).slice(0, 180)}${clean(content).length > 180 ? '…' : ''}`
-      : 'AI와 함께 완성한 에세이입니다.';
+  const buildPublishPayload = () => {
+    // description은 본문 발췌가 아니라 작품 소개문이다. 실제 에세이 내용을 그대로 잘라 넣지 않는다.
+    const description = `주제: ${settings.theme || '자유 주제'} / 톤: ${settings.tone || '담백하게'}`;
+    const readerAge = toReaderAge(settings.authorAge);
 
     return {
-      id: `manual-essay-${Date.now()}`,
+      bookType: 'ESSAY',
+      authorAgeGroup: readerAge,
+      readerAgeGroup: readerAge,
+      creationMode: settings.mode === 'free' ? 'FREE' : 'GUIDED',
       title,
-      author: settings.author || settings.authorName || '지우',
-      category: '나만의 AI 창작',
       description,
-      readingTime: `${Math.max(1, Math.ceil((content || '').length / 500))}분`,
-      pages: Math.max(1, pages.length),
-      magicLevel: 'Lv. 1',
-      isPublic: true,
-      coverUrl: createCoverUrl('ESSAY', title),
+      confirmedSettings: JSON.stringify(settings),
+      coverImageUrl: coverImage?.url || null,
+      pages: pages.map((text, index) => ({
+        pageNo: index + 1,
+        title: index === 0 ? title : '',
+        contentTextKo: text,
+        contentTextEn: '',
+        imageUrl: pageImages[index + 1]?.url || null,
+      })),
     };
   };
 
-  const moveToMyBooks = () => {
-    const book = createCompletedBook();
+  const moveToMyBooks = async () => {
+    setIsSaving(true);
+    setSaveError('');
+
+    let requestBody;
+    let bookId;
+
+    try {
+      requestBody = buildPublishPayload();
+      const response = await publishBook(requestBody);
+      bookId = response.data?.data?.bookId;
+    } catch (error) {
+      setSaveError(error.response?.data?.message || '책 저장에 실패했습니다. 다시 시도해 주세요.');
+      setIsSaving(false);
+      return;
+    }
+
+    const book = { id: bookId, title: requestBody.title, coverUrl: requestBody.coverImageUrl };
     const payload = {
       genre: 'essay',
       book,
@@ -230,6 +299,7 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
       targetComponent: 'AllBooksTab',
     };
 
+    setIsSaving(false);
     setShowCompleteModal(false);
     onBookComplete?.(book);
     onGoToMyBooks?.(payload);
@@ -283,5 +353,13 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     resetEssay,
     selectEssayMode,
     moveToMyBooks,
+    isGenerating,
+    generationNotice,
+    coverImage,
+    setCoverImage,
+    pageImages,
+    setPageImages,
+    isSaving,
+    saveError,
   };
 }

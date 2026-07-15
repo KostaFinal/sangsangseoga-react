@@ -3,6 +3,9 @@ import api from "./axios";
 // 책 목록 조회
 export const getBooks = ({ bookType, sort, keyword, page = 1, size = 12 } = {}) =>
   api.get("/api/books", { params: { bookType, sort, keyword, page, size } });
+
+// 책 발행(저장)
+export const publishBook = (payload) => api.post("/api/books", payload);
  
 // 책 상세 조회
 export const getBook = (bookId) => api.get(`/api/books/${bookId}`);
