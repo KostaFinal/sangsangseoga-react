@@ -26,6 +26,10 @@ export const refreshToken = (refreshToken) =>
 export const requestPasswordReset = (email) =>
   api.post("/api/auth/password/reset_request", { email });
 
+// 새 비밀번호 입력 전 토큰 자체 유효성만 사전 확인 (토큰을 소비하지 않음 — 실제 반영은 completePasswordReset에서)
+export const verifyPasswordResetToken = (token) =>
+  api.get("/api/auth/password/reset/verify", { params: { token } });
+
 export const completePasswordReset = (token, newPassword) =>
   api.patch("/api/auth/password/reset", { token, newPassword });
 

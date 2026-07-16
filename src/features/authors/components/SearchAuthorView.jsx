@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getAuthors } from "../../../api/authorApi";
 import AuthorSearchSortBar from "./AuthorSearchSortBar";
 import AuthorStatCard from "./AuthorStatCard";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Pagination } from "../../../shared/components/Pagination";
 
 export default function SearchAuthorView() {
   const navigate = useNavigate();
@@ -92,36 +92,12 @@ export default function SearchAuthorView() {
       )}
 
       {/* 페이지네이션 */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-1.5 mt-16">
-          <button
-            onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-[#c4b5fd] text-[#5c5480] hover:border-[#6b54e7] hover:text-[#6b54e7] disabled:opacity-30 disabled:pointer-events-none transition-all"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-            <button
-              key={p}
-              onClick={() => handlePageChange(p)}
-              className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium border-2 transition-all ${currentPage === p
-                ? "bg-[#6b54e7] text-white border-[#6b54e7] shadow-sm"
-                : "text-[#5c5480] border-[#c4b5fd] hover:border-[#6b54e7] hover:text-[#6b54e7]"
-              }`}
-            >
-              {p}
-            </button>
-          ))}
-          <button
-            onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-[#c4b5fd] text-[#5c5480] hover:border-[#6b54e7] hover:text-[#6b54e7] disabled:opacity-30 disabled:pointer-events-none transition-all"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        className="mt-16"
+      />
     </div>
   );
 }

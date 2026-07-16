@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import {
@@ -6,6 +6,8 @@ import {
   extractGeneratedScenes,
   extractGeneratedText,
   extractGeneratedTextEn,
+  extractGeneratedTitleEn,
+  rewriteScene,
   translateText,
   writeScene,
   writeSceneSegment,
@@ -70,6 +72,12 @@ export function useNovelWritingEditor() {
   );
   const isGuidedWritingLevel = !isIndependentWritingLevel;
 
+  // 표지 선택 화면에서 "이전으로"로 되돌아온 경우, setting에 이미 작성해둔 scenes가 같이
+  // 실려온다. 이때는 처음 진입처럼 AI 장면 계획을 새로 만들지 않고 그대로 복원해서 이어 쓴다.
+  const incomingScenes = Array.isArray(setting.scenes) && setting.scenes.length
+    ? setting.scenes
+    : null;
+
   // CREATE_SCENE_PLAN은 sceneNo/sceneTitle/sceneGoal처럼 이 화면과 다른 필드명을 쓰고,
   // 본문(content)은 아예 생성하지 않는다(장면별 본문은 이후 "AI 초안"/"다음 문단 제안"으로 따로 쓴다).
   const normalizeAiScenes = (aiScenes, fallbackScenes) =>
@@ -80,15 +88,17 @@ export function useNovelWritingEditor() {
       goal: scene.sceneGoal || scene.goal || fallbackScenes[index]?.goal || "",
       status: "미작성",
       content: "",
-      // contentEn: content(한글 본문)의 영어 번역. contentEnSyncedWith에는 마지막으로
-      // 번역했을 때의 content 값을 저장해뒀다가, 지금 content와 다르면 번역이 오래된 것으로 보고
+      // contentEn/titleEn: content(본문)·title(소제목)의 영어 번역. ...SyncedWith에는 마지막으로
+      // 번역했을 때의 값을 저장해뒀다가, 지금 값과 다르면 번역이 오래된 것으로 보고
       // "다음 장면"으로 넘어갈 때 다시 번역한다(ensureCurrentSceneTranslated 참고).
       contentEn: "",
       contentEnSyncedWith: "",
+      titleEn: "",
+      titleEnSyncedWith: "",
     }));
 
-  const [scenes, setScenes] = useState(() => createInitialScenes(setting));
-  const [currentSceneId, setCurrentSceneId] = useState(1);
+  const [scenes, setScenes] = useState(() => incomingScenes || createInitialScenes(setting));
+  const [currentSceneId, setCurrentSceneId] = useState(() => (incomingScenes ? incomingScenes[0].id : 1));
   const [selectedSentence, setSelectedSentence] = useState("");
   const [selectionRange, setSelectionRange] = useState({ start: 0, end: 0 });
   const [assistSuggestion, setAssistSuggestion] = useState(null);
@@ -96,11 +106,22 @@ export function useNovelWritingEditor() {
   const [assistError, setAssistError] = useState(false);
   // scenes 초기값은 createInitialScenes()가 만든 하드코딩 예시 본문이라, AI 응답이 오기 전까지
   // 그대로 보여주면 사용자가 이걸 실제 생성 결과로 착각한다. 로딩 중에는 화면 자체를 가려서 헷갈리지 않게 한다.
-  const [isLoadingScenes, setIsLoadingScenes] = useState(true);
+  // 단, 이미 작성된 장면(incomingScenes)을 복원하는 경우엔 AI를 다시 부르지 않으니 로딩할 필요가 없다.
+  const [isLoadingScenes, setIsLoadingScenes] = useState(!incomingScenes);
   const [isTranslatingScene, setIsTranslatingScene] = useState(false);
+  // 가이드 모드의 AI 초안/문체 수정/다시쓰기/개연성 검사가 진행 중일 때 관련 버튼을 전부 잠근다.
+  const [isProcessingAiAction, setIsProcessingAiAction] = useState(false);
+
+  // StrictMode 개발 모드의 마운트→언마운트→재마운트 이중 실행 때문에 CREATE_SCENE_PLAN
+  // 요청이 두 번 나가지 않도록, "응답을 반영할지"가 아니라 "요청 자체를 보낼지"를 ref로 막는다.
+  const scenePlanRequestedRef = useRef(false);
 
   useEffect(() => {
-    let isMounted = true;
+    // 이미 작성된 장면을 복원한 경우엔 AI 장면 계획을 다시 만들 필요가 없다.
+    if (incomingScenes) return;
+
+    if (scenePlanRequestedRef.current) return;
+    scenePlanRequestedRef.current = true;
 
     const syncScenePlan = async () => {
       const response = await createScenePlan(
@@ -115,21 +136,16 @@ export function useNovelWritingEditor() {
       );
       const aiScenes = response.ok ? extractGeneratedScenes(response.data) : [];
 
-      if (isMounted && aiScenes.length) {
+      if (aiScenes.length) {
         setScenes((prev) => normalizeAiScenes(aiScenes, prev));
         setCurrentSceneId(aiScenes[0].sceneNo || aiScenes[0].id || 1);
       }
 
-      if (isMounted) {
-        setIsLoadingScenes(false);
-      }
+      setIsLoadingScenes(false);
     };
 
     syncScenePlan();
-
-    return () => {
-      isMounted = false;
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const currentScene = useMemo(
@@ -168,33 +184,53 @@ export function useNovelWritingEditor() {
     );
   };
 
-  // 지금 장면의 content(한글 본문)가 아직 번역 안 됐거나(contentEn 없음), 마지막 번역 이후
-  // 사용자가 본문을 더 고쳐서 오래된 번역이 됐으면("다시쓰기" 아니라 "다음 장면"으로 넘어가는
-  // 시점에) TRANSLATE_TEXT를 한 번 호출해 채운다. 실패해도 다음 장면 이동은 막지 않는다.
+  // 장면을 이동/추가/삭제할 때, 이전 장면에서 선택했던 문장과 AI 제안이 그대로 남아있지
+  // 않도록 초기화한다.
+  const resetSelectionAndSuggestion = () => {
+    setSelectedSentence("");
+    setSelectionRange({ start: 0, end: 0 });
+    setAssistSuggestion(null);
+  };
+
+  // 지금 장면의 content(본문)나 title(소제목)이 아직 번역 안 됐거나, 마지막 번역 이후 사용자가
+  // 고쳐서 오래된 번역이 됐으면("다시쓰기" 아니라 "다음 장면"으로 넘어가는 시점에) TRANSLATE_TEXT를
+  // 한 번 호출해 본문+소제목을 함께 채운다. 실패해도 다음 장면 이동은 막지 않는다 — 대신 어떤
+  // 장면(sceneId)에서 왜 실패했는지 로그로 남겨서 조용히 넘어가지 않게 한다.
   // scenesSnapshot을 받아 갱신된 배열을 그대로 반환해서, 호출부가 setScenes 이후의 React
   // 재렌더링을 기다리지 않고도(state는 비동기라 바로 반영 안 됨) 최신 값을 이어서 쓸 수 있다.
+  // publish 시점(novelPageSplitter)에서 이 캐시가 최신인지 다시 확인하고, 아니면 그때 재번역하므로
+  // 여기서 실패해도 최종 발행 결과에는 영향이 없다 — 이건 어디까지나 지연 시간을 줄이기 위한 선반영이다.
   const ensureCurrentSceneTranslated = async (scenesSnapshot) => {
     const scene = scenesSnapshot.find((item) => item.id === currentSceneId);
     if (!scene) return scenesSnapshot;
 
     const content = scene.content || "";
-    if (!content.trim()) return scenesSnapshot;
-    if (scene.contentEn && scene.contentEnSyncedWith === content) return scenesSnapshot;
+    const title = scene.title || "";
+    const contentInSync = !content.trim() || (scene.contentEn && scene.contentEnSyncedWith === content);
+    const titleInSync = !title.trim() || (scene.titleEn && scene.titleEnSyncedWith === title);
+    if (contentInSync && titleInSync) return scenesSnapshot;
 
     setIsTranslatingScene(true);
 
     let contentEn = "";
+    let titleEn = "";
     try {
       const protagonistName = setting.protagonist?.split(",")[0] || "";
-      const response = await translateText(content, { protagonistName });
+      const response = await translateText(content, {
+        protagonistName,
+        ...(title.trim() ? { titleKo: title } : {}),
+      });
 
       if (response.ok) {
         contentEn = extractGeneratedTextEn(response.data);
+        titleEn = extractGeneratedTitleEn(response.data);
       } else {
-        console.warn("장면 영어 번역 실패. contentEn 없이 진행합니다.", response.message);
+        console.error(
+          `[novel editor] 장면 번역 실패 - sceneId=${scene.id}: ${response.message}`
+        );
       }
     } catch (error) {
-      console.warn("장면 영어 번역 중 예외 발생. contentEn 없이 진행합니다.", error);
+      console.error(`[novel editor] 장면 번역 중 예외 발생 - sceneId=${scene.id}:`, error);
     } finally {
       setIsTranslatingScene(false);
     }
@@ -205,6 +241,8 @@ export function useNovelWritingEditor() {
             ...item,
             contentEn: contentEn || item.contentEn || "",
             contentEnSyncedWith: contentEn ? content : item.contentEnSyncedWith,
+            titleEn: titleEn || item.titleEn || "",
+            titleEnSyncedWith: titleEn ? title : item.titleEnSyncedWith,
           }
         : item
     );
@@ -221,7 +259,7 @@ export function useNovelWritingEditor() {
     const nextScene = updatedScenes[currentSceneIndex + 1];
 
     setCurrentSceneId(nextScene.id);
-    setAssistSuggestion(null);
+    resetSelectionAndSuggestion();
   };
 
   const handlePrevScene = () => {
@@ -229,80 +267,164 @@ export function useNovelWritingEditor() {
 
     if (currentSceneIndex > 0) {
       setCurrentSceneId(scenes[currentSceneIndex - 1].id);
-      setAssistSuggestion(null);
+      resetSelectionAndSuggestion();
     }
+  };
+
+  // 새 빈 장면을 맨 뒤에 추가하고 바로 그 장면으로 이동한다.
+  const handleAddScene = () => {
+    const newId = scenes.length ? Math.max(...scenes.map((scene) => scene.id)) + 1 : 1;
+
+    const newScene = {
+      id: newId,
+      phase: "",
+      title: "새 장면",
+      goal: "",
+      status: "미작성",
+      content: "",
+      contentEn: "",
+      contentEnSyncedWith: "",
+      titleEn: "",
+      titleEnSyncedWith: "",
+    };
+
+    setScenes((prev) => [...prev, newScene]);
+    setCurrentSceneId(newId);
+    resetSelectionAndSuggestion();
+  };
+
+  // 장면을 삭제한다. 최소 1개는 남아야 하므로 마지막 남은 장면은 삭제하지 않는다.
+  // 지금 보고 있던 장면을 지운 경우, 그 자리(또는 그 앞) 장면으로 자동 이동한다.
+  const handleDeleteScene = (sceneId) => {
+    if (scenes.length <= 1) return;
+
+    const deletingIndex = scenes.findIndex((scene) => scene.id === sceneId);
+    if (deletingIndex === -1) return;
+
+    const nextScenes = scenes.filter((scene) => scene.id !== sceneId);
+
+    if (sceneId === currentSceneId) {
+      const fallbackIndex = Math.min(deletingIndex, nextScenes.length - 1);
+      setCurrentSceneId(nextScenes[fallbackIndex].id);
+    }
+
+    setScenes(nextScenes);
+    resetSelectionAndSuggestion();
   };
 
   const handleAiAction = async (type) => {
     if (!currentScene) return;
+    if (isProcessingAiAction) return;
 
-    const baseContent = currentScene.content || "";
+    setIsProcessingAiAction(true);
 
-    if (type === "continue") {
-      const response = await writeScene(
-        {
-          ...setting,
-          bookType: "NOVEL",
-          scenes,
-        },
-        {
-          scene: currentScene,
-          sceneIndex: currentSceneIndex,
+    try {
+      const baseContent = currentScene.content || "";
+
+      if (type === "continue") {
+        const response = await writeScene(
+          {
+            ...setting,
+            bookType: "NOVEL",
+            scenes,
+          },
+          {
+            scene: currentScene,
+            sceneIndex: currentSceneIndex,
+          }
+        );
+        const generatedText = response.ok ? extractGeneratedText(response.data) : "";
+        const generatedTextEn = response.ok ? extractGeneratedTextEn(response.data) : "";
+        const aiScenes = response.ok ? extractGeneratedScenes(response.data) : [];
+
+        if (aiScenes.length) {
+          setScenes((prev) => normalizeAiScenes(aiScenes, prev));
+          return;
         }
-      );
-      const generatedText = response.ok ? extractGeneratedText(response.data) : "";
-      const generatedTextEn = response.ok ? extractGeneratedTextEn(response.data) : "";
-      const aiScenes = response.ok ? extractGeneratedScenes(response.data) : [];
 
-      if (aiScenes.length) {
-        setScenes((prev) => normalizeAiScenes(aiScenes, prev));
-        return;
-      }
+        if (generatedText) {
+          // AI가 한글/영어를 같이 만들어줬으면 둘 다 "지금 막 번역된 상태"로 저장해서,
+          // "다음 장면" 이동 시 ensureCurrentSceneTranslated가 또 번역하지 않게 한다.
+          setScenes((prev) =>
+            prev.map((scene) =>
+              scene.id === currentSceneId
+                ? {
+                    ...scene,
+                    content: generatedText,
+                    contentEn: generatedTextEn || scene.contentEn || "",
+                    contentEnSyncedWith: generatedTextEn ? generatedText : scene.contentEnSyncedWith,
+                    status: "수정 중",
+                  }
+                : scene
+            )
+          );
+          return;
+        }
 
-      if (generatedText) {
-        // AI가 한글/영어를 같이 만들어줬으면 둘 다 "지금 막 번역된 상태"로 저장해서,
-        // "다음 장면" 이동 시 ensureCurrentSceneTranslated가 또 번역하지 않게 한다.
-        setScenes((prev) =>
-          prev.map((scene) =>
-            scene.id === currentSceneId
-              ? {
-                  ...scene,
-                  content: generatedText,
-                  contentEn: generatedTextEn || scene.contentEn || "",
-                  contentEnSyncedWith: generatedTextEn ? generatedText : scene.contentEnSyncedWith,
-                  status: "수정 중",
-                }
-              : scene
-          )
+        if (!response.ok) {
+          console.warn("WRITE_SCENE failed:", response.message);
+        }
+
+        updateCurrentScene(
+          "content",
+          `${baseContent}
+
+나는 그 순간, 이 일이 단순한 이상 현상이 아니라는 것을 알았다. 사라진 별의 자리에는 검은 균열처럼 보이는 어둠이 남아 있었고, 그 어둠은 마치 나를 바라보는 눈처럼 조용히 흔들리고 있었다.`
         );
         return;
       }
 
-      if (!response.ok) {
-        console.warn("WRITE_SCENE failed:", response.message);
+      if (type === "rewrite") {
+        // REWRITE_SCENE은 draft.scenes[].bodyText를 기준으로 기존 장면을 요청에 맞게 고친다.
+        // 우리 scenes 상태는 본문을 content(한글)/contentEn(영어)로 들고 있어서, Python이
+        // 기대하는 bodyText/bodyTextEn 이름으로도 같이 실어 보낸다.
+        const scenesForRewrite = scenes.map((scene) => ({
+          ...scene,
+          sceneNo: scene.id,
+          sceneTitle: scene.title,
+          bodyText: scene.content || "",
+          bodyTextEn: scene.contentEn || "",
+        }));
+
+        const response = await rewriteScene(
+          {
+            ...setting,
+            bookType: "NOVEL",
+            scenes: scenesForRewrite,
+          },
+          {
+            currentSceneNo: currentScene.id,
+            editRequest: "전체적으로 더 자연스럽고 매끄럽게 다시 써주세요.",
+          }
+        );
+
+        const revisedText = response.ok ? extractGeneratedText(response.data) : "";
+        const revisedTextEn = response.ok ? extractGeneratedTextEn(response.data) : "";
+
+        if (revisedText) {
+          setScenes((prev) =>
+            prev.map((scene) =>
+              scene.id === currentSceneId
+                ? {
+                    ...scene,
+                    content: revisedText,
+                    contentEn: revisedTextEn || scene.contentEn || "",
+                    contentEnSyncedWith: revisedTextEn ? revisedText : scene.contentEnSyncedWith,
+                    status: "수정 중",
+                  }
+                : scene
+            )
+          );
+          return;
+        }
+
+        if (!response.ok) {
+          console.warn("REWRITE_SCENE failed:", response.message);
+        }
+        alert("장면을 다시 쓰지 못했어요. 잠시 후 다시 시도해 주세요.");
       }
-
-      updateCurrentScene(
-        "content",
-        `${baseContent}
-
-나는 그 순간, 이 일이 단순한 이상 현상이 아니라는 것을 알았다. 사라진 별의 자리에는 검은 균열처럼 보이는 어둠이 남아 있었고, 그 어둠은 마치 나를 바라보는 눈처럼 조용히 흔들리고 있었다.`
-      );
-      return;
-    }
-
-    if (type === "tone") {
-      alert("문체 수정 기능은 이후 AI API와 연결하면 됩니다.");
-      return;
-    }
-
-    if (type === "rewrite") {
-      alert("장면 다시쓰기 기능은 이후 AI API와 연결하면 됩니다.");
-      return;
-    }
-
-    if (type === "check") {
-      alert("개연성 검사 기능은 이후 AI API와 연결하면 됩니다.");
+    } finally {
+      setIsProcessingAiAction(false);
     }
   };
 
@@ -363,14 +485,31 @@ export function useNovelWritingEditor() {
     );
 
     // Spring 응답은 { success, data: { bookId, stage, result: <Python envelope> } } 형태이고,
-    // Python envelope 자체의 result가 { actionType, targetScope, suggestedText }를 담고 있다.
+    // Python envelope 자체의 result가 { actionType, targetScope, suggestedText, evaluation }를 담고 있다.
     const pythonEnvelope = response.ok ? response.data?.data?.result : null;
     const result = pythonEnvelope?.result;
     const suggestedText = result?.suggestedText || "";
+    // evaluation: CHECK_SCENE_COHERENCE 전용 — 왜 이 제안을 하는지에 대한 평가 설명.
+    // 다른 actionType은 항상 빈 문자열.
+    const evaluation = result?.evaluation || "";
 
     setIsAssisting(false);
 
     if (!suggestedText) {
+      // CHECK_SCENE_COHERENCE는 문제가 없으면 suggestedText 없이 evaluation만 올 수 있다.
+      // 이 경우는 실패가 아니라 "괜찮다"는 정상 결과이므로 에러로 취급하지 않는다.
+      if (actionType === "CHECK_SCENE_COHERENCE" && evaluation) {
+        setAssistSuggestion({
+          actionType,
+          insertionMode: config.insertionMode,
+          targetScope: result?.targetScope || "",
+          text: "",
+          evaluation,
+          context,
+        });
+        return;
+      }
+
       setAssistError(true);
       if (!response.ok) {
         console.warn("WRITE_SCENE_SEGMENT failed:", response.message);
@@ -383,6 +522,7 @@ export function useNovelWritingEditor() {
       insertionMode: config.insertionMode,
       targetScope: result?.targetScope || "",
       text: suggestedText,
+      evaluation,
       context,
     });
   };
@@ -451,6 +591,7 @@ export function useNovelWritingEditor() {
     isIndependentWritingLevel,
     isLoadingScenes,
     isTranslatingScene,
+    isProcessingAiAction,
     scenes,
     currentSceneId,
     setCurrentSceneId,
@@ -461,6 +602,8 @@ export function useNovelWritingEditor() {
     handleTextareaSelect,
     handleNextScene,
     handlePrevScene,
+    handleAddScene,
+    handleDeleteScene,
     handleAiAction,
     handleComplete,
     assistSuggestion,

@@ -4,10 +4,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   collectSetting,
   normalizeSetting,
-  requestAiGenerateStream,
 } from "../../services/aiGenerateService";
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
-import { toBookDraft } from "../../utils/bookDraftMapper";
 import {
   EMPTY_SETTINGS,
   REQUIRED_FIELDS,
@@ -16,7 +14,6 @@ import {
 } from "../data/fairyTaleFreeSettingOptions";
 import { normalizeFairyTaleDraftState } from "../utils/normalizeFairyTaleDraftState";
 import {
-  extractPartialQuestion,
   getChoiceQuestion,
   getMissingFields,
   getResultExamples,
@@ -156,21 +153,6 @@ export function useFairyTaleFreeSetting() {
     setIsCompleting(false);
   };
 
-  // 스트리밍은 로딩 텍스트 갱신용 보조 수단일 뿐, 정답 소스는 non-stream collectSetting 호출이다.
-  const fireLoadingStream = (draftInput, extra) => {
-    let streamedText = "";
-    requestAiGenerateStream({
-      taskType: "COLLECT_SETTING",
-      draft: toBookDraft(draftInput),
-      extra,
-      onDelta: (text) => {
-        streamedText += text;
-        const partial = extractPartialQuestion(streamedText);
-        if (partial) setLoadingHint(partial);
-      },
-    });
-  };
-
   // 마운트 시 1회: 첫 질문을 Gemini에게 받아온다. 고정 질문을 직접 쓰지 않는다.
   useEffect(() => {
     if (initialFetchRef.current) return;
@@ -187,8 +169,6 @@ export function useFairyTaleFreeSetting() {
         interactionMode: "FREE",
         source: "fairyTaleFreeSetting",
       };
-
-      fireLoadingStream(draftInput, extra);
 
       const response = await collectSetting(draftInput, extra);
 
@@ -240,8 +220,6 @@ export function useFairyTaleFreeSetting() {
       interactionMode: "FREE",
       source: "fairyTaleFreeSetting",
     };
-
-    fireLoadingStream(draftInput, extra);
 
     const response = await collectSetting(draftInput, extra);
 

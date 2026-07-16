@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { getBookmarks } from "@/src/api/bookApi";
+import { addBookmark, removeBookmark, getBookmark } from "@/src/api/bookApi";
 import { getViewerPreference, updateViewerPreference } from "@/src/api/memberApi";
 import ReaderHeader from "./reader/ReaderHeader";
 import MemoStickyNote from "./reader/MemoStickyNote";
@@ -49,6 +49,8 @@ export default function BookReaderView({
   const [isCompleted, setIsCompleted] = useState(false);
   const [showLastPageAlert, setShowLastPageAlert] = useState(false);
   const [currentPageKey, setCurrentPageKey] = useState(book.startPageIndex || 0);
+  // 책 한 권당 북마크는 하나뿐 - 현재 북마크가 꽂혀 있는 페이지 번호(없으면 null)
+  const [bookmarkedPage, setBookmarkedPage] = useState(null);
   const [savedBookmarkPageNo, setSavedBookmarkPageNo] = useState(null);
   const [showExitBookmarkModal, setShowExitBookmarkModal] = useState(false);
   const [isSavingBookmark, setIsSavingBookmark] = useState(false);
@@ -78,7 +80,36 @@ export default function BookReaderView({
     updateViewerPreference(null, next).catch(err => console.error("페이지 전환 방식 저장 실패", err));
   };
 
+  const handleToggleBookmark = async () => {
+    const bookId = book.bookId || book.id;
+    const wasCurrentPageBookmarked = bookmarkedPage === currentPageKey;
+    const previousBookmarkedPage = bookmarkedPage;
+    const previousSavedBookmarkPageNo = savedBookmarkPageNo;
+    const nextBookmarkedPage = wasCurrentPageBookmarked ? null : currentPageKey;
 
+    setBookmarkedPage(nextBookmarkedPage);
+    setSavedBookmarkPageNo(nextBookmarkedPage != null ? nextBookmarkedPage + 1 : null);
+
+    try {
+      if (wasCurrentPageBookmarked) {
+        await removeBookmark(bookId);
+      } else {
+        // 책당 북마크가 하나뿐이라, 다른 페이지에 있던 북마크는 현재 페이지로 옮겨진다.
+        // 이어읽기 위치 갱신(onProgressSave)은 여기서 같이 하지 않는다 - 그걸 부르면
+        // MyLibraryLayout의 books state가 바뀌면서 리더를 여는 useEffect가 다시 돌고,
+        // <BookReaderView key={...startPageIndex}>의 key가 바뀌어 읽는 도중에 리더 전체가
+        // 리마운트돼 버린다(요청이 겹쳐 "이미 북마크됨" 에러까지 났다). 이어읽기 위치를
+        // 북마크와 맞추는 건 나갈 때(ExitBookmarkModal/handleKeepBookmarkAndExit)만 한다.
+        // pageNo는 1-index(다른 곳의 currentPage/savedBookmarkPageNo와 동일 규칙) - currentPageKey는
+        // 0-index라 그대로 보내면 한 페이지 앞으로 저장되는 버그가 있었다.
+        await addBookmark(bookId, currentPageKey + 1);
+      }
+    } catch (err) {
+      setBookmarkedPage(previousBookmarkedPage);
+      setSavedBookmarkPageNo(previousSavedBookmarkPageNo);
+      console.error("북마크 처리 실패", err);
+    }
+  };
 
   const [memos, setMemos] = useState({});
 
@@ -103,27 +134,20 @@ export default function BookReaderView({
 
     let cancelled = false;
 
-    getBookmarks(bookId)
+    getBookmark(bookId)
       .then(res => {
         if (cancelled) return;
 
-        const pageNumbers = res.data?.data;
-        const bookmarks = Array.isArray(pageNumbers) ? pageNumbers : [];
+        // 책당 북마크는 하나뿐이라 단일 객체로 온다: { pageNo, isBookmarkedByMe }.
+        const bookmark = res.data?.data;
+        const savedPage = bookmark?.isBookmarkedByMe ? Number(bookmark.pageNo) : null;
+        const validSavedPage = Number.isInteger(savedPage) && savedPage > 0 ? savedPage : null;
 
-        // 기존 데이터에 여러 책갈피가 있다면 마지막 값을 사용합니다.
-        const currentSavedPage = Number(book.currentPage);
-
-        const savedPage = bookmarks.includes(currentSavedPage)
-          ? currentSavedPage
-          : bookmarks.length > 0
-            ? Number(bookmarks[0])
-            : null;
-
-        setSavedBookmarkPageNo(
-          Number.isInteger(savedPage) && savedPage > 0
-            ? savedPage
-            : null
-        );
+        setSavedBookmarkPageNo(validSavedPage);
+        // 헤더의 북마크 아이콘(isPageBookmarked)도 서버에 저장된 북마크로 맞춘다 -
+        // 안 그러면 책을 다시 열었을 때 실제로는 북마크돼 있어도 아이콘이 꺼져 보인다.
+        // currentPageKey는 0-index, pageNo는 1-index라 하나 빼서 맞춘다.
+        setBookmarkedPage(validSavedPage != null ? validSavedPage - 1 : null);
       })
       .catch(err => {
         if (cancelled) return;
@@ -239,6 +263,7 @@ export default function BookReaderView({
         book={book}
         readerMode={readerMode}
         onBack={handleRequestExit}
+        onToggleBookmark={handleToggleBookmark}
         isEnglish={isEnglish}
         setIsEnglish={setIsEnglish}
         fontFamily={fontFamily}
@@ -247,6 +272,7 @@ export default function BookReaderView({
         setFontSize={handleSetFontSize}
         isMemoOpen={isMemoOpen}
         setIsMemoOpen={setIsMemoOpen}
+        isPageBookmarked={bookmarkedPage === currentPageKey}
         viewType={viewType}
         setViewType={handleSetViewType}
       />

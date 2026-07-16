@@ -196,6 +196,12 @@ export const authService = {
     return true;
   },
 
+  /** 비밀번호 재설정 토큰 사전 검증 (GET /api/auth/password/reset/verify) — 토큰을 소비하지 않음 */
+  verifyPasswordResetToken: async (token) => {
+    unwrap(await authApi.verifyPasswordResetToken(token));
+    return true;
+  },
+
   /** 비밀번호 재설정 완료 (PATCH /api/auth/password/reset) — 토큰 유효성은 서버가 검증 */
   confirmPasswordReset: async (token, newPassword) => {
     unwrap(await authApi.completePasswordReset(token, newPassword));

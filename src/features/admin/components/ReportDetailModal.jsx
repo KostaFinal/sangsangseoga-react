@@ -17,7 +17,7 @@ export const ReportDetailModal = ({
       <div className="bg-white border border-[#E6E2FC] max-w-lg w-full text-left p-6 space-y-6 relative rounded-2xl shadow-2xl">
         <div className="flex justify-between items-center border-b border-[#E6E2FC]/50 pb-4">
           <div>
-            <span className="text-xs font-mono tracking-widest text-[#7C769D] uppercase font-black block">ADMIN PANEL</span>
+            <span className="text-xs font-gowun tracking-widest text-[#7C769D] uppercase font-black block">ADMIN PANEL</span>
             <h3 className="text-base font-black text-[#110F24] mt-0.5">신고 상세 내역</h3>
           </div>
           <button 
@@ -42,7 +42,7 @@ export const ReportDetailModal = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-sm pt-2.5 border-t border-[#E6E2FC]/30">
+          <div className="grid grid-cols-2 gap-2 text-sm pt-2.5 border-t border-[#E6E2FC]/30">
             <div>
               <span className="text-[#7C769D] text-xs block font-bold mb-1">신고 분류</span>
               <span className={`inline-block px-2 py-0.5 rounded text-sm font-black border ${
@@ -58,9 +58,9 @@ export const ReportDetailModal = ({
               <span className="text-[#7C769D] text-xs block font-bold mb-1">신고자</span>
               <p className="font-extrabold text-[#2F2D59]">{selectedReport.reporterNickname}</p>
             </div>
-            <div>
+            <div className="col-span-2">
               <span className="text-[#7C769D] text-xs block font-bold mb-1">접수일</span>
-              <p className="font-semibold text-[#2F2D59] font-mono">{selectedReport.date}</p>
+              <p className="font-semibold text-[#2F2D59] font-gowun whitespace-nowrap">{selectedReport.date}</p>
             </div>
           </div>
         </div>

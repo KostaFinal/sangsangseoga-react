@@ -8,16 +8,19 @@ import {
   independentPrimaryAction,
 } from "../data/novelWritingEditorOptions";
 
+const ALL_ASSIST_ACTIONS = [...independentBasicActions, ...independentMoreActions];
+const findAssistAction = (actionType) =>
+  ALL_ASSIST_ACTIONS.find((action) => action.actionType === actionType);
+
 function NovelWritingEditorPage() {
   const {
     setting,
     isGuidedWritingLevel,
-    isIndependentWritingLevel,
     isLoadingScenes,
     isTranslatingScene,
+    isProcessingAiAction,
     scenes,
     currentSceneId,
-    setCurrentSceneId,
     selectedSentence,
     currentScene,
     currentSceneIndex,
@@ -25,6 +28,8 @@ function NovelWritingEditorPage() {
     handleTextareaSelect,
     handleNextScene,
     handlePrevScene,
+    handleAddScene,
+    handleDeleteScene,
     handleAiAction,
     handleComplete,
     assistSuggestion,
@@ -125,13 +130,11 @@ function NovelWritingEditorPage() {
 
           <div className="scene-list">
             {scenes.map((scene) => (
-              <button
+              <div
                 key={scene.id}
-                type="button"
                 className={`scene-item ${
                   scene.id === currentSceneId ? "active" : ""
                 }`}
-                onClick={() => setCurrentSceneId(scene.id)}
               >
                 <div className="scene-item-head">
                   <strong>
@@ -146,10 +149,24 @@ function NovelWritingEditorPage() {
                   <em className={scene.content?.trim() ? "draft" : "empty"}>
                     {scene.status}
                   </em>
+
+                  <button
+                    type="button"
+                    className="scene-delete-btn"
+                    onClick={() => handleDeleteScene(scene.id)}
+                    disabled={scenes.length <= 1}
+                    title={scenes.length <= 1 ? "마지막 장면은 삭제할 수 없어요." : "장면 삭제"}
+                  >
+                    삭제
+                  </button>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
+
+          <button type="button" className="scene-add-btn" onClick={handleAddScene}>
+            + 장면 추가
+          </button>
 
           <div className="scene-help-card">
             <strong>AI가 기획과 연출 회의 내용을 바탕으로 장면 목록과 초안을 생성했어요.</strong>
@@ -197,8 +214,12 @@ function NovelWritingEditorPage() {
             <div className="editor-label-row">
               <label>본문</label>
               {isGuidedWritingLevel ? (
-                <button type="button" onClick={() => handleAiAction("continue")}>
-                  ✦ AI 초안
+                <button
+                  type="button"
+                  onClick={() => handleAiAction("continue")}
+                  disabled={isProcessingAiAction}
+                >
+                  {isProcessingAiAction ? "✦ 생성 중..." : "✦ AI 초안"}
                 </button>
               ) : (
                 <button
@@ -211,21 +232,10 @@ function NovelWritingEditorPage() {
               )}
             </div>
 
-            <div className="mini-toolbar">
-              <button type="button">↶</button>
-              <button type="button">↷</button>
-              <button type="button">H1</button>
-              <button type="button">H2</button>
-              <button type="button">B</button>
-              <button type="button">I</button>
-              <button type="button">밑줄</button>
-              <button type="button">정렬</button>
-            </div>
-
             <textarea
               value={currentScene.content}
               onChange={(e) => updateCurrentScene("content", e.target.value)}
-              onSelect={isIndependentWritingLevel ? handleTextareaSelect : undefined}
+              onSelect={handleTextareaSelect}
               placeholder="AI 초안이 없으면 직접 작성하거나 오른쪽 AI 집필 보조를 사용해보세요."
             />
 
@@ -296,13 +306,11 @@ function NovelWritingEditorPage() {
                 ? `"${selectedSentence.trim()}"`
                 : "본문에서 문장을 드래그하면 여기에 표시됩니다."}
             </p>
-            {isIndependentWritingLevel && (
-              <p className="assist-scope-hint">
-                {hasSelection
-                  ? "선택 영역을 기준으로 AI가 도와드립니다."
-                  : "현재 문단 또는 작성된 내용의 다음 부분을 기준으로 도와드립니다."}
-              </p>
-            )}
+            <p className="assist-scope-hint">
+              {hasSelection
+                ? "선택 영역을 기준으로 AI가 도와드립니다."
+                : "현재 문단 또는 작성된 내용의 다음 부분을 기준으로 도와드립니다."}
+            </p>
           </section>
 
           {isGuidedWritingLevel ? (
@@ -310,16 +318,43 @@ function NovelWritingEditorPage() {
               <h3>무엇을 도와드릴까요?</h3>
 
               <div className="ai-request-grid">
-                <button type="button" onClick={() => handleAiAction("continue")}>
+                <button type="button" onClick={() => handleAiAction("continue")} disabled={isProcessingAiAction}>
                   ✒ 이어쓰기
                 </button>
-                <button type="button" onClick={() => handleAiAction("tone")}>
+                <button
+                  type="button"
+                  onClick={() => handleAssistAction("STYLE_SELECTED_TEXT")}
+                  disabled={
+                    isAssisting ||
+                    isProcessingAiAction ||
+                    (findAssistAction("STYLE_SELECTED_TEXT").requiresSelection && !hasSelection)
+                  }
+                  title={!hasSelection ? "수정할 문장을 먼저 선택해 주세요." : undefined}
+                >
                   🪶 문체 수정
                 </button>
-                <button type="button">⚡ 긴장감 높이기</button>
-                <button type="button">🌙 묘사 추가</button>
-                <button type="button">💬 대사 추가</button>
-                <button type="button" onClick={() => handleAiAction("rewrite")}>
+                <button
+                  type="button"
+                  onClick={() => handleAssistAction("INCREASE_PARAGRAPH_TENSION")}
+                  disabled={isAssisting || isProcessingAiAction}
+                >
+                  ⚡ 긴장감 높이기
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAssistAction("ENHANCE_PARAGRAPH_DESCRIPTION")}
+                  disabled={isAssisting || isProcessingAiAction}
+                >
+                  🌙 묘사 추가
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAssistAction("ADD_DIALOGUE_TO_PARAGRAPH")}
+                  disabled={isAssisting || isProcessingAiAction}
+                >
+                  💬 대사 추가
+                </button>
+                <button type="button" onClick={() => handleAiAction("rewrite")} disabled={isProcessingAiAction}>
                   📄 장면 다시쓰기
                 </button>
               </div>
@@ -327,14 +362,24 @@ function NovelWritingEditorPage() {
               <button
                 type="button"
                 className="wide-ai-btn"
-                onClick={() => handleAiAction("check")}
+                onClick={() => handleAssistAction("CHECK_SCENE_COHERENCE")}
+                disabled={isAssisting || isProcessingAiAction}
               >
                 🔍 개연성 검사
               </button>
 
-              <button type="button" className="wide-ai-btn">
+              <button
+                type="button"
+                className="wide-ai-btn"
+                onClick={() => handleAssistAction("CHECK_SCENE_COHERENCE")}
+                disabled={isAssisting || isProcessingAiAction}
+              >
                 ✅ 설정과 비교
               </button>
+
+              {isProcessingAiAction && (
+                <p className="assist-loading-note">AI가 작성 중입니다...</p>
+              )}
             </section>
           ) : (
             <section className="ai-request-card">
@@ -399,48 +444,50 @@ function NovelWritingEditorPage() {
               {isAssisting && (
                 <p className="assist-loading-note">AI가 작성 중입니다...</p>
               )}
-
-              {assistError && !isAssisting && (
-                <p className="assist-error-note">
-                  AI 응답을 받지 못했어요. 다시 시도해 주세요.
-                </p>
-              )}
-
-              {assistSuggestion && (
-                <div className="assist-suggestion-card">
-                  <h3>AI 제안</h3>
-                  <p className="assist-suggestion-text">{assistSuggestion.text}</p>
-
-                  <div className="assist-suggestion-actions">
-                    {assistSuggestion.actionType === "CHECK_SCENE_COHERENCE" ? (
-                      <button type="button" onClick={handleCancelSuggestion}>
-                        닫기
-                      </button>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          className="wide-ai-btn"
-                          onClick={() =>
-                            handleApplySuggestion(
-                              resolveApplyMode(assistSuggestion.insertionMode)
-                            )
-                          }
-                        >
-                          {applyLabel(assistSuggestion.insertionMode)}
-                        </button>
-                        <button type="button" onClick={handleRegenerateSuggestion}>
-                          다시 추천
-                        </button>
-                        <button type="button" onClick={handleCancelSuggestion}>
-                          취소
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
             </section>
+          )}
+
+          {assistError && !isAssisting && (
+            <p className="assist-error-note">
+              AI 응답을 받지 못했어요. 다시 시도해 주세요.
+            </p>
+          )}
+
+          {assistSuggestion && (
+            <div className="assist-suggestion-card">
+              <h3>AI 제안</h3>
+
+              {/* evaluation: 개연성 검사가 왜 이 제안을 하는지 설명하는 평가 문장 */}
+              {assistSuggestion.evaluation && (
+                <p className="assist-suggestion-evaluation">{assistSuggestion.evaluation}</p>
+              )}
+
+              {assistSuggestion.text && (
+                <p className="assist-suggestion-text">{assistSuggestion.text}</p>
+              )}
+
+              <div className="assist-suggestion-actions">
+                {assistSuggestion.text && (
+                  <button
+                    type="button"
+                    className="wide-ai-btn"
+                    onClick={() =>
+                      handleApplySuggestion(
+                        resolveApplyMode(assistSuggestion.insertionMode)
+                      )
+                    }
+                  >
+                    {applyLabel(assistSuggestion.insertionMode)}
+                  </button>
+                )}
+                <button type="button" onClick={handleRegenerateSuggestion}>
+                  다시 추천
+                </button>
+                <button type="button" onClick={handleCancelSuggestion}>
+                  {assistSuggestion.text ? "취소" : "닫기"}
+                </button>
+              </div>
+            </div>
           )}
 
           <p className="ai-helper-note">

@@ -118,7 +118,7 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
                 </label>
                 <BirthdatePicker value={birthdate} onChange={setBirthdate} />
                 {willNeedGuardianConsent && (
-                  <div className="mt-2 text-[11px] text-neutral-700 bg-neutral-100 hover:bg-neutral-200/50 border border-neutral-200/60 px-3 py-2 rounded-xl font-gowun flex items-start">
+                  <div className="mt-2 text-[13px] text-neutral-700 bg-neutral-100 hover:bg-neutral-200/50 border border-neutral-200/60 px-3 py-2 rounded-xl font-gowun flex items-start">
                     <span className="material-symbols-outlined text-xs mr-1.5 mt-0.5 text-neutral-600">info</span>
                     <span>만 14세 미만의 어린이는 가입 시 보호자의 동의가 필요합니다.</span>
                   </div>
@@ -144,7 +144,7 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
                 <button
                   type="button"
                   onClick={() => setShowTermsModal('service')}
-                  className="text-[10px] text-neutral-400 font-bold hover:text-black underline shrink-0 whitespace-nowrap ml-1.5"
+                  className="text-[12px] text-neutral-400 font-bold hover:text-black underline shrink-0 whitespace-nowrap ml-1.5"
                 >
                   전문 보기
                 </button>
@@ -233,7 +233,7 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
               이용약관 및 개인정보 수집·이용 안내
             </h3>
 
-            <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 text-[11px] text-neutral-500 leading-relaxed font-gowun max-h-60 overflow-y-auto space-y-2.5">
+            <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 text-[13px] text-neutral-500 leading-relaxed font-gowun max-h-60 overflow-y-auto space-y-2.5">
               <p className="font-bold text-black">1. 서비스 이용</p>
               <p>이메일과 닉네임은 로그인 및 서비스 이용을 위한 계정 식별 정보로 사용되며, 비밀번호는 암호화되어 저장됩니다.</p>
               <p className="font-bold text-black">2. 개인정보 수집 및 보관</p>

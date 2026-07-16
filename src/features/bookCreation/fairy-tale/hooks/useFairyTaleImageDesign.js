@@ -253,6 +253,7 @@ export function useFairyTaleImageDesign() {
           imageType: target.imageType,
           pageNo: target.pageNo,
           aspectRatio: "3:4",
+          bookType: "FAIRY_TALE",
         });
 
         stopTrickle();

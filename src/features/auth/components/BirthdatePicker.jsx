@@ -84,7 +84,7 @@ export default function BirthdatePicker({ value, onChange }) {
 
             <div className="grid grid-cols-7 gap-1 mb-1">
               {WEEKDAYS.map((w) => (
-                <div key={w} className="text-center text-[10px] font-bold text-neutral-400 py-1">{w}</div>
+                <div key={w} className="text-center text-[12px] font-bold text-neutral-400 py-1">{w}</div>
               ))}
             </div>
 

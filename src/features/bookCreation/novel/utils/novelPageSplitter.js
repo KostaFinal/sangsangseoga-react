@@ -1,3 +1,9 @@
+import {
+  translateText,
+  extractGeneratedTextEn,
+  extractGeneratedTitleEn,
+} from "../../services/aiGenerateService";
+
 // 리더 화면(src/features/library/components/reader/layout/LayoutPageViewer.jsx)의
 // 텍스트 박스 크기/글꼴 상수를 그대로 따른다. mapBookPages.js의 textOnlyPage()가 만드는
 // 텍스트 박스는 w:360, h:500, fontSize:17, lineHeight:1.85 고정이고, 글자 크기 토글
@@ -33,10 +39,10 @@ function splitIntoSentences(paragraph) {
   return sentences.map((sentence) => sentence.trim()).filter(Boolean);
 }
 
-// 문단들을 페이지 분량 그룹으로 묶는다. 각 그룹에 원래 문단이 몇 개 들어갔는지(paragraphCount)도
-// 같이 반환하는데, 이건 contentTextEn을 같은 문단 개수만큼 슬라이스해서 정렬하기 위해서다.
-// aligned:false는 문단 하나가 너무 길어서 문장 단위로 재분할된 조각이라, 원문 문단과
-// 1:1 대응이 안 되는 경우다(이 경우 해당 그룹은 영어 정렬에서 제외한다).
+// 문단들을 페이지 분량 그룹으로 묶는다. 한글 원문만 기준으로 자르고, 영어 번역은
+// (예전처럼 이미 번역된 전체 문자열을 문단 수로 맞춰 슬라이스하는 대신) 이 함수가 반환한
+// 그룹별로 나중에 translateChunks()가 그룹 텍스트 자체를 번역 요청해서 채운다.
+// 그래서 그룹 개수·문단 정렬이 한글/영어 사이에 어긋날 일이 애초에 없다.
 function chunkParagraphs(paragraphs) {
   const groups = [];
   let current = [];
@@ -44,7 +50,7 @@ function chunkParagraphs(paragraphs) {
 
   const flushCurrent = () => {
     if (current.length) {
-      groups.push({ text: current.join("\n\n"), paragraphCount: current.length, aligned: true });
+      groups.push({ text: current.join("\n\n") });
       current = [];
       currentLength = 0;
     }
@@ -59,7 +65,7 @@ function chunkParagraphs(paragraphs) {
 
       splitIntoSentences(paragraph).forEach((sentence) => {
         if (sentenceLength + sentence.length > CHARS_PER_PAGE && sentenceChunk.length) {
-          groups.push({ text: sentenceChunk.join(" "), paragraphCount: 1, aligned: false });
+          groups.push({ text: sentenceChunk.join(" ") });
           sentenceChunk = [];
           sentenceLength = 0;
         }
@@ -68,7 +74,7 @@ function chunkParagraphs(paragraphs) {
       });
 
       if (sentenceChunk.length) {
-        groups.push({ text: sentenceChunk.join(" "), paragraphCount: 1, aligned: false });
+        groups.push({ text: sentenceChunk.join(" ") });
       }
       return;
     }
@@ -82,51 +88,115 @@ function chunkParagraphs(paragraphs) {
   });
 
   flushCurrent();
-  return groups.length ? groups : [{ text: "", paragraphCount: 0, aligned: true }];
+  return groups.length ? groups : [{ text: "" }];
+}
+
+// 그룹(한글 조각) 하나를 TRANSLATE_TEXT로 번역한다. titleKo를 같이 넘기면(장면의 첫 조각에서만)
+// titleEn도 같이 받아온다. 실패해도 예외를 던지지 않고 빈 문자열로 폴백하되, 어떤 장면/몇 번째
+// 페이지에서 실패했는지는 반드시 콘솔에 남긴다 — 조용히 넘어가면 나중에 원인을 찾을 수 없다.
+async function translateChunk(text, { protagonistName, titleKo } = {}, logCtx = {}) {
+  const trimmedText = (text || "").trim();
+  const trimmedTitle = (titleKo || "").trim();
+
+  if (!trimmedText && !trimmedTitle) {
+    return { textEn: "", titleEn: "" };
+  }
+
+  try {
+    const response = await translateText(trimmedText, {
+      protagonistName,
+      ...(trimmedTitle ? { titleKo: trimmedTitle } : {}),
+    });
+
+    if (!response.ok) {
+      console.error(
+        `[novel publish] 번역 실패 - sceneId=${logCtx.sceneId}, pageNo=${logCtx.pageNo}: ${response.message}`
+      );
+      return { textEn: "", titleEn: "" };
+    }
+
+    return {
+      textEn: extractGeneratedTextEn(response.data),
+      titleEn: trimmedTitle ? extractGeneratedTitleEn(response.data) : "",
+    };
+  } catch (error) {
+    console.error(
+      `[novel publish] 번역 중 예외 발생 - sceneId=${logCtx.sceneId}, pageNo=${logCtx.pageNo}:`,
+      error
+    );
+    return { textEn: "", titleEn: "" };
+  }
 }
 
 // scenes(장면) 배열을 발행 API(BookPublishRequestDto.PageRequest)가 받는 pages[] 형식으로
 // 변환한다. 장면 하나의 본문이 리더 한 페이지보다 길면 여러 행으로 쪼개고, pageNo는
 // 책 전체를 통틀어 순서대로 이어붙인다(장면별로 다시 1부터 시작하지 않는다).
 //
-// contentTextEn은 한글과 글자 수가 달라서 같은 예산으로 독립적으로 자르면 페이지가 안 맞을
-// 수 있다. 대신 한글 문단 그룹의 "문단 개수"를 그대로 영어 문단에도 적용해서 순서를 맞춘다.
-// 번역문 문단 수가 원문과 다르거나(오래된 번역, AI 응답 형태 차이 등) 문단 하나가 너무 길어서
-// 문장 단위로 쪼개진 그룹(aligned:false)이 있으면, 그 장면은 안전하게 contentTextEn을 비워둔다.
-export function splitScenesIntoPageRequests(scenes) {
+// 영어 번역은 "한글을 먼저 자르고, 잘린 조각마다 번역을 요청"하는 방식으로 채운다.
+// 장면 전체를 한 번에 번역한 뒤 문단 개수를 맞춰 슬라이스하던 예전 방식은, LLM 번역문의
+// 문단 수가 원문과 정확히 같으리라는 보장이 없어서 조금만 어긋나도 그 장면 전체의 영어가
+// 통째로 비어버렸다. 조각 단위로 번역하면 애초에 정렬이 필요 없어 이 문제가 구조적으로 없어진다.
+//
+// 편집 화면에서 이미 번역해둔 scene.contentEn/scene.titleEn은, 장면이 페이지 하나에 다
+// 들어가서(가장 흔한 경우) 조각이 장면 전체와 정확히 같을 때만 캐시로 재사용한다 — 중복
+// API 호출을 줄이기 위한 최적화일 뿐, 최종 번역 완성도는 이 함수의 조각 단위 재번역이 보장한다.
+export async function splitScenesIntoPageRequests(scenes, { protagonistName = "" } = {}) {
   const pages = [];
   let pageNo = 1;
 
-  scenes.forEach((scene) => {
+  for (const scene of scenes) {
     const koParagraphs = splitIntoParagraphs(scene.content || "");
     const groups = chunkParagraphs(koParagraphs);
+    const isSinglePageScene = groups.length === 1;
 
-    const enParagraphs = splitIntoParagraphs(scene.contentEn || "");
-    const canAlignEnglish =
-      enParagraphs.length > 0 &&
-      enParagraphs.length === koParagraphs.length &&
-      groups.every((group) => group.aligned);
+    for (let index = 0; index < groups.length; index++) {
+      const group = groups[index];
+      const isFirst = index === 0;
+      const currentPageNo = pageNo++;
 
-    let enCursor = 0;
-
-    groups.forEach((group, index) => {
       let contentTextEn = "";
+      let titleEn = "";
 
-      if (canAlignEnglish) {
-        contentTextEn = enParagraphs.slice(enCursor, enCursor + group.paragraphCount).join("\n\n");
-        enCursor += group.paragraphCount;
+      const canReuseContentCache =
+        isSinglePageScene && scene.contentEn && scene.contentEnSyncedWith === scene.content;
+      const canReuseTitleCache =
+        isFirst && scene.titleEn && scene.titleEnSyncedWith === scene.title;
+
+      if (canReuseContentCache) {
+        contentTextEn = scene.contentEn;
+      }
+      if (canReuseTitleCache) {
+        titleEn = scene.titleEn;
+      }
+
+      const needsContentTranslation = !canReuseContentCache && group.text.trim();
+      const needsTitleTranslation = isFirst && !canReuseTitleCache && (scene.title || "").trim();
+
+      if (needsContentTranslation || needsTitleTranslation) {
+        const translated = await translateChunk(
+          needsContentTranslation ? group.text : "",
+          {
+            protagonistName,
+            titleKo: needsTitleTranslation ? scene.title : "",
+          },
+          { sceneId: scene.id, pageNo: currentPageNo }
+        );
+
+        if (needsContentTranslation) contentTextEn = translated.textEn;
+        if (needsTitleTranslation) titleEn = translated.titleEn;
       }
 
       pages.push({
-        pageNo: pageNo++,
-        title: index === 0 ? scene.title || null : null,
+        pageNo: currentPageNo,
+        title: isFirst ? scene.title || null : null,
+        titleEn: isFirst ? titleEn || null : null,
         contentType: "CHAPTER",
         contentTextKo: group.text,
         contentTextEn,
-        imageUrl: index === 0 ? scene.imageUrl || null : null,
+        imageUrl: isFirst ? scene.imageUrl || null : null,
       });
-    });
-  });
+    }
+  }
 
   return pages;
 }

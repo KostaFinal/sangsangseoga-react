@@ -76,7 +76,7 @@ export const ReportsTab = ({
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{sTab.name}</span>
-              <span className={`font-mono font-black ${isSelected ? 'text-white/90' : 'text-[#6B54E7]'}`}>
+              <span className={`font-gowun font-black ${isSelected ? 'text-white/90' : 'text-[#6B54E7]'}`}>
                 {sTab.count}
               </span>
             </button>
@@ -134,7 +134,7 @@ export const ReportsTab = ({
                       </span>
                       
                       {/* Date */}
-                      <span className="flex items-center gap-1 text-[#7C769D] font-medium font-mono">
+                      <span className="flex items-center gap-1 text-[#7C769D] font-medium font-gowun">
                         <Calendar className="w-3.5 h-3.5 text-[#B9B0DC]" />
                         {item.date}
                       </span>

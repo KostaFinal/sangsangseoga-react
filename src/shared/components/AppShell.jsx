@@ -60,15 +60,16 @@ export function AppShell() {
     if (!requireAuth()) return;
     const book = books.find(b => b.id === bookId);
     try {
-      if (book?.isBookmarked) {
-        await removeBookmark(bookId, 1);
+      if (book?.isBookmarkedByMe) {
+        await removeBookmark(bookId);
       } else {
+        // 목록/상세 화면에는 페이지 개념이 없으므로 책의 첫 페이지를 북마크 위치로 사용
         await addBookmark(bookId, 1);
       }
     } catch (err) {
       console.error("북마크 처리 실패", err);
     }
-    const updated = books.map(b => (b.id === bookId ? { ...b, isBookmarked: !b.isBookmarked } : b));
+    const updated = books.map(b => (b.id === bookId ? { ...b, isBookmarkedByMe: !b.isBookmarkedByMe } : b));
     setBooks(updated);
   };
 

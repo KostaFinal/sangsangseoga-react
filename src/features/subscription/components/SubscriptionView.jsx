@@ -192,7 +192,7 @@ export const SubscriptionView = ({
                   >
                     <span>연간 결제</span>
                     {yearlyDiscountPercent != null && (
-                      <span className="text-[9px] bg-red-100 text-red-600 px-1 py-0.25 rounded-md font-black">{yearlyDiscountPercent}% 할인</span>
+                      <span className="text-[11px] bg-red-100 text-red-600 px-1 py-0.25 rounded-md font-black">{yearlyDiscountPercent}% 할인</span>
                     )}
                   </button>
                 </div>
@@ -233,7 +233,7 @@ export const SubscriptionView = ({
                 <div className="p-5 rounded-2xl border border-[#E6E2FC]/60 bg-[#FAF9FF] flex flex-col justify-between text-left space-y-4">
                   <div className="space-y-3">
                     <div>
-                      <span className="text-[10px] text-[#7C769D] tracking-wider font-extrabold uppercase">Free</span>
+                      <span className="text-[12px] text-[#7C769D] tracking-wider font-extrabold uppercase">Free</span>
                       <h4 className="text-base font-black text-[#2F2D59] mt-0.5">무료 플랜</h4>
                     </div>
 
@@ -284,14 +284,14 @@ export const SubscriptionView = ({
                     : 'border-[#E6E2FC]/60 bg-white hover:border-[#6B54E7]/40 hover:shadow-lg'
                 }`}>
                   {/* Popular Badge */}
-                  <div className="absolute -top-3.5 right-6 bg-[#6B54E7] text-white text-[10px] font-black tracking-wider px-3 py-1 rounded-full uppercase shadow-md flex items-center gap-1">
+                  <div className="absolute -top-3.5 right-6 bg-[#6B54E7] text-white text-[12px] font-black tracking-wider px-3 py-1 rounded-full uppercase shadow-md flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-yellow-300" />
                     <span>추천</span>
                   </div>
 
                   <div className="space-y-3">
                     <div>
-                      <span className="text-[10px] text-[#6B54E7] tracking-wider font-extrabold uppercase">Premium</span>
+                      <span className="text-[12px] text-[#6B54E7] tracking-wider font-extrabold uppercase">Premium</span>
                       <h4 className="text-base font-black text-[#2F2D59] mt-0.5">프리미엄 플랜</h4>
                     </div>
 
@@ -305,7 +305,7 @@ export const SubscriptionView = ({
                         </span>
                       </div>
                       {selectedPlanType === 'yearly' && yearlyDiscountPercent != null && (
-                        <span className="text-[10px] bg-red-50 text-red-600 font-extrabold px-2 py-0.5 rounded-lg inline-block mt-1.5">
+                        <span className="text-[12px] bg-red-50 text-red-600 font-extrabold px-2 py-0.5 rounded-lg inline-block mt-1.5">
                           연간 결제 {yearlyDiscountPercent}% 할인 적용
                         </span>
                       )}
@@ -340,7 +340,7 @@ export const SubscriptionView = ({
                     {isPremium && !isSubscriptionCanceled && (
                       <>
                         {changePlanError && (
-                          <p className="text-[11px] text-rose-600 font-bold text-center">{changePlanError}</p>
+                          <p className="text-[13px] text-rose-600 font-bold text-center">{changePlanError}</p>
                         )}
                         {isCurrentBillingPeriod ? (
                           <button
@@ -350,7 +350,7 @@ export const SubscriptionView = ({
                             현재 이용 중인 요금제
                           </button>
                         ) : isUnsupportedDowngrade ? (
-                          <div className="p-3 rounded-xl bg-[#FAF9FF] border border-dashed border-[#E6E2FC] text-[11px] text-[#7C769D] leading-relaxed text-left">
+                          <div className="p-3 rounded-xl bg-[#FAF9FF] border border-dashed border-[#E6E2FC] text-[13px] text-[#7C769D] leading-relaxed text-left">
                             연간 → 월간 전환은 지원되지 않습니다. 구독을 해지하고 이용 기간이 끝난 뒤 월간 요금제로 다시 가입해 주세요.
                           </div>
                         ) : (
@@ -367,7 +367,7 @@ export const SubscriptionView = ({
                           <button
                             type="button"
                             onClick={openCancelConfirm}
-                            className="text-[11px] text-rose-500 hover:text-rose-600 font-extrabold transition-all cursor-pointer inline-flex items-center gap-1 hover:underline"
+                            className="text-[13px] text-rose-500 hover:text-rose-600 font-extrabold transition-all cursor-pointer inline-flex items-center gap-1 hover:underline"
                           >
                             <X className="w-3.5 h-3.5" />
                             <span>구독 해지</span>
@@ -407,7 +407,7 @@ export const SubscriptionView = ({
                   <Receipt className="w-4 h-4 text-[#6B54E7]" />
                   <span>최근 결제 영수 기록</span>
                 </h3>
-                <span className="text-[10px] text-[#7C769D] font-semibold">최근 {records.length}건</span>
+                <span className="text-[12px] text-[#7C769D] font-semibold">최근 {records.length}건</span>
               </div>
 
               {!isAuthenticated && (
@@ -441,7 +441,7 @@ export const SubscriptionView = ({
                       </div>
                       <div className="min-w-0">
                         <h4 className="font-extrabold text-[#2F2D59] truncate text-xs">{rec.title}</h4>
-                        <p className="text-[10px] text-[#7C769D] font-mono mt-0.5">{rec.date.split(' • ')[0]}</p>
+                        <p className="text-[12px] text-[#7C769D] font-mono mt-0.5">{rec.date.split(' • ')[0]}</p>
                       </div>
                     </div>
 
@@ -451,7 +451,7 @@ export const SubscriptionView = ({
                       </span>
                       <button
                         onClick={() => viewInvoice(rec)}
-                        className="px-2 py-1 bg-[#FAF9FF] hover:bg-[#E6E2FC]/30 border border-[#E6E2FC]/60 text-[#6B54E7] text-[10px] font-bold rounded-lg cursor-pointer transition-all active:scale-95"
+                        className="px-2 py-1 bg-[#FAF9FF] hover:bg-[#E6E2FC]/30 border border-[#E6E2FC]/60 text-[#6B54E7] text-[12px] font-bold rounded-lg cursor-pointer transition-all active:scale-95"
                       >
                         상세
                       </button>
@@ -487,7 +487,7 @@ export const SubscriptionView = ({
                   <Receipt className="w-5.5 h-5.5" />
                 </div>
                 <h4 className="font-black text-base text-[#2F2D59]">결제 영수증</h4>
-                <p className="text-[10px] text-[#7C769D] font-mono">영수 번호: {selectedInvoice.id}</p>
+                <p className="text-[12px] text-[#7C769D] font-mono">영수 번호: {selectedInvoice.id}</p>
               </div>
 
               <div className="border-t border-b border-dashed border-[#E6E2FC] py-4 space-y-2.5 text-xs text-[#7C769D]">
@@ -511,7 +511,7 @@ export const SubscriptionView = ({
                 )}
                 <div className="flex justify-between items-center">
                   <span>거래 상태</span>
-                  <span className="bg-emerald-50 text-emerald-700 text-[10px] font-black px-2 py-0.5 rounded-md border border-emerald-200">
+                  <span className="bg-emerald-50 text-emerald-700 text-[12px] font-black px-2 py-0.5 rounded-md border border-emerald-200">
                     {selectedInvoice.status || '성공'}
                   </span>
                 </div>

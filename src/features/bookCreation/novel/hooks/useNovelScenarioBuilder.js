@@ -1,18 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import {
-  createSettingOptions,
-  requestAiGenerateStream,
-} from "../../services/aiGenerateService";
+import { createSettingOptions } from "../../services/aiGenerateService";
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
-import { toBookDraft } from "../../utils/bookDraftMapper";
 import {
   agendaItems,
   initialSettings,
 } from "../data/novelScenarioBuilderOptions";
 import {
-  extractPartialQuestion,
   getChoiceGuide,
   getChoiceOptions,
   getChoiceQuestion,
@@ -106,18 +101,6 @@ export function useNovelScenarioBuilder() {
       interactionMode: "MIXED",
       recommendationVersion: version,
     };
-
-    let streamedText = "";
-    requestAiGenerateStream({
-      taskType: "CREATE_SETTING_OPTIONS",
-      draft: toBookDraft(draftInput),
-      extra,
-      onDelta: (text) => {
-        streamedText += text;
-        const partial = extractPartialQuestion(streamedText);
-        if (partial) setLoadingHint(partial);
-      },
-    });
 
     const response = await createSettingOptions(draftInput, extra);
 

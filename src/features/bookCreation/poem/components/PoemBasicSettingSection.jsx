@@ -1,7 +1,6 @@
 import React from 'react';
 import PoemSettingRow from './PoemSettingRow.jsx';
 import { basicOptions } from '../data/poemBasicOptions.js';
-import { getBasicRecommendation } from '../utils/poemTextUtils.js';
 
 export const getPoemBasicSettingRows = (settings) => {
   const commonRows = [
@@ -62,16 +61,6 @@ export default function PoemBasicSettingSection({ settings, setSettings }) {
     }));
   };
 
-  const applyAiRecommendation = (key) => {
-    const recommendation = getBasicRecommendation(key, settings);
-    if (!recommendation) return;
-
-    setSettings((prev) => ({
-      ...prev,
-      [key]: recommendation,
-    }));
-  };
-
   return (
     <div className="basic-form-card">
       <div className="settings-group visual-settings">
@@ -87,8 +76,6 @@ export default function PoemBasicSettingSection({ settings, setSettings }) {
               required={required}
               value={settings[key]}
               onPick={(option) => pickOption(key, option, required)}
-              showAiRecommend={isKeywordInputTarget}
-              onAiRecommend={() => applyAiRecommendation(key)}
               showTextInput={isAnswerMode && isKeywordInputTarget}
               inputPlaceholder={
                 key === 'topic'

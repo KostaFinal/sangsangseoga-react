@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { Search, BookOpen, Heart, MessageSquare, ChevronLeft, ChevronRight, X, SlidersHorizontal, Eye } from "lucide-react";
+import { Search, BookOpen, Heart, MessageSquare, X, SlidersHorizontal, Eye } from "lucide-react";
 import BookDetailView from "./BookDetailView";
 import { getBooks, getBook, likeBook, unlikeBook } from "../../../api/bookApi";
 import { addComment, addReply } from "../../../api/commentApi";
 import { useAuth } from "../../../shared/context/AuthContext";
 import { useRequireAuth } from "../../../shared/hooks/useRequireAuth";
-import { addWishlist, deleteWishlist, updateMyWrittenBookDescription, updateMyWrittenBookStatus, updateMyWrittenBookTags, deleteMyWrittenBook, } from "../../../api/myLibraryApi";
+import { Pagination } from "../../../shared/components/Pagination";
+import { addWishlist, deleteWishlist, updateMyWrittenBookDescription, updateMyWrittenBookStatus } from "../../../api/myLibraryApi";
 
 const bookTypeOptions = [
   { label: "전체", value: null },
@@ -430,36 +431,12 @@ export default function FriendsLibraryView() {
           )}
 
           {/* ── 페이지네이션 ── */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-1.5 mt-12">
-              <button
-                onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-[#c4b5fd] text-[#5c5480] hover:border-[#6b54e7] hover:text-[#6b54e7] disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                <button
-                  key={p}
-                  onClick={() => handlePageChange(p)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium border-2 transition-all cursor-pointer ${currentPage === p
-                    ? "bg-[#6b54e7] text-white border-[#6b54e7] shadow-sm shadow-[#6b54e7]/30"
-                    : "text-[#5c5480] border-[#c4b5fd] hover:border-[#6b54e7] hover:text-[#6b54e7]"
-                    }`}
-                >
-                  {p}
-                </button>
-              ))}
-              <button
-                onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-[#c4b5fd] text-[#5c5480] hover:border-[#6b54e7] hover:text-[#6b54e7] disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            className="mt-12"
+          />
         </div>
       )}
     </motion.div>

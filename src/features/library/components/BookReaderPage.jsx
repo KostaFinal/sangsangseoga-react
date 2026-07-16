@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import BookReaderView from './BookReaderView';
-import { getBook, getBookContents } from '../../../api/bookApi';
+import { getBook, getBookContents, getBookmark, addBookmark } from '../../../api/bookApi';
 import { updateReadingProgress, completeReading, getLastReadingPosition } from '../../../api/myLibraryApi';
 import { mapBookPagesByGenre } from '../utils/mapBookPages';
 
@@ -20,7 +20,7 @@ const bookTypeToGenre = {
 export default function BookReaderPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
-  const { books, handleToggleLike, handleToggleBookmark } = useOutletContext();
+  const { books, handleToggleLike } = useOutletContext();
   const [fetchedBook, setFetchedBook] = useState(null);
   const [readerBook, setReaderBook] = useState(null);
   const [readingPosition, setReadingPosition] = useState(null);
@@ -92,6 +92,25 @@ export default function BookReaderPage() {
     }
   };
 
+  // "현재 위치 저장 후 나가기" 등 나가기 모달에서 쓰는 저장 함수.
+  // 책당 북마크는 하나뿐이라, 이미 이 페이지에 북마크돼 있지 않을 때만 등록/이동한다.
+  const handleReadingBookmarkSave = async (id, currentPage, totalPages, readingTime = 0) => {
+    const progress = Math.floor((currentPage / totalPages) * 100);
+    try {
+      const bookmarkRes = await getBookmark(id);
+      const bookmark = bookmarkRes.data?.data;
+
+      if (!(bookmark?.isBookmarkedByMe && bookmark?.pageNo === currentPage)) {
+        await addBookmark(id, currentPage);
+      }
+
+      await updateReadingProgress(id, currentPage, progress, readingTime);
+    } catch (err) {
+      console.error("이어 읽기 책갈피 저장 실패", err);
+      throw err;
+    }
+  };
+
   const handleCompleteReading = async (id) => {
     try {
       await completeReading(id);
@@ -112,11 +131,11 @@ export default function BookReaderPage() {
         book={{ ...readerBook, currentPage: resumeCurrentPage }}
         books={books}
         onBack={() => { navigate(-1); document.body.style.overflow = "unset"; }}
-        onToggleBookmark={e => handleToggleBookmark(e, readerBook.id)}
         onToggleLike={e => handleToggleLike(e, readerBook.id)}
         onSelectRecommended={b => navigate(`/books/${b.id}/read`)}
         onExploreLibrary={() => navigate('/friends')}
         onProgressSave={handleProgressSave}
+        onReadingBookmarkSave={handleReadingBookmarkSave}
         onCompleteReading={handleCompleteReading}
       />
     </div>

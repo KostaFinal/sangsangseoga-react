@@ -7,8 +7,6 @@ export default function PoemSettingRow({
   required = false,
   value,
   onPick,
-  showAiRecommend = false,
-  onAiRecommend,
   showTextInput = false,
   inputPlaceholder = "",
   onChange,
@@ -23,7 +21,7 @@ export default function PoemSettingRow({
         <span>{helper}</span>
       </div>
 
-      <div className={showAiRecommend || showTextInput ? "keyword-option-control" : ""}>
+      <div className={showTextInput ? "keyword-option-control" : ""}>
         {showTextInput && (
           <input
             type="text"
@@ -46,16 +44,6 @@ export default function PoemSettingRow({
               {option}
             </button>
           ))}
-
-          {showAiRecommend && (
-            <button
-              type="button"
-              className="ai-recommend-option"
-              onClick={onAiRecommend}
-            >
-              AI 추천
-            </button>
-          )}
         </div>
       </div>
     </div>

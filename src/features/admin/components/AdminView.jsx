@@ -113,7 +113,7 @@ export const AdminView = ({ initialTab = 'member' }) => {
           <aside className="lg:col-span-3 space-y-6 w-full">
             <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#E6E2FC]/60 text-left">
               <div className="mb-5 border-b border-[#E6E2FC]/40 pb-4">
-                <span className="text-[11px] font-mono tracking-widest text-[#7C769D] uppercase font-black block">Administrator</span>
+                <span className="text-[11px] font-gowun tracking-widest text-[#7C769D] uppercase font-black block">Administrator</span>
                 <h1 className="text-xl font-black text-[#110F24] tracking-tight mt-1">관리 메뉴</h1>
               </div>
 
