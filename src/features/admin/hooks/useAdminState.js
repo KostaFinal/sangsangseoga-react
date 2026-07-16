@@ -17,6 +17,8 @@ const mapReport = (r) => ({
   createdAt: r.createdAt,
   reporterNickname: r.reporterNickname,
   status: STATUS_LABEL_MAP[r.status] || 'pending',
+  resolvedReason: r.resolvedReason,
+  resolvedByNickname: r.resolvedByNickname,
 });
 
 const TARGET_TYPE_LABEL = { BOOK: '도서', COMMENT: '댓글', AUTHOR: '작가' };
@@ -100,11 +102,31 @@ export const useAdminState = (initialTab = 'member') => {
   // [3] AI 리소스 관리 (Tokens Tab State)
   // ==========================================
   const [tokenTrendUnit, setTokenTrendUnit] = useState('daily'); // 'daily' | 'monthly'
-  const [tokenSortPeriod, setTokenSortPeriod] = useState('7d');
+  // daily는 year+month로 특정 월 전체를, monthly는 year로 특정 연도 전체를 조회 (기본값: 오늘 기준)
+  const now = new Date();
+  const [trendYear, setTrendYear] = useState(now.getFullYear());
+  const [trendMonth, setTrendMonth] = useState(now.getMonth() + 1);
+  const goToPrevTrendPeriod = () => {
+    if (tokenTrendUnit === 'daily') {
+      if (trendMonth === 1) { setTrendMonth(12); setTrendYear(y => y - 1); }
+      else { setTrendMonth(m => m - 1); }
+    } else {
+      setTrendYear(y => y - 1);
+    }
+  };
+  const goToNextTrendPeriod = () => {
+    if (tokenTrendUnit === 'daily') {
+      if (trendMonth === 12) { setTrendMonth(1); setTrendYear(y => y + 1); }
+      else { setTrendMonth(m => m + 1); }
+    } else {
+      setTrendYear(y => y + 1);
+    }
+  };
   const [tokenSearchQuery, setTokenSearchQuery] = useState('');
   const [selectedTokenUser, setSelectedTokenUser] = useState(null);
   const [currentTrends, setCurrentTrends] = useState([]);
   const [tokenUsages, setTokenUsages] = useState([]);
+  const [adminMemberIds, setAdminMemberIds] = useState(new Set());
   const [activeTimeline, setActiveTimeline] = useState([]);
 
   // ==========================================
@@ -199,6 +221,12 @@ export const useAdminState = (initialTab = 'member') => {
       // 3. AI 사용량 회원별 통계 조회
       const fetchedTokenUsages = await adminService.getTokenUsages();
       setTokenUsages(fetchedTokenUsages);
+
+      // 4. 관리자 role 회원 id 조회 (AI 사용량 랭킹/집계에서 관리자 계정 활동 제외용)
+      const allMembers = await adminService.getUsers({ size: 100 });
+      setAdminMemberIds(new Set(
+        allMembers.items.filter(m => m.role === 'ADMIN').map(m => String(m.id))
+      ));
     } catch (err) {
       triggerToast(err.message || '관리자 데이터를 불러오지 못했습니다.');
     }
@@ -298,14 +326,17 @@ export const useAdminState = (initialTab = 'member') => {
     return null;
   };
 
-  // 토큰 트렌드 그래프 정보 로드 (일간/월간 변경 감지 시 재호출)
+  // 토큰 트렌드 그래프 정보 로드 (일간/월간, 조회 기간 변경 감지 시 재호출)
   useEffect(() => {
     const fetchTrends = async () => {
-      const data = await adminService.getTokenTrends(tokenTrendUnit);
+      const params = tokenTrendUnit === 'daily'
+        ? { year: trendYear, month: trendMonth }
+        : { year: trendYear };
+      const data = await adminService.getTokenTrends(tokenTrendUnit, params);
       setCurrentTrends(data);
     };
     fetchTrends();
-  }, [tokenTrendUnit]);
+  }, [tokenTrendUnit, trendYear, trendMonth]);
 
   // 특정 회원의 상세 AI 타임라인 정보 로드 (조사 대상 사용자 클릭 시 감지)
   useEffect(() => {
@@ -415,12 +446,15 @@ export const useAdminState = (initialTab = 'member') => {
     targetPath: resolveTargetPath(log.targetType, log.targetId, log.targetNickname, log.targetParentBookId),
   })), [actionLogs]);
 
+  // 관리자 role 계정의 활동은 랭킹/집계에서 제외 (실사용자 지표 왜곡 방지)
+  const nonAdminTokenUsages = useMemo(() => tokenUsages.filter(usage => !adminMemberIds.has(String(usage.userId))), [tokenUsages, adminMemberIds]);
+
   // 검색어 필터링이 적용된 AI 토큰 사용량 목록
   const searchedTokenUsages = useMemo(() => {
-    return tokenUsages.filter(usage =>
+    return nonAdminTokenUsages.filter(usage =>
       usage.nickname.toLowerCase().includes(tokenSearchQuery.toLowerCase())
     );
-  }, [tokenUsages, tokenSearchQuery]);
+  }, [nonAdminTokenUsages, tokenSearchQuery]);
 
   // 가상 타임라인 로그 매핑 (통합 컴포넌트 바인딩용 헬퍼 객체)
   const memberTokenTimelineLogs = useMemo(() => {
@@ -430,12 +464,12 @@ export const useAdminState = (initialTab = 'member') => {
     };
   }, [selectedTokenUser, activeTimeline]);
 
-  // AI 리소스 요약 카드용 집계치
+  // AI 리소스 요약 카드용 집계치 (관리자 계정 활동 제외)
   const tokenSummary = useMemo(() => {
-    const totalTextUsage = tokenUsages.reduce((sum, u) => sum + (u.textUsage || 0), 0);
-    const totalImageUsage = tokenUsages.reduce((sum, u) => sum + (u.imgUsage || 0), 0);
+    const totalTextUsage = nonAdminTokenUsages.reduce((sum, u) => sum + (u.textUsage || 0), 0);
+    const totalImageUsage = nonAdminTokenUsages.reduce((sum, u) => sum + (u.imgUsage || 0), 0);
     return { totalTextUsage, totalImageUsage };
-  }, [tokenUsages]);
+  }, [nonAdminTokenUsages]);
 
   return {
     activeTab,
@@ -499,8 +533,10 @@ export const useAdminState = (initialTab = 'member') => {
     // AI 리소스 토큰 인터페이스
     tokenTrendUnit,
     setTokenTrendUnit,
-    tokenSortPeriod,
-    setTokenSortPeriod,
+    trendYear,
+    trendMonth,
+    goToPrevTrendPeriod,
+    goToNextTrendPeriod,
     tokenSearchQuery,
     setTokenSearchQuery,
     selectedTokenUser,

@@ -274,7 +274,7 @@ export const MemberTab = ({
             )}
 
             {selectedUser.status !== 'pending' && (
-            <div className="grid grid-cols-2 gap-3 pt-4 border-t border-[#E6E2FC]/40 font-sans">
+            <div className="grid grid-cols-2 gap-3 pt-4 border-t border-[#E6E2FC]/40 font-gowun">
               {selectedUser.status === 'active' ? (
                 <>
                   <button

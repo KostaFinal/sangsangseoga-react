@@ -4,4 +4,4 @@ export { default as FinishedTab } from './FinishedTab';
 export { default as ReadingTab } from './ReadingTab';
 export { default as WishlistTab } from './WishlistTab';
 export { default as MainBookshelf } from './MainBookshelf';
-
+export { default as ReportHistoryTab } from "./ReportHistoryTab";

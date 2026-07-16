@@ -10,6 +10,7 @@ import {
   updateGuardianEmail,
   getConnectedMinors,
   withdrawGuardianConsent,
+  uploadProfileImage,
 } from '../../../api/memberApi';
 import { clearTokens } from '../../../api/tokenStorage';
 import { getPendingGuardianConsents, decideGuardianConsent } from '../../../api/authApi';
@@ -40,6 +41,7 @@ export const profileService = {
     return {
       nickname: data.nickname,
       profileImageUrl: data.profileImageUrl,
+      introduction: data.introduction || '',
       isMinor: !!data.isMinor,
       guardianEmail: data.guardianEmail || '',
     };
@@ -68,10 +70,16 @@ export const profileService = {
     return true;
   },
 
-  /** 기본 프로필 정보(필명/아바타) 저장 (PUT /api/members/me) */
-  updateProfile: async ({ nickname, profileImage }) => {
-    const data = await request(updateMyProfile({ nickname, profileImageUrl: profileImage }));
-    return { nickname: data.nickname, profileImageUrl: data.profileImageUrl };
+  /** 기본 프로필 정보(필명/아바타/자기소개) 저장 (PUT /api/members/me) */
+  updateProfile: async ({ nickname, profileImage, introduction }) => {
+    const data = await request(updateMyProfile({ nickname, profileImageUrl: profileImage, introduction }));
+    return { nickname: data.nickname, profileImageUrl: data.profileImageUrl, introduction: data.introduction };
+  },
+
+  /** 프로필 사진 파일 업로드 (POST /api/members/me/profile-image) — 반환된 URL은 저장(updateProfile) 전까지는 반영되지 않음 */
+  uploadProfileImage: async (file) => {
+    const data = await request(uploadProfileImage(file));
+    return data.profileImageUrl;
   },
 
   /** 만 14세 미만 본인 계정의 보호자 이메일 변경 (PATCH /api/members/me/guardian-email) */
@@ -106,11 +114,10 @@ export const profileService = {
 
   /**
    * 회원 탈퇴 처리 (DELETE /api/members/me)
-   * bookDisposalMethod: 'PRIVATE'(비공개 보관) | 'DELETE'(즉시 영구 삭제) → 서버의 bookPolicy 'HIDE'|'DELETE'로 매핑
+   * 실제로는 소프트 삭제 — 데이터는 삭제되지 않고 status만 DELETED로 전환됨
    */
-  withdrawMembership: async (password, bookDisposalMethod) => {
-    const bookPolicy = bookDisposalMethod === 'DELETE' ? 'DELETE' : 'HIDE';
-    await request(withdrawMember(password, bookPolicy));
+  withdrawMembership: async (password) => {
+    await request(withdrawMember(password));
     clearTokens();
     return true;
   },

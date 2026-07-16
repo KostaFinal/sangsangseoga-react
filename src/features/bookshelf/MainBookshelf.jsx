@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Star, BookOpen, Award, Calendar, MessageSquare, Book, Heart, BarChart2 } from 'lucide-react';
+import { Star, BookOpen, Award, Calendar, MessageSquare, Book, Heart, BarChart2, ShieldAlert, } from 'lucide-react';
 import { useEffect, useState } from "react";
 import { getMyInfo } from "@/src/api/memberApi";
 
@@ -109,6 +109,17 @@ export default function MainBookshelf({ setActiveTab, onOpenCreateModal }) {
       coverColor: 'bg-gradient-to-br from-white via-neutral-50 to-neutral-100 text-neutral-900 border-neutral-200 shadow-[4px_16px_36px_rgba(0,0,0,0.12)]',
       pageColor: 'bg-[#fffbfe]',
       subTitle: '깊은 공감을 전하는 가상 거장들의 작업실'
+    },
+    {
+      id: 'reports',
+      title: '신고 내역',
+      color: 'bg-white hover:bg-neutral-50 text-black border-gray-200 shadow-sm',
+      textColor: 'text-neutral-800',
+      icon: ShieldAlert,
+      desc: '처리 내역',
+      coverColor: 'bg-gradient-to-br from-white via-neutral-50 to-neutral-100 text-neutral-900 border-neutral-200 shadow-[4px_16px_36px_rgba(0,0,0,0.12)]',
+      pageColor: 'bg-[#fffafa]',
+      subTitle: '신고 접수와 관리자 처리 결과를 확인합니다.'
     }
   ];
 

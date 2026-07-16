@@ -4,8 +4,6 @@ import {
   Award,
   Star,
   Sparkles,
-  HelpCircle,
-  ChevronDown,
   Check,
   X,
   CheckCircle2,
@@ -40,13 +38,10 @@ export const SubscriptionView = ({
     showCancelSuccess, setShowCancelSuccess,
     printSuccess, setPrintSuccess,
     selectedPlanType, setSelectedPlanType,
-    openFaqId,
-    faqs,
     plans,
     isResuming,
     isChangingPlan,
     changePlanError,
-    toggleFaq,
     openCancelConfirm,
     closeCancelConfirm,
     confirmCancelSubscription,
@@ -68,7 +63,7 @@ export const SubscriptionView = ({
     : null;
 
   return (
-    <div className="bg-[#FAF9FF] min-h-screen font-sans text-[#2F2D59] w-full pb-16">
+    <div className="bg-[#FAF9FF] min-h-screen font-gowun text-[#2F2D59] w-full pb-16">
 
       {/* 2. Unified Grid Layout Container */}
       <div className="w-full max-w-7xl mx-auto px-4 pt-6 pb-6 sm:px-6 md:px-8">
@@ -82,7 +77,12 @@ export const SubscriptionView = ({
             <span>홈으로</span>
           </button>
 
-          <span className={`text-xs font-bold whitespace-nowrap ${isPremium ? 'text-[#6B54E7]' : 'text-[#7C769D]'}`}>
+          <span className={`inline-flex items-center gap-1.5 text-xs font-black whitespace-nowrap px-3 py-1.5 rounded-full border ${
+            isPremium
+              ? 'bg-[#6B54E7] text-white border-transparent shadow-sm shadow-[#6B54E7]/20'
+              : 'bg-[#FAF9FF] text-[#7C769D] border-[#E6E2FC]'
+          }`}>
+            {isPremium ? <Star className="w-3.5 h-3.5 fill-white" /> : <Sparkles className="w-3.5 h-3.5" />}
             {isPremium ? `프리미엄${currentBillingPeriodLabel ? ` (${currentBillingPeriodLabel})` : ''}` : '무료 플랜'}
           </span>
         </div>
@@ -392,44 +392,6 @@ export const SubscriptionView = ({
 
               </div>
 
-              {/* Collapsible FAQ list */}
-              <div className="mt-5 pt-4 border-t border-[#E6E2FC]/40 text-left">
-                <span className="text-xs text-[#7C769D] font-extrabold flex items-center gap-2 uppercase mb-3">
-                  <HelpCircle className="w-4.5 h-4.5 text-[#6B54E7]" />
-                  <span>자주 묻는 질문</span>
-                </span>
-
-                <div className="space-y-2">
-                  {faqs.map((faq) => (
-                    <div
-                      key={faq.id}
-                      className="rounded-2xl border border-[#E6E2FC]/40 bg-[#FAF9FF] overflow-hidden transition-all duration-200"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => toggleFaq(faq.id)}
-                        className="w-full flex justify-between items-center text-left px-4 py-3 text-xs sm:text-sm font-extrabold text-[#2F2D59] hover:bg-[#E6E2FC]/20 transition-colors cursor-pointer"
-                      >
-                        <span className="flex items-center gap-2">
-                          <span className="text-[#6B54E7] font-black">Q.</span>
-                          <span>{faq.q}</span>
-                        </span>
-                        <ChevronDown 
-                          className="w-4.5 h-4.5 text-[#7C769D] transition-transform duration-300 shrink-0" 
-                          style={{ transform: openFaqId === faq.id ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                        />
-                      </button>
-                      
-                      {openFaqId === faq.id && (
-                        <div className="px-6 pb-4 pt-1.5 text-xs text-[#7C769D] leading-relaxed border-t border-[#E6E2FC]/40 bg-white">
-                          <p>{faq.a}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
             </div>
 
           </div>
@@ -483,7 +445,7 @@ export const SubscriptionView = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0 font-sans pl-2">
+                    <div className="flex items-center gap-2 shrink-0 font-gowun pl-2">
                       <span className="text-sm font-black text-[#2F2D59] font-mono">
                         ₩{rec.amount.toLocaleString()}
                       </span>

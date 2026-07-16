@@ -39,7 +39,7 @@ export function GuardianConsentView() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF9FF] flex items-center justify-center px-4 font-sans">
+    <div className="min-h-screen bg-[#FAF9FF] flex items-center justify-center px-4 font-gowun">
       <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-xl border border-[#E6E2FC] text-center space-y-5">
         {status === 'pending' && (
           <>

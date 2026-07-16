@@ -28,6 +28,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
     isNicknameChecked,
     nicknameCheckMsg,
     profileImage, setProfileImage,
+    introduction, setIntroduction,
     handleNicknameChange,
     handleCheckNicknameDuplicate,
     handleProfileImageFileChange,
@@ -57,7 +58,6 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
 
     showWithdrawModal, setShowWithdrawModal,
     withdrawConfirmPw, setWithdrawConfirmPw,
-    bookDisposalMethod, setBookDisposalMethod,
     agreeWithdrawTerms, setAgreeWithdrawTerms,
     withdrawErrorMsg,
     isWithdrawing,
@@ -68,13 +68,14 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
     handleApproveGuardianRequest,
 
     toastMessage,
-    handleSaveProfile,
+    handleSaveBasicInfo,
+    handleSavePassword,
 
     avatarPresets,
   } = useProfileState({ currentUser, onUpdateProfile, onLogout });
 
   return (
-    <div id="profile-edit-container" className="bg-[#FAF9FF] min-h-screen font-sans text-[#2F2D59] w-full leading-relaxed">
+    <div id="profile-edit-container" className="bg-[#FAF9FF] min-h-screen font-gowun text-[#2F2D59] w-full leading-relaxed">
 
       {/* Toast Alert */}
       {toastMessage && (
@@ -103,7 +104,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
             <button
               type="button"
               onClick={() => setActiveTab('basic')}
-              className={`flex-1 sm:flex-none py-2 px-4 rounded-xl font-sans text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              className={`flex-1 sm:flex-none py-2 px-4 rounded-xl font-gowun text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'basic'
                   ? 'bg-[#6B54E7] text-white shadow-md shadow-[#6B54E7]/15'
                   : 'text-[#7C769D] hover:text-[#2F2D59] hover:bg-[#E6E2FC]/15'
@@ -116,7 +117,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
             <button
               type="button"
               onClick={() => setActiveTab('guardian')}
-              className={`flex-1 sm:flex-none py-2 px-4 rounded-xl font-sans text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer relative ${
+              className={`flex-1 sm:flex-none py-2 px-4 rounded-xl font-gowun text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer relative ${
                 activeTab === 'guardian'
                   ? 'bg-[#6B54E7] text-white shadow-md shadow-[#6B54E7]/15'
                   : 'text-[#7C769D] hover:text-[#2F2D59] hover:bg-[#E6E2FC]/15'
@@ -133,7 +134,8 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
 
         {/* TAB 1: BASIC INFO */}
         {activeTab === 'basic' && (
-          <form onSubmit={handleSaveProfile} className="w-full">
+          <div className="w-full space-y-5">
+          <form onSubmit={handleSaveBasicInfo} className="w-full">
             <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E6E2FC]/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-5">
 
                 {/* 1. Profile photo (left) + Nickname (right), balanced side by side */}
@@ -225,85 +227,26 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                       )}
                       <span className="font-bold">{nicknameCheckMsg.text}</span>
                     </div>
-                  </div>
-                </div>
 
-                {/* 2. Password change inputs with current pass requirement */}
-                <div className="border-t border-[#E6E2FC]/40 pt-5 space-y-3 text-left">
-                  <div className="border-b border-[#E6E2FC]/40 pb-3 flex flex-wrap justify-between items-center gap-2">
-                    <div>
-                      <h3 className="text-sm font-black text-[#2F2D59] flex items-center gap-2">
-                        <span className="w-1.5 h-3 bg-[#6B54E7] rounded-full"></span>
-                        <span>비밀번호 변경</span>
-                      </h3>
-                      <p className="text-xs text-[#7C769D] mt-1 text-left">정기적으로 비밀번호를 변경해 계정을 안전하게 보호하세요.</p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setShowPwText(!showPwText)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#FAF9FF] hover:bg-[#E6E2FC]/20 border border-[#E6E2FC] rounded-lg text-[11px] font-bold text-[#7C769D] hover:text-[#2F2D59] transition-all cursor-pointer"
-                    >
-                      {showPwText ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                      <span>{showPwText ? '숨기기' : '보기'}</span>
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-extrabold text-[#7C769D]">
-                        현재 비밀번호 <span className="text-rose-500">*</span>
+                    {/* 자기소개 */}
+                    <div className="pt-2">
+                      <label className="block text-xs font-extrabold text-[#7C769D] uppercase tracking-wider">
+                        자기소개
                       </label>
-                      <div className="relative">
-                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Lock className="w-3.5 h-3.5" /></span>
-                        <input
-                          type={showPwText ? 'text' : 'password'}
-                          value={currentPassword}
-                          onChange={(e) => setCurrentPassword(e.target.value)}
-                          className="w-full pl-10 pr-3 py-2.5 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
-                          placeholder="현재 비밀번호"
-                        />
-                      </div>
+                      <textarea
+                        value={introduction}
+                        onChange={(e) => setIntroduction(e.target.value)}
+                        rows={4}
+                        maxLength={300}
+                        placeholder="독자들에게 보여질 간단한 소개를 작성해보세요."
+                        className="mt-1.5 w-full px-4 py-2.5 bg-[#FAF9FF] hover:bg-neutral-100/50 focus:bg-white text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC] resize-none"
+                      />
+                      <div className="text-right text-[10px] text-[#7C769D] mt-1">{introduction.length}/300</div>
                     </div>
-
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-extrabold text-[#7C769D]">새 비밀번호</label>
-                      <div className="relative">
-                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Key className="w-3.5 h-3.5" /></span>
-                        <input
-                          type={showPwText ? 'text' : 'password'}
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          className="w-full pl-10 pr-3 py-2.5 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
-                          placeholder="새 비밀번호"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-extrabold text-[#7C769D]">새 비밀번호 확인</label>
-                      <div className="relative">
-                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Key className="w-3.5 h-3.5" /></span>
-                        <input
-                          type={showPwText ? 'text' : 'password'}
-                          value={confirmNewPassword}
-                          onChange={(e) => setConfirmNewPassword(e.target.value)}
-                          className="w-full pl-10 pr-3 py-2.5 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
-                          placeholder="새 비밀번호 확인"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-[#FAF9FF] rounded-xl p-3 border border-[#E6E2FC]/60 text-[11px] text-[#7C769D] flex items-start gap-2 mt-2 text-left">
-                    <ShieldAlert className="w-4 h-4 text-[#6B54E7] shrink-0 mt-0.5" />
-                    <p>
-                      비밀번호를 변경하려면 현재 비밀번호를 함께 입력해 주세요.
-                    </p>
                   </div>
                 </div>
 
-                {/* 3. Minor-specific Parent Email setup section */}
+                {/* 2. Minor-specific Parent Email setup section */}
                 {isMinor && (
                   <div className="border-t border-[#E6E2FC]/40 pt-5 space-y-3 text-left">
                     <div className="border-b border-[#E6E2FC]/40 pb-3 flex justify-between items-center flex-wrap gap-2">
@@ -356,7 +299,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                   </div>
                 )}
 
-                {/* Saved changes & navigation buttons in base card */}
+                {/* Save button + 회원 탈퇴 (기본 정보 폼 전용) */}
                 <div className="pt-5 border-t border-[#E6E2FC]/40 flex flex-col sm:flex-row justify-between items-center gap-3">
                   <button
                     type="button"
@@ -367,26 +310,103 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                     <span>회원 탈퇴</span>
                   </button>
 
-                  <div className="flex gap-2.5 w-full sm:w-auto font-sans">
-                    <button
-                      type="button"
-                      onClick={onNavigateHome}
-                      className="flex-1 sm:flex-none px-4 py-2.5 bg-[#FAF9FF] hover:bg-[#E6E2FC]/30 text-[#6B54E7] border border-[#E6E2FC]/60 text-xs font-black rounded-xl transition-all cursor-pointer"
-                    >
-                      취소
-                    </button>
-
-                    <button
-                      type="submit"
-                      className="flex-1 sm:flex-none px-5 py-2.5 bg-gradient-to-r from-[#5179E6] to-[#6B54E7] hover:opacity-95 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-[#6B54E7]/10 cursor-pointer"
-                    >
-                      저장
-                    </button>
-                  </div>
+                  <button
+                    type="submit"
+                    className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-[#5179E6] to-[#6B54E7] hover:opacity-95 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-[#6B54E7]/10 cursor-pointer"
+                  >
+                    기본 정보 저장
+                  </button>
                 </div>
 
             </div>
           </form>
+
+          {/* FORM 2: 비밀번호 변경 — 기본 정보와 독립적으로 저장 */}
+          <form onSubmit={handleSavePassword} className="w-full">
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E6E2FC]/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-3 text-left">
+              <div className="border-b border-[#E6E2FC]/40 pb-3 flex flex-wrap justify-between items-center gap-2">
+                <div>
+                  <h3 className="text-sm font-black text-[#2F2D59] flex items-center gap-2">
+                    <span className="w-1.5 h-3 bg-[#6B54E7] rounded-full"></span>
+                    <span>비밀번호 변경</span>
+                  </h3>
+                  <p className="text-xs text-[#7C769D] mt-1 text-left">정기적으로 비밀번호를 변경해 계정을 안전하게 보호하세요.</p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowPwText(!showPwText)}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#FAF9FF] hover:bg-[#E6E2FC]/20 border border-[#E6E2FC] rounded-lg text-[11px] font-bold text-[#7C769D] hover:text-[#2F2D59] transition-all cursor-pointer"
+                >
+                  {showPwText ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  <span>{showPwText ? '숨기기' : '보기'}</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-extrabold text-[#7C769D]">
+                    현재 비밀번호 <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Lock className="w-3.5 h-3.5" /></span>
+                    <input
+                      type={showPwText ? 'text' : 'password'}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
+                      placeholder="현재 비밀번호"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-extrabold text-[#7C769D]">새 비밀번호</label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Key className="w-3.5 h-3.5" /></span>
+                    <input
+                      type={showPwText ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
+                      placeholder="새 비밀번호"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-extrabold text-[#7C769D]">새 비밀번호 확인</label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7C769D]"><Key className="w-3.5 h-3.5" /></span>
+                    <input
+                      type={showPwText ? 'text' : 'password'}
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-[#FAF9FF] text-xs font-semibold border border-[#E6E2FC] focus:border-[#6B54E7] rounded-xl focus:outline-none transition-all placeholder-[#B9B0DC]"
+                      placeholder="새 비밀번호 확인"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-[#FAF9FF] rounded-xl p-3 border border-[#E6E2FC]/60 text-[11px] text-[#7C769D] flex items-start gap-2 mt-2 text-left">
+                <ShieldAlert className="w-4 h-4 text-[#6B54E7] shrink-0 mt-0.5" />
+                <p>
+                  비밀번호를 변경하려면 현재 비밀번호를 함께 입력해 주세요.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-[#E6E2FC]/40 flex justify-end">
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-[#5179E6] to-[#6B54E7] hover:opacity-95 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-[#6B54E7]/10 cursor-pointer"
+                >
+                  비밀번호 변경
+                </button>
+              </div>
+            </div>
+          </form>
+          </div>
         )}
 
         {/* TAB 2: GUARDIAN PORTAL (학부모 안심 동의) */}
@@ -455,7 +475,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                           </span>
                         </div>
 
-                        <div className="text-xs space-y-1.5 font-sans border-t border-[#E6E2FC]/40 pt-3">
+                        <div className="text-xs space-y-1.5 font-gowun border-t border-[#E6E2FC]/40 pt-3">
                           <div className="flex justify-between items-center">
                             <span className="text-[#7C769D] font-semibold">자녀 아이디 (이메일)</span>
                             <span className="text-[#2F2D59] font-bold font-mono">{minor.email}</span>
@@ -483,7 +503,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                       </div>
 
                       {minor.status === 'ACTIVE' && (
-                        <div className="pt-3 border-t border-[#E6E2FC]/30 mt-3 flex justify-end font-sans">
+                        <div className="pt-3 border-t border-[#E6E2FC]/30 mt-3 flex justify-end font-gowun">
                           <button
                             type="button"
                             onClick={() => openWithdrawConsentModal(minor)}
@@ -530,7 +550,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                 {pendingConsents.map((consent) => (
                   <div
                     key={consent.consentId}
-                    className="bg-[#FAF9FF] p-4 border border-[#E6E2FC] rounded-2xl space-y-3 font-sans text-left relative overflow-hidden shadow-xs"
+                    className="bg-[#FAF9FF] p-4 border border-[#E6E2FC] rounded-2xl space-y-3 font-gowun text-left relative overflow-hidden shadow-xs"
                   >
                     <div className="absolute top-0 right-0 bg-[#6B54E7] text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl">
                       승인 대기 중
@@ -546,7 +566,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                       <p>· <strong>자녀 생년월일:</strong> {consent.birthDate}</p>
                     </div>
 
-                    <div className="pt-3 border-t border-[#E6E2FC] flex justify-end gap-3 text-xs font-sans">
+                    <div className="pt-3 border-t border-[#E6E2FC] flex justify-end gap-3 text-xs font-gowun">
                       <button
                         type="button"
                         onClick={() => handleRejectGuardianRequest(consent)}
@@ -579,7 +599,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                   <span>보호자 동의 안내</span>
                 </div>
 
-                <div className="space-y-3 text-xs font-sans leading-relaxed text-[#B9B0DC] relative z-10">
+                <div className="space-y-3 text-xs font-gowun leading-relaxed text-[#B9B0DC] relative z-10">
                   <p className="text-left">
                     정보통신망법 제31조에 따라 만 14세 미만 회원의 가입에는 보호자 동의가 필요합니다.
                   </p>
@@ -607,7 +627,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
             onSubmit={handleWithdrawConsentSubmit}
             className="bg-white max-w-md w-full rounded-3xl p-5 sm:p-6 text-left shadow-2xl space-y-4 border border-[#E6E2FC] relative animate-in zoom-in-95 duration-200"
           >
-            <div className="flex items-center gap-2 text-rose-600 font-extrabold text-xs uppercase font-sans">
+            <div className="flex items-center gap-2 text-rose-600 font-extrabold text-xs uppercase font-gowun">
               <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0" />
               <span>동의 철회 확인</span>
             </div>
@@ -616,7 +636,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
               {selectedMinorToWithdraw.name}의 계정 동의를 철회하시겠습니까?
             </h3>
 
-            <div className="text-xs text-[#7C769D] leading-relaxed font-sans bg-[#FAF9FF] p-4 rounded-2xl border border-[#E6E2FC] space-y-2">
+            <div className="text-xs text-[#7C769D] leading-relaxed font-gowun bg-[#FAF9FF] p-4 rounded-2xl border border-[#E6E2FC] space-y-2">
               <p className="font-black text-rose-600">철회 시 다음과 같이 처리됩니다:</p>
               <p>1. 자녀 계정은 즉시 로그아웃되고 <strong className="text-[#2F2D59]">정지</strong> 상태로 전환됩니다.</p>
               <p>2. 작성 중이던 작품은 잠금 처리되어 접근할 수 없습니다.</p>
@@ -639,7 +659,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
               <p className="text-xs font-bold text-rose-600">· {withdrawError}</p>
             )}
 
-            <div className="flex gap-2.5 pt-1 text-xs font-sans">
+            <div className="flex gap-2.5 pt-1 text-xs font-gowun">
               <button
                 type="button"
                 onClick={() => setShowWithdrawConsentModal(false)}
@@ -665,7 +685,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
             onSubmit={handleWithdrawMembershipSubmit}
             className="bg-white max-w-lg w-full rounded-3xl p-5 sm:p-6 text-left shadow-2xl space-y-4 border border-[#E6E2FC] overflow-y-auto max-h-[90vh] animate-in zoom-in-95 duration-200"
           >
-            <div className="flex items-center gap-2 text-rose-600 font-extrabold text-xs uppercase font-sans">
+            <div className="flex items-center gap-2 text-rose-600 font-extrabold text-xs uppercase font-gowun">
               <ShieldAlert className="w-5 h-5 text-rose-600 animate-pulse shrink-0" />
               <span>회원 탈퇴 확인</span>
             </div>
@@ -674,66 +694,17 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
               정말 회원 탈퇴를 진행하시겠습니까?
             </h3>
 
-            <div className="text-xs text-[#7C769D] leading-relaxed font-sans bg-[#FAF9FF] p-4 rounded-2xl border border-[#E6E2FC] space-y-3">
-              <h4 className="font-black text-rose-600">탈퇴 시 다음 사항이 적용됩니다:</h4>
+            <div className="text-xs text-[#7C769D] leading-relaxed font-gowun bg-[#FAF9FF] p-4 rounded-2xl border border-[#E6E2FC] space-y-3">
+              <h4 className="font-black text-rose-600">탈퇴 시 다음과 같이 처리됩니다:</h4>
 
               <div className="space-y-1.5 pl-1 leading-relaxed text-left">
-                <p><strong>1. 구독 종료:</strong> 프리미엄 구독은 즉시 종료되며 잔여 기간에 대한 환불은 없습니다.</p>
-                <p><strong>2. 댓글/독후감:</strong> 작성한 댓글과 독후감은 삭제되지 않고 <strong>'알 수 없는 작가'</strong>로 표시됩니다.</p>
-                <p><strong>3. 서재 초기화:</strong> 위시리스트와 서재 목록은 모두 삭제됩니다.</p>
-                <p><strong>4. 재가입 제한:</strong> 탈퇴 후 30일간은 동일 이메일로 재가입할 수 없으며, 이후 모든 데이터가 영구 삭제됩니다.</p>
-              </div>
-            </div>
-
-            {/* Radio options for public book disposal method */}
-            <div className="space-y-2.5 border-t border-b border-[#E6E2FC] py-3">
-              <span className="block text-xs font-extrabold text-[#2F2D59] uppercase tracking-wider">
-                출간한 작품 처리 방법 선택 <span className="text-rose-500">*</span>
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer select-none transition-all ${
-                  bookDisposalMethod === 'PRIVATE'
-                    ? 'border-[#6B54E7] bg-[#E6E2FC]/10 ring-1 ring-[#6B54E7]/30'
-                    : 'border-[#E6E2FC] hover:bg-[#FAF9FF]'
-                }`}>
-                  <input
-                    type="radio"
-                    name="bookDisposal"
-                    value="PRIVATE"
-                    checked={bookDisposalMethod === 'PRIVATE'}
-                    onChange={() => setBookDisposalMethod('PRIVATE')}
-                    className="mt-0.5 accent-[#6B54E7]"
-                  />
-                  <div className="space-y-0.5 text-xs text-left">
-                    <p className="font-black text-[#2F2D59]">비공개 보관</p>
-                    <p className="text-[10px] text-[#7C769D] font-sans leading-normal">공개 목록에서 내리고 30일간 비공개로 보관합니다.</p>
-                  </div>
-                </label>
-
-                <label className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer select-none transition-all ${
-                  bookDisposalMethod === 'DELETE'
-                    ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                    : 'border-[#E6E2FC] hover:bg-[#FAF9FF]'
-                }`}>
-                  <input
-                    type="radio"
-                    name="bookDisposal"
-                    value="DELETE"
-                    checked={bookDisposalMethod === 'DELETE'}
-                    onChange={() => setBookDisposalMethod('DELETE')}
-                    className="mt-0.5 accent-rose-600"
-                  />
-                  <div className="space-y-0.5 text-xs text-left">
-                    <p className="font-black text-rose-950">즉시 영구 삭제</p>
-                    <p className="text-[10px] text-rose-800 font-sans leading-normal">작성한 모든 작품을 복구할 수 없게 즉시 삭제합니다.</p>
-                  </div>
-                </label>
+                <p><strong>1. 계정 비활성화:</strong> 즉시 로그아웃되며, 탈퇴 상태로 전환되어 재로그인이 제한됩니다.</p>
+                <p><strong>2. 데이터 보존:</strong> 작성하신 책·댓글 등 데이터는 삭제되지 않고 그대로 보존됩니다. 재가입이나 계정 복구가 필요하면 고객센터로 문의해 주세요.</p>
               </div>
             </div>
 
             {/* Checkbox confirmation */}
-            <div className="font-sans text-left">
+            <div className="font-gowun text-left">
               <label className="flex items-start gap-3 text-xs text-[#2F2D59] cursor-pointer">
                 <input
                   type="checkbox"
@@ -764,7 +735,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
               <p className="text-xs font-bold text-rose-600 leading-normal text-left">· {withdrawErrorMsg}</p>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-2.5 text-xs font-sans">
+            <div className="flex flex-col sm:flex-row gap-2.5 text-xs font-gowun">
               <button
                 type="button"
                 onClick={() => setShowWithdrawModal(false)}

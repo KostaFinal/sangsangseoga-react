@@ -108,11 +108,13 @@ export const adminService = {
   },
 
   /**
-   * AI 사용량 트렌드 및 통계 정보 조회 (unit=daily: 최근 7일, monthly: 최근 5개월)
-   * 실 API: GET /api/admin/token/trends?unit=daily|monthly
+   * AI 사용량 트렌드 및 통계 정보 조회
+   * 실 API: GET /api/admin/token/trends?unit=daily|monthly&year=&month=
+   * - unit=daily: year+month를 주면 그 달의 1일~말일. 생략하면 최근 7일.
+   * - unit=monthly: year를 주면 그 해의 1월~12월. 생략하면 최근 5개월.
    */
-  getTokenTrends: async (unit) => {
-    const res = await api.get('/api/admin/token/trends', { params: { unit } });
+  getTokenTrends: async (unit, { year, month } = {}) => {
+    const res = await api.get('/api/admin/token/trends', { params: { unit, year, month } });
     return res.data?.data || [];
   },
 

@@ -3,12 +3,18 @@ import { useNavigate, useParams, useLocation, Outlet, useOutletContext } from 'r
 import { AnimatePresence, motion } from 'motion/react';
 import SideMenu from './SideMenu';
 import { BookReaderView } from '../../features/library';
-import { MainBookshelf, MyBookTab, FinishedTab, ReadingTab, WishlistTab } from '../../features/bookshelf';
+import { MainBookshelf, MyBookTab, FinishedTab, ReadingTab, WishlistTab, ReportHistoryTab, } from '../../features/bookshelf';
 import { SavedAuthorTab } from '../../features/library';
 import { ReviewWithAI } from '../../features/review';
 import { BookCalendar } from '../../features/calendar';
 import { BookStats } from '../../features/stats';
-import { getBookContents } from '../../api/bookApi';
+import BookMemoListModal from "../../features/library/components/BookMemoListModal";
+import {
+  getBookContents,
+  getBookmarks,
+  addBookmark,
+  removeBookmark,
+} from '../../api/bookApi';
 import {
   getWishlist as getWishlistBookshelf,
   getReadingList as getReadingBookshelf,
@@ -24,10 +30,12 @@ import {
   deleteMyWrittenBook,
 } from '../../api/myLibraryApi';
 
+
 export function MyLibraryLayout() {
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [memoListBook, setMemoListBook] = useState(null);
 
   // Favorite Authors List State
   const [favoriteAuthors, setFavoriteAuthors] = useState([]);
@@ -36,20 +44,20 @@ export function MyLibraryLayout() {
     try {
       const [wishlistRes, readingRes, finishedRes, myBooksRes] = await Promise.all([
         getWishlistBookshelf(),
-        getReadingBookshelf(),
+        getReadingBookshelf(1, 20),
         getFinishedBookshelf(),
         getMyWrittenBooks(),
       ]);
 
       const wishlistData = wishlistRes.data.data || [];
-      const readingData = readingRes.data.data || [];
+      const readingData = readingRes.data?.data?.content || [];
       const finishedData = finishedRes.data.data || [];
       const myBooksData = myBooksRes.data?.data?.content || [];
 
       const wishlistBooks = Array.isArray(wishlistData)
         ? wishlistData.map(book => ({
-          id: book.id,
-          bookId: book.id,
+          id: book.bookId,
+          bookId: book.bookId,
           title: book.title,
           coverUrl: book.coverImageUrl || "/default-book-cover.png",
           category: book.category,
@@ -69,6 +77,7 @@ export function MyLibraryLayout() {
         : [];
 
       const readingBooks = Array.isArray(readingData)
+
         ? readingData.map(book => ({
           id: book.bookId,
           bookId: book.bookId,
@@ -85,13 +94,13 @@ export function MyLibraryLayout() {
           pages: book.pageCount || 1,
           readingStatus: book.readingStatus,
           recentReadAt: book.recentReadAt,
+          readingTime: book.readingTime || 0,
           isFavorite: false,
           totalViews: 0,
           totalLikes: 0,
           reviews: []
         }))
         : [];
-
       const finishedBooks = Array.isArray(finishedData)
         ? finishedData.map(book => ({
           id: book.bookId,
@@ -147,9 +156,9 @@ export function MyLibraryLayout() {
 
       const mergedBooks = [
         ...wishlistBooks,
-        ...readingBooks,
         ...finishedBooks,
-        ...myWrittenBooks
+        ...myWrittenBooks,
+        ...readingBooks,
       ];
 
       const dedupedBooks = Object.values(
@@ -201,27 +210,173 @@ export function MyLibraryLayout() {
     setBooks(prev => [newBookObj, ...prev]);
   };
 
-  const handleProgressSave = async (bookId, currentPage, totalPages, readingTime = 0) => {
-    const progress = Math.floor((currentPage / totalPages) * 100);
+  const handleProgressSave = async (
+    bookId,
+    currentPage,
+    totalPages,
+    readingTime = 0
+  ) => {
+    const safeTotalPages = Math.max(1, totalPages);
+
+    const progress = Math.min(
+      100,
+      Math.max(
+        0,
+        Math.floor((currentPage / safeTotalPages) * 100)
+      )
+    );
 
     try {
-      await updateReadingProgress(bookId, currentPage, progress, readingTime);
+      await updateReadingProgress(
+        bookId,
+        currentPage,
+        progress,
+        readingTime
+      );
 
       setBooks(prev =>
         prev.map(book =>
-          String(book.id) === String(bookId)
+          String(book.bookId || book.id) === String(bookId)
             ? {
               ...book,
               currentPage,
               progress,
+              readingStatus: "READING",
               readingTime: (book.readingTime || 0) + readingTime,
               recentReadAt: new Date().toISOString(),
             }
             : book
         )
       );
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error("이어 읽기 위치 저장 실패", err);
+      throw err;
+    }
+  };
+
+  const handleReadingBookmarkSave = async (
+    bookId,
+    currentPage,
+    totalPages,
+    readingTime = 0
+  ) => {
+    const safeTotalPages = Math.max(1, totalPages);
+
+    const progress = Math.min(
+      100,
+      Math.max(
+        0,
+        Math.floor((currentPage / safeTotalPages) * 100)
+      )
+    );
+
+    try {
+      // 해당 책의 기존 북마크 조회
+      const bookmarkRes = await getBookmarks(bookId);
+
+      const bookmarkData = bookmarkRes.data?.data;
+      const existingBookmarks = Array.isArray(bookmarkData)
+        ? bookmarkData
+          .map(Number)
+          .filter(pageNo => Number.isInteger(pageNo) && pageNo > 0)
+        : [];
+
+      // 현재 페이지 이외의 기존 북마크 제거
+      await Promise.all(
+        existingBookmarks
+          .filter(pageNo => pageNo !== currentPage)
+          .map(pageNo => removeBookmark(bookId, pageNo))
+      );
+
+      // 같은 페이지가 이미 저장돼 있지 않을 때만 추가
+      if (!existingBookmarks.includes(currentPage)) {
+        await addBookmark(bookId, currentPage);
+      }
+
+      // 북마크 페이지를 읽는 중 위치에도 반영
+      await updateReadingProgress(
+        bookId,
+        currentPage,
+        progress,
+        readingTime
+      );
+
+      setBooks(prev =>
+        prev.map(book =>
+          String(book.bookId || book.id) === String(bookId)
+            ? {
+              ...book,
+              currentPage,
+              progress,
+              readingStatus: "READING",
+              readingTime: (book.readingTime || 0) + readingTime,
+              recentReadAt: new Date().toISOString(),
+            }
+            : book
+        )
+      );
+    } catch (err) {
+      console.error("이어 읽기 책갈피 저장 실패", err);
+      throw err;
+    }
+  };
+
+  const handleReadingTimeSave = async (
+    bookId,
+    readingTime = 0
+  ) => {
+    if (!Number.isFinite(readingTime) || readingTime < 1) {
+      return;
+    }
+
+    const targetBook = books.find(
+      book => String(book.bookId || book.id) === String(bookId)
+    );
+
+    if (!targetBook) {
+      return;
+    }
+
+    const currentPage = Math.max(
+      1,
+      Number(targetBook.currentPage) || 1
+    );
+
+    const totalPages = Math.max(
+      1,
+      Number(targetBook.pageCount) || 1
+    );
+
+    const progress = Math.min(
+      100,
+      Math.max(
+        0,
+        Math.floor((currentPage / totalPages) * 100)
+      )
+    );
+
+    try {
+      await updateReadingProgress(
+        bookId,
+        currentPage,
+        progress,
+        readingTime
+      );
+
+      setBooks(prev =>
+        prev.map(book =>
+          String(book.bookId || book.id) === String(bookId)
+            ? {
+              ...book,
+              readingTime: (book.readingTime || 0) + readingTime,
+              recentReadAt: new Date().toISOString(),
+            }
+            : book
+        )
+      );
+    } catch (err) {
+      console.error("독서 시간 저장 실패", err);
+      throw err;
     }
   };
 
@@ -278,6 +433,26 @@ export function MyLibraryLayout() {
       alert("책 삭제에 실패했습니다.");
       throw err;
     }
+  };
+
+  const handleOpenMemos = book => {
+    setMemoListBook(book);
+  };
+
+  const handleCloseMemos = () => {
+    setMemoListBook(null);
+  };
+
+  const handleSelectMemo = (book, pageNo) => {
+    const targetBookId = book.bookId || book.id;
+
+    setMemoListBook(null);
+
+    navigate(`/library/read/${targetBookId}`, {
+      state: {
+        startPageKey: Number(pageNo),
+      },
+    });
   };
 
   const handleToggleFavorite = async (bookId) => {
@@ -367,6 +542,7 @@ export function MyLibraryLayout() {
     setFavoriteAuthors,
     onOpenDetail,
     onOpenViewer: (bookId) => navigate(`/library/read/${bookId}`),
+    onOpenMemos: handleOpenMemos,
     onStartWishReading: handleStartWishReading,
     onReread: handleRereadBook,
     onToggleFavorite: handleToggleFavorite,
@@ -392,16 +568,21 @@ export function MyLibraryLayout() {
             transition={{ duration: 0.35 }}
             className="bg-transparent text-navy-purple"
           >
-            <Outlet context={{ ...outletContext, handleProgressSave, handleCompleteReading, handleLikeBook }} />
+            <Outlet context={{ ...outletContext, handleProgressSave, handleReadingBookmarkSave, handleCompleteReading, handleReadingTimeSave, handleLikeBook }} />
           </motion.div>
         </AnimatePresence>
       </main>
+      <BookMemoListModal
+        book={memoListBook}
+        onClose={handleCloseMemos}
+        onSelectMemo={handleSelectMemo}
+      />
     </div>
   );
 }
 
 // 탭 컴포넌트들이 내부적으로 쓰는 tab id('saved-author' 등, 단수형)를 URL 세그먼트('saved-authors', 복수형)로 매핑
-const TAB_ID_TO_PATH = { 'saved-author': 'saved-authors' };
+const TAB_ID_TO_PATH = { 'saved-author': 'saved-authors', 'reports': 'reports', };
 const tabToLibraryPath = (tab) => `/library/${tab === 'bookshelf' ? '' : (TAB_ID_TO_PATH[tab] || tab)}`;
 
 export function MyLibraryBookshelfRoute() {
@@ -427,19 +608,41 @@ export function MyLibraryWishlistRoute() {
   );
 }
 export function MyLibraryReadingRoute() {
-  const { filteredBooks, onOpenDetail, onOpenViewer } = useOutletContext();
-  return <ReadingTab filteredBooks={filteredBooks} onOpenViewer={onOpenViewer} onOpenDetail={onOpenDetail} />;
+  const {
+    filteredBooks,
+    onOpenDetail,
+    onOpenViewer,
+    onOpenMemos,
+  } = useOutletContext();
+
+  return (
+    <ReadingTab
+      filteredBooks={filteredBooks}
+      onOpenViewer={onOpenViewer}
+      onOpenDetail={onOpenDetail}
+      onOpenMemos={onOpenMemos}
+    />
+  );
 }
 
 export function MyLibraryFinishedRoute() {
   const navigate = useNavigate();
-  const { filteredBooks, onOpenDetail, onOpenViewer, onReread } = useOutletContext();
+
+  const {
+    filteredBooks,
+    onOpenDetail,
+    onOpenViewer,
+    onReread,
+    onOpenMemos,
+  } = useOutletContext();
+
   return (
     <FinishedTab
       filteredBooks={filteredBooks}
       onOpenViewer={onOpenViewer}
       onReread={onReread}
-      setActiveTab={(tab) => navigate(tabToLibraryPath(tab))}
+      onOpenMemos={onOpenMemos}
+      setActiveTab={tab => navigate(tabToLibraryPath(tab))}
       onOpenDetail={onOpenDetail}
     />
   );
@@ -510,10 +713,15 @@ export function MyLibrarySavedAuthorsRoute() {
   );
 }
 
+export function MyLibraryReportsRoute() {
+  return <ReportHistoryTab />;
+}
+
 export function MyLibraryReaderRoute() {
   const { bookId } = useParams();
   const navigate = useNavigate();
-  const { books, handleProgressSave, handleCompleteReading, handleLikeBook, onToggleFavorite } = useOutletContext();
+  const location = useLocation();
+  const { books, handleProgressSave, handleReadingBookmarkSave, handleReadingTimeSave, handleCompleteReading } = useOutletContext();
   const [readerBook, setReaderBook] = useState(null);
 
   useEffect(() => {
@@ -545,38 +753,78 @@ export function MyLibraryReaderRoute() {
         ],
       }));
 
+      const finalPages =
+        viewerPages.length > 0
+          ? viewerPages
+          : [
+            {
+              id: "page-empty",
+              backgroundColor: "#ffffff",
+              elements: [
+                {
+                  id: "text-empty",
+                  type: "text",
+                  x: 60,
+                  y: 100,
+                  w: 360,
+                  h: 300,
+                  html: "본문 준비 중입니다.",
+                  fontSize: 18,
+                },
+              ],
+            },
+          ];
+
+      const maxPageIndex = Math.max(0, finalPages.length - 1);
+
+      const requestedPageKey = Number(location.state?.startPageKey);
+
+      const hasRequestedPage =
+        Number.isInteger(requestedPageKey) &&
+        requestedPageKey >= 0;
+
+      const startPageIndex = Math.min(
+        Math.max(
+          0,
+          hasRequestedPage
+            ? requestedPageKey
+            : (book.currentPage || 1) - 1
+        ),
+        maxPageIndex
+      );
+
+      const currentPage = startPageIndex + 1;
+
       setReaderBook({
         ...book,
         genre: book.category,
         coverImage: book.coverUrl,
         likes: book.totalLikes || 0,
         comments: book.reviews || [],
-        pages: viewerPages.length > 0 ? viewerPages : [
-          {
-            id: "page-empty",
-            backgroundColor: "#ffffff",
-            elements: [{ id: "text-empty", type: "text", x: 60, y: 100, w: 360, h: 300, html: "본문 준비 중입니다.", fontSize: 18 }],
-          },
-        ],
+        pages: finalPages,
+        startPageIndex,
+        currentPage,
       });
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookId, books]);
+  }, [bookId, books, location.state?.startPageKey,]);
 
   if (!readerBook) {
     return <div className="text-center py-20 text-sm text-[#7C769D]">불러오는 중...</div>;
   }
 
+
+
+
   return (
     <BookReaderView
-      key={readerBook.id}
+      key={`${readerBook.id}-${readerBook.startPageIndex}`}
       book={readerBook}
-      books={books}
       onBack={() => navigate(-1)}
       onProgressSave={handleProgressSave}
+      onReadingBookmarkSave={handleReadingBookmarkSave}
+      onReadingTimeSave={handleReadingTimeSave}
       onCompleteReading={handleCompleteReading}
-      onToggleBookmark={() => onToggleFavorite(readerBook.id)}
-      onToggleLike={() => handleLikeBook(readerBook.id)}
       onSelectRecommended={(book) => navigate(`/library/read/${book.id}`)}
       onExploreLibrary={() => navigate('/friends')}
     />

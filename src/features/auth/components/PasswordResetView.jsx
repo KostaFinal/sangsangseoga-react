@@ -20,7 +20,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
   const { hasLetter, hasNumber, hasSpecial, isMinLength } = passwordStrength;
 
   return (
-    <div id="password-reset-container" className="min-h-screen bg-neutral-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative font-sans text-neutral-900">
+    <div id="password-reset-container" className="min-h-screen bg-neutral-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative font-gowun text-neutral-900">
       <div className="absolute top-[-10%] left-[-10%] w-[350px] h-[350px] bg-neutral-900 watercolor-blob opacity-[0.03]"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-neutral-400 watercolor-blob opacity-[0.05]"></div>
 
@@ -43,13 +43,13 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
 
           {stage === 'request' && (
             <div className="space-y-4">
-              <p className="text-xs text-neutral-500 leading-relaxed font-sans">
+              <p className="text-xs text-neutral-500 leading-relaxed font-gowun">
                 가입하신 이메일 주소를 입력해 주시면, 본인 소유 계정임을 확인할 수 있는 안전한 비밀번호 설정용 주소 메일을 발송해 드립니다.
               </p>
 
               <form onSubmit={handleRequestLink} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-sans">
+                  <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-gowun">
                     가입된 이메일 주소
                   </label>
                   <div className="relative">
@@ -72,7 +72,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full flex justify-center py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all active:scale-98 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full flex justify-center py-3.5 px-4 font-gowun font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all active:scale-98 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? '발송 중...' : '비밀번호 재설정 인증 메일 발송'}
                   </button>
@@ -80,7 +80,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
               </form>
 
               {serverError && (
-                <div className="p-3 bg-neutral-50 text-neutral-900 border border-neutral-300/80 rounded-xl text-xs leading-relaxed text-left font-sans">
+                <div className="p-3 bg-neutral-50 text-neutral-900 border border-neutral-300/80 rounded-xl text-xs leading-relaxed text-left font-gowun">
                   {serverError}
                 </div>
               )}
@@ -111,7 +111,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
 
               <form onSubmit={handleTokenSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-sans">
+                  <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-gowun">
                     인증 토큰 입력
                   </label>
                   <input
@@ -125,7 +125,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                 </div>
 
                 {serverError && (
-                  <div className="p-3 bg-neutral-50 text-neutral-900 border border-neutral-300/80 rounded-xl text-xs leading-relaxed text-left font-sans">
+                  <div className="p-3 bg-neutral-50 text-neutral-900 border border-neutral-300/80 rounded-xl text-xs leading-relaxed text-left font-gowun">
                     {serverError}
                   </div>
                 )}
@@ -133,14 +133,14 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full flex justify-center py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all"
+                    className="w-full flex justify-center py-3.5 px-4 font-gowun font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all"
                   >
                     다음 단계로
                   </button>
                 </div>
               </form>
 
-              <div className="flex items-center justify-between pt-1 font-sans">
+              <div className="flex items-center justify-between pt-1 font-gowun">
                 <button
                   onClick={() => setStage('request')}
                   className="text-xs font-semibold text-[#356572] hover:underline cursor-pointer"
@@ -159,7 +159,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
 
           {stage === 'new_password' && (
             <div className="space-y-4">
-              <div className="bg-emerald-50 text-emerald-800 p-3.5 rounded-xl border border-emerald-200/50 flex items-start space-x-2.5 text-xs font-sans">
+              <div className="bg-emerald-50 text-emerald-800 p-3.5 rounded-xl border border-emerald-200/50 flex items-start space-x-2.5 text-xs font-gowun">
                 <span className="material-symbols-outlined text-emerald-600 text-lg">verified</span>
                 <div>
                   <p className="font-bold">인증 토큰 확인 완료</p>
@@ -170,7 +170,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
               </div>
 
               {validationErrors.length > 0 && (
-                <div className="p-3 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl text-xs leading-relaxed font-sans space-y-1">
+                <div className="p-3 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl text-xs leading-relaxed font-gowun space-y-1">
                   {validationErrors.map((err, idx) => (
                     <p key={idx} className="flex items-start">
                       <span className="material-symbols-outlined text-rose-500 text-sm mr-1.5 mt-0.5">error_outline</span>
@@ -182,7 +182,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
 
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-sans">
+                  <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-gowun">
                     새 비밀번호 입력
                   </label>
                   <div className="relative">
@@ -201,7 +201,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-sans">
+                  <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-gowun">
                     새 비밀번호 확인
                   </label>
                   <div className="relative">
@@ -220,8 +220,8 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                 </div>
 
                 <div className="p-3 bg-neutral-50 rounded-xl space-y-2 border border-neutral-200 text-xs">
-                  <p className="font-bold text-[10px] text-neutral-500 uppercase tracking-widest font-sans">비밀번호 안전도 등급 요건 검사</p>
-                  <div className="grid grid-cols-2 gap-2 text-[11px] font-sans">
+                  <p className="font-bold text-[10px] text-neutral-500 uppercase tracking-widest font-gowun">비밀번호 안전도 등급 요건 검사</p>
+                  <div className="grid grid-cols-2 gap-2 text-[11px] font-gowun">
                     <span className={`flex items-center ${hasLetter ? 'text-emerald-700 font-bold' : 'text-neutral-400'}`}>
                       <span className="material-symbols-outlined text-[15px] mr-1">
                         {hasLetter ? 'check_circle' : 'pending'}
@@ -250,7 +250,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                 </div>
 
                 {serverError && (
-                  <div className="p-3 bg-neutral-50 text-neutral-900 border border-neutral-300/80 rounded-xl text-xs leading-relaxed text-left font-sans">
+                  <div className="p-3 bg-neutral-50 text-neutral-900 border border-neutral-300/80 rounded-xl text-xs leading-relaxed text-left font-gowun">
                     {serverError}
                   </div>
                 )}
@@ -259,7 +259,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full flex justify-center py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full flex justify-center py-3.5 px-4 font-gowun font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? '변경 중...' : '🔒 안전하게 비밀번호 변경 적용하기'}
                   </button>
@@ -269,7 +269,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
           )}
 
           {stage === 'finished_success' && (
-            <div className="text-center space-y-6 py-4 font-sans">
+            <div className="text-center space-y-6 py-4 font-gowun">
               <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center mx-auto shadow-md">
                 <span className="material-symbols-outlined text-3xl font-bold text-white">done_all</span>
               </div>
@@ -281,7 +281,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                 </p>
               </div>
 
-              <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-200/80 text-left text-xs space-y-1.5 text-neutral-600 max-w-sm mx-auto font-sans shadow-xs">
+              <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-200/80 text-left text-xs space-y-1.5 text-neutral-600 max-w-sm mx-auto font-gowun shadow-xs">
                 <p className="text-center font-bold border-b border-neutral-100 pb-1 text-black font-literata mb-1">인증 처리 상태 정보</p>
                 <p>🔒 <strong>비밀번호 암호화 강도:</strong> 안전 등급 기준 만족 (정상 설정됨)</p>
                 <p>🎫 <strong>인증 메일 전송 링크:</strong> 승인 완료 / 재사용 방지 만료 처리됨</p>
@@ -291,7 +291,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
               <div className="pt-2">
                 <button
                   onClick={onNavigateToLogin}
-                  className="w-full flex justify-center py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all"
+                  className="w-full flex justify-center py-3.5 px-4 font-gowun font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all"
                 >
                   로그인 화면으로 이동
                 </button>
@@ -301,7 +301,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
 
         </div>
 
-        <div className="text-center text-[10px] text-neutral-400 font-sans space-y-1">
+        <div className="text-center text-[10px] text-neutral-400 font-gowun space-y-1">
           <p>상상서가 계정 및 개인정보 관리 통합 보증 센터</p>
           <p>© 2026 상상서가. All rights reserved. 본 서비스는 안전한 개인정보 인큐이팅 및 암호보안 절차를 수행합니다.</p>
         </div>
