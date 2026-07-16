@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {  
+import {
   ChevronDown,
   User,
   CreditCard,
   LogOut,
   Bell,
+  Users,
 } from 'lucide-react';
 import { CURRENT_USER_PROFILE } from '../data';
 import { useAuth } from '../context/AuthContext';
@@ -337,10 +338,22 @@ export const Header = () => {
                             navigate("/profile/edit");
                             setShowProfileMenu(false);
                           }}
-                          className="w-full text-left px-4 py-2.5 text-xs text-neutral-700 hover:bg-neutral-50 flex items-center transition-colors font-bold"
+                          className="w-full text-left px-4 py-2.5 text-xs text-neutral-700 hover:bg-neutral-50 flex items-center transition-colors font-bold border-b border-neutral-100"
                         >
                           <User className="w-4 h-4 mr-2.5 text-neutral-400" />
                           <span>내 정보 수정</span>
+                        </button>
+
+                        {/* Menu Item: 보호자 동의 관리 */}
+                        <button
+                          onClick={() => {
+                            navigate("/profile/guardian");
+                            setShowProfileMenu(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-xs text-neutral-700 hover:bg-neutral-50 flex items-center transition-colors font-bold"
+                        >
+                          <Users className="w-4 h-4 mr-2.5 text-neutral-400" />
+                          <span>보호자 동의 관리</span>
                         </button>
 
                         {/* Menu Item: 로그아웃 */}

@@ -13,6 +13,7 @@ import { PaymentView } from './features/subscription/components/PaymentView';
 import { SubscriptionView } from './features/subscription/components/SubscriptionView';
 import { AdminView } from './features/admin/components/AdminView';
 import { ProfileEditView } from './features/profile/components/ProfileEditView';
+import { GuardianManageView } from './features/profile/components/GuardianManageView';
 import { NotificationsView } from './features/dashboard/components/NotificationsView';
 import { PasswordResetView } from './features/auth/components/PasswordResetView';
 import { BookCreationRouter } from './features/bookCreation';
@@ -203,6 +204,19 @@ function ProfileEditRoute() {
   );
 }
 
+function GuardianManageRoute() {
+  const navigate = useNavigate();
+  const { currentUser, isPremium, setCurrentUser, handleLogout: logoutFromServer } = useAuth();
+  return (
+    <GuardianManageView
+      currentUser={{ ...currentUser, isSubscribed: isPremium }}
+      onNavigateHome={() => navigate('/')}
+      onUpdateProfile={(updates) => setCurrentUser(prev => ({ ...prev, ...updates }))}
+      onLogout={async () => { await logoutFromServer(); navigate('/login'); }}
+    />
+  );
+}
+
 function NotificationsRoute() {
   const { notifications, markNotificationRead, markAllNotificationsRead } = useAuth();
   return (
@@ -287,6 +301,7 @@ function AppInner() {
 
           <Route path="subscription/payment" element={<PaymentRoute />} />
           <Route path="profile/edit" element={<ProfileEditRoute />} />
+          <Route path="profile/guardian" element={<GuardianManageRoute />} />
           <Route path="notifications" element={<NotificationsRoute />} />
 
           <Route element={<AdminRoute forbidden={<ForbiddenPanel />} />}>
