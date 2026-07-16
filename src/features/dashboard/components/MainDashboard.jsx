@@ -7,10 +7,10 @@ import {
 } from '../../../shared/data';
 import heroIllustrationUrl from '../../../assets/images/sangsangseoga_hero_illustration_1782314686916.jpg';
 import homeBooksUrl from '../../../assets/images/home_books.png';
-import genreFairyTaleUrl from '../../../assets/images/genre_fairy_tale.jpg';
-import genreNovelUrl from '../../../assets/images/genre_novel.jpg';
-import genrePoemUrl from '../../../assets/images/genre_poem.jpg';
-import genreEssayUrl from '../../../assets/images/genre_essay.jpg';
+import genreFairyTaleUrl from '../../../features/bookCreation/assets/fairy-bg.png';
+import genreNovelUrl from '../../../features/bookCreation/assets/novelstudiobg.png';
+import genrePoemUrl from '../../../features/bookCreation/styles/images/poem-kids-bg.png';
+import genreEssayUrl from '../../../features/bookCreation/styles/images/essay-illustration-bg.png';
 import logoUrl from '../../../assets/images/sangsangseoga_official_logo_1782313504336.jpg';
 import {
   Sparkles, 
@@ -31,7 +31,6 @@ import {
   TrendingUp, 
   Clock,
   ArrowRight,
-  MoreHorizontal,
   ChevronRight,
   MessageSquare,
   Smile,
@@ -180,80 +179,58 @@ export const MainDashboard = (props) => {
             <div className="space-y-4 pt-4 z-10 relative">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-1 cursor-pointer group" onClick={() => navigate('/library')}>
-                  <h2 className="text-base sm:text-lg font-extrabold text-[#2F2D59] hover:text-[#6B54E7] transition-colors flex items-center gap-1">
+                  <h2 className="text-base sm:text-lg font-extrabold text-navy-purple hover:text-brand-purple transition-colors flex items-center gap-1">
                     <span>최근 읽은 작품</span>
-                    <ChevronRight className="w-4 h-4 text-[#2F2D59] group-hover:translate-x-0.5 transition-transform" />
+                    <ChevronRight className="w-4 h-4 text-navy-purple group-hover:translate-x-0.5 transition-transform" />
                   </h2>
                 </div>
-                <button className="text-[#7C769D] hover:text-[#2F2D59] p-1 rounded-lg hover:bg-[#FAF9FF] transition-all">
-                  <MoreHorizontal className="w-5 h-5" />
-                </button>
               </div>
-              
-              <div className="bg-white rounded-3xl p-6 shadow-xs border border-transparent flex flex-col md:flex-row gap-8">
-                <div className="flex-1 flex flex-col sm:flex-row gap-6 text-left">
-                  <div className="w-full sm:w-44 aspect-[3/4] rounded-2xl overflow-hidden shadow-md flex-shrink-0 relative group cursor-pointer" onClick={() => alert('이어서 읽기 기능은 준비 중입니다.')}>
-                    <img 
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4qbLMXrDeSvtACQrqxaabRXhUcLWI6ISEPbVCL4zP57a5y85IerCnkSy5pgzsSQmnNvDc1q2s-ibxVkN7ZqJ31_b8pC4F9l3lfBrQYbyPWPxUbP86iX2oTav5lZ0ev4-koEU62F0a8awUxxeRhuKpbx11aiJCLL1Ac5DNjJFB_E6OqjY7OCfsrzj9vnGnBx1ksipJacKjVdyp8736LnR-kx6bUc_klYIKrF7BlzGIXFzpeSpGXPTsZHSfJlVMQOc3tUYU5ecEPPc" 
-                      alt="별이 잠든 밤" 
-                      className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                  <div className="flex-1 flex flex-col justify-between py-1.5 text-left">
-                    <div className="space-y-1">
-                      <h3 className="text-base sm:text-lg font-extrabold text-[#2F2D59] hover:text-[#6B54E7] cursor-pointer transition-colors" onClick={() => alert('이어서 읽기 기능은 준비 중입니다.')}>
-                        별이 잠든 밤
-                      </h3>
-                      <p className="text-xs text-[#7C769D] font-bold">판타지 · 12화까지 읽음</p>
-                      
-                      <div className="flex items-center gap-3 pt-3.5 max-w-xs">
-                        <div className="flex-1 h-1.5 bg-[#F3F0FF] rounded-full overflow-hidden">
-                          <div className="h-full bg-[#6B54E7] rounded-full" style={{ width: '63%' }}></div>
-                        </div>
-                        <span className="text-[11px] font-bold text-[#7C769D]">63%</span>
-                      </div>
-                    </div>
-                    
-                    <p className="text-xs sm:text-sm text-[#7C769D] leading-relaxed pr-4">
-                      도시의 불빛이 모두 꺼진 밤, 소녀는 별빛이 이끄는 길을 따라 언덕을 올랐다.
-                    </p>
-                    
-                    <div className="pt-2">
-                      <button 
-                        onClick={() => alert('이어서 읽기 기능은 준비 중입니다.')}
-                        className="px-5 py-2 bg-[#F3F0FF] hover:bg-[#E6E2FC] text-[#6B54E7] text-xs font-bold rounded-xl inline-flex items-center gap-1 cursor-pointer transition-all hover:shadow-xs active:scale-98"
-                      >
-                        <span>이어보기</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="hidden md:block w-px bg-neutral-100"></div>
-                
-                <div className="w-full md:w-[320px] grid grid-cols-2 gap-6 text-left">
-                  {[
-                    { title: '바람이 분다, 여름', desc: '소설 · 8화까지', cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAQHaZbTIh-qZz2zWXqdVpVBhMMmTyM82fnx_hh17ZiHkj27S_HTNBgEow5mw54n8enyKHv0aPXoZbHoIIXHQmmXPYyRAtWlG3basGWcjJDb2OGTNsSjQRphauo8WObivk8sXjpu1J1CjKEOqGmfZ3pHaollH6-uGl4Z_VNgSwPD_VrGTnOK5yRUg1QsaQIefQG1oXxyMmfjWGkX2FLRL5jfOanTv7SGBdqwgeB-adv_ra9SHzaImv3uqDJp5GDI4pKZeRAApklAaA' },
-                    { title: '그날의 우리', desc: '로맨스 · 5화까지', cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC2O_PD7xdQCc_iGfXoKwNrVIurVlo0ugo_weeYOYZOG-Wh7f6vj3_DVFNiSln1HzMbFHhwypEYn9qPXQRQ2x8rytzojL6ot4tX_9mXRZB-OO0IANHl_DZM9OrB17ajZemU93sWq3W66bOlFJdjmkeDtvqCmbG_BQln7wrzg4vFRQrmn0Mqlbt4NOhAIZX_FDgxT1X3R9q6wVpNMIjLbN0ioReZ88c5QTD0GfjDeChjMbk1UZw-N3JIAVoL1fzcD4ansUKeIZxSdXk' }
-                  ].map((b, idx) => (
-                    <div key={idx} className="space-y-2.5 group cursor-pointer" onClick={() => alert('이어서 읽기 기능은 준비 중입니다.')}>
-                      <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-slate-50 shadow-xs relative">
-                        <img 
-                          src={b.cover} 
-                          alt={b.title} 
-                          className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[
+                  { id: 1, title: '별이 잠든 밤', category: '판타지', author: '상상의작가', progress: 63, cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB4qbLMXrDeSvtACQrqxaabRXhUcLWI6ISEPbVCL4zP57a5y85IerCnkSy5pgzsSQmnNvDc1q2s-ibxVkN7ZqJ31_b8pC4F9l3lfBrQYbyPWPxUbP86iX2oTav5lZ0ev4-koEU62F0a8awUxxeRhuKpbx11aiJCLL1Ac5DNjJFB_E6OqjY7OCfsrzj9vnGnBx1ksipJacKjVdyp8736LnR-kx6bUc_klYIKrF7BlzGIXFzpeSpGXPTsZHSfJlVMQOc3tUYU5ecEPPc' },
+                  { id: 2, title: '바람이 분다, 여름', category: '소설', author: '은우 작가', progress: 40, cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAQHaZbTIh-qZz2zWXqdVpVBhMMmTyM82fnx_hh17ZiHkj27S_HTNBgEow5mw54n8enyKHv0aPXoZbHoIIXHQmmXPYyRAtWlG3basGWcjJDb2OGTNsSjQRphauo8WObivk8sXjpu1J1CjKEOqGmfZ3pHaollH6-uGl4Z_VNgSwPD_VrGTnOK5yRUg1QsaQIefQG1oXxyMmfjWGkX2FLRL5jfOanTv7SGBdqwgeB-adv_ra9SHzaImv3uqDJp5GDI4pKZeRAApklAaA' },
+                  { id: 3, title: '그날의 우리', category: '로맨스', author: '서린 작가', progress: 22, cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC2O_PD7xdQCc_iGfXoKwNrVIurVlo0ugo_weeYOYZOG-Wh7f6vj3_DVFNiSln1HzMbFHhwypEYn9qPXQRQ2x8rytzojL6ot4tX_9mXRZB-OO0IANHl_DZM9OrB17ajZemU93sWq3W66bOlFJdjmkeDtvqCmbG_BQln7wrzg4vFRQrmn0Mqlbt4NOhAIZX_FDgxT1X3R9q6wVpNMIjLbN0ioReZ88c5QTD0GfjDeChjMbk1UZw-N3JIAVoL1fzcD4ansUKeIZxSdXk' },
+                ].map((book) => (
+                  <div
+                    key={book.id}
+                    onClick={() => alert('이어서 읽기 기능은 준비 중입니다.')}
+                    className="bg-white rounded-2xl border border-lavender-border shadow-xs p-4 flex flex-col justify-between hover:shadow-md hover:border-brand-purple/50 transition-all group cursor-pointer"
+                  >
+                    <div className="flex gap-4">
+                      <div className="w-16 h-24 rounded-lg overflow-hidden shrink-0 border border-lavender-border shadow-sm">
+                        <img
+                          src={book.cover}
+                          alt={book.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
                           referrerPolicy="no-referrer"
                         />
                       </div>
-                      <div className="px-1 text-left">
-                        <h4 className="text-xs font-extrabold text-[#2F2D59] line-clamp-1 group-hover:text-[#6B54E7] transition-colors">{b.title}</h4>
-                        <p className="text-[10px] text-[#7C769D] font-bold mt-0.5">{b.desc}</p>
+                      <div className="flex-grow min-w-0 text-left">
+                        <span className="text-[9px] font-bold text-navy-purple bg-white border border-lavender-border px-2 py-0.5 rounded-full">{book.category}</span>
+                        <h4 className="font-bold text-sm text-navy-purple mt-1 truncate tracking-tight">{book.title}</h4>
+                        <p className="text-[10px] text-purple-gray-text mt-0.5 truncate">글쓴이: {book.author}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
+
+                    <div className="space-y-1.5 mt-3">
+                      <div className="flex justify-between items-center text-[10px] font-bold text-purple-gray-text">
+                        <span>독서 진행률</span>
+                        <span className="text-navy-purple">{book.progress}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-lavender-bg rounded-full overflow-hidden">
+                        <div className="h-full bg-brand-purple rounded-full" style={{ width: `${book.progress}%` }}></div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={(e) => { e.stopPropagation(); alert('이어서 읽기 기능은 준비 중입니다.'); }}
+                      className="w-full text-center py-2 bg-brand-purple hover:bg-brand-dark text-white font-bold text-xs rounded-full cursor-pointer transition-all flex items-center justify-center gap-1 mt-3 shadow-sm"
+                    >
+                      이어 읽기 <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
             )}
@@ -391,100 +368,69 @@ export const MainDashboard = (props) => {
                 </button>
               </div>
               
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-white via-[#FAF9FF] to-white rounded-3xl -mx-4 sm:-mx-6 px-4 sm:px-6 py-6 -my-6 border-y border-[#E6E2FC]/40 pointer-events-none"></div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 relative z-10 pt-2">
-                  {[
-                    {
-                      author: '은우 작가',
-                      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBunwmp9gNYdr5DprurqI-56fQqtRXoNlM91FNSmsHjHsLhHzItDBdIf290fXFgrHtz_Wf4JndCfQwlgQBp0iq1dxmfJujPYJoUj233w2XqQHmvo3mJYKWwKDMVw1aQPZbx_aotYrk615BxBUOn3fZdJ1N5H3VQmQTAB_MNJsYQtEsN4orO-G4D6P--xTblP1eapL8dKYZ7UUHzn50Xj7gTK3CSAEGwzl2hH51X4yjPPkr3mdtqYwX0dg1ao_g8ZALzaz3yoTpGwWM',
-                      title: '달빛 아래, 우리',
-                      category: '로맨스',
-                      desc: '우연한 만남이 운명이 되기까지, 두 사람의 따뜻한 이야기',
-                      likes: '1.2K',
-                      replies: '312',
-                      cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB4qbLMXrDeSvtACQrqxaabRXhUcLWI6ISEPbVCL4zP57a5y85IerCnkSy5pgzsSQmnNvDc1q2s-ibxVkN7ZqJ31_b8pC4F9l3lfBrQYbyPWPxUbP86iX2oTav5lZ0ev4-koEU62F0a8awUxxeRhuKpbx11aiJCLL1Ac5DNjJFB_E6OqjY7OCfsrzj9vnGnBx1ksipJacKjVdyp8736LnR-kx6bUc_klYIKrF7BlzGIXFzpeSpGXPTsZHSfJlVMQOc3tUYU5ecEPPc'
-                    },
-                    {
-                      author: '서린 작가',
-                      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBunwmp9gNYdr5DprurqI-56fQqtRXoNlM91FNSmsHjHsLhHzItDBdIf290fXFgrHtz_Wf4JndCfQwlgQBp0iq1dxmfJujPYJoUj233w2XqQHmvo3mJYKWwKDMVw1aQPZbx_aotYrk615BxBUOn3fZdJ1N5H3VQmQTAB_MNJsYQtEsN4orO-G4D6P--xTblP1eapL8dKYZ7UUHzn50Xj7gTK3CSAEGwzl2hH51X4yjPPkr3mdtqYwX0dg1ao_g8ZALzaz3yoTpGwWM',
-                      title: '햇살이 스며든 날들',
-                      category: '에세이',
-                      desc: '작은 일상 속에서 발견한 소중한 순간들',
-                      likes: '864',
-                      replies: '198',
-                      cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBL9C026912DWIR1LG1aQKUHDO0L5tB1PxdJVonj8bxfKQ75IV6uR99DoLyUg5iNVqKW4ev8bK2aL2BlTbVxn229HmaAO9sRDdAPkLWiWlcE1gawXlfOmeRX8WJCPiDsttSWRVJOOhgVWLBXWfS6LVxJ9kjDI9wPvEkD851Ok7e_hSpVr0cTBTFVYvIJLm8XNQzQx_ESFnx3tM27mBrOsK16EdHSGfyOc0zpOhyvCEZWSpb7Y7A8kZ3Gl2NKGhuOZgXcTEJ_E7Pgf0'
-                    },
-                    {
-                      author: '하루 작가',
-                      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBunwmp9gNYdr5DprurqI-56fQqtRXoNlM91FNSmsHjHsLhHzItDBdIf290fXFgrHtz_Wf4JndCfQwlgQBp0iq1dxmfJujPYJoUj233w2XqQHmvo3mJYKWwKDMVw1aQPZbx_aotYrk615BxBUOn3fZdJ1N5H3VQmQTAB_MNJsYQtEsN4orO-G4D6P--xTblP1eapL8dKYZ7UUHzn50Xj7gTK3CSAEGwzl2hH51X4yjPPkr3mdtqYwX0dg1ao_g8ZALzaz3yoTpGwWM',
-                      title: '별을 향한 약속',
-                      category: '판타지',
-                      desc: '언젠가 다시 만날 그날을 기다리며',
-                      likes: '1.6K',
-                      replies: '245',
-                      cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAQHaZbTIh-qZz2zWXqdVpVBhMMmTyM82fnx_hh17ZiHkj27S_HTNBgEow5mw54n8enyKHv0aPXoZbHoIIXHQmmXPYyRAtWlG3basGWcjJDb2OGTNsSjQRphauo8WObivk8sXjpu1J1CjKEOqGmfZ3pHaollH6-uGl4Z_VNgSwPD_VrGTnOK5yRUg1QsaQIefQG1oXxyMmfjWGkX2FLRL5jfOanTv7SGBdqwgeB-adv_ra9SHzaImv3uqDJp5GDI4pKZeRAApklAaA'
-                    }
-                  ].map((card, idx) => (
-                    <div key={idx} className="bg-white border border-[#E6E2FC] hover:border-[#6B54E7]/50 rounded-3xl p-5 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] cursor-pointer group" onClick={() => alert('작품 상세 페이지는 준비 중입니다.')}>
-                      <div className="flex items-center justify-between gap-3 pb-3 border-b border-[#E6E2FC]/50">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
-                            <img 
-                              src={card.avatar} 
-                              alt={card.author} 
-                              className="w-full h-full object-cover"
-                              referrerPolicy="no-referrer"
-                            />
-                          </div>
-                          <span className="text-sm font-extrabold text-[#2F2D59]">{card.author}</span>
-                          <div className="w-4 h-4 rounded-full bg-[#6B54E7] flex items-center justify-center text-white text-[10px] font-black">
-                            ✓
-                          </div>
-                        </div>
-                        <span className="bg-[#E6E2FC]/50 text-[#6B54E7] text-[10px] font-black px-2 py-1 rounded-lg">신작알림</span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-5">
+                {[
+                  {
+                    author: '은우 작가',
+                    title: '달빛 아래, 우리',
+                    category: '로맨스',
+                    likes: '1.2K',
+                    replies: '312',
+                    cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB4qbLMXrDeSvtACQrqxaabRXhUcLWI6ISEPbVCL4zP57a5y85IerCnkSy5pgzsSQmnNvDc1q2s-ibxVkN7ZqJ31_b8pC4F9l3lfBrQYbyPWPxUbP86iX2oTav5lZ0ev4-koEU62F0a8awUxxeRhuKpbx11aiJCLL1Ac5DNjJFB_E6OqjY7OCfsrzj9vnGnBx1ksipJacKjVdyp8736LnR-kx6bUc_klYIKrF7BlzGIXFzpeSpGXPTsZHSfJlVMQOc3tUYU5ecEPPc'
+                  },
+                  {
+                    author: '서린 작가',
+                    title: '햇살이 스며든 날들',
+                    category: '에세이',
+                    likes: '864',
+                    replies: '198',
+                    cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBL9C026912DWIR1LG1aQKUHDO0L5tB1PxdJVonj8bxfKQ75IV6uR99DoLyUg5iNVqKW4ev8bK2aL2BlTbVxn229HmaAO9sRDdAPkLWiWlcE1gawXlfOmeRX8WJCPiDsttSWRVJOOhgVWLBXWfS6LVxJ9kjDI9wPvEkD851Ok7e_hSpVr0cTBTFVYvIJLm8XNQzQx_ESFnx3tM27mBrOsK16EdHSGfyOc0zpOhyvCEZWSpb7Y7A8kZ3Gl2NKGhuOZgXcTEJ_E7Pgf0'
+                  },
+                  {
+                    author: '하루 작가',
+                    title: '별을 향한 약속',
+                    category: '판타지',
+                    likes: '1.6K',
+                    replies: '245',
+                    cover: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAQHaZbTIh-qZz2zWXqdVpVBhMMmTyM82fnx_hh17ZiHkj27S_HTNBgEow5mw54n8enyKHv0aPXoZbHoIIXHQmmXPYyRAtWlG3basGWcjJDb2OGTNsSjQRphauo8WObivk8sXjpu1J1CjKEOqGmfZ3pHaollH6-uGl4Z_VNgSwPD_VrGTnOK5yRUg1QsaQIefQG1oXxyMmfjWGkX2FLRL5jfOanTv7SGBdqwgeB-adv_ra9SHzaImv3uqDJp5GDI4pKZeRAApklAaA'
+                  }
+                ].map((card, idx) => (
+                  <div key={idx} onClick={() => alert('작품 상세 페이지는 준비 중입니다.')} className="group cursor-pointer">
+                    <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-gray-200 group-hover:shadow-md group-hover:border-[#d4cdf2] transition-all duration-300 group-hover:-translate-y-1 bg-white">
+                      <img
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        src={card.cover}
+                        alt={card.title}
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/75 via-transparent to-transparent" />
+                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold border backdrop-blur-sm bg-[#6b54e7]/90 text-white border-white/30">
+                        {card.category}
                       </div>
-                      
-                      <div className="flex gap-4">
-                        <div className="w-24 aspect-[3/4] rounded-2xl overflow-hidden shadow-sm flex-shrink-0 relative group-hover:shadow-md transition-shadow">
-                          <img 
-                            src={card.cover} 
-                            alt={card.title} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            referrerPolicy="no-referrer"
-                          />
-                        </div>
-                        
-                        <div className="flex-1 flex flex-col justify-between py-1 text-left">
-                          <div className="space-y-1.5">
-                            <h4 className="text-sm font-black text-[#2F2D59] line-clamp-2 group-hover:text-[#6B54E7] transition-colors leading-snug">{card.title}</h4>
-                            <span className="inline-block text-[10px] font-bold text-[#6B54E7] bg-[#F3F0FF] px-2 py-0.5 rounded-md">{card.category}</span>
-                            <p className="text-xs text-[#7C769D] leading-relaxed line-clamp-2 pt-1">{card.desc}</p>
-                          </div>
-                          
-                          <div className="flex items-center gap-4 text-[#7C769D] text-[11px] font-bold pt-2 mt-auto">
-                            <span className="flex items-center gap-1 hover:text-red-500 transition-colors">
-                              <Heart className="w-3.5 h-3.5" />
-                              {card.likes}
-                            </span>
-                            <span className="flex items-center gap-1 hover:text-[#6B54E7] transition-colors">
-                              <MessageSquare className="w-3.5 h-3.5" />
-                              {card.replies}
-                            </span>
-                          </div>
+                      <div className="absolute bottom-0 inset-x-0 p-3 text-left">
+                        <h4 className="text-white text-[13px] font-semibold leading-tight line-clamp-2 mb-1.5">{card.title}</h4>
+                        <div className="flex items-center gap-2.5 text-white/80 text-[10px]">
+                          <span className="flex items-center gap-1">
+                            <Heart className="w-3.5 h-3.5" />
+                            {card.likes}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            {card.replies}
+                          </span>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-                
-                <button 
-                  onClick={() => alert('더보기 기능은 준비 중입니다.')}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4.5 w-10 h-10 rounded-full bg-white shadow-lg border border-[#E6E2FC] flex items-center justify-center text-[#2F2D59] hover:bg-[#F3F0FF] hover:scale-105 active:scale-95 transition-all z-20"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
+                    <div className="mt-2 text-center">
+                      <button
+                        onClick={e => { e.stopPropagation(); navigate(`/authors/${encodeURIComponent(card.author)}`); }}
+                        className="text-[12px] font-medium text-[#2f2d59] hover:text-[#6b54e7] transition-colors cursor-pointer"
+                      >
+                        {card.author}
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
             )}
