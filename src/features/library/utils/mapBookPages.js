@@ -18,7 +18,7 @@ function textOnlyPage(page) {
         x: 60, y: 50, w: 360, h: 30,
         fontSize: 15, fontWeight: 700, color: "#5139d6",
         htmlKo: page.title,
-        htmlEn: page.title,
+        htmlEn: page.titleEn || page.title,
       }] : []),
       {
         id: `text-${page.pageNo}`,

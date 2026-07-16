@@ -90,6 +90,16 @@ export const extractGeneratedTextEn = (data) => {
   return typeof generated === "string" ? generated : "";
 };
 
+// TRANSLATE_TEXT가 extra.titleKo와 함께 요청됐을 때 돌려주는 titleEn을 읽는다.
+// titleKo를 안 보낸 요청이면 Python이 titleEn을 빈 문자열로 채워서 그대로 ""가 나온다.
+export const extractGeneratedTitleEn = (data) => {
+  const result = getTaskResult(data);
+
+  if (!result || typeof result === "string") return "";
+
+  return typeof result.titleEn === "string" ? result.titleEn : "";
+};
+
 export const extractGeneratedPages = (data) => {
   const result = getTaskResult(data);
   return Array.isArray(result?.pages) ? result.pages : [];
@@ -312,6 +322,9 @@ export const createScenePlan = (state, extra, options) =>
 export const writeScene = (state, extra, options) =>
   generateAiContent("WRITE_SCENE", state, extra, options);
 
+export const rewriteScene = (state, extra, options) =>
+  generateAiContent("REWRITE_SCENE", state, extra, options);
+
 // 청소년/성인(창작 보조 모드) 전용: 장면 전체가 아니라 문장/문단/선택 영역 단위로만 짧게 보조한다.
 export const writeSceneSegment = (state, extra, options) =>
   generateAiContent("WRITE_SCENE_SEGMENT", state, extra, options);
@@ -342,6 +355,7 @@ export const aiGenerateService = {
   generateAiContent,
   extractGeneratedText,
   extractGeneratedTextEn,
+  extractGeneratedTitleEn,
   extractGeneratedPages,
   extractGeneratedScenes,
   normalizeSetting,
@@ -354,6 +368,7 @@ export const aiGenerateService = {
   rewritePage,
   createScenePlan,
   writeScene,
+  rewriteScene,
   writeSceneSegment,
   createImagePrompt,
   createCoverPrompt,
