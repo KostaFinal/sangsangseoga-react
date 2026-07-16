@@ -42,7 +42,7 @@ export default function MyBookTab({ filteredBooks,
                     {book.author}
                   </span>
                 </div>
-                <h4 className="font-plus font-bold text-sm text-navy-purple tracking-tight truncate mt-1.5">{book.title}</h4>
+                <h4 className="font-bold text-sm text-navy-purple tracking-tight truncate mt-1.5">{book.title}</h4>
                 <p className="text-[10px] text-purple-gray-text mt-1 line-clamp-2 leading-relaxed">{book.description}</p>
               </div>
 

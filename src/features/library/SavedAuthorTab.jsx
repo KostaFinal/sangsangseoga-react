@@ -171,7 +171,7 @@ export default function SavedAuthorTab({ favoriteAuthors,
                   </div>
 
                   <div>
-                    <h4 className="font-plus font-bold text-sm text-navy-purple tracking-tight">
+                    <h4 className="font-bold text-sm text-navy-purple tracking-tight">
                       {author.name}
                     </h4>
                     <span className="text-[9px] text-purple-gray-text">
