@@ -9,6 +9,11 @@ import {
 } from '../utils/poemTextUtils.js';
 import { generatePoem, rewritePoemSelection, toReaderAge, translatePoemContent, translatePoemTitle } from '../services/poemCreationService.js';
 import { publishBook } from '../../../../api/bookApi.js';
+import { mapWithConcurrency } from '../../utils/concurrency.js';
+
+// 페이지 번역 동시 요청 개수 - 너무 많이 한꺼번에 보내면 Gemini가 일시 과부하(503)를
+// 낼 수 있어(실측: 11개 동시 요청 중 3개 실패) 3~4개 선에서 안전하게 맞춘다.
+const TRANSLATE_CONCURRENCY = 3;
 
 const defaultSettings = {
   mode: '',
@@ -284,13 +289,12 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
     const readerAge = toReaderAge(settings.authorAge);
 
     // 페이지별로 영어 번역(content_text_en)을 채운다. 구분 페이지(content 없음)는 번역할
-    // 게 없으니 건너뛴다. 예전에는 Promise.all로 페이지를 한꺼번에 병렬 요청했는데, 페이지가
-    // 많아지면 Gemini에 번역 요청이 동시에 몰려 503(과부하)이 뜨고 재시도까지 겹쳐 실패하는
-    // 일이 생겨서, 순서대로 하나씩 번역해 동시 요청 수를 늘 1개로 유지한다.
-    const pages = [];
-    for (const page of previewPages) {
+    // 게 없으니 건너뛴다. 한꺼번에 다 병렬로 보내면(Promise.all) 페이지가 많을 때 Gemini에
+    // 요청이 몰려 503(과부하)이 났었고, 완전히 하나씩만(순차) 하면 안전하지만 너무 느리다.
+    // 동시에 최대 TRANSLATE_CONCURRENCY개 페이지까지만 처리해 속도와 안정성을 같이 맞춘다.
+    const pages = await mapWithConcurrency(previewPages, TRANSLATE_CONCURRENCY, async (page) => {
       const translated = await translatePoemContent(page.content, page.title);
-      pages.push({
+      return {
         pageNo: page.pageNumber,
         // 같은 시가 여러 페이지로 이어질 때(isContinued)는 제목을 비우고, 각 시의 첫 페이지에만
         // 제목을 실어서 리더에서 시가 바뀌는 지점을 구분할 수 있게 한다(한 책에 시가 여러 편 있을 때 필요).
@@ -300,8 +304,8 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
         contentTextEn: translated.text,
         contentFontSizeEn: translated.fontSize,
         imageUrl: null,
-      });
-    }
+      };
+    });
 
     return {
       bookType: 'POEM',
