@@ -63,7 +63,7 @@ export const SubscriptionView = ({
     : null;
 
   return (
-    <div className="bg-[#FAF9FF] min-h-screen font-sans text-[#2F2D59] w-full pb-16">
+    <div className="bg-[#FAF9FF] min-h-screen font-gowun text-[#2F2D59] w-full pb-16">
 
       {/* 2. Unified Grid Layout Container */}
       <div className="w-full max-w-7xl mx-auto px-4 pt-6 pb-6 sm:px-6 md:px-8">
@@ -445,7 +445,7 @@ export const SubscriptionView = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0 font-sans pl-2">
+                    <div className="flex items-center gap-2 shrink-0 font-gowun pl-2">
                       <span className="text-sm font-black text-[#2F2D59] font-mono">
                         ₩{rec.amount.toLocaleString()}
                       </span>

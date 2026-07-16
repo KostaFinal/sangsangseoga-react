@@ -102,7 +102,7 @@ export const AdminView = ({ initialTab = 'member' }) => {
   }, [activeTab]);
 
   return (
-    <div id="admin-main-view" className="min-h-screen bg-[#FAF9FF] flex flex-col font-sans text-[#2F2D59] selection:bg-[#6B54E7] selection:text-white pb-20">
+    <div id="admin-main-view" className="min-h-screen bg-[#FAF9FF] flex flex-col font-gowun text-[#2F2D59] selection:bg-[#6B54E7] selection:text-white pb-20">
 
       {/* 2. Unified Layout Grid */}
       <div className="w-full px-6 pt-6 pb-8 sm:px-10 lg:px-16">

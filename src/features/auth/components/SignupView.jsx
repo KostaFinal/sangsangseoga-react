@@ -26,7 +26,7 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
   } = useSignupState({ onSuccess });
 
   return (
-    <div id="signup-container" className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative bg-neutral-50 overflow-hidden font-sans">
+    <div id="signup-container" className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative bg-neutral-50 overflow-hidden font-gowun">
       <div className="absolute bottom-[-10%] left-[-10%] w-[420px] h-[420px] bg-neutral-800 watercolor-blob opacity-[0.05]"></div>
       <div className="absolute top-[-10%] right-[-10%] w-[380px] h-[380px] bg-neutral-400 watercolor-blob opacity-[0.08]"></div>
 
@@ -35,20 +35,20 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
           <h2 id="signup-title" className="text-2xl font-literata font-bold text-neutral-900 tracking-tight">
             상상서가 회원가입
           </h2>
-          <p id="signup-subtitle" className="mt-1 text-xs text-neutral-500 leading-relaxed font-sans">
+          <p id="signup-subtitle" className="mt-1 text-xs text-neutral-500 leading-relaxed font-gowun">
             아이와 부모가 함께 만들어가는 AI 그림책방
           </p>
         </div>
 
         {error && (
-          <div className="flex items-start gap-1.5 bg-rose-50 text-rose-800 border border-rose-200 p-3 rounded-xl text-xs leading-relaxed text-left font-sans">
+          <div className="flex items-start gap-1.5 bg-rose-50 text-rose-800 border border-rose-200 p-3 rounded-xl text-xs leading-relaxed text-left font-gowun">
             <span className="material-symbols-outlined text-rose-500 text-sm mt-0.5">error_outline</span>
             <span>{error}</span>
           </div>
         )}
 
         {step === 'info' ? (
-          <form className="mt-4 space-y-4 text-left font-sans" onSubmit={handleNextOrSubmit} noValidate>
+          <form className="mt-4 space-y-4 text-left font-gowun" onSubmit={handleNextOrSubmit} noValidate>
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-neutral-600 mb-1">
@@ -118,7 +118,7 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
                 </label>
                 <BirthdatePicker value={birthdate} onChange={setBirthdate} />
                 {willNeedGuardianConsent && (
-                  <div className="mt-2 text-[11px] text-neutral-700 bg-neutral-100 hover:bg-neutral-200/50 border border-neutral-200/60 px-3 py-2 rounded-xl font-sans flex items-start">
+                  <div className="mt-2 text-[11px] text-neutral-700 bg-neutral-100 hover:bg-neutral-200/50 border border-neutral-200/60 px-3 py-2 rounded-xl font-gowun flex items-start">
                     <span className="material-symbols-outlined text-xs mr-1.5 mt-0.5 text-neutral-600">info</span>
                     <span>만 14세 미만의 어린이는 가입 시 보호자의 동의가 필요합니다.</span>
                   </div>
@@ -126,9 +126,9 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
               </div>
             </div>
 
-            <div className="pt-2.5 border-t border-neutral-200 font-sans">
+            <div className="pt-2.5 border-t border-neutral-200 font-gowun">
               <div className="flex items-center justify-between">
-                <label className="flex items-start space-x-2 text-xs text-neutral-500 cursor-pointer font-sans leading-relaxed flex-1">
+                <label className="flex items-start space-x-2 text-xs text-neutral-500 cursor-pointer font-gowun leading-relaxed flex-1">
                   <input
                     id="signup-agree-terms"
                     type="checkbox"
@@ -156,7 +156,7 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
                 id="signup-submit-btn"
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-900 rounded-xl text-sm shadow-md transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full py-3.5 px-4 font-gowun font-bold text-white bg-black hover:bg-neutral-900 rounded-xl text-sm shadow-md transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? '처리 중...' : '다음 단계로 진행'}
               </button>
@@ -174,8 +174,8 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
           />
         )}
 
-        <div className="text-center pt-2 font-sans">
-          <p className="text-xs text-neutral-500 font-sans">
+        <div className="text-center pt-2 font-gowun">
+          <p className="text-xs text-neutral-500 font-gowun">
             이미 가입된 계정이 있으신가요? {' '}
             <button
               id="signup-to-login"
@@ -190,15 +190,15 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
 
       {/* Success Modal Alert */}
       {showSuccessModal && (
-        <div className="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200 font-sans">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl relative border border-neutral-200 animate-in fade-in zoom-in-95 duration-200 font-sans">
-            <span className="material-symbols-outlined text-black text-5xl mb-2 font-sans">
+        <div className="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200 font-gowun">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl relative border border-neutral-200 animate-in fade-in zoom-in-95 duration-200 font-gowun">
+            <span className="material-symbols-outlined text-black text-5xl mb-2 font-gowun">
               task_alt
             </span>
             {isMinorUnder14 ? (
               <>
                 <h3 className="text-lg font-bold text-neutral-900 font-literata">보호자 동의 메일 발송 완료</h3>
-                <p className="text-xs text-neutral-500 mt-2 leading-relaxed font-sans font-medium">
+                <p className="text-xs text-neutral-500 mt-2 leading-relaxed font-gowun font-medium">
                   보호자님의 메일(**{guardianEmail}**)로 가입 확인 동의 안내를 보냈습니다.<br />
                   보호자님께서 메일 속 링크를 확인 및 승인하시면 가입이 완료됩니다.
                 </p>
@@ -206,14 +206,14 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
             ) : (
               <>
                 <h3 className="text-lg font-bold text-neutral-900 font-literata">가입을 환영합니다!</h3>
-                <div className="text-xs text-neutral-500 mt-2.5 leading-relaxed text-left font-sans space-y-2 bg-neutral-50 p-3.5 rounded-xl border border-neutral-200">
+                <div className="text-xs text-neutral-500 mt-2.5 leading-relaxed text-left font-gowun space-y-2 bg-neutral-50 p-3.5 rounded-xl border border-neutral-200">
                   <p className="font-bold text-center border-b border-neutral-150 pb-1 text-black font-literata">🎁 가입 기념 혜택</p>
                   <p>📁 <strong>개인 서재 제공:</strong> 소중한 작품을 자유롭게 보관할 수 있는 전용 서재가 배정되었습니다.</p>
                   <p>🎫 <strong>무료 체험 1회 지급:</strong> AI 그림책(글자 최대 1,000자, 그림 최대 3장)을 만들어볼 수 있는 체험 기회가 발급되었습니다.</p>
                 </div>
               </>
             )}
-            <div className="mt-5 font-sans">
+            <div className="mt-5 font-gowun">
               <button
                 onClick={handleModalClose}
                 className="w-full py-2.5 bg-black hover:bg-neutral-900 text-white text-xs font-semibold rounded-xl tracking-wide transition-colors"
@@ -233,7 +233,7 @@ export const SignupView = ({ onSuccess, onNavigateToLogin }) => {
               이용약관 및 개인정보 수집·이용 안내
             </h3>
 
-            <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 text-[11px] text-neutral-500 leading-relaxed font-sans max-h-60 overflow-y-auto space-y-2.5">
+            <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 text-[11px] text-neutral-500 leading-relaxed font-gowun max-h-60 overflow-y-auto space-y-2.5">
               <p className="font-bold text-black">1. 서비스 이용</p>
               <p>이메일과 닉네임은 로그인 및 서비스 이용을 위한 계정 식별 정보로 사용되며, 비밀번호는 암호화되어 저장됩니다.</p>
               <p className="font-bold text-black">2. 개인정보 수집 및 보관</p>

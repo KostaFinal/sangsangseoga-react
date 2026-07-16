@@ -75,7 +75,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
   } = useProfileState({ currentUser, onUpdateProfile, onLogout });
 
   return (
-    <div id="profile-edit-container" className="bg-[#FAF9FF] min-h-screen font-sans text-[#2F2D59] w-full leading-relaxed">
+    <div id="profile-edit-container" className="bg-[#FAF9FF] min-h-screen font-gowun text-[#2F2D59] w-full leading-relaxed">
 
       {/* Toast Alert */}
       {toastMessage && (
@@ -104,7 +104,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
             <button
               type="button"
               onClick={() => setActiveTab('basic')}
-              className={`flex-1 sm:flex-none py-2 px-4 rounded-xl font-sans text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              className={`flex-1 sm:flex-none py-2 px-4 rounded-xl font-gowun text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'basic'
                   ? 'bg-[#6B54E7] text-white shadow-md shadow-[#6B54E7]/15'
                   : 'text-[#7C769D] hover:text-[#2F2D59] hover:bg-[#E6E2FC]/15'
@@ -117,7 +117,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
             <button
               type="button"
               onClick={() => setActiveTab('guardian')}
-              className={`flex-1 sm:flex-none py-2 px-4 rounded-xl font-sans text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer relative ${
+              className={`flex-1 sm:flex-none py-2 px-4 rounded-xl font-gowun text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer relative ${
                 activeTab === 'guardian'
                   ? 'bg-[#6B54E7] text-white shadow-md shadow-[#6B54E7]/15'
                   : 'text-[#7C769D] hover:text-[#2F2D59] hover:bg-[#E6E2FC]/15'
@@ -475,7 +475,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                           </span>
                         </div>
 
-                        <div className="text-xs space-y-1.5 font-sans border-t border-[#E6E2FC]/40 pt-3">
+                        <div className="text-xs space-y-1.5 font-gowun border-t border-[#E6E2FC]/40 pt-3">
                           <div className="flex justify-between items-center">
                             <span className="text-[#7C769D] font-semibold">자녀 아이디 (이메일)</span>
                             <span className="text-[#2F2D59] font-bold font-mono">{minor.email}</span>
@@ -503,7 +503,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                       </div>
 
                       {minor.status === 'ACTIVE' && (
-                        <div className="pt-3 border-t border-[#E6E2FC]/30 mt-3 flex justify-end font-sans">
+                        <div className="pt-3 border-t border-[#E6E2FC]/30 mt-3 flex justify-end font-gowun">
                           <button
                             type="button"
                             onClick={() => openWithdrawConsentModal(minor)}
@@ -550,7 +550,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                 {pendingConsents.map((consent) => (
                   <div
                     key={consent.consentId}
-                    className="bg-[#FAF9FF] p-4 border border-[#E6E2FC] rounded-2xl space-y-3 font-sans text-left relative overflow-hidden shadow-xs"
+                    className="bg-[#FAF9FF] p-4 border border-[#E6E2FC] rounded-2xl space-y-3 font-gowun text-left relative overflow-hidden shadow-xs"
                   >
                     <div className="absolute top-0 right-0 bg-[#6B54E7] text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl">
                       승인 대기 중
@@ -566,7 +566,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                       <p>· <strong>자녀 생년월일:</strong> {consent.birthDate}</p>
                     </div>
 
-                    <div className="pt-3 border-t border-[#E6E2FC] flex justify-end gap-3 text-xs font-sans">
+                    <div className="pt-3 border-t border-[#E6E2FC] flex justify-end gap-3 text-xs font-gowun">
                       <button
                         type="button"
                         onClick={() => handleRejectGuardianRequest(consent)}
@@ -599,7 +599,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
                   <span>보호자 동의 안내</span>
                 </div>
 
-                <div className="space-y-3 text-xs font-sans leading-relaxed text-[#B9B0DC] relative z-10">
+                <div className="space-y-3 text-xs font-gowun leading-relaxed text-[#B9B0DC] relative z-10">
                   <p className="text-left">
                     정보통신망법 제31조에 따라 만 14세 미만 회원의 가입에는 보호자 동의가 필요합니다.
                   </p>
@@ -627,7 +627,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
             onSubmit={handleWithdrawConsentSubmit}
             className="bg-white max-w-md w-full rounded-3xl p-5 sm:p-6 text-left shadow-2xl space-y-4 border border-[#E6E2FC] relative animate-in zoom-in-95 duration-200"
           >
-            <div className="flex items-center gap-2 text-rose-600 font-extrabold text-xs uppercase font-sans">
+            <div className="flex items-center gap-2 text-rose-600 font-extrabold text-xs uppercase font-gowun">
               <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0" />
               <span>동의 철회 확인</span>
             </div>
@@ -636,7 +636,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
               {selectedMinorToWithdraw.name}의 계정 동의를 철회하시겠습니까?
             </h3>
 
-            <div className="text-xs text-[#7C769D] leading-relaxed font-sans bg-[#FAF9FF] p-4 rounded-2xl border border-[#E6E2FC] space-y-2">
+            <div className="text-xs text-[#7C769D] leading-relaxed font-gowun bg-[#FAF9FF] p-4 rounded-2xl border border-[#E6E2FC] space-y-2">
               <p className="font-black text-rose-600">철회 시 다음과 같이 처리됩니다:</p>
               <p>1. 자녀 계정은 즉시 로그아웃되고 <strong className="text-[#2F2D59]">정지</strong> 상태로 전환됩니다.</p>
               <p>2. 작성 중이던 작품은 잠금 처리되어 접근할 수 없습니다.</p>
@@ -659,7 +659,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
               <p className="text-xs font-bold text-rose-600">· {withdrawError}</p>
             )}
 
-            <div className="flex gap-2.5 pt-1 text-xs font-sans">
+            <div className="flex gap-2.5 pt-1 text-xs font-gowun">
               <button
                 type="button"
                 onClick={() => setShowWithdrawConsentModal(false)}
@@ -685,7 +685,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
             onSubmit={handleWithdrawMembershipSubmit}
             className="bg-white max-w-lg w-full rounded-3xl p-5 sm:p-6 text-left shadow-2xl space-y-4 border border-[#E6E2FC] overflow-y-auto max-h-[90vh] animate-in zoom-in-95 duration-200"
           >
-            <div className="flex items-center gap-2 text-rose-600 font-extrabold text-xs uppercase font-sans">
+            <div className="flex items-center gap-2 text-rose-600 font-extrabold text-xs uppercase font-gowun">
               <ShieldAlert className="w-5 h-5 text-rose-600 animate-pulse shrink-0" />
               <span>회원 탈퇴 확인</span>
             </div>
@@ -694,7 +694,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
               정말 회원 탈퇴를 진행하시겠습니까?
             </h3>
 
-            <div className="text-xs text-[#7C769D] leading-relaxed font-sans bg-[#FAF9FF] p-4 rounded-2xl border border-[#E6E2FC] space-y-3">
+            <div className="text-xs text-[#7C769D] leading-relaxed font-gowun bg-[#FAF9FF] p-4 rounded-2xl border border-[#E6E2FC] space-y-3">
               <h4 className="font-black text-rose-600">탈퇴 시 다음과 같이 처리됩니다:</h4>
 
               <div className="space-y-1.5 pl-1 leading-relaxed text-left">
@@ -704,7 +704,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
             </div>
 
             {/* Checkbox confirmation */}
-            <div className="font-sans text-left">
+            <div className="font-gowun text-left">
               <label className="flex items-start gap-3 text-xs text-[#2F2D59] cursor-pointer">
                 <input
                   type="checkbox"
@@ -735,7 +735,7 @@ export const ProfileEditView = ({ currentUser, onNavigateHome, onUpdateProfile, 
               <p className="text-xs font-bold text-rose-600 leading-normal text-left">· {withdrawErrorMsg}</p>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-2.5 text-xs font-sans">
+            <div className="flex flex-col sm:flex-row gap-2.5 text-xs font-gowun">
               <button
                 type="button"
                 onClick={() => setShowWithdrawModal(false)}

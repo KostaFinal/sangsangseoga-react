@@ -13,7 +13,7 @@ export const ReportDetailModal = ({
   if (!reportModalOpen || !selectedReport) return null;
 
   return (
-    <div className="fixed inset-0 bg-[#110F24]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans animate-in fade-in duration-150">
+    <div className="fixed inset-0 bg-[#110F24]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-gowun animate-in fade-in duration-150">
       <div className="bg-white border border-[#E6E2FC] max-w-lg w-full text-left p-6 space-y-6 relative rounded-2xl shadow-2xl">
         <div className="flex justify-between items-center border-b border-[#E6E2FC]/50 pb-4">
           <div>
@@ -87,7 +87,7 @@ export const ReportDetailModal = ({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-2 font-sans">
+            <div className="grid grid-cols-2 gap-3 pt-2 font-gowun">
               <button
                 onClick={() => handleResolveReport(selectedReport.id, 'execute')}
                 className="py-3 bg-rose-600 hover:bg-rose-750 text-white text-sm font-black text-center rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
