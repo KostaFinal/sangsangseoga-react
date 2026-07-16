@@ -60,7 +60,6 @@ export const AdminView = ({ initialTab = 'member' }) => {
     setSelectedReport,
     reportedBooks,
     reportedComments,
-    reportedAuthors,
     reportPage,
     reportTotalCount,
     reportHasNext,
@@ -106,7 +105,6 @@ export const AdminView = ({ initialTab = 'member' }) => {
 
       {/* 2. Unified Layout Grid */}
       <div className="w-full px-6 pt-6 pb-8 sm:px-10 lg:px-16">
-        <h2 className="text-2xl font-black text-[#110F24] tracking-tight mb-5">관리자 페이지</h2>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Side Unified Navigation Bar (3 Cols) */}
@@ -169,7 +167,7 @@ export const AdminView = ({ initialTab = 'member' }) => {
                 </h2>
                 <p className="text-sm text-[#7C769D] mt-1 leading-relaxed">
                   {activeTab === 'member' && '작가 계정 상태와 가입 승인을 관리합니다.'}
-                  {activeTab === 'reports' && '접수된 도서, 댓글, 작가 신고를 심사합니다.'}
+                  {activeTab === 'reports' && '접수된 도서, 댓글 신고를 심사합니다.'}
                   {activeTab === 'tokens' && 'AI 텍스트/이미지 생성 사용량을 확인합니다.'}
                   {activeTab === 'actionLogs' && '관리자가 처리한 신고 조치 이력을 최신순으로 확인합니다.'}
                 </p>
@@ -210,7 +208,6 @@ export const AdminView = ({ initialTab = 'member' }) => {
                   setReportModalOpen={setReportModalOpen}
                   reportedBooks={reportedBooks}
                   reportedComments={reportedComments}
-                  reportedAuthors={reportedAuthors}
                   reportPage={reportPage}
                   reportTotalCount={reportTotalCount}
                   reportHasNext={reportHasNext}

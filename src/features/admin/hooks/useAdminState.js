@@ -4,7 +4,7 @@ import { getBook } from '../../../api/bookApi';
 
 const REASON_LABEL = { SPAM: '스팸', ABUSE: '욕설', SEXUAL: '음란', OTHER: '기타' };
 const STATUS_LABEL_MAP = { PENDING: 'pending', RESOLVED: 'hidden', REJECTED: 'rejected' };
-const ACTION_TYPE_BY_SUBTAB = { books: 'BOOK_HIDE', comments: 'COMMENT_DELETE', authors: 'AUTHOR_SUSPEND' };
+const ACTION_TYPE_BY_SUBTAB = { books: 'BOOK_HIDE', comments: 'COMMENT_DELETE' };
 
 const mapReport = (r) => ({
   id: r.reportId,
@@ -75,7 +75,7 @@ export const useAdminState = (initialTab = 'member') => {
   // ==========================================
   // [2] 통합 신고 심의 (Reports Tab State)
   // ==========================================
-  const [reportSubTab, setReportSubTab] = useState('books'); // 'books' | 'comments' | 'authors'
+  const [reportSubTab, setReportSubTab] = useState('books'); // 'books' | 'comments'
   const [reportStatusFilter, setReportStatusFilter] = useState('PENDING'); // 'PENDING' | 'RESOLVED' | 'REJECTED'
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportRejectReason, setReportRejectReason] = useState('');
@@ -436,10 +436,6 @@ export const useAdminState = (initialTab = 'member') => {
     .filter(r => r.targetType === 'COMMENT')
     .map(r => ({ ...mapReport(r), title: `댓글 #${r.targetId}`, targetPath: resolveTargetPath('COMMENT', r.targetId, null, r.targetParentBookId) })), [reports]);
 
-  const reportedAuthors = useMemo(() => reports
-    .filter(r => r.targetType === 'AUTHOR')
-    .map(r => ({ ...mapReport(r), title: r.targetNickname || `작가 회원 #${r.targetId}`, targetPath: resolveTargetPath('AUTHOR', r.targetId, r.targetNickname) })), [reports]);
-
   // 처리 이력 목록에 신고 대상 이동 경로 부여
   const actionLogsWithPath = useMemo(() => actionLogs.map(log => ({
     ...log,
@@ -512,7 +508,6 @@ export const useAdminState = (initialTab = 'member') => {
     setSelectedReport,
     reportedBooks,
     reportedComments,
-    reportedAuthors,
     reportPage,
     reportTotalCount,
     reportHasNext,

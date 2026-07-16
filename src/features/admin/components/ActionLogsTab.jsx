@@ -16,7 +16,6 @@ const ACTION_TYPE_OPTIONS = [
   { value: 'all', label: '전체' },
   { value: 'BOOK_HIDE', label: '도서' },
   { value: 'COMMENT_DELETE', label: '댓글' },
-  { value: 'AUTHOR_SUSPEND', label: '작가' },
   { value: 'REPORT_REJECT', label: '신고 반려' },
 ];
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, MessageSquare, BookOpen, User, Flag, ChevronRight, ChevronLeft, Calendar, ExternalLink } from 'lucide-react';
+import { AlertCircle, MessageSquare, BookOpen, Flag, ChevronRight, ChevronLeft, Calendar, ExternalLink } from 'lucide-react';
 
 const STATUS_TABS = [
   { key: 'PENDING', label: '미처리' },
@@ -18,15 +18,13 @@ export const ReportsTab = ({
   setReportModalOpen,
   reportedBooks,
   reportedComments,
-  reportedAuthors,
   reportPage,
   reportTotalCount,
   reportHasNext,
   reportPageSize,
   goToReportPage,
 }) => {
-  const currentList = reportSubTab === 'books' ? reportedBooks :
-    reportSubTab === 'comments' ? reportedComments : reportedAuthors;
+  const currentList = reportSubTab === 'books' ? reportedBooks : reportedComments;
   const totalPages = Math.max(1, Math.ceil(reportTotalCount / reportPageSize));
   const navigate = useNavigate();
 
@@ -57,7 +55,6 @@ export const ReportsTab = ({
         {[
           { id: 'books', name: '도서 신고', count: reportedBooks.length, icon: BookOpen },
           { id: 'comments', name: '댓글 신고', count: reportedComments.length, icon: MessageSquare },
-          { id: 'authors', name: '작가 신고', count: reportedAuthors.length, icon: User }
         ].map((sTab) => {
           const Icon = sTab.icon;
           const isSelected = reportSubTab === sTab.id;
@@ -151,11 +148,6 @@ export const ReportsTab = ({
                         <p className="text-sm font-bold text-[#110F24] bg-[#FAF9FF] p-3 rounded-xl border border-[#E6E2FC]/40 leading-relaxed block break-words">
                           {item.title}
                         </p>
-                      )}
-                      {reportSubTab === 'authors' && (
-                        <h4 className="text-base font-black text-[#110F24] leading-snug group-hover:text-[#6B54E7] transition-colors">
-                          작가 계정: {item.title}
-                        </h4>
                       )}
                     </div>
 

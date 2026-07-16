@@ -32,7 +32,6 @@ export const MemberTab = ({
             { key: 'all', label: '전체', count: memberStatusCounts.all },
             { key: 'active', label: '활동 중', count: memberStatusCounts.active },
             { key: 'pending', label: '승인 대기', count: memberStatusCounts.pending },
-            { key: 'suspended', label: '정지', count: memberStatusCounts.suspended },
             { key: 'deleted', label: '탈퇴', count: memberStatusCounts.deleted }
           ].map((filter) => (
             <button

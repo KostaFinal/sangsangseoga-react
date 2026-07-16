@@ -38,7 +38,6 @@ export const ReportDetailModal = ({
             <p className="font-black text-base text-[#110F24] leading-tight">
               {reportSubTab === 'books' && `도서: 《${selectedReport.title}》`}
               {reportSubTab === 'comments' && selectedReport.title}
-              {reportSubTab === 'authors' && `작가명: ${selectedReport.title}`}
             </p>
           </div>
 
@@ -94,7 +93,6 @@ export const ReportDetailModal = ({
               >
                 {reportSubTab === 'books' && '도서 숨김'}
                 {reportSubTab === 'comments' && '댓글 삭제'}
-                {reportSubTab === 'authors' && '작가 정지'}
               </button>
               <button
                 onClick={() => handleResolveReport(selectedReport.id, 'dismiss')}
