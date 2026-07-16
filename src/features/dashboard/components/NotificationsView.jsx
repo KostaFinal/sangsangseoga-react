@@ -26,7 +26,7 @@ export const NotificationsView = ({ notifications, onMarkAsRead, onMarkAllAsRead
               <div className={`w-2 h-2 mt-1.5 rounded-full ${note.read ? 'bg-neutral-300' : 'bg-black'}`}></div>
               <div className="flex-1 text-left">
                 <p className="text-sm font-semibold text-neutral-900">{note.text}</p>
-                <span className="text-[10px] text-neutral-400 font-mono mt-1 block">{note.time}</span>
+                <span className="text-[12px] text-neutral-400 font-mono mt-1 block">{note.time}</span>
               </div>
             </button>
           ))

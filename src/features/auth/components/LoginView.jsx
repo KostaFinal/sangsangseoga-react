@@ -36,9 +36,6 @@ export const LoginView = ({
       {isAdminMode ? (
         <div id="admin-login-card" className="max-w-md w-full space-y-8 bg-white rounded-3xl p-8 sm:p-10 z-10 relative border border-neutral-200/80 shadow-2xl shadow-neutral-950/[0.03]">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-black text-white font-literata text-2xl mb-4 shadow-md font-extrabold">
-              관리
-            </div>
             <h2 className="text-3xl font-literata font-bold text-neutral-900 tracking-tight">
               상상서가 관리자
             </h2>
@@ -126,7 +123,7 @@ export const LoginView = ({
               <div className="text-right">
                 <button
                   onClick={enterAdminMode}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-black hover:text-white text-neutral-600 text-[10px] font-gowun font-bold transition-all border border-neutral-200"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-black hover:text-white text-neutral-600 text-[12px] font-gowun font-bold transition-all border border-neutral-200"
                 >
                   <ShieldAlert className="w-3 h-3" /> 관리자 로그인
                 </button>
@@ -251,7 +248,7 @@ export const LoginView = ({
                     onClick={() => handleSocialLogin('naver')}
                     className="flex items-center justify-center gap-1.5 py-2.5 px-1 rounded-xl border border-[#03C75A]/20 bg-[#03C75A] hover:bg-[#02A64B] text-white font-gowun font-semibold cursor-pointer transition-all shadow-xs"
                   >
-                    <span className="flex items-center justify-center w-4 h-4 rounded-[3px] bg-white text-[#03C75A] text-[10px] font-black leading-none">N</span>
+                    <span className="flex items-center justify-center w-4 h-4 rounded-[3px] bg-white text-[#03C75A] text-[12px] font-black leading-none">N</span>
                     <span>네이버</span>
                   </button>
                 </div>

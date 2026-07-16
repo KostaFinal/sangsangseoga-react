@@ -14,7 +14,7 @@ export default function GuardianConsentRequestForm({
   return (
     <form className="mt-4 space-y-4 text-left font-gowun animate-in fade-in slide-in-from-bottom-2 duration-300" onSubmit={onSubmit} noValidate>
       <div className="p-4 bg-neutral-900 text-white rounded-2xl border border-neutral-900 font-gowun">
-        <span className="inline-block px-2 py-0.5 bg-neutral-800 text-neutral-100 text-[10px] font-bold rounded mb-1 font-gowun">만 14세 미만 보호자 동의</span>
+        <span className="inline-block px-2 py-0.5 bg-neutral-800 text-neutral-100 text-[12px] font-bold rounded mb-1 font-gowun">만 14세 미만 보호자 동의</span>
         <p className="text-xs text-neutral-300 leading-relaxed font-gowun font-medium">
           만 14세 미만 어린이는 가입을 위해 보호자 동의가 필요합니다. 보호자님의 이메일로 가입 확인 메일을 보내 드립니다.
         </p>
@@ -47,7 +47,7 @@ export default function GuardianConsentRequestForm({
             className="w-full px-4 py-2.5 bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white text-sm text-neutral-900 rounded-xl border border-neutral-200 focus:border-black focus:outline-none transition-all duration-200 font-gowun"
             placeholder="guardian@email.com"
           />
-          <p className="mt-1 text-[10px] text-neutral-400 font-gowun font-medium">
+          <p className="mt-1 text-[12px] text-neutral-400 font-gowun font-medium">
             * 입력하신 이메일로 가입 동의 확인 링크가 전송됩니다.
           </p>
         </div>

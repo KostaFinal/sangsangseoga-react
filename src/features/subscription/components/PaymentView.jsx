@@ -49,7 +49,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
               <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
               실패 사유
             </p>
-            <p className="leading-relaxed text-[11px]">{failureReason}</p>
+            <p className="leading-relaxed text-[13px]">{failureReason}</p>
           </div>
 
           <p className="text-xs text-[#7C769D] leading-relaxed">
@@ -96,7 +96,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
           <div className="flex justify-between items-center pb-4 border-b border-neutral-100">
             <div className="text-left">
               <h3 id="payment-form-title" className="text-base font-bold text-[#2F2D59]">결제 신용카드 정보 등록</h3>
-              <p className="text-[11px] text-[#7C769D] mt-0.5">
+              <p className="text-[13px] text-[#7C769D] mt-0.5">
                 구독 결제에 사용할 카드 정보를 등록합니다.
               </p>
             </div>
@@ -114,7 +114,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               안전한 결제 시스템 안내
             </p>
-            <p className="text-[11px] text-[#7C769D] leading-relaxed mt-0.5">
+            <p className="text-[13px] text-[#7C769D] leading-relaxed mt-0.5">
               * 토스페이먼츠(Toss Payments)의 보안 결제 시스템을 통해 카드 정보가 암호화되어 안전하게 처리됩니다.
             </p>
           </div>
@@ -229,7 +229,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
           <div className="absolute top-[-30px] right-[-30px] w-48 h-48 bg-white/5 rounded-full filter blur-xl"></div>
           
           <div className="space-y-1">
-            <span className="text-[10px] bg-white/10 text-white font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+            <span className="text-[12px] bg-white/10 text-white font-bold px-2 py-0.5 rounded uppercase tracking-wider">
               Selected Item
             </span>
             <h4 className="text-lg font-bold">
@@ -259,7 +259,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
             </span>
           </div>
 
-          <p className="text-[10px] text-neutral-400 leading-relaxed pt-2">
+          <p className="text-[12px] text-neutral-400 leading-relaxed pt-2">
             * 카드 등록 및 결제가 완료되면 프리미엄 혜택이 즉시 적용됩니다.
           </p>
         </div>
