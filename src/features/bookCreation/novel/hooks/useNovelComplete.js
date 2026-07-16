@@ -14,7 +14,9 @@ export function useNovelComplete() {
   const coverImageUrl = data.coverImageUrl || null;
   const bookId = data.bookId || null;
 
-  const title = setting.storySeed || "제목 없는 소설";
+  // cover 화면에서 사용자가 제목을 직접 고쳤을 수 있으니, 넘어온 title을 우선 쓰고
+  // (예: fallback 진입 등으로) 없을 때만 storySeed에서 계산한 기본값을 쓴다.
+  const title = data.title || setting.storySeed || "제목 없는 소설";
   const protagonist = setting.protagonist || "미정";
   const genre = setting.genre || "미정";
   const pointOfView = setting.directing?.pointOfView || "미정";
