@@ -275,12 +275,23 @@ export const TokensTab = ({
       {/* Members specific lists / Search block */}
       <div className="grid lg:grid-cols-12 gap-6 items-stretch">
         {/* Usage High Order list */}
-        <div className="lg:col-span-7 bg-white rounded-2xl border border-[#E6E2FC]/60 p-6 space-y-4 flex flex-col h-full">
+        <div className={`bg-white rounded-2xl border border-[#E6E2FC]/60 p-6 space-y-4 flex flex-col h-full ${selectedTokenUser ? 'lg:col-span-7' : 'lg:col-span-12'}`}>
           <div className="border-b border-[#E6E2FC]/30 pb-3.5">
             <h4 className="text-sm font-black text-[#110F24] flex items-center gap-1">
               AI 리소스 사용 회원 순위
             </h4>
             <p className="text-sm text-[#7C769D]">AI 사용량이 많은 순서입니다.</p>
+          </div>
+
+          <div className="relative text-left">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7C769D] w-3.5 h-3.5" />
+            <input
+              type="text"
+              value={tokenSearchQuery}
+              onChange={(e) => setTokenSearchQuery(e.target.value)}
+              placeholder="작가명 검색..."
+              className="w-full pl-9 pr-3 py-2 bg-[#FAF9FF] rounded-xl text-sm border border-[#E6E2FC] focus:bg-white focus:outline-none transition-all placeholder:text-[#B9B0DC] text-[#2F2D59]"
+            />
           </div>
 
           {/* List */}
@@ -338,28 +349,16 @@ export const TokensTab = ({
           )}
         </div>
 
-        {/* Timeline audit tracking */}
-        <div className="lg:col-span-5 bg-white rounded-2xl border border-[#E6E2FC]/60 p-6 space-y-4 flex flex-col h-full">
-          <div>
-            <h4 className="text-sm font-black text-[#110F24] flex items-center gap-1.5">
-              상세 사용 기록 조회
-            </h4>
-            <p className="text-sm text-[#7C769D]">회원을 선택하면 사용 이력을 확인할 수 있습니다.</p>
-          </div>
+        {/* Timeline audit tracking — 좌측 순위 리스트에서 회원을 클릭했을 때만 표시 */}
+        {selectedTokenUser && (
+          <div className="lg:col-span-5 bg-white rounded-2xl border border-[#E6E2FC]/60 p-6 space-y-4 flex flex-col h-full">
+            <div>
+              <h4 className="text-sm font-black text-[#110F24] flex items-center gap-1.5">
+                상세 사용 기록 조회
+              </h4>
+              <p className="text-sm text-[#7C769D]">선택한 회원의 사용 이력입니다.</p>
+            </div>
 
-          <div className="relative text-left">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7C769D] w-3.5 h-3.5" />
-            <input
-              type="text"
-              value={tokenSearchQuery}
-              onChange={(e) => setTokenSearchQuery(e.target.value)}
-              placeholder="작가명 검색..."
-              className="w-full pl-9 pr-3 py-2 bg-[#FAF9FF] rounded-xl text-sm border border-[#E6E2FC] focus:bg-white focus:outline-none transition-all placeholder:text-[#B9B0DC] text-[#2F2D59]"
-            />
-          </div>
-
-          {/* Output timeline */}
-          {selectedTokenUser && memberTokenTimelineLogs[selectedTokenUser] ? (
             <div className="flex-1 flex flex-col pt-2 text-left">
               <div className="flex items-center justify-between border-b border-[#E6E2FC]/30 pb-2">
                 <span className="text-sm font-black text-[#2F2D59]">
@@ -411,12 +410,8 @@ export const TokensTab = ({
                 </div>
               )}
             </div>
-          ) : (
-            <div className="flex-1 flex items-center justify-center border border-dashed border-[#E6E2FC] rounded-xl text-center text-[#7C769D] text-sm">
-              <p className="font-medium">회원을 선택하면 사용 이력이 표시됩니다.</p>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
