@@ -182,20 +182,3 @@ export const isValidPagePlan = (data, expectedPageCount) => {
 
   return pages.every((page) => page && typeof page.pageNo === "number");
 };
-
-// 스트리밍 delta는 response_mime_type=application/json이라 조각난 JSON 텍스트다.
-// 완전한 JSON 파서 대신, 지정한 필드 값이 인식되는 시점에만 로딩 프리뷰를 갱신하기 위한
-// 가벼운 정규식 추출기. 정답 소스가 아니라 로딩 중 보여줄 힌트 텍스트 용도로만 쓴다.
-export const extractPartialField = (buffer, fieldName) => {
-  const regex = new RegExp(`"${fieldName}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)`);
-  const match = regex.exec(buffer);
-  if (!match) return null;
-
-  try {
-    return JSON.parse(`"${match[1]}"`);
-  } catch {
-    return match[1];
-  }
-};
-
-export const extractPartialQuestion = (buffer) => extractPartialField(buffer, "question");

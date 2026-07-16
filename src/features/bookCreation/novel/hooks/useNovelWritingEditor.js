@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import {
@@ -99,8 +99,13 @@ export function useNovelWritingEditor() {
   const [isLoadingScenes, setIsLoadingScenes] = useState(true);
   const [isTranslatingScene, setIsTranslatingScene] = useState(false);
 
+  // StrictMode 개발 모드의 마운트→언마운트→재마운트 이중 실행 때문에 CREATE_SCENE_PLAN
+  // 요청이 두 번 나가지 않도록, "응답을 반영할지"가 아니라 "요청 자체를 보낼지"를 ref로 막는다.
+  const scenePlanRequestedRef = useRef(false);
+
   useEffect(() => {
-    let isMounted = true;
+    if (scenePlanRequestedRef.current) return;
+    scenePlanRequestedRef.current = true;
 
     const syncScenePlan = async () => {
       const response = await createScenePlan(
@@ -115,21 +120,16 @@ export function useNovelWritingEditor() {
       );
       const aiScenes = response.ok ? extractGeneratedScenes(response.data) : [];
 
-      if (isMounted && aiScenes.length) {
+      if (aiScenes.length) {
         setScenes((prev) => normalizeAiScenes(aiScenes, prev));
         setCurrentSceneId(aiScenes[0].sceneNo || aiScenes[0].id || 1);
       }
 
-      if (isMounted) {
-        setIsLoadingScenes(false);
-      }
+      setIsLoadingScenes(false);
     };
 
     syncScenePlan();
-
-    return () => {
-      isMounted = false;
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const currentScene = useMemo(
