@@ -63,7 +63,7 @@ export const ActionLogsTab = ({
           <table className="w-full text-sm">
             <thead className="bg-[#FAF9FF] text-[#7C769D] border-b border-[#E6E2FC]/50 text-xs font-extrabold uppercase tracking-widest">
               <tr>
-                <th className="py-4 px-6 text-left font-mono">처리 시각</th>
+                <th className="py-4 px-6 text-left font-gowun">처리 시각</th>
                 <th className="py-4 px-4 text-left">처리 관리자</th>
                 <th className="py-4 px-4 text-center">신고 대상</th>
                 <th className="py-4 px-4 text-center">조치</th>
@@ -82,13 +82,13 @@ export const ActionLogsTab = ({
               ) : (
                 actionLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-[#FAF9FF]/60 transition-colors">
-                    <td className="py-4 px-6 text-[#7C769D] font-mono whitespace-nowrap">{log.date}</td>
+                    <td className="py-4 px-6 text-[#7C769D] font-gowun whitespace-nowrap">{log.date}</td>
                     <td className="py-4 px-4">
                       <span className="font-bold text-[#2F2D59]">{log.adminNickname}</span>
                     </td>
                     <td className="py-4 px-4 text-center">
                       <span className="text-[#2F2D59] font-semibold">{log.targetTypeLabel}</span>
-                      <span className="text-[#7C769D] font-mono text-xs ml-1">#{log.targetId}</span>
+                      <span className="text-[#7C769D] font-gowun text-xs ml-1">#{log.targetId}</span>
                     </td>
                     <td className="py-4 px-4 text-center">
                       <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold border ${

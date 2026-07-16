@@ -45,7 +45,7 @@ export const MemberTab = ({
               }`}
             >
               <span>{filter.label}</span>
-              <span className={`font-mono font-black ${memberStatusFilter === filter.key ? 'text-white/90' : 'text-[#6B54E7]'}`}>
+              <span className={`font-gowun font-black ${memberStatusFilter === filter.key ? 'text-white/90' : 'text-[#6B54E7]'}`}>
                 {filter.count.toLocaleString()}
               </span>
             </button>
@@ -75,7 +75,7 @@ export const MemberTab = ({
               <tr>
                 <th className="py-4 px-6 text-left">작가명 / 이메일</th>
                 <th className="py-4 px-4 text-center">요금제</th>
-                <th className="py-4 px-4 text-center font-mono">가입일</th>
+                <th className="py-4 px-4 text-center font-gowun">가입일</th>
                 <th className="py-4 px-6 text-center">상태</th>
                 <th className="py-4 px-6 text-center">관리</th>
               </tr>
@@ -109,7 +109,7 @@ export const MemberTab = ({
                           >
                             {user.nickname}
                           </button>
-                          <span className="text-xs text-[#7C769D] font-mono block mt-0.5">{user.email}</span>
+                          <span className="text-xs text-[#7C769D] font-gowun block mt-0.5">{user.email}</span>
                         </div>
                       </div>
                     </td>
@@ -120,7 +120,7 @@ export const MemberTab = ({
                       </span>
                     </td>
 
-                    <td className="py-4 px-4 text-center text-[#7C769D] font-mono">
+                    <td className="py-4 px-4 text-center text-[#7C769D] font-gowun">
                       {user.joinDate}
                     </td>
 
@@ -197,7 +197,7 @@ export const MemberTab = ({
           <div className="bg-white border border-[#E6E2FC] max-w-lg w-full text-left p-6 space-y-6 relative rounded-2xl shadow-2xl">
             <div className="flex justify-between items-center border-b border-[#E6E2FC]/50 pb-4">
               <div>
-                <span className="text-xs font-mono tracking-widest text-[#7C769D] uppercase font-black block">ADMIN PANEL</span>
+                <span className="text-xs font-gowun tracking-widest text-[#7C769D] uppercase font-black block">ADMIN PANEL</span>
                 <h3 className="text-lg font-black text-[#110F24] mt-0.5">작가 상세 정보</h3>
               </div>
               <button
@@ -228,7 +228,7 @@ export const MemberTab = ({
                      selectedUser.status === 'suspended' ? '정지' : '탈퇴'}
                   </span>
                 </div>
-                <p className="text-sm text-[#7C769D] font-mono">{selectedUser.email}</p>
+                <p className="text-sm text-[#7C769D] font-gowun">{selectedUser.email}</p>
               </div>
             </div>
 
@@ -236,7 +236,7 @@ export const MemberTab = ({
             <div className="grid grid-cols-2 gap-3.5 bg-[#FAF9FF] p-4 border border-[#E6E2FC]/40 rounded-xl text-sm">
               <div>
                 <span className="text-[#7C769D] block font-bold text-xs">가입일</span>
-                <p className="font-semibold text-[#2F2D59] mt-0.5 font-mono">{selectedUser.joinDate}</p>
+                <p className="font-semibold text-[#2F2D59] mt-0.5 font-gowun">{selectedUser.joinDate}</p>
               </div>
               <div>
                 <span className="text-[#7C769D] block font-bold text-xs">요금제</span>
@@ -245,7 +245,7 @@ export const MemberTab = ({
               {selectedUser.status === 'deleted' && selectedUser.withdrawnAt && (
                 <div className="border-t pt-2 border-[#E6E2FC]/30 col-span-2">
                   <span className="text-[#7C769D] block font-bold text-xs">탈퇴일</span>
-                  <p className="font-mono text-[#2F2D59] mt-0.5">{selectedUser.withdrawnAt}</p>
+                  <p className="font-gowun text-[#2F2D59] mt-0.5">{selectedUser.withdrawnAt}</p>
                 </div>
               )}
             </div>

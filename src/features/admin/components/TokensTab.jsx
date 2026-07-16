@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PenTool, BookOpen, Sliders, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const USAGE_RANKING_PAGE_SIZE = 10;
+const TIMELINE_PAGE_SIZE = 5;
 
 export const TokensTab = ({
   tokenTrendUnit,
@@ -34,6 +35,18 @@ export const TokensTab = ({
   const pagedTokenUsages = searchedTokenUsages.slice(
     rankingPage * USAGE_RANKING_PAGE_SIZE,
     rankingPage * USAGE_RANKING_PAGE_SIZE + USAGE_RANKING_PAGE_SIZE
+  );
+
+  // 상세 사용 기록 조회(타임라인)도 서버 페이지네이션 없이 전체를 받아오므로 프론트에서만 페이지 처리
+  const [timelinePage, setTimelinePage] = useState(0);
+  useEffect(() => {
+    setTimelinePage(0);
+  }, [selectedTokenUser]);
+  const timelineLogs = (selectedTokenUser && memberTokenTimelineLogs[selectedTokenUser]) || [];
+  const timelineTotalPages = Math.max(1, Math.ceil(timelineLogs.length / TIMELINE_PAGE_SIZE));
+  const pagedTimelineLogs = timelineLogs.slice(
+    timelinePage * TIMELINE_PAGE_SIZE,
+    timelinePage * TIMELINE_PAGE_SIZE + TIMELINE_PAGE_SIZE
   );
 
   // BE는 premiumTxt/freeTxt를 "만 토큰" 단위로 내려주므로, 실제 토큰 수로 되돌린 뒤
@@ -80,7 +93,7 @@ export const TokensTab = ({
                 <Icon className="w-4 h-4 text-[#6B54E7]" />
               </div>
               <div className="flex items-baseline space-x-1.5">
-                <span className="text-2xl font-mono font-black text-[#110F24]">{card.value}</span>
+                <span className="text-2xl font-gowun font-black text-[#110F24]">{card.value}</span>
                 <span className="text-sm text-[#7C769D] font-bold">{card.desc}</span>
               </div>
             </div>
@@ -124,7 +137,7 @@ export const TokensTab = ({
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="text-sm font-black text-[#110F24] font-mono min-w-[110px] text-center">
+          <span className="text-sm font-black text-[#110F24] font-gowun min-w-[110px] text-center">
             {tokenTrendUnit === 'daily' ? `${trendYear}년 ${trendMonth}월` : `${trendYear}년`}
           </span>
           <button
@@ -164,7 +177,7 @@ export const TokensTab = ({
                 {/* Y축 눈금 라벨 */}
                 <div className="flex flex-col justify-between h-36 shrink-0 w-8 text-right">
                   {ticks.map((t, i) => (
-                    <span key={i} className="text-[10px] font-mono font-bold text-[#B9B0DC] leading-none">{t}</span>
+                    <span key={i} className="text-[12px] font-gowun font-bold text-[#B9B0DC] leading-none">{t}</span>
                   ))}
                 </div>
 
@@ -213,7 +226,7 @@ export const TokensTab = ({
                   {/* X축 날짜/월 라벨 */}
                   <div className="flex items-start justify-around mt-2">
                     {currentTrends.map((col, idx) => (
-                      <span key={idx} className="flex-1 text-center text-xs font-mono font-bold text-[#7C769D]">{col.label}</span>
+                      <span key={idx} className="flex-1 text-center text-xs font-gowun font-bold text-[#7C769D]">{col.label}</span>
                     ))}
                   </div>
                 </div>
@@ -238,21 +251,21 @@ export const TokensTab = ({
               <span className="flex items-center gap-1.5 text-[#7C769D] whitespace-nowrap">
                 <span className="w-2 h-2 rounded-xs bg-[#6B54E7] shrink-0"></span>유료 구독 텍스트
               </span>
-              <span className="font-mono font-bold whitespace-nowrap text-[#2F2D59]">{toRawTokens(hoveredTrendCol.premiumTxt).toLocaleString()} 토큰</span>
+              <span className="font-gowun font-bold whitespace-nowrap text-[#2F2D59]">{toRawTokens(hoveredTrendCol.premiumTxt).toLocaleString()} 토큰</span>
             </div>
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center gap-1.5 text-[#7C769D] whitespace-nowrap">
                 <span className="w-2 h-2 rounded-xs bg-[#B9B0DC] shrink-0"></span>무료 이용 텍스트
               </span>
-              <span className="font-mono font-bold whitespace-nowrap text-[#2F2D59]">{toRawTokens(hoveredTrendCol.freeTxt).toLocaleString()} 토큰</span>
+              <span className="font-gowun font-bold whitespace-nowrap text-[#2F2D59]">{toRawTokens(hoveredTrendCol.freeTxt).toLocaleString()} 토큰</span>
             </div>
             <div className="flex items-center justify-between gap-2 border-t border-[#E6E2FC] pt-1.5 mt-1.5 text-[#7C769D]">
               <span className="whitespace-nowrap">유료 구독 이미지</span>
-              <span className="font-mono font-bold text-[#2F2D59] whitespace-nowrap">{hoveredTrendCol.premiumImg.toLocaleString()}장</span>
+              <span className="font-gowun font-bold text-[#2F2D59] whitespace-nowrap">{hoveredTrendCol.premiumImg.toLocaleString()}장</span>
             </div>
             <div className="flex items-center justify-between gap-2 text-[#7C769D]">
               <span className="whitespace-nowrap">무료 이용 이미지</span>
-              <span className="font-mono font-bold text-[#2F2D59] whitespace-nowrap">{hoveredTrendCol.freeImg.toLocaleString()}장</span>
+              <span className="font-gowun font-bold text-[#2F2D59] whitespace-nowrap">{hoveredTrendCol.freeImg.toLocaleString()}장</span>
             </div>
             <div className="absolute top-full left-1/2 -translate-x-1/2 border-[7px] border-transparent border-t-white" style={{ filter: 'drop-shadow(0 1px 0 #E6E2FC)' }}></div>
           </div>
@@ -260,9 +273,9 @@ export const TokensTab = ({
       </div>
 
       {/* Members specific lists / Search block */}
-      <div className="grid lg:grid-cols-12 gap-6 items-start">
+      <div className="grid lg:grid-cols-12 gap-6 items-stretch">
         {/* Usage High Order list */}
-        <div className="lg:col-span-7 bg-white rounded-2xl border border-[#E6E2FC]/60 p-6 space-y-4">
+        <div className="lg:col-span-7 bg-white rounded-2xl border border-[#E6E2FC]/60 p-6 space-y-4 flex flex-col h-full">
           <div className="border-b border-[#E6E2FC]/30 pb-3.5">
             <h4 className="text-sm font-black text-[#110F24] flex items-center gap-1">
               AI 리소스 사용 회원 순위
@@ -281,7 +294,7 @@ export const TokensTab = ({
                 }`}
               >
                 <div className="flex items-center space-x-3 text-left">
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center font-mono text-xs font-bold ${
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center font-gowun text-xs font-bold ${
                     rankingPage === 0 && idx === 0 ? 'bg-[#6B54E7] text-white' : 'bg-[#FAF9FF] text-[#7C769D] border border-[#E6E2FC]/40'
                   }`}>
                     {rankingPage * USAGE_RANKING_PAGE_SIZE + idx + 1}
@@ -292,7 +305,7 @@ export const TokensTab = ({
                   </div>
                 </div>
 
-                <p className="text-sm text-[#2F2D59] font-mono font-black">
+                <p className="text-sm text-[#2F2D59] font-gowun font-black">
                   {usage.textUsage.toLocaleString()}자 <span className="text-xs text-[#7C769D] font-normal">({usage.imgUsage}장)</span>
                 </p>
               </div>
@@ -326,7 +339,7 @@ export const TokensTab = ({
         </div>
 
         {/* Timeline audit tracking */}
-        <div className="lg:col-span-5 bg-white rounded-2xl border border-[#E6E2FC]/60 p-6 space-y-4">
+        <div className="lg:col-span-5 bg-white rounded-2xl border border-[#E6E2FC]/60 p-6 space-y-4 flex flex-col h-full">
           <div>
             <h4 className="text-sm font-black text-[#110F24] flex items-center gap-1.5">
               상세 사용 기록 조회
@@ -347,7 +360,7 @@ export const TokensTab = ({
 
           {/* Output timeline */}
           {selectedTokenUser && memberTokenTimelineLogs[selectedTokenUser] ? (
-            <div className="space-y-3 pt-2 text-left">
+            <div className="flex-1 flex flex-col pt-2 text-left">
               <div className="flex items-center justify-between border-b border-[#E6E2FC]/30 pb-2">
                 <span className="text-sm font-black text-[#2F2D59]">
                   {searchedTokenUsages.find(u => u.userId === selectedTokenUser)?.nickname || '조사 대상'} 회원 사용 이력
@@ -360,21 +373,46 @@ export const TokensTab = ({
                 </button>
               </div>
 
-              <div className="relative border-l border-[#E6E2FC] pl-4.5 space-y-4 pt-1 ml-1.5">
-                {memberTokenTimelineLogs[selectedTokenUser].map((log, lidx) => (
+              <div className="relative border-l border-[#E6E2FC] pl-4.5 space-y-4 pt-4 pb-1 ml-1.5 flex-1">
+                {pagedTimelineLogs.map((log, lidx) => (
                   <div key={lidx} className="relative text-sm">
                     <span className="absolute -left-7 top-1 w-2.5 h-2.5 rounded-full bg-[#6B54E7] border border-white"></span>
                     <div className="flex justify-between text-xs">
-                      <span className="text-[#7C769D] font-mono">{log.date}</span>
-                      <span className="font-mono font-black text-[#2F2D59]">{log.usage === 'image' ? '이미지 생성' : 'AI 텍스트 생성'}</span>
+                      <span className="text-[#7C769D] font-gowun">{log.date}</span>
+                      <span className="font-gowun font-black text-[#2F2D59]">{log.usage === 'image' ? '이미지 생성' : 'AI 텍스트 생성'}</span>
                     </div>
-                    <p className="text-xs text-[#7C769D] font-mono mt-0.5">산출량: {log.amount}</p>
+                    <p className="text-xs text-[#7C769D] font-gowun mt-0.5">산출량: {log.amount}</p>
                   </div>
                 ))}
               </div>
+
+              {/* Pagination */}
+              {timelineLogs.length > 0 && (
+                <div className="flex items-center justify-between pt-2 border-t border-[#E6E2FC]/30">
+                  <span className="text-sm text-[#7C769D] font-semibold">
+                    {timelinePage + 1} / {timelineTotalPages} 페이지
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setTimelinePage(p => Math.max(0, p - 1))}
+                      disabled={timelinePage === 0}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#E6E2FC] text-[#7C769D] hover:border-[#6B54E7] hover:text-[#6B54E7] disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setTimelinePage(p => Math.min(timelineTotalPages - 1, p + 1))}
+                      disabled={timelinePage >= timelineTotalPages - 1}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#E6E2FC] text-[#7C769D] hover:border-[#6B54E7] hover:text-[#6B54E7] disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="py-12 border border-dashed border-[#E6E2FC] rounded-xl text-center text-[#7C769D] text-sm">
+            <div className="flex-1 flex items-center justify-center border border-dashed border-[#E6E2FC] rounded-xl text-center text-[#7C769D] text-sm">
               <p className="font-medium">회원을 선택하면 사용 이력이 표시됩니다.</p>
             </div>
           )}
