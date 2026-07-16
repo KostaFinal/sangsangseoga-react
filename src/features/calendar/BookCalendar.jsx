@@ -141,9 +141,7 @@ export default function BookCalendar({ books = [] }) {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 select-none">
         <div>
           <h3 className="font-plus text-xl font-black text-navy-purple">독서 계획표</h3>
-          <p className="text-xs text-purple-gray-text mt-1">
-            날짜별로 읽을 책과 목표 페이지를 계획해보세요.
-          </p>
+          
         </div>
 
         <button

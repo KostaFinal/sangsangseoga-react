@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation, Outlet, useOutletContext } from 'r
 import { AnimatePresence, motion } from 'motion/react';
 import SideMenu from './SideMenu';
 import { BookReaderView } from '../../features/library';
-import { MainBookshelf, MyBookTab, FinishedTab, ReadingTab, WishlistTab } from '../../features/bookshelf';
+import { MainBookshelf, MyBookTab, FinishedTab, ReadingTab, WishlistTab, ReportHistoryTab, } from '../../features/bookshelf';
 import { SavedAuthorTab } from '../../features/library';
 import { ReviewWithAI } from '../../features/review';
 import { BookCalendar } from '../../features/calendar';
@@ -44,13 +44,13 @@ export function MyLibraryLayout() {
     try {
       const [wishlistRes, readingRes, finishedRes, myBooksRes] = await Promise.all([
         getWishlistBookshelf(),
-        getReadingBookshelf(),
+        getReadingBookshelf(1, 20),
         getFinishedBookshelf(),
         getMyWrittenBooks(),
       ]);
 
       const wishlistData = wishlistRes.data.data || [];
-      const readingData = readingRes.data.data || [];
+      const readingData = readingRes.data?.data?.content || [];
       const finishedData = finishedRes.data.data || [];
       const myBooksData = myBooksRes.data?.data?.content || [];
 
@@ -582,7 +582,7 @@ export function MyLibraryLayout() {
 }
 
 // 탭 컴포넌트들이 내부적으로 쓰는 tab id('saved-author' 등, 단수형)를 URL 세그먼트('saved-authors', 복수형)로 매핑
-const TAB_ID_TO_PATH = { 'saved-author': 'saved-authors' };
+const TAB_ID_TO_PATH = { 'saved-author': 'saved-authors', 'reports': 'reports', };
 const tabToLibraryPath = (tab) => `/library/${tab === 'bookshelf' ? '' : (TAB_ID_TO_PATH[tab] || tab)}`;
 
 export function MyLibraryBookshelfRoute() {
@@ -711,6 +711,10 @@ export function MyLibrarySavedAuthorsRoute() {
       onOpenAuthorSearch={() => navigate('/authors')}
     />
   );
+}
+
+export function MyLibraryReportsRoute() {
+  return <ReportHistoryTab />;
 }
 
 export function MyLibraryReaderRoute() {

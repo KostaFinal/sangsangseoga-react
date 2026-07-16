@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams, useOutletContext } from "react-router-dom";
-import { ArrowRight, Heart, MessageSquare, Eye, Flag, ArrowLeft } from "lucide-react";
-import ReportModal from "@/src/shared/components/ReportModal";
-import { submitReport, getReportedIds } from "@/src/shared/utils/reports";
+import { Heart, MessageSquare, Eye, ArrowLeft } from "lucide-react";
 import { getAuthors, followAuthor, unfollowAuthor } from "../../../api/authorApi";
 import { useAuth } from "../../../shared/context/AuthContext";
 import { useRequireAuth } from "../../../shared/hooks/useRequireAuth";
@@ -26,7 +24,7 @@ export default function AuthorProfileView() {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode") === "owner" ? "owner" : "viewer";
   const { books: allBooks, handleToggleLike } = useOutletContext();
-  const { currentUser, isAuthenticated } = useAuth();
+  const { currentUser } = useAuth();
   const requireAuth = useRequireAuth();
   const onSelectBook = (book) => navigate(`/friends/${book.id}`);
   const onBackToDirectory = () => navigate("/authors");
@@ -35,8 +33,6 @@ export default function AuthorProfileView() {
   const [followerCount, setFollowerCount] = useState(null);
   const [authorRecord, setAuthorRecord] = useState(null); // getAuthors API의 원본 항목
   const [followBusy, setFollowBusy] = useState(false);
-  const [isReportOpen, setIsReportOpen] = useState(false);
-  const [hasReported, setHasReported] = useState(false);
 
   const realAuthorBooks = allBooks.filter(b => b.author.trim() === authorName.trim());
 
@@ -70,28 +66,6 @@ export default function AuthorProfileView() {
     return () => { cancelled = true; };
   }, [authorName]);
 
-  useEffect(() => {
-    if (!effectiveAuthorId || !isAuthenticated) return;
-    let cancelled = false;
-    getReportedIds("author")
-      .then(ids => {
-        if (!cancelled) setHasReported(ids.includes(effectiveAuthorId));
-      })
-      .catch(() => { });
-    return () => { cancelled = true; };
-  }, [effectiveAuthorId]);
-
-  const handleSubmitReport = async ({ reason, detail }) => {
-    if (!effectiveAuthorId || !requireAuth()) return;
-    try {
-      await submitReport({ targetType: "author", targetId: effectiveAuthorId, reason, detail });
-      setHasReported(true);
-      setIsReportOpen(false);
-      alert("신고가 접수되었습니다. 검토 후 조치하겠습니다.");
-    } catch (err) {
-      alert(err?.response?.data?.message || "신고 접수에 실패했습니다. 잠시 후 다시 시도해 주세요.");
-    }
-  };
 
   const handleToggleFollow = async () => {
     if (!effectiveAuthorId || followBusy || !requireAuth()) return;
@@ -156,20 +130,11 @@ export default function AuthorProfileView() {
                     onClick={handleToggleFollow}
                     disabled={!effectiveAuthorId || followBusy}
                     className={`px-5 py-1.5 rounded-full text-xs font-bold transition duration-300 shadow-xs cursor-pointer border disabled:opacity-50 disabled:cursor-default ${isFollowing
-                        ? "bg-[#6b54e7] hover:bg-[#6148e1] text-white border-transparent"
-                        : "bg-white text-[#69619a] border-gray-200 hover:text-[#6b54e7] hover:border-[#d4cdf2]"
+                      ? "bg-[#6b54e7] hover:bg-[#6148e1] text-white border-transparent"
+                      : "bg-white text-[#69619a] border-gray-200 hover:text-[#6b54e7] hover:border-[#d4cdf2]"
                       }`}
                   >
                     {isFollowing ? "팔로잉" : "팔로우"}
-
-                  </button>
-                  <button
-                    onClick={() => !hasReported && setIsReportOpen(true)}
-                    disabled={hasReported}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 text-[#69619a] hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition disabled:opacity-50"
-                  >
-                    <Flag className="w-3 h-3" />
-                    {hasReported ? "신고됨" : "신고"}
                   </button>
                 </div>
               )}
@@ -255,12 +220,7 @@ export default function AuthorProfileView() {
         )}
       </div>
 
-      <ReportModal
-        isOpen={isReportOpen}
-        onClose={() => setIsReportOpen(false)}
-        targetLabel={`작가 '${authorProfile.name}'`}
-        onSubmit={handleSubmitReport}
-      />
+
     </div >
   );
 }

@@ -24,17 +24,17 @@ export default function BookMemoListModal({
       try {
         setLoading(true);
 
-        const res = await getMemosByBook(bookId);
-        const data = res.data?.data;
+        const res = await getMemosByBook(bookId, 1, 20);
+        const data = res.data?.data?.content || [];
 
         if (cancelled) return;
 
         const validMemos = Array.isArray(data)
           ? data.filter(
-              memo =>
-                typeof memo.content === "string" &&
-                memo.content.trim().length > 0
-            )
+            memo =>
+              typeof memo.content === "string" &&
+              memo.content.trim().length > 0
+          )
           : [];
 
         setMemos(validMemos);
