@@ -55,7 +55,7 @@ export default function SavedAuthorTab({ favoriteAuthors,
     <div className="space-y-4 bg-transparent text-navy-purple">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 select-none">
         <div>
-          <h3 className="font-plus text-xl font-black text-navy-purple">관심 작가 목록</h3>
+          <h3 className="text-xl font-black text-navy-purple">관심 작가 목록</h3>
         </div>
 
         <button
@@ -171,7 +171,7 @@ export default function SavedAuthorTab({ favoriteAuthors,
                   </div>
 
                   <div>
-                    <h4 className="font-plus font-bold text-sm text-navy-purple tracking-tight">
+                    <h4 className="font-bold text-sm text-navy-purple tracking-tight">
                       {author.name}
                     </h4>
                     <span className="text-[9px] text-purple-gray-text">

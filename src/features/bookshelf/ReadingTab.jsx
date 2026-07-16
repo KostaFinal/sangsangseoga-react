@@ -41,7 +41,7 @@ export default function ReadingTab({
     <div className="space-y-4 bg-transparent text-navy-purple">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div className="flex items-center gap-2">
-          <h3 className="font-plus text-xl font-black text-navy-purple">
+          <h3 className="text-xl font-black text-navy-purple">
             읽고 있는 책
           </h3>
 
@@ -95,7 +95,7 @@ export default function ReadingTab({
                     {book.category}
                   </span>
 
-                  <h4 className="font-plus font-bold text-sm text-navy-purple mt-1 truncate tracking-tight">
+                  <h4 className="font-bold text-sm text-navy-purple mt-1 truncate tracking-tight">
                     {book.title}
                   </h4>
 

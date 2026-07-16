@@ -8,7 +8,7 @@ export default function WishlistTab({ filteredBooks, onOpenDetail, onToggleFavor
     <div className="space-y-4 bg-transparent text-navy-purple">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 select-none">
         <div className="flex items-center gap-3">
-          <h3 className="font-plus text-xl font-black text-navy-purple">
+          <h3 className="text-xl font-black text-navy-purple">
             읽고 싶은 책 
           </h3>
 
@@ -58,7 +58,7 @@ export default function WishlistTab({ filteredBooks, onOpenDetail, onToggleFavor
               </div>
               <div className="p-4 flex-grow flex flex-col justify-between">
                 <div>
-                  <h4 className="font-plus font-bold text-sm text-navy-purple tracking-tight truncate">{book.title}</h4>
+                  <h4 className="font-bold text-sm text-navy-purple tracking-tight truncate">{book.title}</h4>
                   <p className="text-[10px] text-purple-gray-text mt-0.5 line-clamp-2 leading-relaxed">{book.description}</p>
                 </div>
 

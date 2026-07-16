@@ -13,7 +13,7 @@ export default function MyBookTab({ filteredBooks,
     <div className="space-y-4 bg-transparent text-navy-purple">
       <div className="flex justify-between items-center select-none header-wrap">
         <div>
-          <h3 className="font-plus text-xl font-black text-navy-purple">내가 쓴 책</h3>
+          <h3 className="text-xl font-black text-navy-purple">내가 쓴 책</h3>
         </div>
 
 
@@ -42,7 +42,7 @@ export default function MyBookTab({ filteredBooks,
                     {book.author}
                   </span>
                 </div>
-                <h4 className="font-plus font-bold text-sm text-navy-purple tracking-tight truncate mt-1.5">{book.title}</h4>
+                <h4 className="font-bold text-sm text-navy-purple tracking-tight truncate mt-1.5">{book.title}</h4>
                 <p className="text-[10px] text-purple-gray-text mt-1 line-clamp-2 leading-relaxed">{book.description}</p>
               </div>
 

@@ -100,7 +100,7 @@ export default function BookStats({ getReadingStats }) {
   return (
     <div className="space-y-5 pr-24" id="bookstats-container">
       <div className="border-b border-lavender-border pb-3">
-        <h2 className="text-xl font-black text-navy-purple tracking-tight font-serif">
+        <h2 className="text-xl font-black text-navy-purple tracking-tight">
           나의 서재 현황
         </h2>
       </div>

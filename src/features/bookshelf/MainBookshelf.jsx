@@ -145,7 +145,7 @@ export default function MainBookshelf({ setActiveTab, onOpenCreateModal }) {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-5 select-none bg-transparent" id="bookshelf-header-container">
           <div>
             <p className="text-neutral-500 text-xs font-bold mb-0.5 tracking-wide">안녕하세요, {nickname}님! </p>
-            <h2 className="font-plus text-3xl font-extrabold text-navy-purple tracking-tight font-serif">{nickname}님의 서재</h2>
+            <h2 className="text-3xl font-extrabold text-navy-purple tracking-tight">{nickname}님의 서재</h2>
           </div>
 
         </div>

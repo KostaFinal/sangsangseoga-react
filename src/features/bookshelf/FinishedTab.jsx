@@ -43,7 +43,7 @@ export default function FinishedTab({ filteredBooks, onOpenViewer, onReread, set
     <div className="space-y-4 bg-transparent text-navy-purple">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 select-none">
         <div className="flex items-center gap-3">
-          <h3 className="font-plus text-xl font-black text-navy-purple">
+          <h3 className="text-xl font-black text-navy-purple">
             모두 읽은 책
           </h3>
 
@@ -90,7 +90,7 @@ export default function FinishedTab({ filteredBooks, onOpenViewer, onReread, set
                 </div>
                 <div className="min-w-0">
                   <span className="text-[9px] font-bold text-navy-purple bg-white border border-lavender-border px-2 py-0.5 rounded-full">{book.category}</span>
-                  <h4 className="font-plus font-bold text-sm text-navy-purple mt-1 truncate tracking-tight">{book.title}</h4>
+                  <h4 className="font-bold text-sm text-navy-purple mt-1 truncate tracking-tight">{book.title}</h4>
                   <p className="text-[10px] text-purple-gray-text mt-0.5">
                     독서 시작일: {formatDate(book.startedDate)}
                   </p>

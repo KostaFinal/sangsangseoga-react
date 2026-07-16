@@ -8,7 +8,7 @@ import { addComment, addReply } from "../../../api/commentApi";
 import { useAuth } from "../../../shared/context/AuthContext";
 import { useRequireAuth } from "../../../shared/hooks/useRequireAuth";
 import { Pagination } from "../../../shared/components/Pagination";
-import { addWishlist, deleteWishlist, updateMyWrittenBookDescription, updateMyWrittenBookStatus } from "../../../api/myLibraryApi";
+import { addWishlist, deleteWishlist, updateMyWrittenBookDescription, updateMyWrittenBookStatus, updateMyWrittenBookTags } from "../../../api/myLibraryApi";
 
 const bookTypeOptions = [
   { label: "전체", value: null },
@@ -30,7 +30,6 @@ const bookTypeToGenre = {
 };
 
 const mapBookForDetail = (book, currentUser) => {
-  console.log("authorId:", book.authorId, "memberId:", currentUser?.memberId);
   return {
     ...book,
     coverImage: book.coverImageUrl,
