@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { PenTool, BookOpen, Sliders, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sliders, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import AdminCalendarInput from './AdminCalendarInput';
 
 const USAGE_RANKING_PAGE_SIZE = 10;
 const TIMELINE_PAGE_SIZE = 5;
@@ -13,6 +14,10 @@ export const TokensTab = ({
   goToNextTrendPeriod,
   tokenSearchQuery,
   setTokenSearchQuery,
+  tokenUsageStartDate,
+  setTokenUsageStartDate,
+  tokenUsageEndDate,
+  setTokenUsageEndDate,
   selectedTokenUser,
   setSelectedTokenUser,
   currentTrends,
@@ -25,6 +30,9 @@ export const TokensTab = ({
   const [hoveredTrendIdx, setHoveredTrendIdx] = useState(null);
   const [hoveredTrendRect, setHoveredTrendRect] = useState(null);
   const clearHoveredTrend = () => { setHoveredTrendIdx(null); setHoveredTrendRect(null); };
+
+  // 추이 차트에 표시할 지표 — 텍스트(토큰량) / 이미지(장수). 일간·월간(tokenTrendUnit)과는 별개 축.
+  const [trendMetric, setTrendMetric] = useState('text'); // 'text' | 'image'
 
   // 회원 순위 리스트는 서버 페이지네이션 없이 전체를 한 번에 받아오므로 프론트에서만 페이지 처리
   const [rankingPage, setRankingPage] = useState(0);
@@ -49,58 +57,41 @@ export const TokensTab = ({
     timelinePage * TIMELINE_PAGE_SIZE + TIMELINE_PAGE_SIZE
   );
 
-  // BE는 premiumTxt/freeTxt를 "만 토큰" 단위로 내려주므로, 실제 토큰 수로 되돌린 뒤
-  // 현재 데이터 범위(최댓값)에 맞춰 표시 단위(토큰/만 토큰/억 토큰)를 자동으로 고른다.
+  // BE는 premiumTxt/freeTxt를 "만 토큰" 단위로 내려주므로, 실제 토큰 수로 되돌린다.
+  // 이미지는 이미 장수(개수) 그대로 내려오므로 별도 환산이 필요 없다.
   const toRawTokens = (v) => (v || 0) * 10000;
-  const maxRawTokens = Math.max(
-    ...currentTrends.flatMap(col => [toRawTokens(col.premiumTxt), toRawTokens(col.freeTxt)]),
-    1
-  );
+  const unitBaseLabel = trendMetric === 'text' ? '토큰' : '장';
+  const getRawPair = (col) => trendMetric === 'text'
+    ? [toRawTokens(col.premiumTxt), toRawTokens(col.freeTxt)]
+    : [col.premiumImg || 0, col.freeImg || 0];
+
+  // 현재 데이터 범위(최댓값)에 맞춰 표시 단위(그대로/만/억)를 자동으로 고른다.
+  const maxRawValue = Math.max(...currentTrends.flatMap(getRawPair), 1);
   let unitDivisor = 1;
-  let trendUnitLabel = '토큰';
-  if (maxRawTokens >= 100_000_000) {
+  let trendUnitLabel = unitBaseLabel;
+  if (maxRawValue >= 100_000_000) {
     unitDivisor = 100_000_000;
-    trendUnitLabel = '억 토큰';
-  } else if (maxRawTokens >= 10_000) {
+    trendUnitLabel = `억 ${unitBaseLabel}`;
+  } else if (maxRawValue >= 10_000) {
     unitDivisor = 10_000;
-    trendUnitLabel = '만 토큰';
+    trendUnitLabel = `만 ${unitBaseLabel}`;
   }
-  const toDisplayUnit = (v) => {
-    const raw = toRawTokens(v);
+  const toDisplayUnit = (raw) => {
     const scaled = raw / unitDivisor;
     return Number(scaled.toFixed(scaled < 10 ? 2 : scaled < 100 ? 1 : 0));
   };
-  const scaledTrends = currentTrends.map(col => ({
-    ...col,
-    premiumDisplay: toDisplayUnit(col.premiumTxt),
-    freeDisplay: toDisplayUnit(col.freeTxt),
-  }));
+  const scaledTrends = currentTrends.map(col => {
+    const [premRaw, freeRaw] = getRawPair(col);
+    return {
+      ...col,
+      premiumDisplay: toDisplayUnit(premRaw),
+      freeDisplay: toDisplayUnit(freeRaw),
+    };
+  });
   const hoveredTrendCol = hoveredTrendIdx != null ? scaledTrends[hoveredTrendIdx] : null;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200 text-left">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-4">
-        {[
-          { title: '누적 텍스트 생성량', value: `${(tokenSummary.totalTextUsage / 1000).toFixed(1)}k`, desc: '자', icon: PenTool },
-          { title: '누적 이미지 생성량', value: `${tokenSummary.totalImageUsage.toLocaleString()}`, desc: '장', icon: BookOpen },
-        ].map((card, idx) => {
-          const Icon = card.icon;
-          return (
-            <div key={idx} className="bg-white border border-[#E6E2FC]/60 rounded-2xl p-5 shadow-xs space-y-2">
-              <div className="flex justify-between items-center text-[#7C769D]">
-                <span className="text-xs font-black uppercase tracking-wider">{card.title}</span>
-                <Icon className="w-4 h-4 text-[#6B54E7]" />
-              </div>
-              <div className="flex items-baseline space-x-1.5">
-                <span className="text-2xl font-gowun font-black text-[#110F24]">{card.value}</span>
-                <span className="text-sm text-[#7C769D] font-bold">{card.desc}</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
       {/* Graphic Usage Trend Grid */}
       <div className="bg-white border border-[#E6E2FC]/60 rounded-3xl p-6 shadow-sm space-y-6">
         <div className="flex justify-between items-center border-b border-[#E6E2FC]/30 pb-4">
@@ -110,22 +101,38 @@ export const TokensTab = ({
               <span>전체 AI 리소스 사용량 추이</span>
             </h3>
             <p className="text-sm text-[#7C769D] mt-0.5">
-              요금제별 텍스트 생성량 비교 · 막대에 마우스를 올리면 상세 수치를 확인할 수 있습니다.
+              요금제별 {trendMetric === 'text' ? '텍스트' : '이미지'} 생성량 비교 · 막대에 마우스를 올리면 상세 수치를 확인할 수 있습니다.
             </p>
           </div>
-          <div className="flex bg-[#FAF9FF] p-1 rounded-xl border border-[#E6E2FC]/40">
-            <button
-              onClick={() => setTokenTrendUnit('daily')}
-              className={`px-3 py-1.5 text-sm font-bold rounded-lg transition-all cursor-pointer ${tokenTrendUnit === 'daily' ? 'bg-[#6B54E7] text-white shadow-xs' : 'text-[#7C769D] hover:text-[#110F24]'}`}
-            >
-              일간
-            </button>
-            <button
-              onClick={() => setTokenTrendUnit('monthly')}
-              className={`px-3 py-1.5 text-sm font-bold rounded-lg transition-all cursor-pointer ${tokenTrendUnit === 'monthly' ? 'bg-[#6B54E7] text-white shadow-xs' : 'text-[#7C769D] hover:text-[#110F24]'}`}
-            >
-              월간
-            </button>
+          <div className="flex items-center gap-2">
+            <div className="flex bg-[#FAF9FF] p-1 rounded-xl border border-[#E6E2FC]/40">
+              <button
+                onClick={() => setTrendMetric('text')}
+                className={`px-3 py-1.5 text-sm font-bold rounded-lg transition-all cursor-pointer ${trendMetric === 'text' ? 'bg-[#6B54E7] text-white shadow-xs' : 'text-[#7C769D] hover:text-[#110F24]'}`}
+              >
+                텍스트
+              </button>
+              <button
+                onClick={() => setTrendMetric('image')}
+                className={`px-3 py-1.5 text-sm font-bold rounded-lg transition-all cursor-pointer ${trendMetric === 'image' ? 'bg-[#6B54E7] text-white shadow-xs' : 'text-[#7C769D] hover:text-[#110F24]'}`}
+              >
+                이미지
+              </button>
+            </div>
+            <div className="flex bg-[#FAF9FF] p-1 rounded-xl border border-[#E6E2FC]/40">
+              <button
+                onClick={() => setTokenTrendUnit('daily')}
+                className={`px-3 py-1.5 text-sm font-bold rounded-lg transition-all cursor-pointer ${tokenTrendUnit === 'daily' ? 'bg-[#6B54E7] text-white shadow-xs' : 'text-[#7C769D] hover:text-[#110F24]'}`}
+              >
+                일간
+              </button>
+              <button
+                onClick={() => setTokenTrendUnit('monthly')}
+                className={`px-3 py-1.5 text-sm font-bold rounded-lg transition-all cursor-pointer ${tokenTrendUnit === 'monthly' ? 'bg-[#6B54E7] text-white shadow-xs' : 'text-[#7C769D] hover:text-[#110F24]'}`}
+              >
+                월간
+              </button>
+            </div>
           </div>
         </div>
 
@@ -277,9 +284,14 @@ export const TokensTab = ({
         {/* Usage High Order list */}
         <div className={`bg-white rounded-2xl border border-[#E6E2FC]/60 p-6 space-y-4 flex flex-col h-full ${selectedTokenUser ? 'lg:col-span-7' : 'lg:col-span-12'}`}>
           <div className="border-b border-[#E6E2FC]/30 pb-3.5">
-            <h4 className="text-sm font-black text-[#110F24] flex items-center gap-1">
-              AI 리소스 사용 회원 순위
-            </h4>
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="text-sm font-black text-[#110F24] flex items-center gap-1">
+                AI 리소스 사용량
+              </h4>
+              <span className="text-[10px] text-[#B9B0DC] font-gowun font-bold shrink-0">
+                총합 · 텍스트 {(tokenSummary.totalTextUsage / 1000).toFixed(1)}k자 · 이미지 {tokenSummary.totalImageUsage.toLocaleString()}장
+              </span>
+            </div>
             <p className="text-sm text-[#7C769D]">AI 사용량이 많은 순서입니다.</p>
           </div>
 
@@ -294,12 +306,30 @@ export const TokensTab = ({
             />
           </div>
 
+          {/* 조회 기간 필터 — 기본값은 오늘~오늘, 초기화하면 전체 누적 기간 */}
+          <div className="flex items-center gap-2 text-left">
+            <div className="flex-1">
+              <AdminCalendarInput value={tokenUsageStartDate} onChange={setTokenUsageStartDate} />
+            </div>
+            <span className="text-[#7C769D] text-sm shrink-0">~</span>
+            <div className="flex-1">
+              <AdminCalendarInput value={tokenUsageEndDate} onChange={setTokenUsageEndDate} />
+            </div>
+            <button
+              type="button"
+              onClick={() => { setTokenUsageStartDate(''); setTokenUsageEndDate(''); }}
+              className="shrink-0 px-3 py-2 text-sm font-bold text-[#7C769D] hover:text-[#6B54E7] cursor-pointer"
+            >
+              초기화
+            </button>
+          </div>
+
           {/* List */}
           <div className="space-y-2.5">
             {pagedTokenUsages.map((usage, idx) => (
               <div
                 key={usage.userId}
-                onClick={() => setSelectedTokenUser(usage.userId)}
+                onClick={() => setSelectedTokenUser(prev => (prev === usage.userId ? null : usage.userId))}
                 className={`p-3.5 border rounded-xl flex justify-between items-center hover:bg-[#FAF9FF]/60 cursor-pointer transition-all ${
                   selectedTokenUser === usage.userId ? 'border-[#6B54E7] bg-[#FAF9FF] shadow-xs' : 'border-[#E6E2FC]/60'
                 }`}

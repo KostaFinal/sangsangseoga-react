@@ -86,6 +86,10 @@ export const AdminView = ({ initialTab = 'member' }) => {
     goToNextTrendPeriod,
     tokenSearchQuery,
     setTokenSearchQuery,
+    tokenUsageStartDate,
+    setTokenUsageStartDate,
+    tokenUsageEndDate,
+    setTokenUsageEndDate,
     selectedTokenUser,
     setSelectedTokenUser,
     currentTrends,
@@ -226,6 +230,10 @@ export const AdminView = ({ initialTab = 'member' }) => {
                   goToNextTrendPeriod={goToNextTrendPeriod}
                   tokenSearchQuery={tokenSearchQuery}
                   setTokenSearchQuery={setTokenSearchQuery}
+                  tokenUsageStartDate={tokenUsageStartDate}
+                  setTokenUsageStartDate={setTokenUsageStartDate}
+                  tokenUsageEndDate={tokenUsageEndDate}
+                  setTokenUsageEndDate={setTokenUsageEndDate}
                   selectedTokenUser={selectedTokenUser}
                   setSelectedTokenUser={setSelectedTokenUser}
                   currentTrends={currentTrends}

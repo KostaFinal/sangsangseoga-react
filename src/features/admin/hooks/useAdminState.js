@@ -6,6 +6,12 @@ const REASON_LABEL = { SPAM: '스팸', ABUSE: '욕설', SEXUAL: '음란', OTHER:
 const STATUS_LABEL_MAP = { PENDING: 'pending', RESOLVED: 'hidden', REJECTED: 'rejected' };
 const ACTION_TYPE_BY_SUBTAB = { books: 'BOOK_HIDE', comments: 'COMMENT_DELETE' };
 
+const getTodayDateStr = () => {
+  const d = new Date();
+  const pad2 = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+};
+
 const mapReport = (r) => ({
   id: r.reportId,
   targetId: r.targetId,
@@ -126,6 +132,9 @@ export const useAdminState = (initialTab = 'member') => {
   const [selectedTokenUser, setSelectedTokenUser] = useState(null);
   const [currentTrends, setCurrentTrends] = useState([]);
   const [tokenUsages, setTokenUsages] = useState([]);
+  // 회원별 사용량 순위 조회 기간 필터 (빈 문자열이면 전체 누적)
+  const [tokenUsageStartDate, setTokenUsageStartDate] = useState(getTodayDateStr());
+  const [tokenUsageEndDate, setTokenUsageEndDate] = useState(getTodayDateStr());
   const [adminMemberIds, setAdminMemberIds] = useState(new Set());
   const [activeTimeline, setActiveTimeline] = useState([]);
 
@@ -209,6 +218,19 @@ export const useAdminState = (initialTab = 'member') => {
     }
   };
 
+  // AI 사용량 회원별 통계 조회 (기간 필터 적용, 빈 값이면 전체 누적)
+  const loadTokenUsages = async (startDate = tokenUsageStartDate, endDate = tokenUsageEndDate) => {
+    try {
+      const fetchedTokenUsages = await adminService.getTokenUsages({
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      });
+      setTokenUsages(fetchedTokenUsages);
+    } catch (err) {
+      setTokenUsages([]);
+    }
+  };
+
   const loadInitialData = async () => {
     try {
       // 1. 회원 목록 조회 (첫 페이지)
@@ -219,8 +241,7 @@ export const useAdminState = (initialTab = 'member') => {
       await loadReports(0, reportStatusFilter);
 
       // 3. AI 사용량 회원별 통계 조회
-      const fetchedTokenUsages = await adminService.getTokenUsages();
-      setTokenUsages(fetchedTokenUsages);
+      await loadTokenUsages();
 
       // 4. 관리자 role 회원 id 조회 (AI 사용량 랭킹/집계에서 관리자 계정 활동 제외용)
       const allMembers = await adminService.getUsers({ size: 100 });
@@ -236,6 +257,17 @@ export const useAdminState = (initialTab = 'member') => {
     loadInitialData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 사용량 순위 기간 필터 변경 시 재조회 (최초 마운트는 loadInitialData가 이미 처리)
+  const isFirstTokenUsageDateRun = useRef(true);
+  useEffect(() => {
+    if (isFirstTokenUsageDateRun.current) {
+      isFirstTokenUsageDateRun.current = false;
+      return;
+    }
+    loadTokenUsages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tokenUsageStartDate, tokenUsageEndDate]);
 
   // 상태 필터/검색어 변경 시 1페이지부터 재조회 (검색어는 타이핑 debounce)
   const isFirstMemberFilterRun = useRef(true);
@@ -534,6 +566,10 @@ export const useAdminState = (initialTab = 'member') => {
     goToNextTrendPeriod,
     tokenSearchQuery,
     setTokenSearchQuery,
+    tokenUsageStartDate,
+    setTokenUsageStartDate,
+    tokenUsageEndDate,
+    setTokenUsageEndDate,
     selectedTokenUser,
     setSelectedTokenUser,
     currentTrends,

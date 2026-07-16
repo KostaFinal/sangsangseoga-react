@@ -121,9 +121,10 @@ export const adminService = {
   /**
    * 회원별 누적 AI 사용량(텍스트/이미지) 랭킹 조회 (많은 순)
    * 실 API: GET /api/admin/token/usages
+   * startDate/endDate 생략 시 전체 누적 기간 조회. 하나만 주면 반대쪽은 서비스 시작 이전/오늘로 채워짐.
    */
-  getTokenUsages: async () => {
-    const res = await api.get('/api/admin/token/usages');
+  getTokenUsages: async ({ startDate, endDate } = {}) => {
+    const res = await api.get('/api/admin/token/usages', { params: { startDate, endDate } });
     return res.data?.data || [];
   },
 
