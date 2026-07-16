@@ -504,6 +504,39 @@ export default function BookDetailView({
     }
   };
 
+  const handleReadingBookmarkSave = async (
+    bookId,
+    currentPage,
+    totalPages,
+    readingTime = 0
+  ) => {
+    const safeTotalPages = Math.max(1, totalPages);
+
+    const progress = Math.min(
+      100,
+      Math.max(
+        0,
+        Math.floor((currentPage / safeTotalPages) * 100)
+      )
+    );
+
+    await updateReadingProgress(
+      bookId,
+      currentPage,
+      progress,
+      readingTime
+    );
+  };
+
+  const handleReadingTimeSave = async (
+    bookId,
+    readingTime = 0
+  ) => {
+    if (readingTime < 1) return;
+
+    await updateReadingProgress(bookId, readingTime);
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto px-4 md:px-0 py-4 animate-fadeIn font-gowun">
       {/* Back button - 더 굵고 진한 보라색으로 가독성 개선 */}
@@ -756,11 +789,14 @@ export default function BookDetailView({
                             w: 360,
                             h: 300,
                             html: "본문 준비 중입니다.",
-                            fontSize: 18
-                          }
-                        ]
-                      }
-                    ]
+                            fontSize: 18,
+                          },
+                        ],
+                      },
+                    ],
+
+                    onReadingBookmarkSave: handleReadingBookmarkSave,
+                    onReadingTimeSave: handleReadingTimeSave,
                   });
                 }}
                 className={getCtaButtonStyle()}

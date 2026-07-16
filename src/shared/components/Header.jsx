@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {
+import {  
   ChevronDown,
   User,
   CreditCard,
@@ -9,6 +9,7 @@ import {
 import { CURRENT_USER_PROFILE } from '../data';
 import { useAuth } from '../context/AuthContext';
 import logoUrl from '../../assets/images/sangsangseoga_official_logo_1782313504336.jpg';
+
 
 export const Header = () => {
   const { isAuthenticated, currentUser, usage, handleLogout } = useAuth();
@@ -19,6 +20,8 @@ export const Header = () => {
   const [showSangsangMenu, setShowSangsangMenu] = useState(false);
   const [showFriendsMenu, setShowFriendsMenu] = useState(false);
   const [nickname, setNickname] = useState('상상의작가');
+
+
 
   // Sync state nickname with logged-in user profile
   useEffect(() => {
@@ -208,8 +211,9 @@ export const Header = () => {
                   </button>
                 </div>
               ) : (
+
                 // 3-B. Logged-in state: [프로필 이미지 + 메뉴]
-                <div className="relative flex items-center space-x-1.5 sm:space-x-2.5">
+                <div className="relative flex items-center space-x-1.5 sm:space-x-2.5"> 
                   {/* 바로 소모량을 파악할 수 있는 헤더 실시간 지표 버튼 (클릭 시 구독/아틀리에 관리 이동) */}
                   <button
                     onClick={() => navigate("/subscription")}
@@ -311,6 +315,7 @@ export const Header = () => {
                     )}
                   </div>
                 </div>
+                  
               )}
             </div>
           </div>

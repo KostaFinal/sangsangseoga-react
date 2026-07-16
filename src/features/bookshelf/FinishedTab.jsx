@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { ThumbsUp, Eye } from 'lucide-react';
+import { ThumbsUp, Eye, StickyNote } from 'lucide-react';
 
 const GENRES = ["전체", "소설", "시", "에세이", "동화"];
 
-export default function FinishedTab({ filteredBooks, onOpenViewer, onReread, setActiveTab, onOpenDetail }) {
+export default function FinishedTab({ filteredBooks, onOpenViewer, onReread, setActiveTab, onOpenDetail, onOpenMemos, }) {
   const [selectedGenre, setSelectedGenre] = useState('전체');
 
   // Filter books by completed status and then by selected genre
@@ -82,7 +82,7 @@ export default function FinishedTab({ filteredBooks, onOpenViewer, onReread, set
               key={book.id}
               id={`finishedbook-${book.id}`}
               onClick={() => onOpenDetail(book)}
-              className="bg-white rounded-2xl border border-lavender-border shadow-sm p-4 flex flex-col justify-between h-[300px] group hover:shadow-md hover:border-brand-purple/50 transition-all cursor-pointer"
+              className="bg-white rounded-2xl border border-lavender-border shadow-sm p-4 flex flex-col justify-between h-[340px] group hover:shadow-md hover:border-brand-purple/50 transition-all cursor-pointer"
             >
               <div className="flex gap-4">
                 <div className="w-16 h-24 rounded-lg overflow-hidden shrink-0 border border-lavender-border shadow-sm">
@@ -114,6 +114,18 @@ export default function FinishedTab({ filteredBooks, onOpenViewer, onReread, set
                   </div>
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={event => {
+                  event.stopPropagation();
+                  onOpenMemos(book);
+                }}
+                className="w-full py-2 bg-white hover:bg-lavender-bg text-brand-purple font-bold text-xs rounded-full border border-lavender-border transition-all flex items-center justify-center gap-1 mt-2"
+              >
+                <StickyNote className="w-3 h-3" />
+                메모 목록
+              </button>
 
               <div className="flex gap-2 mt-2.5">
                 <button
