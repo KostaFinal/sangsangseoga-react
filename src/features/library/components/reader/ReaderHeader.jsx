@@ -1,10 +1,9 @@
-import { ChevronLeft, Languages, Bookmark, StickyNote } from "lucide-react";
+import { ChevronLeft, Languages, StickyNote } from "lucide-react";
 
 export default function ReaderHeader({
   book,
   readerMode,
   onBack,
-  onToggleBookmark,
   isEnglish,
   setIsEnglish,
   fontFamily,
@@ -13,7 +12,6 @@ export default function ReaderHeader({
   setFontSize,
   isMemoOpen,
   setIsMemoOpen,
-  isPageBookmarked,
   viewType,
   setViewType,
 }) {
@@ -70,15 +68,7 @@ export default function ReaderHeader({
           가<span className={`text-xs font-gowun font-bold ml-1 ${fontSize === "base" ? "text-black/90" : "text-white"}`}>{fontSize === "sm" ? "작게" : fontSize === "base" ? "보통" : "크게"}</span>
         </button>
 
-        <button
-          onClick={onToggleBookmark}
-          className={`p-2 rounded-lg border transition-all cursor-pointer ${
-            isPageBookmarked ? "bg-amber-100 border-amber-300 text-amber-600" : "border-black/10 hover:bg-black/5 text-black/95"
-          }`}
-          title="이 페이지 북마크"
-        >
-          <Bookmark className={`w-4 h-4 ${isPageBookmarked ? "fill-amber-500" : ""}`} />
-        </button>
+        
 
         <button
           onClick={() => setIsMemoOpen(!isMemoOpen)}

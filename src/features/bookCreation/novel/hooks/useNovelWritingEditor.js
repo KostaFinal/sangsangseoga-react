@@ -5,6 +5,8 @@ import {
   createScenePlan,
   extractGeneratedScenes,
   extractGeneratedText,
+  extractGeneratedTextEn,
+  translateText,
   writeScene,
   writeSceneSegment,
 } from "../../services/aiGenerateService";
@@ -78,6 +80,11 @@ export function useNovelWritingEditor() {
       goal: scene.sceneGoal || scene.goal || fallbackScenes[index]?.goal || "",
       status: "미작성",
       content: "",
+      // contentEn: content(한글 본문)의 영어 번역. contentEnSyncedWith에는 마지막으로
+      // 번역했을 때의 content 값을 저장해뒀다가, 지금 content와 다르면 번역이 오래된 것으로 보고
+      // "다음 장면"으로 넘어갈 때 다시 번역한다(ensureCurrentSceneTranslated 참고).
+      contentEn: "",
+      contentEnSyncedWith: "",
     }));
 
   const [scenes, setScenes] = useState(() => createInitialScenes(setting));
@@ -87,6 +94,10 @@ export function useNovelWritingEditor() {
   const [assistSuggestion, setAssistSuggestion] = useState(null);
   const [isAssisting, setIsAssisting] = useState(false);
   const [assistError, setAssistError] = useState(false);
+  // scenes 초기값은 createInitialScenes()가 만든 하드코딩 예시 본문이라, AI 응답이 오기 전까지
+  // 그대로 보여주면 사용자가 이걸 실제 생성 결과로 착각한다. 로딩 중에는 화면 자체를 가려서 헷갈리지 않게 한다.
+  const [isLoadingScenes, setIsLoadingScenes] = useState(true);
+  const [isTranslatingScene, setIsTranslatingScene] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -107,6 +118,10 @@ export function useNovelWritingEditor() {
       if (isMounted && aiScenes.length) {
         setScenes((prev) => normalizeAiScenes(aiScenes, prev));
         setCurrentSceneId(aiScenes[0].sceneNo || aiScenes[0].id || 1);
+      }
+
+      if (isMounted) {
+        setIsLoadingScenes(false);
       }
     };
 
@@ -153,13 +168,60 @@ export function useNovelWritingEditor() {
     );
   };
 
-  const handleNextScene = () => {
-    if (currentSceneIndex < 0) return;
+  // 지금 장면의 content(한글 본문)가 아직 번역 안 됐거나(contentEn 없음), 마지막 번역 이후
+  // 사용자가 본문을 더 고쳐서 오래된 번역이 됐으면("다시쓰기" 아니라 "다음 장면"으로 넘어가는
+  // 시점에) TRANSLATE_TEXT를 한 번 호출해 채운다. 실패해도 다음 장면 이동은 막지 않는다.
+  // scenesSnapshot을 받아 갱신된 배열을 그대로 반환해서, 호출부가 setScenes 이후의 React
+  // 재렌더링을 기다리지 않고도(state는 비동기라 바로 반영 안 됨) 최신 값을 이어서 쓸 수 있다.
+  const ensureCurrentSceneTranslated = async (scenesSnapshot) => {
+    const scene = scenesSnapshot.find((item) => item.id === currentSceneId);
+    if (!scene) return scenesSnapshot;
 
-    if (currentSceneIndex < scenes.length - 1) {
-      setCurrentSceneId(scenes[currentSceneIndex + 1].id);
-      setAssistSuggestion(null);
+    const content = scene.content || "";
+    if (!content.trim()) return scenesSnapshot;
+    if (scene.contentEn && scene.contentEnSyncedWith === content) return scenesSnapshot;
+
+    setIsTranslatingScene(true);
+
+    let contentEn = "";
+    try {
+      const protagonistName = setting.protagonist?.split(",")[0] || "";
+      const response = await translateText(content, { protagonistName });
+
+      if (response.ok) {
+        contentEn = extractGeneratedTextEn(response.data);
+      } else {
+        console.warn("장면 영어 번역 실패. contentEn 없이 진행합니다.", response.message);
+      }
+    } catch (error) {
+      console.warn("장면 영어 번역 중 예외 발생. contentEn 없이 진행합니다.", error);
+    } finally {
+      setIsTranslatingScene(false);
     }
+
+    const updatedScenes = scenesSnapshot.map((item) =>
+      item.id === currentSceneId
+        ? {
+            ...item,
+            contentEn: contentEn || item.contentEn || "",
+            contentEnSyncedWith: contentEn ? content : item.contentEnSyncedWith,
+          }
+        : item
+    );
+
+    setScenes(updatedScenes);
+    return updatedScenes;
+  };
+
+  const handleNextScene = async () => {
+    if (currentSceneIndex < 0) return;
+    if (currentSceneIndex >= scenes.length - 1) return;
+
+    const updatedScenes = await ensureCurrentSceneTranslated(scenes);
+    const nextScene = updatedScenes[currentSceneIndex + 1];
+
+    setCurrentSceneId(nextScene.id);
+    setAssistSuggestion(null);
   };
 
   const handlePrevScene = () => {
@@ -189,6 +251,7 @@ export function useNovelWritingEditor() {
         }
       );
       const generatedText = response.ok ? extractGeneratedText(response.data) : "";
+      const generatedTextEn = response.ok ? extractGeneratedTextEn(response.data) : "";
       const aiScenes = response.ok ? extractGeneratedScenes(response.data) : [];
 
       if (aiScenes.length) {
@@ -197,7 +260,21 @@ export function useNovelWritingEditor() {
       }
 
       if (generatedText) {
-        updateCurrentScene("content", generatedText);
+        // AI가 한글/영어를 같이 만들어줬으면 둘 다 "지금 막 번역된 상태"로 저장해서,
+        // "다음 장면" 이동 시 ensureCurrentSceneTranslated가 또 번역하지 않게 한다.
+        setScenes((prev) =>
+          prev.map((scene) =>
+            scene.id === currentSceneId
+              ? {
+                  ...scene,
+                  content: generatedText,
+                  contentEn: generatedTextEn || scene.contentEn || "",
+                  contentEnSyncedWith: generatedTextEn ? generatedText : scene.contentEnSyncedWith,
+                  status: "수정 중",
+                }
+              : scene
+          )
+        );
         return;
       }
 
@@ -348,13 +425,17 @@ export function useNovelWritingEditor() {
     setSelectionRange({ start: 0, end: 0 });
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!scenes.length) return;
+
+    // 마지막 장면은 handleNextScene을 거치지 않고 바로 여기로 오므로, 나가기 전에
+    // 여기서도 한 번 번역 여부를 확인한다.
+    const updatedScenes = await ensureCurrentSceneTranslated(scenes);
 
     const payload = {
       bookType: "NOVEL",
       setting,
-      scenes,
+      scenes: updatedScenes,
     };
 
     console.log("표지 선택 화면으로 이동:", payload);
@@ -368,6 +449,8 @@ export function useNovelWritingEditor() {
     setting,
     isGuidedWritingLevel,
     isIndependentWritingLevel,
+    isLoadingScenes,
+    isTranslatingScene,
     scenes,
     currentSceneId,
     setCurrentSceneId,

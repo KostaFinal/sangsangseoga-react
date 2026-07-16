@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {
+import {  
   ChevronDown,
   User,
   CreditCard,
@@ -11,6 +11,7 @@ import { CURRENT_USER_PROFILE } from '../data';
 import { useAuth } from '../context/AuthContext';
 import { NotificationPanel } from './NotificationPanel';
 import logoUrl from '../../assets/images/sangsangseoga_official_logo_1782313504336.jpg';
+
 
 export const Header = () => {
   const {
@@ -25,6 +26,8 @@ export const Header = () => {
   const [showFriendsMenu, setShowFriendsMenu] = useState(false);
   const [nickname, setNickname] = useState('상상의작가');
   const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
+
+
 
   // Sync state nickname with logged-in user profile
   useEffect(() => {
@@ -215,6 +218,7 @@ export const Header = () => {
                   </button>
                 </div>
               ) : (
+
                 // 3-B. Logged-in state: [프로필 이미지 + 메뉴]
                 <div className="relative flex items-center space-x-1.5 sm:space-x-2.5">
                   {/* 알림 벨 아이콘 + 드롭다운 패널 */}
@@ -351,6 +355,7 @@ export const Header = () => {
                     )}
                   </div>
                 </div>
+                  
               )}
             </div>
           </div>

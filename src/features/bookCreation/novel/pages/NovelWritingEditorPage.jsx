@@ -13,6 +13,8 @@ function NovelWritingEditorPage() {
     setting,
     isGuidedWritingLevel,
     isIndependentWritingLevel,
+    isLoadingScenes,
+    isTranslatingScene,
     scenes,
     currentSceneId,
     setCurrentSceneId,
@@ -57,6 +59,28 @@ function NovelWritingEditorPage() {
     if (mode === "replaceParagraph") return "현재 문단과 교체";
     return "적용";
   };
+
+  if (isLoadingScenes) {
+    return (
+      <div className="novel-editor-page">
+        <img
+          className="novel-editor-bg"
+          src={scenarioBg}
+          alt=""
+          aria-hidden="true"
+        />
+        <div className="novel-editor-overlay" />
+
+        <main className="novel-editor-loading-layout">
+          <div className="novel-editor-loading-card">
+            <div className="novel-editor-spinner" />
+            <h1>AI가 장면을 만들고 있어요...</h1>
+            <p>기획과 연출 회의 내용을 바탕으로 장면 목록과 초안을 준비하고 있어요.</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (!currentScene) {
     return (
@@ -224,10 +248,14 @@ function NovelWritingEditorPage() {
               type="button"
               className="next-scene-btn"
               onClick={isLastScene ? handleComplete : handleNextScene}
-              disabled={!currentScene || scenes.length === 0}
+              disabled={!currentScene || scenes.length === 0 || isTranslatingScene}
             >
               <span className="editor-next-action-label">
-                {isLastScene ? "표지 선택으로 →" : "다음 장면 →"}
+                {isTranslatingScene
+                  ? "번역 확인 중..."
+                  : isLastScene
+                  ? "표지 선택으로 →"
+                  : "다음 장면 →"}
               </span>
             </button>
           </div>
