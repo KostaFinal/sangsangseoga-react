@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import PoemFlowStepper from './PoemFlowStepper.jsx';
 import { requestGenerateImage, extractImageUrl } from '../../services/imageGenerateService.js';
+import { requestPoemCoverPrompt } from '../services/poemCreationService.js';
+import { poemPage } from '../../../library/utils/mapBookPages.js';
+import { PageCanvas } from '../../../library/components/reader/layout/pageElements.jsx';
 
-const getPoemPagePrompt = (page) => {
-  const content = page?.content || '';
-  return `선택한 ${page?.pageNumber || ''}쪽의 시 내용과 분위기에 어울리는 감성적인 삽화를 만들어줘.\n\n${content}`.trim();
-};
+const DEFAULT_COVER_INSTRUCTION = '시집의 제목과 전체 분위기를 담은 부드럽고 감성적인 표지 이미지를 만들어줘.';
 
 export default function PoemPreviewStep({
+  settings,
   previewPages,
   activePreviewPage,
   setActivePreviewPage,
@@ -16,11 +17,10 @@ export default function PoemPreviewStep({
   setShowCompleteModal,
   coverImage,
   setCoverImage,
-  pageImages,
-  setPageImages,
+  isSaving,
+  saveError,
 }) {
   const [panelMode, setPanelMode] = useState('idle');
-  const [selectedIllustrationPage, setSelectedIllustrationPage] = useState(null);
   const [imagePrompt, setImagePrompt] = useState('');
   const [isRequestingImage, setIsRequestingImage] = useState(false);
   const [imageError, setImageError] = useState('');
@@ -31,8 +31,19 @@ export default function PoemPreviewStep({
   const maxStart = Math.max(0, Math.floor((previewPages.length - 1) / 2) * 2);
   const canGoPrev = spreadStart > 0;
   const canGoNext = spreadStart < maxStart;
-  const selectedPage = previewPages.find((page) => page.pageNumber === selectedIllustrationPage);
-  const selectedPageImage = selectedIllustrationPage ? pageImages[selectedIllustrationPage] : null;
+
+  // 실제 리더(mapBookPages.js)와 똑같은 레이아웃 함수를 그대로 써서 미리보기를 그린다.
+  // 이러면 여기서 보이는 모양이 곧 완독 화면에서 보일 모양이라, 둘이 어긋날 일이 없다.
+  const toReaderPage = (previewPage) => {
+    if (!previewPage) return null;
+    return poemPage({
+      pageNo: previewPage.pageNumber,
+      title: previewPage.title || null,
+      contentTextKo: previewPage.content,
+      contentTextEn: previewPage.content,
+      imageUrl: null,
+    });
+  };
 
   const goPrev = () => {
     if (!canGoPrev) return;
@@ -46,13 +57,7 @@ export default function PoemPreviewStep({
 
   const openCoverRequest = () => {
     setPanelMode('coverRequest');
-    setImagePrompt('시집의 제목과 전체 분위기를 담은 부드럽고 감성적인 표지 이미지를 만들어줘.');
-  };
-
-  const openIllustrationRequest = () => {
-    if (!selectedPage) return;
-    setPanelMode('illustrationRequest');
-    setImagePrompt(getPoemPagePrompt(selectedPage));
+    setImagePrompt(DEFAULT_COVER_INSTRUCTION);
   };
 
   const cancelImageRequest = () => {
@@ -61,18 +66,30 @@ export default function PoemPreviewStep({
     setImageError('');
   };
 
-  const completeImageRequest = async () => {
-    const isCoverRequest = panelMode === 'coverRequest';
-    if (!isCoverRequest && !selectedPage) return;
-
+  const completeCoverRequest = async () => {
     setIsRequestingImage(true);
     setImageError('');
 
+    // 시는 은유로 쓰여 있어서 본문을 그대로 이미지 프롬프트에 넣으면 그림이 글이랑 안 맞는다.
+    // AI에게 먼저 "실제로 그림으로 그릴 수 있는" 영어 표지 프롬프트를 뽑아달라고 요청한다.
+    const coverPromptResult = await requestPoemCoverPrompt({
+      settings,
+      previewPages,
+      userRequest: imagePrompt,
+    });
+
+    if (!coverPromptResult.ok || !coverPromptResult.coverPrompt) {
+      setIsRequestingImage(false);
+      setImageError(coverPromptResult.message || '표지 프롬프트를 만들지 못했어요. 다시 시도해 주세요.');
+      return;
+    }
+
     const response = await requestGenerateImage({
-      promptText: imagePrompt,
-      imageType: isCoverRequest ? 'COVER' : 'PAGE',
-      pageNo: isCoverRequest ? null : selectedPage.pageNumber,
+      promptText: coverPromptResult.coverPrompt,
+      imageType: 'COVER',
+      pageNo: null,
       aspectRatio: '3:4',
+      bookType: 'POEM',
     });
 
     setIsRequestingImage(false);
@@ -88,74 +105,26 @@ export default function PoemPreviewStep({
       return;
     }
 
-    if (isCoverRequest) {
-      setCoverImage({ url: imageUrl, prompt: imagePrompt });
-    } else {
-      setPageImages((prev) => ({
-        ...prev,
-        [selectedPage.pageNumber]: { url: imageUrl, prompt: imagePrompt },
-      }));
-    }
-
+    setCoverImage({ url: imageUrl, prompt: imagePrompt });
     cancelImageRequest();
-  };
-
-  const selectPage = (page) => {
-    if (!page) return;
-    setSelectedIllustrationPage(page.pageNumber);
-    if (panelMode === 'illustrationRequest') {
-      setImagePrompt(getPoemPagePrompt(page));
-    }
-  };
-
-  const getPageSelectProps = (page) => {
-    if (!page) return {};
-
-    return {
-      role: 'button',
-      tabIndex: 0,
-      onClick: () => selectPage(page),
-      onKeyDown: (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          selectPage(page);
-        }
-      },
-    };
-  };
-
-  const renderPageIllustration = (page) => {
-    const image = page ? pageImages[page.pageNumber] : null;
-    if (!image) return null;
-
-    return (
-      <div className="preview-page-illustration">
-        <img src={image.url} alt={`${page.pageNumber}쪽 삽화`} />
-      </div>
-    );
   };
 
   const renderImagePanel = () => {
     if (panelMode !== 'idle') {
-      const isCoverRequest = panelMode === 'coverRequest';
       return (
         <div className="essay-image-box preview-image-request">
-          <strong>{isCoverRequest ? '표지 이미지 만들기' : '삽화 이미지 만들기'}</strong>
-          <p>
-            {isCoverRequest
-              ? '시집의 분위기를 담은 표지 요청문을 확인해 주세요.'
-              : `${selectedIllustrationPage}쪽의 시 내용에 어울리는 삽화 요청문을 확인해 주세요.`}
-          </p>
+          <strong>표지 이미지 만들기</strong>
+          <p>시집의 분위기를 담은 표지 요청문을 확인해 주세요.</p>
           <textarea
             className="preview-prompt-textarea"
             value={imagePrompt}
             onChange={(event) => setImagePrompt(event.target.value)}
-            aria-label={isCoverRequest ? '표지 이미지 요청문' : '삽화 이미지 요청문'}
+            aria-label="표지 이미지 요청문"
             disabled={isRequestingImage}
           />
           {imageError && <p className="preview-image-error">{imageError}</p>}
           <div className="preview-request-actions">
-            <button type="button" className="essay-primary" onClick={completeImageRequest} disabled={isRequestingImage}>
+            <button type="button" className="essay-primary" onClick={completeCoverRequest} disabled={isRequestingImage}>
               {isRequestingImage ? '생성 중…' : '생성하기'}
             </button>
             <button type="button" className="essay-ghost" onClick={cancelImageRequest} disabled={isRequestingImage}>취소</button>
@@ -177,29 +146,6 @@ export default function PoemPreviewStep({
             </div>
           )}
         </div>
-
-        <div className="preview-image-section">
-          <strong>삽화 이미지</strong>
-          <p>삽화를 넣고 싶은 쪽을 먼저 선택해 주세요.</p>
-          <div className="preview-page-selection">
-            <span>선택된 쪽</span>
-            <b>{selectedIllustrationPage ? `${selectedIllustrationPage}쪽` : '없음'}</b>
-          </div>
-          <button
-            type="button"
-            className="essay-soft"
-            onClick={openIllustrationRequest}
-            disabled={!selectedIllustrationPage}
-          >
-            선택한 쪽 삽화 생성
-          </button>
-          {selectedPageImage && (
-            <div className="preview-generated-card">
-              <span>{selectedIllustrationPage}쪽 삽화</span>
-              <img src={selectedPageImage.url} alt={`${selectedIllustrationPage}쪽 삽화`} />
-            </div>
-          )}
-        </div>
       </div>
     );
   };
@@ -210,51 +156,47 @@ export default function PoemPreviewStep({
         <PoemFlowStepper active={3} />
       </div>
       <div className="essay-preview-layout">
-        <div className="essay-book-preview poem-book-preview">
-          <div className="preview-page-hint">삽화를 넣고 싶은 쪽을 클릭해 선택할 수 있어요.</div>
-          <button type="button" className="page-turn prev" onClick={goPrev} disabled={!canGoPrev} aria-label="이전 페이지">‹</button>
-          <article
-            className={`essay-book-page left poem-book-page preview-selectable-page ${selectedIllustrationPage === leftPage?.pageNumber ? 'selected-illustration-page' : ''}`}
-            {...getPageSelectProps(leftPage)}
-          >
-            {leftPage ? (
-              <>
-                {selectedIllustrationPage === leftPage.pageNumber && <em className="selected-page-badge">선택됨</em>}
-                <h2 className={leftPage.isContinued ? 'poem-page-title-slot' : ''}>{leftPage.title}</h2>
-                <p>{leftPage.content}</p>
-                {renderPageIllustration(leftPage)}
-                <span>{leftPage.pageNumber}</span>
-              </>
-            ) : (
-              <p className="empty-page">빈 페이지</p>
-            )}
-          </article>
-          <article
-            className={`essay-book-page right poem-book-page ${rightPage ? 'preview-selectable-page' : ''} ${selectedIllustrationPage === rightPage?.pageNumber ? 'selected-illustration-page' : ''}`}
-            {...getPageSelectProps(rightPage)}
-          >
-            {rightPage ? (
-              <>
-                {selectedIllustrationPage === rightPage.pageNumber && <em className="selected-page-badge">선택됨</em>}
-                <h2 className={(rightPage.isContinued || rightPage.poemId === leftPage?.poemId) ? 'poem-page-title-slot' : ''}>{rightPage.title}</h2>
-                <p>{rightPage.content}</p>
-                {renderPageIllustration(rightPage)}
-                <span>{rightPage.pageNumber}</span>
-              </>
-            ) : (
-              <p className="empty-page">다음 페이지 없음</p>
-            )}
-          </article>
-          <button type="button" className="page-turn next" onClick={goNext} disabled={!canGoNext} aria-label="다음 페이지">›</button>
+        <div className="poem-book-preview-canvas-shell">
+          <div className="poem-preview-spread">
+            <button type="button" className="page-turn prev" onClick={goPrev} disabled={!canGoPrev} aria-label="이전 페이지">‹</button>
+            <div className="poem-preview-canvas-wrap">
+              {leftPage ? (
+                <>
+                  <PageCanvas page={toReaderPage(leftPage)} />
+                  <span className="poem-preview-page-no">{leftPage.pageNumber}</span>
+                </>
+              ) : (
+                <div className="empty-page">빈 페이지</div>
+              )}
+            </div>
+            <div className="poem-preview-canvas-wrap">
+              {rightPage ? (
+                <>
+                  <PageCanvas page={toReaderPage(rightPage)} />
+                  <span className="poem-preview-page-no">{rightPage.pageNumber}</span>
+                </>
+              ) : (
+                <div className="empty-page">다음 페이지 없음</div>
+              )}
+            </div>
+            <button type="button" className="page-turn next" onClick={goNext} disabled={!canGoNext} aria-label="다음 페이지">›</button>
+          </div>
         </div>
         <aside className="essay-preview-side poem-preview-side">
-          <h2>이미지 생성</h2>
           {renderImagePanel()}
         </aside>
       </div>
+      {saveError && <p className="essay-image-error preview-save-error">{saveError}</p>}
       <div className="essay-bottom-actions essay-work-bottom-actions">
         <button type="button" className="essay-ghost" onClick={() => requestViewChange('step2')}>이전</button>
-        <button type="button" className="essay-primary" onClick={() => setShowCompleteModal(true)}>완성하기</button>
+        <button
+          type="button"
+          className="essay-primary"
+          disabled={isSaving}
+          onClick={() => setShowCompleteModal(true)}
+        >
+          {isSaving ? '저장 중...' : '완성하기'}
+        </button>
       </div>
     </section>
   );

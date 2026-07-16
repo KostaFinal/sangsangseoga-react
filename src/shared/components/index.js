@@ -8,3 +8,4 @@ export { NotificationPanel } from './NotificationPanel';
 export { SkeletonLoading } from './SkeletonLoading';
 export { Toast } from './Toast';
 export { default as SideMenu } from './SideMenu';
+export { Pagination } from './Pagination';

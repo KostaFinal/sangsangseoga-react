@@ -16,6 +16,7 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
     setQuestionIndex,
     guidedComplete,
     content,
+    updateContent,
     title,
     pages,
     workInput,
@@ -36,8 +37,6 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
     setShowCompleteModal,
     writeGuidedStep,
     recommendGuidedAnswer,
-    appendRaw,
-    appendPolished,
     askAi,
     undoFreeAction,
     redoFreeAction,
@@ -52,8 +51,8 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
     generationNotice,
     coverImage,
     setCoverImage,
-    pageImages,
-    setPageImages,
+    isSaving,
+    saveError,
   } = useEssayCreationState({ initialView, onGoToMyBooks, onBookComplete });
 
   return (
@@ -77,13 +76,12 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
             setQuestionIndex={setQuestionIndex}
             guidedComplete={guidedComplete}
             content={content}
+            updateContent={updateContent}
             title={title}
             workInput={workInput}
             setWorkInput={setWorkInput}
             writeGuidedStep={writeGuidedStep}
             recommendGuidedAnswer={recommendGuidedAnswer}
-            appendRaw={appendRaw}
-            appendPolished={appendPolished}
             askAi={askAi}
             selectedText={selectedText}
             setSelectedText={setSelectedText}
@@ -116,8 +114,8 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
             setShowCompleteModal={setShowCompleteModal}
             coverImage={coverImage}
             setCoverImage={setCoverImage}
-            pageImages={pageImages}
-            setPageImages={setPageImages}
+            isSaving={isSaving}
+            saveError={saveError}
           />
         )}
       </main>
@@ -128,7 +126,7 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
         message="내 서재의 내가 쓴 책에서 방금 만든 에세이를 확인할 수 있어요."
         cancelText="닫기"
         confirmText="내 서재로 이동"
-        type="success"
+        type="brand"
         onClose={() => setShowCompleteModal(false)}
         onConfirm={moveToMyBooks}
       />

@@ -32,6 +32,7 @@ export const requestGenerateImage = async ({
   pageNo = null,
   style = null,
   aspectRatio = "3:4",
+  bookType = null,
   signal,
 } = {}) => {
   if (!promptText) {
@@ -50,7 +51,7 @@ export const requestGenerateImage = async ({
         "Content-Type": "application/json",
         ...authHeaders(),
       },
-      body: JSON.stringify({ promptText, imageType, pageNo, style, aspectRatio }),
+      body: JSON.stringify({ promptText, imageType, pageNo, style, aspectRatio, bookType }),
       signal,
     });
     const data = await parseResponseBody(response);
@@ -82,8 +83,9 @@ export const requestGenerateImage = async ({
 };
 
 // Spring의 ApiResponse { success, data: { success, message, imageUrl, imageBase64 }, code, message } 구조에서
-// 실제 이미지 URL을 꺼낸다.
-export const extractImageUrl = (fetchData) => fetchData?.data?.imageUrl || null;
+// 실제 이미지 URL을 꺼낸다. Gemini 이미지 생성은 호스팅 URL이 없어 imageUrl이 비어 있고, 대신
+// imageBase64에 <img src>에 바로 쓸 수 있는 data URI("data:image/png;base64,...")가 담겨 온다.
+export const extractImageUrl = (fetchData) => fetchData?.data?.imageUrl || fetchData?.data?.imageBase64 || null;
 
 // Spring의 ApiResponse { success, data: { bookId, stage, result: <Python envelope> }, code, message } 구조에서
 // CREATE_IMAGE_PROMPT/CREATE_COVER_PROMPT 응답(Python envelope)을 꺼낸다.

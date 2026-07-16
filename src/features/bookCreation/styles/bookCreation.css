@@ -777,6 +777,22 @@
   font-size: 12px;
   font-weight: 950;
 }
+.body-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.body-edit-hint {
+  color: var(--editor-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+.poem-body-locked {
+  cursor: not-allowed;
+  background: rgba(0, 0, 0, .03);
+  color: var(--editor-muted);
+}
 .title-editor input {
   height: 38px;
   border: 1px solid var(--editor-border);
@@ -788,32 +804,6 @@
   font-weight: 900;
   outline: none;
 }
-.title-recommend { position: relative; }
-.title-recommend > div {
-  display: none;
-  position: absolute;
-  z-index: 5;
-  right: 0;
-  top: 43px;
-  width: 230px;
-  padding: 10px;
-  border: 1px solid var(--editor-border);
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: var(--editor-shadow);
-}
-.title-recommend:hover > div { display: grid; gap: 8px; }
-.title-recommend > div button {
-  min-height: 34px;
-  border: 0;
-  border-radius: 10px;
-  background: #fbfaff;
-  color: var(--editor-navy);
-  padding: 0 10px;
-  text-align: left;
-  font-size: 12px;
-  font-weight: 850;
-}
 .soft,
 .page-panel-head button,
 .image-buttons button {
@@ -823,15 +813,6 @@
   color: var(--editor-purple);
   font-size: 12px;
   font-weight: 950;
-}
-.title-recommend .soft {
-  width: 100%;
-  height: 38px;
-  border: 0;
-  border-radius: 11px;
-  color: #fff;
-  background: linear-gradient(135deg, #6b54e7, #5179e6);
-  box-shadow: 0 8px 20px rgba(107, 84, 231, .22);
 }
 .result-panel textarea {
   flex: 1;
@@ -856,8 +837,8 @@
   padding: 15px;
   overflow-y: auto;
 }
-.question-card h3 { margin: 16px 0 8px; font-size: 18px; line-height: 1.35; letter-spacing: -.03em; }
-.question-card p { margin: 0 0 16px; color: var(--editor-muted); font-size: 12px; line-height: 1.65; font-weight: 800; }
+.question-card h3 { margin: 16px 0 8px; font-size: 18px; line-height: 1.35; letter-spacing: -.03em; word-break: keep-all; overflow-wrap: break-word; }
+.question-card p { margin: 0 0 16px; color: var(--editor-muted); font-size: 12px; line-height: 1.65; font-weight: 800; word-break: keep-all; overflow-wrap: break-word; }
 .question-head {
   display: flex;
   justify-content: space-between;
@@ -1554,13 +1535,6 @@
   background: #fee2e2;
   border-color: #fecaca;
 }
-.free-summary-card div {
-  grid-template-columns: 58px 1fr;
-}
-.free-summary-card strong {
-  word-break: keep-all;
-  overflow-wrap: anywhere;
-}
 .free-edit-panel .edit-request-input {
   min-height: 118px;
 }
@@ -1664,12 +1638,13 @@
   white-space: normal;
   line-height: 1.25;
 }
-.free-ai-request-note {
+.free-request-blank-notice {
   margin: 8px 0 0 !important;
   padding: 9px 10px;
+  border: 1px solid #fecdd3;
   border-radius: 12px;
-  background: #fbfaff;
-  color: var(--editor-muted) !important;
+  background: #fff1f2;
+  color: #e11d48 !important;
   font-size: 11px !important;
   line-height: 1.55 !important;
   font-weight: 850 !important;
@@ -1692,17 +1667,6 @@
 }
 .free-action-bar .primary.small {
   box-shadow: 0 8px 18px rgba(107, 84, 231, 0.16);
-}
-.free-ai-request-note {
-  margin: 9px 0 0 !important;
-  padding: 9px 11px;
-  border: 1px solid #eee9ff;
-  border-radius: 12px;
-  background: #fbfaff;
-  color: #8179ac !important;
-  font-size: 11px !important;
-  line-height: 1.5 !important;
-  font-weight: 850 !important;
 }
 
 /* Essay 2-mode content-first workspace */
@@ -2185,7 +2149,7 @@
 
 .essay-editor-title-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   padding: 18px;
   border-bottom: 1px solid #f1e8ff;
@@ -2216,6 +2180,14 @@
 
 .essay-main-textarea::placeholder {
   color: #b7adc8;
+}
+
+.essay-body-edit-hint {
+  padding: 0 40px;
+  color: var(--essay-muted, #8a7fa3);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: right;
 }
 
 .essay-editor-foot {
@@ -2317,10 +2289,12 @@
 }
 
 .essay-preview-layout {
+  /* 화면 높이에 맞춰 억지로 늘리면(예전 calc(100vh - 220px)) 실제 책 페이지(620px)보다
+     행이 훨씬 커져서, 미리보기 아래 빈 공간이 크게 남고 "이전/완성하기" 버튼이 너무
+     아래로 밀려났다. 내용 높이에 맞게 자연스럽게 줄어들도록 고정 높이를 없앤다. */
   display: grid;
   grid-template-columns: minmax(700px, 1fr) 320px;
   gap: 20px;
-  height: calc(100vh - 220px);
   min-height: 640px;
 }
 
@@ -2393,6 +2367,14 @@
 }
 
 .essay-preview-side {
+  /* .layout-flip-page의 실제 높이(.poem-preview-canvas-wrap의 620px, pageElements.jsx의
+     PAGE_HEIGHT)와 맞춘다 — 전체 그리드 행 높이(100%)로 늘리면 실제로 보이는 책 페이지보다
+     훨씬 커져서 옆 미리보기와 안 맞아 보였다. 왼쪽 책 페이지는 더 큰 행 높이 안에서
+     세로 가운데 정렬돼 있으므로(.poem-book-preview-canvas-shell), 이쪽도 grid 행 안에서
+     가운데로 정렬해야 실제 책 페이지와 위아래 위치가 맞는다. */
+  height: 620px;
+  align-self: center;
+  box-sizing: border-box;
   padding: 18px;
   overflow: auto;
 }
@@ -2541,13 +2523,6 @@
   min-width: 84px;
 }
 
-.essay-title-button {
-  min-height: 48px;
-  align-self: end;
-  white-space: nowrap;
-  border-radius: 18px;
-}
-
 .essay-main-textarea[readonly] {
   background: #fffdfb;
   cursor: text;
@@ -2574,7 +2549,7 @@
 }
 
 .essay-work-bottom-actions {
-  margin-top: 18px;
+  margin-top: 8px;
 }
 
 .essay-panel-actions.vertical .essay-primary,
@@ -3010,8 +2985,7 @@
 .app-frame .step-title > span,
 .app-frame .signup-button,
 .app-frame .primary,
-.app-frame .ai-full,
-.app-frame .title-recommend .soft {
+.app-frame .ai-full {
   background: linear-gradient(135deg, #8b5cf6, #6d28d9);
   box-shadow: 0 14px 28px rgba(124, 58, 237, .22);
 }
@@ -3285,8 +3259,7 @@
 .app-frame .question-card p,
 .app-frame .history-card span,
 .app-frame .page-panel p,
-.app-frame .free-guide-text,
-.app-frame .free-ai-request-note {
+.app-frame .free-guide-text {
   color: var(--poem-muted) !important;
 }
 
@@ -3339,7 +3312,6 @@
 
 .app-frame .option-button-grid button,
 .app-frame .choice-list button,
-.app-frame .title-recommend > div button,
 .app-frame .preview-page-list button {
   border: 1px solid var(--poem-border);
   background: #fff;
@@ -3441,14 +3413,6 @@
   border: 1px solid var(--poem-border);
   border-radius: 18px;
   font-size: 15px;
-}
-
-.app-frame .title-recommend .soft {
-  min-height: 48px;
-  height: auto;
-  border-radius: 18px;
-  padding: 0 16px;
-  box-shadow: none;
 }
 
 .app-frame .body-label {
@@ -3773,27 +3737,6 @@
   color: #fff;
 }
 
-.app-frame .poem-title-recommend-button {
-  min-height: 48px;
-  align-self: end;
-  white-space: nowrap;
-  border-radius: 18px;
-  background: #f3e8ff;
-  color: #5b21b6;
-  border: 1px solid #e9d5ff;
-  box-shadow: none;
-  padding: 0 16px;
-}
-
-.app-frame .poem-title-recommend-button:hover:not(:disabled) {
-  background: #ede9fe;
-  border-color: #c4b5fd;
-  transform: translateY(-1px);
-}
-
-.app-frame .title-recommend > div {
-  display: none !important;
-}
 
 .app-frame .editor-step .editor-grid,
 .app-frame .editor-step .editor-grid.edit-mode-grid {
@@ -3809,12 +3752,65 @@
   margin-bottom: 22px;
 }
 
-.app-frame .poem-book-preview {
-  min-height: 640px;
+/* 시(POEM) 미리보기 - 실제 리더(LayoutPageViewer, 480x620 캔버스)와 똑같은
+   PageCanvas 컴포넌트로 페이지를 그리므로, 이 감싸는 틀도 리더와 같은 크기를 쓴다. */
+.poem-book-preview-canvas-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+  justify-content: center;
+  overflow-x: auto;
 }
 
-.app-frame .poem-book-page p {
-  white-space: pre-wrap;
+.poem-preview-spread {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  border-radius: 4px;
+  box-shadow: 0 25px 70px rgba(124, 58, 231, .12);
+  overflow: hidden;
+}
+
+.poem-preview-canvas-wrap {
+  position: relative;
+  width: 480px;
+  height: 620px;
+  background: #fffdfb;
+}
+
+.poem-preview-page-no {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  text-align: center;
+  color: #a79ab8;
+  font-size: 12px;
+  font-weight: 800;
+  z-index: 3;
+}
+
+/* PageCanvas가 배경이 불투명한 자식이라 .selected-illustration-page/:hover가 주는
+   background/box-shadow가 그 밑에 가려서 안 보인다. ::after를 PageCanvas보다 위에 띄워서
+   선택/호버 테두리만 별도로 그린다 (pointer-events:none이라 클릭은 그대로 wrap이 받음). */
+.poem-preview-canvas-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  transition: box-shadow .16s ease;
+}
+
+.poem-preview-canvas-wrap.preview-selectable-page:hover::after {
+  box-shadow: inset 0 0 0 2px rgba(167, 139, 250, .5);
+}
+
+.poem-preview-canvas-wrap.selected-illustration-page::after {
+  box-shadow: inset 0 0 0 3px rgba(124, 58, 231, .55), inset 0 0 42px rgba(124, 58, 231, .12);
 }
 
 .app-frame .poem-preview-side .essay-image-box {
@@ -6844,7 +6840,10 @@
 .preview-generated-card img {
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  /* 표지 이미지는 항상 3:4(세로) 비율로 생성되는데(요청 시 aspectRatio: "3:4"),
+     이 박스가 16:10(가로)이라 object-fit: cover가 위아래를 크게 잘라냈다.
+     실제 생성 비율과 맞춰서 전체 이미지가 다 보이게 한다. */
+  aspect-ratio: 3 / 4;
   object-fit: cover;
   border-radius: 13px;
   border: 1px solid #f1e8ff;
@@ -6926,8 +6925,6 @@
 .app-frame .primary,
 .app-frame .essay-primary,
 .app-frame .signup-button,
-.app-frame .title-recommend .soft,
-.app-frame .poem-title-recommend-button,
 .app-frame .ai-full {
   background: linear-gradient(135deg, #8a68dc 0%, #6f49c6 100%);
   box-shadow: 0 10px 24px rgba(111, 73, 198, .22);
@@ -6950,7 +6947,6 @@
 
 .app-frame .primary:hover:not(:disabled),
 .app-frame .essay-primary:hover:not(:disabled),
-.app-frame .poem-title-recommend-button:hover:not(:disabled),
 .app-frame .ai-full:hover:not(:disabled) {
   background: linear-gradient(135deg, #7d5fd2 0%, #613db6 100%);
 }
@@ -7212,7 +7208,6 @@
 .app-frame .answer-choice-options button,
 .app-frame .option-button-grid button,
 .app-frame .choice-list button,
-.app-frame .title-recommend > div button,
 .app-frame .preview-page-list button {
   background: rgba(255, 255, 255, .56);
   border-color: rgba(229, 215, 255, .74);
@@ -7236,8 +7231,6 @@
 .app-frame .primary,
 .app-frame .essay-primary,
 .app-frame .signup-button,
-.app-frame .title-recommend .soft,
-.app-frame .poem-title-recommend-button,
 .app-frame .ai-full {
   background: linear-gradient(135deg, #8665d5 0%, #6b49bf 100%);
   box-shadow: 0 8px 18px rgba(95, 63, 178, .18);
@@ -7596,11 +7589,10 @@
 }
 
 .essay-only-shell .essay-bottom-actions {
-  margin-top: 22px;
+  margin-top: 8px;
 }
 
-.essay-only-shell .essay-image-box .essay-soft,
-.essay-only-shell .essay-title-button {
+.essay-only-shell .essay-image-box .essay-soft {
   min-height: 38px;
 }
 

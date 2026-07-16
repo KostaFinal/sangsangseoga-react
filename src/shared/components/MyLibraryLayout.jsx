@@ -11,9 +11,8 @@ import { BookStats } from '../../features/stats';
 import BookMemoListModal from "../../features/library/components/BookMemoListModal";
 import {
   getBookContents,
-  getBookmarks,
+  getBookmark,
   addBookmark,
-  removeBookmark,
 } from '../../api/bookApi';
 import {
   getWishlist as getWishlistBookshelf,
@@ -271,25 +270,13 @@ export function MyLibraryLayout() {
     );
 
     try {
-      // 해당 책의 기존 북마크 조회
-      const bookmarkRes = await getBookmarks(bookId);
+      // 책당 북마크는 하나뿐이라, 이미 이 페이지에 북마크돼 있지 않을 때만 등록/이동한다
+      // (서버가 addBookmark에서 알아서 기존 북마크를 이 페이지로 옮겨준다 - 같은 페이지에
+      // 다시 등록하면 BOOKMARK_ALREADY_EXISTS로 거부하므로 그 경우만 걸러낸다).
+      const bookmarkRes = await getBookmark(bookId);
+      const bookmark = bookmarkRes.data?.data;
 
-      const bookmarkData = bookmarkRes.data?.data;
-      const existingBookmarks = Array.isArray(bookmarkData)
-        ? bookmarkData
-          .map(Number)
-          .filter(pageNo => Number.isInteger(pageNo) && pageNo > 0)
-        : [];
-
-      // 현재 페이지 이외의 기존 북마크 제거
-      await Promise.all(
-        existingBookmarks
-          .filter(pageNo => pageNo !== currentPage)
-          .map(pageNo => removeBookmark(bookId, pageNo))
-      );
-
-      // 같은 페이지가 이미 저장돼 있지 않을 때만 추가
-      if (!existingBookmarks.includes(currentPage)) {
+      if (!(bookmark?.isBookmarkedByMe && bookmark?.pageNo === currentPage)) {
         await addBookmark(bookId, currentPage);
       }
 

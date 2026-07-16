@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PoemFlowStepper from './PoemFlowStepper.jsx';
 import { answerQuestions, POEM_EDIT_DIRECTION_CHOICES } from '../data/poemQuestions.js';
-import { joinPoemText, polishFreeInput, getContentBase, getTitleIdeas } from '../utils/poemTextUtils.js';
+import { getContentBase } from '../utils/poemTextUtils.js';
 
 
 export default function PoemWorkStep({
@@ -18,11 +18,9 @@ export default function PoemWorkStep({
   updateCurrentPoemAnswers,
   updateCurrentPoemFreeRequest,
   makePoem,
-  makeAll,
   variant,
   setVariant,
   resetStep3,
-  titleIdeas,
   addPoem,
   deletePoem,
   setCurrentView,
@@ -44,19 +42,37 @@ export default function PoemWorkStep({
   const [answerSelectedText, setAnswerSelectedText] = useState('');
   const [answerEditRequest, setAnswerEditRequest] = useState('');
   const [answerEditChoiceOpen, setAnswerEditChoiceOpen] = useState(false);
-  const [freeAction, setFreeAction] = useState('raw');
   const [freeEditMode, setFreeEditMode] = useState(false);
   const [freeSelectedText, setFreeSelectedText] = useState('');
   const [freeEditRequest, setFreeEditRequest] = useState('');
   const [freeUndoSnapshot, setFreeUndoSnapshot] = useState(null);
   const [freeRedoSnapshot, setFreeRedoSnapshot] = useState(null);
+  const [freeRequestBlank, setFreeRequestBlank] = useState(false);
   const answerReady = answerQuestions.every((item) => item.optional || String(answers[item.key] || '').trim());
-  const freeInputReady = String(poem.freeRequest || '').trim().length > 0;
   const freeBaseContent = getContentBase(poem.content);
   const freeHasContent = freeBaseContent.trim().length > 0;
-  const canUseRawFreeAction = freeInputReady;
   const canUseAiRequest = true;
   const poemGenerated = getContentBase(poem.content).trim().length > 0;
+  // 선택+답변형은 오른쪽 질문에 답해서 AI가 첫 본문을 만들어주기 전까지는
+  // 본문 칸에 직접 타이핑해서 시작할 수 없도록 막는다. (AI가 한 번 만든 뒤에는
+  // 기존처럼 클릭해서 자유롭게 고칠 수 있다.)
+  const answerBodyLocked = isAnswerMode && !poemGenerated;
+  // 선택+답변형은 자유형과 달리 오른쪽에 직접 내용을 입력하는 칸이 없고 질문에 답하는
+  // 방식뿐이라, 안내 문구에서 "오른쪽에서 내용을 입력하거나" 부분만 빼고 보여준다.
+  // (poem.content 자체는 그대로 둬서 getContentBase() 같은 빈 상태 판별 로직은 안 건드린다.)
+  const answerModePlaceholder = '아직 시가 없어요.\nAI에게 요청해 본문을 추가해 주세요.';
+  const displayedPoemContent = isAnswerMode && poem.content === initialPoemBody
+    ? answerModePlaceholder
+    : poem.content;
+
+  // 아직 아무것도 안 쓴 상태(placeholder 안내 문구가 그대로 있을 때)에서 본문 칸을
+  // 클릭하면, 사용자가 안내 문구를 일일이 지우지 않아도 되게 바로 비워 준다.
+  const handlePoemBodyFocus = () => {
+    if (answerBodyLocked) return;
+    if (poem.content === initialPoemBody) {
+      updatePoem({ content: '' });
+    }
+  };
 
   const updateAnswer = (value) => {
     const nextAnswers = { ...answers, [q.key]: value };
@@ -83,15 +99,6 @@ export default function PoemWorkStep({
     makePoem({ answers }, { generationSource: 'answer' });
   };
 
-  const regenerateAnswerPoem = () => {
-    if (poem.generationSource === 'basic') {
-      makeAll();
-      return;
-    }
-
-    makeAnswerPoem();
-  };
-
   const saveFreeUndoSnapshot = () => {
     setFreeUndoSnapshot({
       poemId: poem.id,
@@ -102,36 +109,16 @@ export default function PoemWorkStep({
     });
   };
 
-  const applyFreeAction = async (action) => {
-    const input = String(poem.freeRequest || '').trim();
-    const base = getContentBase(poem.content);
-
-    if (action === 'raw' || action === 'polish') {
-      if (!input) return;
-      const addition = action === 'polish' ? polishFreeInput(input) : input;
-      if (!addition.trim()) return;
-
-      saveFreeUndoSnapshot();
-      setFreeRedoSnapshot(null);
-      setFreeAction(action);
-      const title = poem.title === '아직 제목이 없어요' ? getTitleIdeas(settings, poem)[0] : poem.title;
-      updatePoem({
-        title,
-        content: joinPoemText(base, addition),
-        freeRequest: '',
-        generationSource: `free-${action}`,
-      });
-      setVariant((v) => v + 1);
+  const requestFreeContinuation = async () => {
+    if (!String(poem.freeRequest || '').trim()) {
+      setFreeRequestBlank(true);
       return;
     }
-
-    if (action === 'ask') {
-      saveFreeUndoSnapshot();
-      setFreeAction(action);
-      const result = await requestFreePoemText();
-      if (result.ok) {
-        setFreeRedoSnapshot(null);
-      }
+    setFreeRequestBlank(false);
+    saveFreeUndoSnapshot();
+    const result = await requestFreePoemText();
+    if (result.ok) {
+      setFreeRedoSnapshot(null);
     }
   };
 
@@ -190,7 +177,6 @@ export default function PoemWorkStep({
       freeRequest: '',
       generationSource: '',
     });
-    setFreeAction('raw');
     setFreeEditMode(false);
     setFreeSelectedText('');
     setFreeEditRequest('');
@@ -228,6 +214,7 @@ export default function PoemWorkStep({
     setFreeEditRequest('');
     setFreeUndoSnapshot(null);
     setFreeRedoSnapshot(null);
+    setFreeRequestBlank(false);
   }, [poem.id, mode]);
 
   useEffect(() => {
@@ -269,19 +256,9 @@ export default function PoemWorkStep({
     setAnswerEditChoiceOpen(false);
   };
 
-  const freeLastActionLabel = freeAction === 'raw'
-    ? (freeHasContent ? '그대로 이어 붙이기' : '그대로 넣기')
-    : freeAction === 'polish'
-      ? (freeHasContent ? 'AI가 다듬어 이어 붙이기' : 'AI가 다듬어 넣기')
-      : 'AI에게 요청하기';
-  const freePanelStateLabel = freeHasContent ? '이어가기' : '처음 넣기';
-  const freeInputPlaceholder = freeHasContent
-    ? `예: 다음 연은 밤 장면으로 이어줘
+  const freeInputPlaceholder = `예: 다음 연은 밤 장면으로 이어줘
 예: 조금 더 따뜻한 분위기로 이어줘
-예: 이 분위기로 자연스럽게 이어줘`
-    : `예: 꿈은 밤마다 내 창문을 두드리고...
-예: 꿈을 주제로 첫 연만 써줘
-예: 따뜻한 자유시 한 편을 써줘`; 
+예: 이 분위기로 자연스럽게 이어줘`;
   const freeSelectionType = freeSelectedText.trim() && freeSelectedText.trim() === getContentBase(poem.content).trim() ? '전체 선택됨' : '선택 부분';
   const isFreeEditing = isFreeMode && freeEditMode;
 
@@ -318,21 +295,26 @@ export default function PoemWorkStep({
             <div className="title-editor">
               <label>시 제목</label>
               <input value={poem.title} onChange={(e) => updatePoem({ title: e.target.value })} />
-              <div className="title-recommend">
-                <button
-                  type="button"
-                  className="essay-soft essay-title-button poem-title-recommend-button"
-                  onClick={() => updatePoem({ title: titleIdeas[0] || '나의 시' })}
-                >
-                  AI제목추천
-                </button>
-              </div>
             </div>
 
-            <label className="body-label">시 본문</label>
+            <div className="body-label-row">
+              <label className="body-label">시 본문</label>
+              <span className="body-edit-hint">
+                {answerBodyLocked
+                  ? '오른쪽 질문에 답하면 이곳에 시가 채워져요'
+                  : '이 안을 클릭해서 직접 고칠 수도 있어요'}
+              </span>
+            </div>
             <textarea
-              value={poem.content}
-              readOnly
+              className={answerBodyLocked ? 'poem-body-locked' : ''}
+              value={displayedPoemContent}
+              readOnly={answerBodyLocked}
+              aria-readonly={answerBodyLocked}
+              onChange={(event) => {
+                if (answerBodyLocked) return;
+                updatePoem({ content: event.target.value });
+              }}
+              onFocus={handlePoemBodyFocus}
               onSelect={handlePoemTextSelect}
               onMouseUp={handlePoemTextSelect}
               onKeyUp={handlePoemTextSelect}
@@ -446,10 +428,8 @@ export default function PoemWorkStep({
                           {isGenerating ? '만드는 중...' : '시 만들기'}
                         </button>
                       )}
-                      <button className="ghost small danger" onClick={resetGuidedWork}>초기화</button>
-                      <button className="primary small" disabled={isGenerating} onClick={poemGenerated ? regenerateAnswerPoem : makeAll}>
-                        {isGenerating ? '만드는 중...' : poemGenerated ? 'AI 전체 재생성' : 'AI 전체 만들기'}
-                      </button>
+                      {/* AI 전체 만들기 버튼이 있던 자리(2x2 mini-nav의 오른쪽 아래 칸)에 그대로 배치 */}
+                      <button className="ghost small danger" style={{ gridColumn: 2 }} onClick={resetGuidedWork}>초기화</button>
                     </div>
                   </>
                 )}
@@ -502,50 +482,44 @@ export default function PoemWorkStep({
                       <button className="ghost small" onClick={closeFreeEditMode}>닫기</button>
                     </div>
                   </div>
+                ) : !freeHasContent ? (
+                  <>
+                    <div className="question-head">
+                      <span>자유형</span>
+                    </div>
+                    <h3>먼저 왼쪽 본문에 시를 직접 써 주세요.</h3>
+                    <p className="free-guide-text">
+                      본문을 쓰고 나면 여기서 이어 쓰거나 AI에게 다음 흐름을 부탁할 수 있어요.
+                    </p>
+                  </>
                 ) : (
                   <>
                     <div className="question-head">
                       <span>자유형</span>
-                      <strong>{freePanelStateLabel}</strong>
+                      <strong>이어가기</strong>
                     </div>
-                    <h3>{freeHasContent ? '현재 시 뒤에 어떻게 이어갈까요?' : '본문에 넣을 첫 내용을 만들어 주세요.'}</h3>
+                    <h3>현재 시 뒤에 어떻게 이어갈까요?</h3>
                     <p className="free-guide-text">
-                      {freeHasContent
-                        ? '입력창에 이어 붙일 내용이나 AI에게 부탁할 방향을 적고 버튼을 선택하세요.'
-                        : '입력창에 직접 쓴 시나 AI에게 부탁할 내용을 적고 버튼을 선택하세요.'}
+                      입력창에 AI에게 부탁할 방향을 적고 요청하세요.
                     </p>
                     <textarea
                       className="answer-input free-input"
                       value={poem.freeRequest || ''}
                       placeholder={freeInputPlaceholder}
-                      onChange={(event) => updateCurrentPoemFreeRequest(event.target.value)}
+                      onChange={(event) => {
+                        updateCurrentPoemFreeRequest(event.target.value);
+                        if (freeRequestBlank) setFreeRequestBlank(false);
+                      }}
                     />
-
-                    <p className="free-ai-request-note">
-                      {freeHasContent
-                        ? '입력창을 비우고 AI에게 요청하면 현재 시의 흐름을 자연스럽게 이어 써요.'
-                        : '입력창을 비우고 AI에게 요청하면 기본 설정만으로 시 한 편을 만들어줘요.'}
-                    </p>
+                    {freeRequestBlank && (
+                      <p className="free-request-blank-notice">이어갈 방향을 입력해 주세요.</p>
+                    )}
 
                     <div className="free-action-bar" aria-label="자유형 작업 버튼">
-                      <button
-                        className="ghost small"
-                        disabled={!canUseRawFreeAction}
-                        onClick={() => applyFreeAction('raw')}
-                      >
-                        {freeHasContent ? '그대로 이어 붙이기' : '그대로 넣기'}
-                      </button>
-                      <button
-                        className="ghost small"
-                        disabled={!canUseRawFreeAction}
-                        onClick={() => applyFreeAction('polish')}
-                      >
-                        {freeHasContent ? 'AI가 다듬어 이어 붙이기' : 'AI가 다듬어 넣기'}
-                      </button>
-                      <button className="primary small" disabled={!canUseAiRequest || isGenerating} onClick={() => applyFreeAction('ask')}>
+                      <button className="primary small" disabled={!canUseAiRequest || isGenerating} onClick={requestFreeContinuation}>
                         {isGenerating ? '요청하는 중...' : 'AI에게 요청하기'}
                       </button>
-                      <button className="ghost small" disabled={!freeHasContent} onClick={() => setFreeEditMode(true)}>
+                      <button className="ghost small" onClick={() => setFreeEditMode(true)}>
                         수정하기
                       </button>
                     </div>
@@ -558,20 +532,6 @@ export default function PoemWorkStep({
                   </>
                 )}
               </div>
-
-              {!freeEditMode && (
-                <div className="history-card free-summary-card">
-                  <h3>작성 요약</h3>
-                  <div>
-                    <span>방식</span>
-                    <strong>{freeLastActionLabel}</strong>
-                  </div>
-                  <div>
-                    <span>입력</span>
-                    <strong>{poem.freeRequest || ''}</strong>
-                  </div>
-                </div>
-              )}
 
               {generationNotice && <p className="ai-generation-notice">{generationNotice}</p>}
             </>

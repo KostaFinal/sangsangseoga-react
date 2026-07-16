@@ -1,8 +1,5 @@
-// 책 뷰어(LayoutPageViewer/mapBookPages.js)는 본문을 폭 360px·높이 500px 고정 박스에
-// overflow:hidden으로 그린다. fontSize 17px·lineHeight 1.85 기준으로 그 박스에 실제로
-// 들어가는 건 15줄(약 260자) 정도이므로, 그 이상으로 나누면 뷰어에서 뒷부분이 잘려 보인다.
-// 여기 숫자를 늘리려면 반드시 mapBookPages.js의 본문 박스 높이도 같이 늘려야 한다.
-const PAGE_LIMIT = 260;
+import { splitTextToFitBox } from '../../../library/utils/textFitting.js';
+import { TEXT_ONLY_BODY_BOX, TEXT_ONLY_TEXT_STYLE } from '../../../library/utils/mapBookPages.js';
 
 export function createId() {
   return globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
@@ -113,30 +110,13 @@ export function reviseSelection(selectedText, request) {
 }
 
 
+// 에세이 본문을 리더 페이지 본문 박스(TEXT_ONLY_BODY_BOX)에 실제로 맞춰서 여러 페이지로
+// 나눈다. 글자 수 어림값 대신 실제 DOM 측정으로 자르기 때문에, 글씨를 가장 크게 봐도
+// 박스를 넘치지 않는다(그래서 리더는 스크롤 없이 다음 페이지로만 넘어가면 된다).
 export function splitPages(content) {
   const text = clean(content);
   if (!text) return ['아직 작성된 본문이 없어요.'];
-  const paragraphs = text.split(/\n\s*\n/gu).filter(Boolean);
-  const pages = [];
-  let current = '';
-  paragraphs.forEach((paragraph) => {
-    const next = current ? `${current}\n\n${paragraph}` : paragraph;
-    if (next.length <= PAGE_LIMIT) {
-      current = next;
-      return;
-    }
-    if (current) pages.push(current.trim());
-    if (paragraph.length <= PAGE_LIMIT) {
-      current = paragraph;
-      return;
-    }
-    for (let i = 0; i < paragraph.length; i += PAGE_LIMIT) {
-      pages.push(paragraph.slice(i, i + PAGE_LIMIT).trim());
-    }
-    current = '';
-  });
-  if (current) pages.push(current.trim());
-  return pages.length ? pages : ['아직 작성된 본문이 없어요.'];
+  return splitTextToFitBox(text, { ...TEXT_ONLY_BODY_BOX, ...TEXT_ONLY_TEXT_STYLE });
 }
 
 export function getDisplayTitle(settings, answers, content) {

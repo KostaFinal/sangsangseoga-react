@@ -1,8 +1,8 @@
 import api from "./axios";
 
 // 책 목록 조회
-export const getBooks = ({ bookType, sort, keyword, page = 1, size = 12 } = {}) =>
-  api.get("/api/books", { params: { bookType, sort, keyword, page, size } });
+export const getBooks = ({ bookType, sort, keyword, authorId, page = 1, size = 12 } = {}) =>
+  api.get("/api/books", { params: { bookType, sort, keyword, authorId, page, size } });
 
 // 책 상세 조회
 export const getBook = (bookId) => api.get(`/api/books/${bookId}`);
@@ -20,13 +20,12 @@ export const getRecommendations = (bookId, size = 3) =>
 // 좋아요
 export const likeBook = (bookId) => api.post(`/api/books/${bookId}/likes`);
 export const unlikeBook = (bookId) => api.delete(`/api/books/${bookId}/likes`);
-
-// 북마크
+ 
+// 북마크 - 책 한 권당 하나뿐이라 등록 시 pageNo로 위치를 옮기고, 취소/조회는 페이지 구분이 없다.
 export const addBookmark = (bookId, pageNo) => api.post(`/api/books/${bookId}/bookmarks`, { pageNo });
-export const removeBookmark = (bookId, pageNo) => api.delete(`/api/books/${bookId}/bookmarks`, { params: { pageNo } });
-// 특정 책의 북마크 페이지 번호 목록
-export const getBookmarks = (bookId) => api.get(`/api/books/${bookId}/bookmarks`);
-
+export const removeBookmark = (bookId) => api.delete(`/api/books/${bookId}/bookmarks`);
+export const getBookmark = (bookId) => api.get(`/api/books/${bookId}/bookmarks`);
+ 
 // 주간 랭킹
 export const getWeeklyRanking = () => api.get("/api/books/weekly-ranking");
 export const getWeeklyNewReleases = () => api.get("/api/books/weekly-new-releases");

@@ -27,11 +27,9 @@ export default function PoemApp({ onSwitchGenre, initialView = 'step1', onGoToMy
     answers,
     initialPoemBody,
     previewPages,
-    titleIdeas,
     updatePoem,
     updatePoemById,
     makePoem,
-    makeAll,
     resetStep3,
     requestViewChange,
     confirmBack,
@@ -47,8 +45,8 @@ export default function PoemApp({ onSwitchGenre, initialView = 'step1', onGoToMy
     requestPoemRevision,
     coverImage,
     setCoverImage,
-    pageImages,
-    setPageImages,
+    isSaving,
+    saveError,
   } = usePoemCreationState({ initialView, onGoToMyBooks, onBookComplete });
 
   return (
@@ -76,11 +74,9 @@ export default function PoemApp({ onSwitchGenre, initialView = 'step1', onGoToMy
             updateCurrentPoemAnswers={updateCurrentPoemAnswers}
             updateCurrentPoemFreeRequest={updateCurrentPoemFreeRequest}
             makePoem={makePoem}
-            makeAll={makeAll}
             variant={variant}
             setVariant={setVariant}
             resetStep3={resetStep3}
-            titleIdeas={titleIdeas}
             addPoem={addPoem}
             deletePoem={deletePoem}
             setCurrentView={setCurrentView}
@@ -93,6 +89,7 @@ export default function PoemApp({ onSwitchGenre, initialView = 'step1', onGoToMy
         )}
         {currentView === 'step3' && (
           <PoemPreviewStep
+            settings={settings}
             previewPages={previewPages}
             activePreviewPage={activePreviewPage}
             setActivePreviewPage={setActivePreviewPage}
@@ -101,8 +98,8 @@ export default function PoemApp({ onSwitchGenre, initialView = 'step1', onGoToMy
             setShowCompleteModal={setShowCompleteModal}
             coverImage={coverImage}
             setCoverImage={setCoverImage}
-            pageImages={pageImages}
-            setPageImages={setPageImages}
+            isSaving={isSaving}
+            saveError={saveError}
           />
         )}
       </main>
@@ -126,7 +123,7 @@ export default function PoemApp({ onSwitchGenre, initialView = 'step1', onGoToMy
           message="내 서재의 내가 쓴 책에서 방금 만든 시집을 확인할 수 있어요."
           cancelText="닫기"
           confirmText="확인"
-          type="success"
+          type="brand"
           onClose={() => setShowCompleteModal(false)}
           onConfirm={completeAndMove}
       />

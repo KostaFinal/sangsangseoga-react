@@ -209,6 +209,7 @@ export function useNovelCoverSelect() {
         promptText: coverPrompt,
         imageType: "COVER",
         aspectRatio: "3:4",
+        bookType: "NOVEL",
       });
 
       if (!imageResponse.ok) {

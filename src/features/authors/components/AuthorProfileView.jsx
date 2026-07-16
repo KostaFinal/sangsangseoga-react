@@ -2,8 +2,16 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams, useOutletContext } from "react-router-dom";
 import { Heart, MessageSquare, Eye, ArrowLeft } from "lucide-react";
 import { getAuthors, followAuthor, unfollowAuthor } from "../../../api/authorApi";
+import { getBooks, likeBook, unlikeBook } from "../../../api/bookApi";
 import { useAuth } from "../../../shared/context/AuthContext";
 import { useRequireAuth } from "../../../shared/hooks/useRequireAuth";
+import { Pagination } from "../../../shared/components/Pagination";
+
+const PAGE_SIZE = 12;
+
+const bookTypeToGenre = {
+  "NOVEL": "소설", "POEM": "시", "ESSAY": "에세이", "FAIRY_TALE": "동화",
+};
 
 // 장르 뱃지 스타일 - 통일감 있는 팔레트
 const genreBadge = (genre) => {
@@ -23,8 +31,8 @@ export default function AuthorProfileView() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode") === "owner" ? "owner" : "viewer";
-  const { books: allBooks, handleToggleLike } = useOutletContext();
-  const { currentUser } = useAuth();
+  const { books: allBooks } = useOutletContext();
+  const { currentUser, isAuthenticated } = useAuth();
   const requireAuth = useRequireAuth();
   const onSelectBook = (book) => navigate(`/friends/${book.id}`);
   const onBackToDirectory = () => navigate("/authors");
@@ -34,16 +42,23 @@ export default function AuthorProfileView() {
   const [authorRecord, setAuthorRecord] = useState(null); // getAuthors API의 원본 항목
   const [followBusy, setFollowBusy] = useState(false);
 
-  const realAuthorBooks = allBooks.filter(b => b.author.trim() === authorName.trim());
+  const [authorBooks, setAuthorBooks] = useState([]);
+  const [booksTotalCount, setBooksTotalCount] = useState(0);
+  const [booksTotalPages, setBooksTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [booksLoading, setBooksLoading] = useState(false);
+
+  // authorRecord가 아직 안 왔을 때(검색 실패 등)를 대비한 최후의 폴백
+  const fallbackAuthorId = allBooks.find(b => b.author.trim() === authorName.trim())?.authorId ?? null;
 
   const authorProfile = {
     name: authorRecord?.nickname || authorName,
     avatar: authorRecord?.profileImageUrl || null,
-    worksCount: authorRecord?.worksCount ?? realAuthorBooks.length,
+    worksCount: authorRecord?.worksCount ?? booksTotalCount,
     bio: authorRecord?.introduction || "아직 작성된 소개글이 없습니다.",
   };
 
-  const effectiveAuthorId = authorRecord?.id ?? realAuthorBooks[0]?.authorId ?? null;
+  const effectiveAuthorId = authorRecord?.id ?? fallbackAuthorId;
   const displayFollowers = followerCount ?? 0;
   // mode 뿐 아니라 memberId 비교로도 본인 프로필인지 확인 (mode가 못 갱신되는 진입 경로 대비)
   const isOwnProfile = mode === "owner" ||
@@ -51,6 +66,11 @@ export default function AuthorProfileView() {
 
   useEffect(() => {
     let cancelled = false;
+    // authorName이 바뀌었는데 이전 작가의 authorRecord가 남아있으면 effectiveAuthorId가
+    // 잠깐(또는 매칭 실패 시 계속) 이전 작가를 가리켜 그 작가의 작품이 새 프로필에 노출된다.
+    setAuthorRecord(null);
+    setIsFollowing(false);
+    setFollowerCount(null);
     getAuthors({ keyword: authorName, size: 20 })
       .then(res => {
         if (cancelled) return;
@@ -65,6 +85,66 @@ export default function AuthorProfileView() {
       .catch(() => { });
     return () => { cancelled = true; };
   }, [authorName]);
+
+  // 작가 이름이 바뀌면(다른 작가 프로필로 이동) 페이지/작품 목록을 리셋해서
+  // 이전 작가의 작품이 새 작가 프로필에 잠깐이라도 보이지 않게 한다.
+  useEffect(() => {
+    setCurrentPage(1);
+    setAuthorBooks([]);
+  }, [authorName]);
+
+  useEffect(() => {
+    if (!effectiveAuthorId) return;
+    let cancelled = false;
+    setBooksLoading(true);
+    getBooks({ authorId: effectiveAuthorId, sort: "latest", page: currentPage, size: PAGE_SIZE })
+      .then(res => {
+        if (cancelled) return; // 늦게 도착한 이전 작가/페이지 응답이 최신 목록을 덮어쓰지 않도록 방지
+        const data = res.data?.data;
+        const items = data?.items || [];
+        const mapped = items.map(b => ({
+          ...b,
+          coverImage: b.coverImageUrl,
+          likes: b.likeCount,
+          commentsCount: b.commentCount,
+          genre: bookTypeToGenre[b.bookType] || b.bookType,
+        }));
+        setAuthorBooks(mapped);
+        setBooksTotalCount(data?.totalCount ?? 0);
+        setBooksTotalPages(Math.ceil((data?.totalCount ?? 0) / PAGE_SIZE) || 1);
+      })
+      .catch(err => {
+        if (!cancelled) console.error("작가 작품 목록 조회 실패", err);
+      })
+      .finally(() => {
+        if (!cancelled) setBooksLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [effectiveAuthorId, currentPage]);
+
+  const handlePageChange = (pageNum) => {
+    setCurrentPage(pageNum);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleToggleLike = async (e, bookId) => {
+    e.stopPropagation();
+    if (!requireAuth()) return;
+    const book = authorBooks.find(b => b.id === bookId);
+    if (!book) return;
+    const wasLiked = book.isLikedByMe;
+    setAuthorBooks(prev => prev.map(b => (b.id === bookId ? { ...b, isLikedByMe: !wasLiked, likes: wasLiked ? b.likes - 1 : b.likes + 1 } : b)));
+    try {
+      if (wasLiked) {
+        await unlikeBook(bookId);
+      } else {
+        await likeBook(bookId);
+      }
+    } catch (err) {
+      setAuthorBooks(prev => prev.map(b => (b.id === bookId ? { ...b, isLikedByMe: wasLiked, likes: wasLiked ? b.likes + 1 : b.likes - 1 } : b)));
+      console.error("좋아요 처리 실패", err);
+    }
+  };
 
 
   const handleToggleFollow = async () => {
@@ -173,13 +253,17 @@ export default function AuthorProfileView() {
           </div>
         </div>
 
-        {realAuthorBooks.length === 0 ? (
+        {booksLoading ? (
+          <div className="flex justify-center py-16">
+            <div className="w-8 h-8 border-4 border-[#6b54e7] border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : authorBooks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center bg-[#faf9ff] rounded-2xl border border-[#e3def7]">
             <p className="text-[#69619a] text-sm font-bold">아직 등록된 작품이 없습니다</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
-            {realAuthorBooks.map((book) => {
+            {authorBooks.map((book) => {
               const badge = genreBadge(book.genre);
               return (
                 <div key={book.id} onClick={() => onSelectBook(book)} className="group cursor-pointer">
@@ -218,6 +302,13 @@ export default function AuthorProfileView() {
             })}
           </div>
         )}
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={booksTotalPages}
+          onPageChange={handlePageChange}
+          className="pt-2"
+        />
       </div>
 
 
