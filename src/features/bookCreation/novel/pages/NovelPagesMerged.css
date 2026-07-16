@@ -1055,7 +1055,6 @@ min-height: 92px;
   color: var(--editor-text);
 
   text-align: left;
-  cursor: pointer;
   box-shadow: 0 8px 20px rgba(72, 52, 130, 0.06);
   transition: 0.18s ease;
 }
@@ -1106,7 +1105,8 @@ margin: 10px 0 0;
 
 .novel-editor-page .scene-status-row {
 display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 8px;
 }
 
@@ -1122,6 +1122,45 @@ color: var(--editor-primary);
 
 .novel-editor-page .scene-status-row em.empty {
 color: rgba(111, 102, 128, 0.58);
+}
+
+.novel-editor-page .scene-delete-btn {
+padding: 3px 10px;
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  border-radius: 999px;
+  background: rgba(192, 57, 43, 0.06);
+  color: #c0392b;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.novel-editor-page .scene-delete-btn:hover:not(:disabled) {
+background: rgba(192, 57, 43, 0.14);
+}
+
+.novel-editor-page .scene-delete-btn:disabled {
+opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.novel-editor-page .scene-add-btn {
+margin-top: 12px;
+  width: 100%;
+  padding: 12px;
+  border: 1px dashed rgba(108, 78, 246, 0.4);
+  border-radius: 14px;
+  background: rgba(108, 78, 246, 0.05);
+  color: var(--editor-primary);
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.novel-editor-page .scene-add-btn:hover {
+background: rgba(108, 78, 246, 0.12);
 }
 
 .novel-editor-page .scene-help-card {
@@ -1564,6 +1603,19 @@ margin: 0 0 10px;
   color: var(--editor-primary);
   font-size: 15px;
   font-weight: 900;
+}
+
+.novel-editor-page .assist-suggestion-evaluation {
+margin: 0 0 10px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--editor-primary);
+  border-radius: 6px;
+  background: rgba(108, 78, 246, 0.05);
+  color: var(--editor-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  font-weight: 700;
+  word-break: keep-all;
 }
 
 .novel-editor-page .assist-suggestion-text {
