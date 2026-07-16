@@ -1,10 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { QUESTIONS } from '../data/essayQuestions.js';
 import {
   hasText,
   clean,
   joinText,
-  polishText,
   makeOpeningEssay,
   getGuidedSuggestion,
   makeFreeEssay,
@@ -13,7 +12,7 @@ import {
   splitPages,
   getDisplayTitle,
 } from '../utils/essayTextUtils.js';
-import { generateEssay, rewriteEssaySelection, toReaderAge } from '../services/essayCreationService.js';
+import { generateEssay, rewriteEssaySelection, toReaderAge, translateEssayContent, translateEssayTitle } from '../services/essayCreationService.js';
 import { publishBook } from '../../../../api/bookApi.js';
 
 const createInitialSettings = () => ({
@@ -48,12 +47,20 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
   const [generationNotice, setGenerationNotice] = useState('');
   const [aiTitle, setAiTitle] = useState('');
   const [coverImage, setCoverImage] = useState(null);
-  const [pageImages, setPageImages] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
 
   const title = aiTitle || getDisplayTitle(settings, answers, content);
-  const pages = useMemo(() => splitPages(content), [content]);
+
+  // splitPages()는 실제 DOM에 글자를 그려 보며 페이지를 나누기 때문에, content가 바뀔 때마다
+  // (자유 수정 중 매 타이핑마다) 바로 돌리면 느려질 수 있다. 타이핑이 잠깐 멈췄을 때만
+  // 다시 계산해서 입력 반응성을 지킨다.
+  const [debouncedContent, setDebouncedContent] = useState(content);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedContent(content), 300);
+    return () => clearTimeout(timer);
+  }, [content]);
+  const pages = useMemo(() => splitPages(debouncedContent), [debouncedContent]);
 
   const updateContent = (next) => {
     setContent(next);
@@ -167,20 +174,6 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     }));
   };
 
-  const appendRaw = () => {
-    if (!hasText(workInput)) return;
-    saveFreeUndoSnapshot();
-    updateContent(joinText(content, workInput));
-    setWorkInput('');
-  };
-
-  const appendPolished = () => {
-    if (!hasText(workInput)) return;
-    saveFreeUndoSnapshot();
-    updateContent(joinText(content, polishText(workInput)));
-    setWorkInput('');
-  };
-
   const askAi = async () => {
     saveFreeUndoSnapshot();
     const isContinuation = hasText(content);
@@ -248,10 +241,30 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const buildPublishPayload = () => {
+  const buildPublishPayload = async () => {
     // description은 본문 발췌가 아니라 작품 소개문이다. 실제 에세이 내용을 그대로 잘라 넣지 않는다.
     const description = `주제: ${settings.theme || '자유 주제'} / 톤: ${settings.tone || '담백하게'}`;
     const readerAge = toReaderAge(settings.authorAge);
+    const titleEn = await translateEssayTitle(title);
+
+    // 페이지별 영어 번역(content_text_en)을 채운다. 예전에는 Promise.all로 페이지를 한꺼번에
+    // 병렬 요청했는데, 에세이가 최소 10페이지 분량으로 길어지면서 한 번에 10개 넘는 번역
+    // 요청이 Gemini에 동시에 몰려 503(과부하)이 뜨고 재시도까지 겹쳐 실패하는 일이 생겼다.
+    // 순서대로 하나씩 번역해서 동시 요청 수를 늘 1개로 유지한다.
+    const translatedPages = [];
+    for (let index = 0; index < pages.length; index += 1) {
+      const text = pages[index];
+      const translated = await translateEssayContent(text);
+      translatedPages.push({
+        pageNo: index + 1,
+        title: index === 0 ? title : '',
+        titleEn: index === 0 ? titleEn : '',
+        contentTextKo: text,
+        contentTextEn: translated.text,
+        contentFontSizeEn: translated.fontSize,
+        imageUrl: null,
+      });
+    }
 
     return {
       bookType: 'ESSAY',
@@ -262,13 +275,7 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
       description,
       confirmedSettings: JSON.stringify(settings),
       coverImageUrl: coverImage?.url || null,
-      pages: pages.map((text, index) => ({
-        pageNo: index + 1,
-        title: index === 0 ? title : '',
-        contentTextKo: text,
-        contentTextEn: '',
-        imageUrl: pageImages[index + 1]?.url || null,
-      })),
+      pages: translatedPages,
     };
   };
 
@@ -280,11 +287,11 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     let bookId;
 
     try {
-      requestBody = buildPublishPayload();
+      requestBody = await buildPublishPayload();
       const response = await publishBook(requestBody);
       bookId = response.data?.data?.bookId;
     } catch (error) {
-      setSaveError(error.response?.data?.message || '책 저장에 실패했습니다. 다시 시도해 주세요.');
+      setSaveError(error.response?.data?.message || error.message || '책 저장에 실패했습니다. 다시 시도해 주세요.');
       setIsSaving(false);
       return;
     }
@@ -321,6 +328,7 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     setQuestionIndex,
     guidedComplete,
     content,
+    updateContent,
     title,
     pages,
     workInput,
@@ -341,8 +349,6 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     setShowCompleteModal,
     writeGuidedStep,
     recommendGuidedAnswer,
-    appendRaw,
-    appendPolished,
     askAi,
     undoFreeAction,
     redoFreeAction,
@@ -357,8 +363,6 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     generationNotice,
     coverImage,
     setCoverImage,
-    pageImages,
-    setPageImages,
     isSaving,
     saveError,
   };

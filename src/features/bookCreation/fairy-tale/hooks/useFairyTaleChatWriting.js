@@ -2,11 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
-import { toBookDraft } from "../../utils/bookDraftMapper";
 import {
   createPagePlan,
   extractGeneratedPages,
-  requestAiGenerateStream,
   rewritePage,
   writePage,
 } from "../../services/aiGenerateService";
@@ -18,7 +16,6 @@ import {
   makePageText,
 } from "../data/fairyTaleChatWritingOptions";
 import {
-  extractPartialField,
   getEditSummary,
   getNextQuestion,
   getPageBody,
@@ -72,7 +69,6 @@ export function useFairyTaleChatWriting() {
   ]);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
   const [isWorking, setIsWorking] = useState(false);
-  const [streamingPreview, setStreamingPreview] = useState("");
   const [usedFallbackNotice, setUsedFallbackNotice] = useState(false);
 
   const chatLogRef = useRef(null);
@@ -164,41 +160,20 @@ export function useFairyTaleChatWriting() {
     outline: { pages: pages.map(toAiOutlinePage) },
   });
 
-  // 스트리밍은 로딩 프리뷰용 보조 수단일 뿐, 정답 소스는 non-stream writePage/rewritePage 호출이다.
-  const fireBodyStream = (draftInput, extra, taskType) => {
-    let streamed = "";
-    const fieldName = taskType === "REWRITE_PAGE" ? "revisedBodyText" : "bodyText";
-
-    requestAiGenerateStream({
-      taskType,
-      draft: toBookDraft(draftInput),
-      extra,
-      onDelta: (text) => {
-        streamed += text;
-        const partial = extractPartialField(streamed, fieldName);
-        if (partial) setStreamingPreview(partial);
-      },
-    });
-  };
-
   // WRITE_PAGE(최초 작성)/REWRITE_PAGE(수정) 공용 실행 함수.
   const runPageAction = async ({ taskType, extra, fallbackTone }) => {
     if (workGuardRef.current) return;
 
     workGuardRef.current = true;
     setIsWorking(true);
-    setStreamingPreview("");
     setUsedFallbackNotice(false);
 
     const draftInput = buildDraftInput();
-    fireBodyStream(draftInput, extra, taskType);
 
     const response =
       taskType === "REWRITE_PAGE"
         ? await rewritePage(draftInput, extra)
         : await writePage(draftInput, extra);
-
-    setStreamingPreview("");
 
     if (response.ok && isValidPageBody(response.data)) {
       const body = getPageBody(response.data);
@@ -365,7 +340,6 @@ export function useFairyTaleChatWriting() {
 
     setCurrentPageNo(nextPageNo);
     setChatNotes([]);
-    setStreamingPreview("");
 
     addAiMessage(`${nextPageNo}페이지로 이동했어요. 앞 장면과 자연스럽게 이어서 써볼게요.`);
   };
@@ -436,7 +410,6 @@ export function useFairyTaleChatWriting() {
     completedCount,
     isGeneratingPlan,
     isWorking,
-    streamingPreview,
     usedFallbackNotice,
     chatNotesCount: chatNotes.length,
     handleWritePage,

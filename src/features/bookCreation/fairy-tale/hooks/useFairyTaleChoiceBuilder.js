@@ -4,17 +4,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   createSettingOptions,
   normalizeSetting,
-  requestAiGenerateStream,
 } from "../../services/aiGenerateService";
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
-import { toBookDraft } from "../../utils/bookDraftMapper";
 import {
   optionSets,
   stepList,
 } from "../data/fairyTaleChoiceBuilderOptions";
 import { normalizeFairyTaleDraftState } from "../utils/normalizeFairyTaleDraftState";
 import {
-  extractPartialQuestion,
   getChoiceGuide,
   getChoiceOptions,
   getChoiceQuestion,
@@ -131,20 +128,6 @@ export function useFairyTaleChoiceBuilder() {
       interactionMode: "CHOICE",
       recommendationVersion: version,
     };
-
-    // 스트리밍은 로딩 텍스트 갱신용 보조 수단일 뿐, 정답 소스는 아래의 non-stream 호출이다.
-    // 실패해도(onError) non-stream 호출에는 영향을 주지 않는다.
-    let streamedText = "";
-    requestAiGenerateStream({
-      taskType: "CREATE_SETTING_OPTIONS",
-      draft: toBookDraft(draftInput),
-      extra,
-      onDelta: (text) => {
-        streamedText += text;
-        const partial = extractPartialQuestion(streamedText);
-        if (partial) setLoadingHint(partial);
-      },
-    });
 
     const response = await createSettingOptions(draftInput, extra);
 

@@ -40,6 +40,7 @@ import {
   MyLibraryAiChatRoute,
   MyLibraryAllBooksRoute,
   MyLibrarySavedAuthorsRoute,
+  MyLibraryReportsRoute,
   MyLibraryReaderRoute,
 } from './shared/components/MyLibraryLayout';
 
@@ -293,6 +294,7 @@ function AppInner() {
             <Route path="finished" element={<MyLibraryFinishedRoute />} />
             <Route path="wishlist" element={<MyLibraryWishlistRoute />} />
             <Route path="saved-authors" element={<MyLibrarySavedAuthorsRoute />} />
+            <Route path="reports" element={<MyLibraryReportsRoute />} />
             <Route path="stats" element={<MyLibraryStatsRoute />} />
             <Route path="calendar" element={<MyLibraryCalendarRoute />} />
             <Route path="ai-chat" element={<MyLibraryAiChatRoute />} />

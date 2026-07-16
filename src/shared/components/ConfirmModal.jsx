@@ -10,7 +10,7 @@ export const ConfirmModal = ({
   message = '정말로 진행하시겠습니까?',
   confirmText = '확인',
   cancelText = '취소',
-  type = 'primary', // 'primary' | 'danger' | 'success'
+  type = 'primary', // 'primary' | 'danger' | 'success' | 'brand'
 }) => {
   if (!isOpen) return null;
 
@@ -27,6 +27,14 @@ export const ConfirmModal = ({
           icon: <CheckCircle className="w-5 h-5 text-emerald-500" />,
           confirmBg: 'bg-emerald-500 hover:bg-emerald-600 focus:ring-emerald-500',
           iconBg: 'bg-emerald-50',
+        };
+      // 책 만들기의 "완성하기" 버튼(.essay-primary, 보라색 그라데이션)과 색을 맞춘 확인 버튼.
+      // 책 완성 모달처럼 "완성하기"에서 이어지는 확인 액션에 쓴다.
+      case 'brand':
+        return {
+          icon: <CheckCircle className="w-5 h-5 text-[#7c4ded]" />,
+          confirmBg: 'bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9] hover:from-[#7c4ded] hover:to-[#5b21b6] focus:ring-[#8b5cf6]',
+          iconBg: 'bg-[#F3F0FF]',
         };
       default:
         return {

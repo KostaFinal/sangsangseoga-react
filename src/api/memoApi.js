@@ -9,5 +9,7 @@ export const updateMemo = (bookId, pageNo, content, posX = null, posY = null) =>
 export const deleteMemo = (bookId, pageNo) =>
   api.delete(`/api/books/${bookId}/pages/${pageNo}/memos`);
 
-export const getMemosByBook = (bookId) =>
-  api.get(`/api/books/${bookId}/memos`);
+export const getMemosByBook = (bookId, page = 1, size = 20) =>
+  api.get(`/api/books/${bookId}/memos`, {
+    params: { page, size },
+  });

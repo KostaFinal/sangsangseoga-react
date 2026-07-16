@@ -2,71 +2,7 @@ import { forwardRef, useRef, useCallback, useEffect } from "react";
 import HTMLFlipBook from "react-pageflip";
 import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import "./LayoutPageViewer.css";
-
-const PAGE_WIDTH = 480;
-const PAGE_HEIGHT = 620;
-
-const FONT_SCALE = { sm: 0.85, base: 1, lg: 1.2 };
-
-function sortElements(elements = []) {
-  return [...elements].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
-}
-
-function renderElement(element, fontScale = 1, isEnglish = false) {
-  if (element.type === "image") {
-    return (
-      <div
-        key={element.id}
-        className="layout-page-image"
-        style={{
-          left: element.x,
-          top: element.y,
-          width: element.w,
-          height: element.h,
-          borderRadius: `${element.radius || 0}px`,
-          opacity: element.opacity ?? 1,
-          zIndex: element.zIndex || 1,
-        }}
-      >
-        <img
-          src={element.src}
-          alt=""
-          draggable={false}
-          referrerPolicy="no-referrer"
-          style={{ objectFit: element.objectFit || "cover" }}
-        />
-      </div>
-    );
-  }
-
-  if (element.type === "text") {
-    return (
-      <div
-        key={element.id}
-        className="layout-page-text"
-        style={{
-          left: element.x,
-          top: element.y,
-          width: element.w,
-          height: element.h,
-          fontSize: `${(element.fontSize || 17) * fontScale}px`,
-          lineHeight: element.lineHeight || 1.8,
-          color: element.color || "#222222",
-          backgroundColor: element.backgroundColor || "transparent",
-          textAlign: element.align || "left",
-          fontWeight: element.fontWeight || 500,
-          fontFamily: element.fontFamily === "serif" ? "var(--font-serif)" : element.fontFamily === "sans" ? "var(--font-sans)" : undefined,
-          opacity: element.opacity ?? 1,
-          borderRadius: `${element.radius || 0}px`,
-          zIndex: element.zIndex || 10,
-        }}
-        dangerouslySetInnerHTML={{ __html: (isEnglish ? element.htmlEn : element.htmlKo) ?? element.html }}
-      />
-    );
-  }
-
-  return null;
-}
+import { PAGE_WIDTH, PAGE_HEIGHT, FONT_SCALE, sortElements, renderElement } from "./pageElements.jsx";
 
 // react-pageflip은 페이지 엘리먼트에 ref가 꽂혀야 해서 forwardRef로 감싼다.
 const FlipPage = forwardRef(({ page, fontScale, isEnglish }, ref) => (

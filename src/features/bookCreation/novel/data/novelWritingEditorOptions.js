@@ -74,7 +74,7 @@ export const independentMoreActions = [
     actionType: "CHECK_SCENE_COHERENCE",
     label: "현재 장면 개연성 검사",
     requiresSelection: false,
-    insertionMode: "reportOnly",
+    insertionMode: "append",
   },
 ];
 

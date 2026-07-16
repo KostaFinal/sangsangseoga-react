@@ -1,9 +1,11 @@
-import { ChevronLeft, Languages, StickyNote } from "lucide-react";
+import { Bookmark, ChevronLeft, Languages, StickyNote } from "lucide-react";
 
 export default function ReaderHeader({
   book,
   readerMode,
   onBack,
+  onToggleBookmark,
+  isPageBookmarked,
   isEnglish,
   setIsEnglish,
   fontFamily,
@@ -44,12 +46,14 @@ export default function ReaderHeader({
         <button
           onClick={() => setIsEnglish(!isEnglish)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-gowun font-bold border transition-all cursor-pointer ${
-            isEnglish ? "bg-black text-white border-black" : "bg-white hover:bg-black/5 border-black/10 text-black"
+            isEnglish
+              ? "bg-[#6b54e7] border-[#6b54e7] text-white hover:bg-[#5f47d6]"
+              : "bg-white hover:bg-black/5 border-black/10 text-black"
           }`}
           title="영문/국문 번역 전환"
         >
           <Languages className="w-4 h-4" />
-          <span className="text-sm">{isEnglish ? "국문" : "영문"}</span>
+          <span className="text-sm">{isEnglish ? "영문" : "국문"}</span>
         </button>
 
         <button
@@ -68,7 +72,15 @@ export default function ReaderHeader({
           가<span className={`text-xs font-gowun font-bold ml-1 ${fontSize === "base" ? "text-black/90" : "text-white"}`}>{fontSize === "sm" ? "작게" : fontSize === "base" ? "보통" : "크게"}</span>
         </button>
 
-        
+        <button
+          onClick={onToggleBookmark}
+          className={`p-2 rounded-lg border transition-all cursor-pointer ${
+            isPageBookmarked ? "bg-[#6b54e7] border-[#6b54e7] text-white hover:bg-[#5f47d6]" : "border-black/10 hover:bg-black/5 text-black/95"
+          }`}
+          title="이 페이지 북마크"
+        >
+          <Bookmark className="w-4 h-4" fill={isPageBookmarked ? "currentColor" : "none"} />
+        </button>
 
         <button
           onClick={() => setIsMemoOpen(!isMemoOpen)}

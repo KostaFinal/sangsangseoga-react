@@ -1,10 +1,22 @@
 import React, { useState } from "react";
 import EssayFlowStepper from "./EssayFlowStepper.jsx";
 import { requestGenerateImage, extractImageUrl } from "../../services/imageGenerateService.js";
+import { textOnlyPage } from "../../../library/utils/mapBookPages.js";
+import { PageCanvas } from "../../../library/components/reader/layout/pageElements.jsx";
 
-const getEssayPagePrompt = (pageNumber, content) => (
-  `선택한 ${pageNumber}쪽의 에세이 내용과 분위기에 어울리는 차분한 삽화를 만들어줘.\n\n${content || ''}`
-).trim();
+const DEFAULT_COVER_INSTRUCTION = "에세이의 주제와 분위기를 담은 차분하고 따뜻한 표지 이미지를 만들어줘.";
+
+// 사용자가 보는 요청문 입력창에는 이 짧은 안내 문구만 채워서 깔끔하게 편집하게 하고,
+// 실제 제목/본문은 여기서 따로 만들어 생성 요청 시에만 뒤에 붙여 보낸다(화면엔 안 보임).
+// 이렇게 해야 AI가 실제 내용을 참고하면서도, 사용자가 긴 본문을 안 보고 자기 요청만 다듬을 수 있다.
+const getEssayContext = (title, pages) => {
+  const excerpt = (pages || []).filter(Boolean).join("\n");
+
+  return [
+    title ? `제목: ${title}` : "",
+    excerpt ? `본문:\n${excerpt}` : "",
+  ].filter(Boolean).join("\n\n").trim();
+};
 
 export default function EssayPreviewStep({
   title,
@@ -15,37 +27,40 @@ export default function EssayPreviewStep({
   setShowCompleteModal,
   coverImage,
   setCoverImage,
-  pageImages,
-  setPageImages,
+  isSaving,
+  saveError,
 }) {
   const [panelMode, setPanelMode] = useState("idle");
-  const [selectedIllustrationPage, setSelectedIllustrationPage] = useState(null);
   const [imagePrompt, setImagePrompt] = useState("");
   const [isRequestingImage, setIsRequestingImage] = useState(false);
   const [imageError, setImageError] = useState("");
 
   const spreadStart = Math.floor(activePreviewPage / 2) * 2;
-  const left = pages[spreadStart];
-  const right = pages[spreadStart + 1];
   const leftPageNumber = spreadStart + 1;
   const rightPageNumber = spreadStart + 2;
   const maxStart = Math.max(0, Math.floor((pages.length - 1) / 2) * 2);
-  const selectedPageContent = selectedIllustrationPage
-    ? pages[selectedIllustrationPage - 1]
-    : "";
-  const selectedPageImage = selectedIllustrationPage
-    ? pageImages[selectedIllustrationPage]
-    : null;
+  const canGoPrev = spreadStart > 0;
+  const canGoNext = spreadStart < maxStart;
+
+  // 실제 리더(mapBookPages.js)와 똑같은 레이아웃 함수를 그대로 써서 미리보기를 그린다.
+  // 이러면 여기서 보이는 모양이 곧 완독 화면에서 보일 모양이라, 둘이 어긋날 일이 없다.
+  const toReaderPage = (pageIndex) => {
+    const text = pages[pageIndex];
+    if (text === undefined) return null;
+    return textOnlyPage({
+      pageNo: pageIndex + 1,
+      title: pageIndex === 0 ? title : null,
+      contentTextKo: text,
+      contentTextEn: text,
+    });
+  };
+
+  const leftReaderPage = toReaderPage(spreadStart);
+  const rightReaderPage = toReaderPage(spreadStart + 1);
 
   const openCoverRequest = () => {
     setPanelMode("coverRequest");
-    setImagePrompt("에세이의 주제와 분위기를 담은 차분하고 따뜻한 표지 이미지를 만들어줘.");
-  };
-
-  const openIllustrationRequest = () => {
-    if (!selectedIllustrationPage) return;
-    setPanelMode("illustrationRequest");
-    setImagePrompt(getEssayPagePrompt(selectedIllustrationPage, selectedPageContent));
+    setImagePrompt(DEFAULT_COVER_INSTRUCTION);
   };
 
   const cancelImageRequest = () => {
@@ -54,18 +69,19 @@ export default function EssayPreviewStep({
     setImageError("");
   };
 
-  const completeImageRequest = async () => {
-    const isCoverRequest = panelMode === "coverRequest";
-    if (!isCoverRequest && !selectedIllustrationPage) return;
-
+  const completeCoverRequest = async () => {
     setIsRequestingImage(true);
     setImageError("");
 
+    const essayContext = getEssayContext(title, pages);
+    const finalPrompt = [imagePrompt, essayContext].filter(Boolean).join("\n\n");
+
     const response = await requestGenerateImage({
-      promptText: imagePrompt,
-      imageType: isCoverRequest ? "COVER" : "PAGE",
-      pageNo: isCoverRequest ? null : selectedIllustrationPage,
+      promptText: finalPrompt,
+      imageType: "COVER",
+      pageNo: null,
       aspectRatio: "3:4",
+      bookType: "ESSAY",
     });
 
     setIsRequestingImage(false);
@@ -81,74 +97,26 @@ export default function EssayPreviewStep({
       return;
     }
 
-    if (isCoverRequest) {
-      setCoverImage({ url: imageUrl, prompt: imagePrompt });
-    } else {
-      setPageImages((prev) => ({
-        ...prev,
-        [selectedIllustrationPage]: { url: imageUrl, prompt: imagePrompt },
-      }));
-    }
-
+    setCoverImage({ url: imageUrl, prompt: imagePrompt });
     cancelImageRequest();
-  };
-
-  const selectPage = (pageNumber, hasPage) => {
-    if (!hasPage) return;
-    setSelectedIllustrationPage(pageNumber);
-    if (panelMode === "illustrationRequest") {
-      setImagePrompt(getEssayPagePrompt(pageNumber, pages[pageNumber - 1]));
-    }
-  };
-
-  const getPageSelectProps = (pageNumber, hasPage) => {
-    if (!hasPage) return {};
-
-    return {
-      role: "button",
-      tabIndex: 0,
-      onClick: () => selectPage(pageNumber, hasPage),
-      onKeyDown: (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          selectPage(pageNumber, hasPage);
-        }
-      },
-    };
-  };
-
-  const renderPageIllustration = (pageNumber) => {
-    const image = pageImages[pageNumber];
-    if (!image) return null;
-
-    return (
-      <div className="preview-page-illustration">
-        <img src={image.url} alt={`${pageNumber}쪽 삽화`} />
-      </div>
-    );
   };
 
   const renderImagePanel = () => {
     if (panelMode !== "idle") {
-      const isCoverRequest = panelMode === "coverRequest";
       return (
         <div className="essay-image-box preview-image-request">
-          <strong>{isCoverRequest ? "표지 이미지 만들기" : "삽화 이미지 만들기"}</strong>
-          <p>
-            {isCoverRequest
-              ? "에세이의 주제와 분위기를 담은 표지 요청문을 확인해 주세요."
-              : `${selectedIllustrationPage}쪽의 글 내용에 어울리는 삽화 요청문을 확인해 주세요.`}
-          </p>
+          <strong>표지 이미지 만들기</strong>
+          <p>에세이의 주제와 분위기를 담은 표지 요청문을 확인해 주세요.</p>
           <textarea
             className="preview-prompt-textarea"
             value={imagePrompt}
             onChange={(event) => setImagePrompt(event.target.value)}
-            aria-label={isCoverRequest ? "표지 이미지 요청문" : "삽화 이미지 요청문"}
+            aria-label="표지 이미지 요청문"
             disabled={isRequestingImage}
           />
           {imageError && <p className="preview-image-error">{imageError}</p>}
           <div className="preview-request-actions">
-            <button type="button" className="essay-primary" onClick={completeImageRequest} disabled={isRequestingImage}>
+            <button type="button" className="essay-primary" onClick={completeCoverRequest} disabled={isRequestingImage}>
               {isRequestingImage ? "생성 중…" : "생성하기"}
             </button>
             <button type="button" className="essay-ghost" onClick={cancelImageRequest} disabled={isRequestingImage}>취소</button>
@@ -172,29 +140,6 @@ export default function EssayPreviewStep({
             </div>
           )}
         </div>
-
-        <div className="preview-image-section">
-          <strong>삽화 이미지</strong>
-          <p>삽화를 넣고 싶은 쪽을 먼저 선택해 주세요.</p>
-          <div className="preview-page-selection">
-            <span>선택된 쪽</span>
-            <b>{selectedIllustrationPage ? `${selectedIllustrationPage}쪽` : "없음"}</b>
-          </div>
-          <button
-            type="button"
-            className="essay-soft"
-            onClick={openIllustrationRequest}
-            disabled={!selectedIllustrationPage}
-          >
-            선택한 쪽 삽화 생성
-          </button>
-          {selectedPageImage && (
-            <div className="preview-generated-card">
-              <span>{selectedIllustrationPage}쪽 삽화</span>
-              <img src={selectedPageImage.url} alt={`${selectedIllustrationPage}쪽 삽화`} />
-            </div>
-          )}
-        </div>
       </div>
     );
   };
@@ -205,57 +150,55 @@ export default function EssayPreviewStep({
         <EssayFlowStepper active={3} />
       </div>
       <div className="essay-preview-layout">
-        <div className="essay-book-preview">
-          <div className="preview-page-hint">삽화를 넣고 싶은 쪽을 클릭해 선택할 수 있어요.</div>
-          <button
-            type="button"
-            className="page-turn prev"
-            disabled={spreadStart === 0}
-            onClick={() => setActivePreviewPage(Math.max(0, spreadStart - 2))}
-          >
-            ‹
-          </button>
-          <article
-            className={`essay-book-page left preview-selectable-page ${selectedIllustrationPage === leftPageNumber ? "selected-illustration-page" : ""}`}
-            {...getPageSelectProps(leftPageNumber, Boolean(left))}
-          >
-            {selectedIllustrationPage === leftPageNumber && <em className="selected-page-badge">선택됨</em>}
-            {spreadStart === 0 && <h2>{title}</h2>}
-            <p>{left}</p>
-            {renderPageIllustration(leftPageNumber)}
-            <span>{leftPageNumber}</span>
-          </article>
-          <article
-            className={`essay-book-page right ${right ? "preview-selectable-page" : ""} ${selectedIllustrationPage === rightPageNumber ? "selected-illustration-page" : ""}`}
-            {...getPageSelectProps(rightPageNumber, Boolean(right))}
-          >
-            {right ? (
-              <>
-                {selectedIllustrationPage === rightPageNumber && <em className="selected-page-badge">선택됨</em>}
-                <p>{right}</p>
-                {renderPageIllustration(rightPageNumber)}
-              </>
-            ) : (
-              <p className="empty-page">다음 페이지 없음</p>
-            )}
-            <span>{right ? rightPageNumber : ""}</span>
-          </article>
-          <button
-            type="button"
-            className="page-turn next"
-            disabled={spreadStart >= maxStart}
-            onClick={() =>
-              setActivePreviewPage(Math.min(maxStart, spreadStart + 2))
-            }
-          >
-            ›
-          </button>
+        <div className="poem-book-preview-canvas-shell">
+          <div className="poem-preview-spread">
+            <button
+              type="button"
+              className="page-turn prev"
+              disabled={!canGoPrev}
+              aria-label="이전 페이지"
+              onClick={() => setActivePreviewPage(Math.max(0, spreadStart - 2))}
+            >
+              ‹
+            </button>
+            <div className="poem-preview-canvas-wrap">
+              {leftReaderPage ? (
+                <>
+                  <PageCanvas page={leftReaderPage} />
+                  <span className="poem-preview-page-no">{leftPageNumber}</span>
+                </>
+              ) : (
+                <div className="empty-page">빈 페이지</div>
+              )}
+            </div>
+            <div className="poem-preview-canvas-wrap">
+              {rightReaderPage ? (
+                <>
+                  <PageCanvas page={rightReaderPage} />
+                  <span className="poem-preview-page-no">{rightPageNumber}</span>
+                </>
+              ) : (
+                <div className="empty-page">다음 페이지 없음</div>
+              )}
+            </div>
+            <button
+              type="button"
+              className="page-turn next"
+              disabled={!canGoNext}
+              aria-label="다음 페이지"
+              onClick={() =>
+                setActivePreviewPage(Math.min(maxStart, spreadStart + 2))
+              }
+            >
+              ›
+            </button>
+          </div>
         </div>
         <aside className="essay-preview-side">
-          <h2>이미지 생성</h2>
           {renderImagePanel()}
         </aside>
       </div>
+      {saveError && <p className="essay-image-error preview-save-error">{saveError}</p>}
       <div className="essay-bottom-actions essay-work-bottom-actions">
         <button
           type="button"
@@ -267,9 +210,10 @@ export default function EssayPreviewStep({
         <button
           type="button"
           className="essay-primary"
+          disabled={isSaving}
           onClick={() => setShowCompleteModal(true)}
         >
-          완성하기
+          {isSaving ? "저장 중..." : "완성하기"}
         </button>
       </div>
     </section>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Star, BookOpen, Award, Calendar, MessageSquare, Book, Heart, BarChart2 } from 'lucide-react';
+import { Star, BookOpen, Award, Calendar, MessageSquare, Book, Heart, BarChart2, ShieldAlert, } from 'lucide-react';
 
 export default function SideMenu({ disabled = false }) {
   const bookmarks = [
@@ -12,6 +12,7 @@ export default function SideMenu({ disabled = false }) {
     { path: 'ai-chat', label: '독후감', icon: MessageSquare },
     { path: 'all-books', label: '내가 쓴 책', icon: Book },
     { path: 'saved-authors', label: '관심 작가', icon: Heart },
+    { path: 'reports', label: '신고 내역', icon: ShieldAlert },
   ];
 
   if (disabled) {

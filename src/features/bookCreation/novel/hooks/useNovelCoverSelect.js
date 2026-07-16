@@ -103,28 +103,48 @@ export function useNovelCoverSelect() {
   // scenes를 pages[] 형식으로 변환한다(소설을 페이지 구조로 바꾸는 게 아니라 API 경계 호환 변환).
   // 장면 본문이 리더 한 페이지보다 길면 splitScenesIntoPageRequests가 여러 행으로 쪼개
   // pageNo가 실제 화면에 보이는 페이지 수와 일치하도록 만든다(가장 큰 글씨 기준으로 계산해
-  // 글자 크기를 줄여도 잘리지 않음).
-  const buildNovelPublishPayload = () => ({
-    bookType: "NOVEL",
-    authorAgeGroup: setting.writerLevel || "TEEN",
-    readerAgeGroup: setting.writerLevel || "TEEN",
-    creationMode: setting.interactionMode || "MIXED",
-    title,
-    description: [setting.genre, setting.protagonist].filter(Boolean).join(" · ") || title,
-    confirmedSettings: JSON.stringify(setting),
-    coverImageUrl: generatedCoverImageUrl,
-    pages: splitScenesIntoPageRequests(scenes),
-  });
+  // 글자 크기를 줄여도 잘리지 않음). 쪼개진 조각마다 번역을 새로 요청할 수 있어 비동기이고,
+  // handleConfirmCover가 이미 isPublishing 상태 안에서 await하므로 발행 버튼은 그동안 잠겨 있다.
+  const buildNovelPublishPayload = async () => {
+    const protagonistName = setting.protagonist?.split(",")[0] || "";
+
+    return {
+      bookType: "NOVEL",
+      authorAgeGroup: setting.writerLevel || "TEEN",
+      readerAgeGroup: setting.writerLevel || "TEEN",
+      creationMode: setting.interactionMode || "MIXED",
+      title,
+      description: [setting.genre, setting.protagonist].filter(Boolean).join(" · ") || title,
+      confirmedSettings: JSON.stringify(setting),
+      coverImageUrl: generatedCoverImageUrl,
+      pages: await splitScenesIntoPageRequests(scenes, { protagonistName }),
+    };
+  };
 
   const handleConfirmCover = async () => {
     if (isPublishingRef.current) return;
+
+    // 본문이 비어있는 장면(예: "+ 장면 추가"로 만들고 안 쓴 장면)이 있으면 빈 페이지로
+    // 그대로 발행돼버리니, 발행 전에 미리 알려주고 막는다.
+    const emptySceneNumbers = scenes
+      .map((scene, index) => ({ scene, order: index + 1 }))
+      .filter(({ scene }) => !(scene.content || "").trim())
+      .map(({ order }) => order);
+
+    if (emptySceneNumbers.length) {
+      setPublishError(
+        `${emptySceneNumbers.join(", ")}번째 장면의 본문이 비어있어요. 내용을 채우거나 삭제한 뒤 다시 시도해 주세요.`
+      );
+      return;
+    }
+
     isPublishingRef.current = true;
 
     setIsPublishing(true);
     setPublishError(null);
 
     try {
-      const requestBody = buildNovelPublishPayload();
+      const requestBody = await buildNovelPublishPayload();
       const response = await publishBook(requestBody);
       const bookId = response.data?.data?.bookId;
 
@@ -136,6 +156,7 @@ export function useNovelCoverSelect() {
           cover: selectedCover,
           coverImageUrl: generatedCoverImageUrl,
           bookId,
+          title,
         },
       });
     } catch (error) {
@@ -188,6 +209,7 @@ export function useNovelCoverSelect() {
         promptText: coverPrompt,
         imageType: "COVER",
         aspectRatio: "3:4",
+        bookType: "NOVEL",
       });
 
       if (!imageResponse.ok) {

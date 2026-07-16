@@ -10,8 +10,10 @@ export const deleteWishlist = (bookId) =>
   api.delete(`/api/bookshelves/wishlist/${bookId}`);
 
 // 읽는 중
-export const getReadingList = () => api.get("/api/bookshelves/reading");
-
+export const getReadingList = (page = 1, size = 20) =>
+  api.get("/api/bookshelves/reading", {
+    params: { page, size },
+  });
 export const updateReadingProgress = (bookId, currentPage, progress, readingTime = 0) =>
   api.patch(`/api/bookshelves/reading/${bookId}/progress`, {
     currentPage,
@@ -59,8 +61,10 @@ export const requestAiFeedback = (reviewId) =>
 export const getAiFeedback = (reviewId) =>
   api.get(`/api/bookshelves/reviews/${reviewId}/ai-feedback`);
 
-export const getMyWrittenBooks = () =>
-  api.get("/api/bookshelves/my-books");
+export const getMyWrittenBooks = (page = 1, size = 20) =>
+  api.get("/api/bookshelves/my-books", {
+    params: { page, size },
+  });
 
 export const updateMyWrittenBookStatus = (bookId, status) =>
   api.patch(`/api/bookshelves/my-books/${bookId}/status`, {
@@ -106,3 +110,25 @@ export const updateMyWrittenBookTags = (bookId, tags) =>
 export const deleteMyWrittenBook = (bookId) =>
   api.delete(`/api/bookshelves/my-books/${bookId}`);
 
+// 신고 내역 - 내가 신고한 내역
+export const getSubmittedReports = ({
+  status,
+  page = 1,
+  size = 20,
+} = {}) =>
+  api.get("/api/bookshelves/reports/submitted", {
+    params: {
+      ...(status ? { status } : {}),
+      page,
+      size,
+    },
+  });
+
+// 신고 내역 - 내가 신고당한 내역
+export const getReceivedReports = ({
+  page = 1,
+  size = 20,
+} = {}) =>
+  api.get("/api/bookshelves/reports/received", {
+    params: { page, size },
+  });

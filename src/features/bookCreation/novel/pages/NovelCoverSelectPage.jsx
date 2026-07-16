@@ -217,7 +217,11 @@ function NovelCoverSelectPage() {
           <button
             type="button"
             className="back-btn"
-            onClick={() => navigate(BOOK_CREATION_ROUTES.NOVEL.EDITOR, { state: data })}
+            onClick={() =>
+              navigate(BOOK_CREATION_ROUTES.NOVEL.EDITOR, {
+                state: { ...setting, scenes: data.scenes },
+              })
+            }
           >
             ← 이전으로
           </button>

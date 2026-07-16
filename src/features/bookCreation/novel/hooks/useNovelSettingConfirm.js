@@ -290,6 +290,10 @@ export function useNovelSettingConfirm() {
     const payload = {
       ...setupData,
       ...minutes,
+      // writerLevel이 이전 단계에서 안 채워진 채로 오면 에디터가 이걸 "가이드 모드"로
+      // 잘못 판단해버리므로(INDEPENDENT_WRITER_LEVELS.includes(undefined) === false),
+      // buildDraftInput()과 동일하게 여기서도 기본값을 명시해준다.
+      writerLevel: setupData.writerLevel || "TEEN",
       minutes,
       directing,
     };
