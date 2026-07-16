@@ -3,7 +3,8 @@ import { authService } from '../../features/auth/services/authService';
 import { subscriptionService } from '../../features/subscription/services/subscriptionService';
 import { notificationService } from '../services/notificationService';
 import { profileService } from '../../features/profile/services/profileService';
-import { getAccessToken } from '../../api/tokenStorage';
+import { getAccessToken, subscribeAccessToken } from '../../api/tokenStorage';
+import { API_BASE_URL } from '../../api/axios';
 import { CURRENT_USER_PROFILE } from '../data';
 
 const AuthContext = createContext(null);
@@ -114,6 +115,75 @@ export function AuthProvider({ children }) {
       console.error("전체 알림 삭제 실패", err);
     }
   };
+
+  // 실시간 알림(SSE) — 토큰이 있을 때 연결하고, 토큰이 바뀔 때마다(로그인/조용한 재발급/로그아웃)
+  // 다시 맺는다. 연결 자체는 1회용 티켓(POST /api/notifications/stream-ticket)으로 열며,
+  // 브라우저 EventSource는 URL을 못 바꾸는 자동 재연결만 하므로 그 재연결은 꺼두고
+  // 에러 시 직접 새 티켓을 받아 새 연결을 여는 방식으로 대체한다.
+  // 자세한 설계는 docs/choiswgg/domain-notifications-sse.md 참고.
+  useEffect(() => {
+    let es = null;
+    let reconnectTimer = null;
+    let generation = 0; // 이 값이 바뀌면 이전 연결 시도의 재연결 예약은 전부 무효
+
+    const clearReconnectTimer = () => {
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+    };
+
+    const connect = async (token) => {
+      const myGeneration = ++generation;
+      clearReconnectTimer();
+      if (es) {
+        es.close();
+        es = null;
+      }
+      if (!token) return;
+
+      let ticket;
+      try {
+        ticket = await notificationService.getStreamTicket();
+      } catch (err) {
+        console.error("알림 SSE 티켓 발급 실패", err);
+        return;
+      }
+      if (myGeneration !== generation) return; // 그 사이 로그아웃/토큰변경 등으로 무효화됨
+
+      es = new EventSource(`${API_BASE_URL}/api/notifications/stream?ticket=${encodeURIComponent(ticket)}`);
+      es.addEventListener('notification', (event) => {
+        try {
+          const incoming = JSON.parse(event.data);
+          setNotifications(prev => (
+            prev.some(n => n.id === incoming.id) ? prev : [incoming, ...prev]
+          ));
+        } catch (err) {
+          console.error("실시간 알림 파싱 실패", err);
+        }
+      });
+      es.onerror = (err) => {
+        console.error("알림 SSE 연결 오류, 새 티켓으로 재연결 예약", err);
+        if (es) {
+          es.close();
+          es = null;
+        }
+        if (myGeneration !== generation) return;
+        clearReconnectTimer();
+        reconnectTimer = setTimeout(() => connect(getAccessToken()), 3000);
+      };
+    };
+
+    connect(getAccessToken());
+    const unsubscribe = subscribeAccessToken(connect);
+
+    return () => {
+      unsubscribe();
+      clearReconnectTimer();
+      generation++; // 진행 중이던 티켓 발급 응답이 와도 무시되도록
+      if (es) es.close();
+    };
+  }, []);
 
   useEffect(() => {
     const token = getAccessToken();

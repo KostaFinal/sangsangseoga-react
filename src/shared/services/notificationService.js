@@ -6,6 +6,7 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteAllNotifications,
+  getNotificationStreamTicket,
 } from '../../api/notificationApi';
 
 const unwrap = (res) => {
@@ -60,5 +61,11 @@ export const notificationService = {
   /** 전체 삭제 */
   clearAll: async () => {
     await deleteAllNotifications();
+  },
+
+  /** SSE 연결용 1회용 티켓 발급 (30초 내 미사용 시 만료, 사용 즉시 무효화) */
+  getStreamTicket: async () => {
+    const data = unwrap(await getNotificationStreamTicket());
+    return data.ticket;
   },
 };

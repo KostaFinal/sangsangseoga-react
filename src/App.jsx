@@ -204,11 +204,12 @@ function ProfileEditRoute() {
 }
 
 function NotificationsRoute() {
-  const { notifications, markAllNotificationsRead } = useAuth();
+  const { notifications, markNotificationRead, markAllNotificationsRead } = useAuth();
   return (
     <div className="max-w-4xl mx-auto py-12">
       <NotificationsView
         notifications={notifications}
+        onMarkAsRead={markNotificationRead}
         onMarkAllAsRead={markAllNotificationsRead}
       />
     </div>
