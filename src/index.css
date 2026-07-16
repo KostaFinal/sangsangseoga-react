@@ -10,13 +10,7 @@
 }
 
 @theme {
-  --font-literata: "Literata", serif;
-  --font-vietnam: "Be Vietnam Pro", sans-serif;
-  --font-hanken: "Hanken Grotesk", sans-serif;
-  --font-sans: "Be Vietnam Pro", "Hanken Grotesk", system-ui, sans-serif;
-  --font-serif: "Literata", Georgia, ui-serif, serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  --font-gowun: "Gowun Dodum", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Gowun Dodum", ui-sans-serif, system-ui, sans-serif;
 
   /* From index1.css */
   --font-plus: "Plus Jakarta Sans", sans-serif;
@@ -24,16 +18,26 @@
   --font-pen: "Nanum Pen Script", cursive;
 
   /* 상상서가 보라색 계열 컬러 팔레트 */
-  --color-brand-purple: #6B54E7;      /* 메인 포인트 보라 (버튼, 활성 탭, 로고 포인트) */
-  --color-brand-purple-dark: #6148E1; /* 진한 보라 (선택된 카테고리, 강조 버튼) */
-  --color-brand-purple-light: #835AF1;/* 밝은 보라 (버튼 그라데이션 밝은 쪽) */
-  --color-brand-purple-blue: #5179E6; /* 블루 보라 (메인 CTA 버튼 왼쪽 그라데이션) */
-  --color-brand-purple-bg: #E6E2FC;   /* 연보라 배경 (카드 배경, 아이콘 배경) */
-  --color-brand-lavender: #F3F0FF;    /* 옅은 라벤더 (흐릿한 배경빛) */
-  --color-brand-border: #D4CDF2;      /* 라벤더 테두리 (버튼 테두리, 탭 라인) */
-  --color-brand-muted: #B9B0DC;       /* 흐린 보라 회색 (보조 텍스트, 비활성 요소) */
-  --color-brand-indigo: #2F2D59;      /* 어두운 남보라 (아이콘, 진한 텍스트) */
-  --color-brand-text: #7C769D;        /* 회보라 텍스트 (보조 설명 텍스트) */
+  --color-brand-purple: #6B54E7;
+  /* 메인 포인트 보라 (버튼, 활성 탭, 로고 포인트) */
+  --color-brand-purple-dark: #6148E1;
+  /* 진한 보라 (선택된 카테고리, 강조 버튼) */
+  --color-brand-purple-light: #835AF1;
+  /* 밝은 보라 (버튼 그라데이션 밝은 쪽) */
+  --color-brand-purple-blue: #5179E6;
+  /* 블루 보라 (메인 CTA 버튼 왼쪽 그라데이션) */
+  --color-brand-purple-bg: #E6E2FC;
+  /* 연보라 배경 (카드 배경, 아이콘 배경) */
+  --color-brand-lavender: #F3F0FF;
+  /* 옅은 라벤더 (흐릿한 배경빛) */
+  --color-brand-border: #D4CDF2;
+  /* 라벤더 테두리 (버튼 테두리, 탭 라인) */
+  --color-brand-muted: #B9B0DC;
+  /* 흐린 보라 회색 (보조 텍스트, 비활성 요소) */
+  --color-brand-indigo: #2F2D59;
+  /* 어두운 남보라 (아이콘, 진한 텍스트) */
+  --color-brand-text: #7C769D;
+  /* 회보라 텍스트 (보조 설명 텍스트) */
 
   /* From index1.css brand colors */
   --color-brand-dark: #6148E1;
@@ -77,6 +81,7 @@ html {
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -86,9 +91,11 @@ html {
   width: 6px;
   height: 6px;
 }
+
 .custom-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scroll::-webkit-scrollbar-thumb {
   background: #CCCCCC;
   border-radius: 9999px;
@@ -128,10 +135,22 @@ html {
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+html,
+body,
+#root {
+  font-family: "Gowun Dodum", ui-sans-serif, system-ui, sans-serif;
+}
+
 body {
-  font-family: "Be Vietnam Pro", "Hanken Grotesk", sans-serif;
-  background-color: #F3F0FF;
+  background-color: #f3f0ff;
   overflow-x: hidden;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
 
 :root {
@@ -155,19 +174,23 @@ body {
   .font-serif-literata {
     font-family: var(--font-serif);
   }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
   .line-clamp-1 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
   }
+
   .line-clamp-2 {
     overflow: hidden;
     display: -webkit-box;
@@ -183,10 +206,23 @@ body {
 }
 
 /* Customized scrollbar */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d4cdf2; border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: #b9b0dc; }
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4cdf2;
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b9b0dc;
+}
 
 /* Soft transition */
 .transition-all-custom {
@@ -195,7 +231,7 @@ body {
 
 /* Book cover overlay */
 .cover-overlay {
-  background: linear-gradient(to right, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0) 5%, rgba(255,255,255,0.05) 10%, rgba(255,255,255,0) 60%);
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0) 5%, rgba(255, 255, 255, 0.05) 10%, rgba(255, 255, 255, 0) 60%);
 }
 
 /* Tactile Pop-up Book Elements from index1.css */
@@ -230,9 +266,17 @@ body {
 }
 
 @keyframes voicePulse {
-  0% { box-shadow: 0 0 0 0 rgba(193, 240, 255, 0.7); }
-  70% { box-shadow: 0 0 0 15px rgba(193, 240, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(193, 240, 255, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(193, 240, 255, 0.7);
+  }
+
+  70% {
+    box-shadow: 0 0 0 15px rgba(193, 240, 255, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(193, 240, 255, 0);
+  }
 }
 
 .voice-pulsing {
@@ -240,8 +284,15 @@ body {
 }
 
 @keyframes floatLight {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-8px) rotate(1deg); }
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
 }
 
 .floating-magic {
@@ -251,9 +302,11 @@ body {
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #d1c4be;
   border-radius: 10px;
@@ -277,14 +330,16 @@ body {
 .book-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
+
 .book-scrollbar::-webkit-scrollbar-track {
-  background: transparent; 
+  background: transparent;
 }
+
 .book-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(140, 116, 86, 0.3);
   border-radius: 10px;
 }
+
 .book-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(140, 116, 86, 0.6);
 }
-

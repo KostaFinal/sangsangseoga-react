@@ -140,7 +140,7 @@ export default function BookCalendar({ books = [] }) {
     <div className="space-y-6 bg-transparent text-navy-purple pr-24">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 select-none">
         <div>
-          <h3 className="font-plus text-xl font-black text-navy-purple">독서 계획표</h3>
+          <h3 className="text-xl font-black text-navy-purple">독서 계획표</h3>
           
         </div>
 
@@ -164,7 +164,7 @@ export default function BookCalendar({ books = [] }) {
               이전
             </button>
 
-            <h4 className="font-plus font-black text-lg text-navy-purple">
+            <h4 className="font-black text-lg text-navy-purple">
               {monthLabel}
             </h4>
 
@@ -216,7 +216,7 @@ export default function BookCalendar({ books = [] }) {
         <div className="bg-white border border-lavender-border rounded-3xl shadow-sm p-5 min-h-[420px]">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h4 className="font-plus font-bold text-sm text-navy-purple">
+              <h4 className="font-bold text-sm text-navy-purple">
                 선택한 날짜의 계획
               </h4>
               <p className="text-[10px] text-purple-gray-text mt-1">{selectedDate}</p>

@@ -267,7 +267,7 @@ export const Header = () => {
                         <span className={`text-[7.5px] font-extrabold uppercase tracking-tight hidden lg:block leading-none select-none mt-0.5 ${isPremium ? 'text-[#6B54E7]/70' : 'text-neutral-400'}`}>
                           오늘 사용량
                         </span>
-                        <span className={`text-[10px] font-bold font-mono block mt-0.5 leading-none ${isPremium ? 'text-[#2F2D59]' : 'text-neutral-800'}`}>
+                        <span className={`text-[10px] font-bold block mt-0.5 leading-none ${isPremium ? 'text-[#2F2D59]' : 'text-neutral-800'}`}>
                           {usage ? `텍스트 ${usage.text.remaining}/${usage.text.limit} · 이미지 ${usage.image.remaining}/${usage.image.limit}` : '-'}
                         </span>
                       </div>

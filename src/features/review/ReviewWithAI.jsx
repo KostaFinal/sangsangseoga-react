@@ -372,7 +372,7 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
     <div className="w-full max-w-[calc(100%-70px)] flex flex-col pt-1 pr-4 animate-in slide-in-from-bottom-6 duration-500 select-none text-navy-purple bg-transparent">
       {/* Page Title */}
       <div className="border-b border-lavender-border pb-4 mb-4">
-        <h2 className="text-xl font-black text-navy-purple tracking-tight font-serif">
+        <h2 className="text-xl font-black text-navy-purple tracking-tight">
           독후감
         </h2>
       </div>
@@ -381,7 +381,7 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h3 className="font-plus text-base font-black text-navy-purple">내가 쓴 독서록 📖 ({reports.length})</h3>
+            <h3 className="text-base font-black text-navy-purple">내가 쓴 독서록 📖 ({reports.length})</h3>
           </div>
 
           <button
@@ -451,7 +451,7 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
 
                 {/* Title and Author block */}
                 <div className="text-center mt-1">
-                  <h4 className="text-xs font-black text-navy-purple font-plus tracking-tight">
+                  <h4 className="text-xs font-black text-navy-purple tracking-tight">
                     {selectedBook?.title}
                   </h4>
                   <p className="text-[10px] text-purple-gray-text mt-0.5 font-bold">
@@ -599,7 +599,7 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
                       작성 중
                     </span>
                   )}
-                  <h4 className="text-[14px] font-black text-navy-purple font-plus mt-1.5">{report.bookTitle} 읽고서</h4>
+                  <h4 className="text-[14px] font-black text-navy-purple mt-1.5">{report.bookTitle} 읽고서</h4>
                   <span className="text-[11px] text-purple-gray-text font-medium flex items-center gap-1 mt-1">🏛️ 기록일: {report.date}</span>
                 </div>
               </div>
@@ -654,7 +654,7 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
                   style={{ backgroundImage: `url('${selectedReportForEdit.bookCover}')` }}
                 />
                 <div>
-                  <h5 className="font-plus font-black text-sm text-navy-purple">{selectedReportForEdit.bookTitle}</h5>
+                  <h5 className="font-black text-sm text-navy-purple">{selectedReportForEdit.bookTitle}</h5>
                   <p className="text-[10px] text-purple-gray-text mt-1 font-semibold">정서 테마: {selectedReportForEdit.mood || '기록 없음'}</p>
                 </div>
               </div>

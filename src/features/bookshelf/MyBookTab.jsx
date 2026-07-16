@@ -13,7 +13,7 @@ export default function MyBookTab({ filteredBooks,
     <div className="space-y-4 bg-transparent text-navy-purple">
       <div className="flex justify-between items-center select-none header-wrap">
         <div>
-          <h3 className="font-plus text-xl font-black text-navy-purple">내가 쓴 책</h3>
+          <h3 className="text-xl font-black text-navy-purple">내가 쓴 책</h3>
         </div>
 
 
