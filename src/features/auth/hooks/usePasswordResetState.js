@@ -38,14 +38,23 @@ export const usePasswordResetState = () => {
     }
   };
 
-  const handleTokenSubmit = (e) => {
+  const handleTokenSubmit = async (e) => {
     e.preventDefault();
     if (!resetToken.trim()) {
       setServerError('이메일로 받은 인증 토큰을 입력해 주세요.');
       return;
     }
+
+    setIsSubmitting(true);
     setServerError('');
-    setStage('new_password');
+    try {
+      await authService.verifyPasswordResetToken(resetToken.trim());
+      setStage('new_password');
+    } catch (err) {
+      setServerError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handlePasswordSubmit = async (e) => {

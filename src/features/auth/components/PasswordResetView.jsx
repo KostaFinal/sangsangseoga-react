@@ -30,9 +30,9 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
           <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
             <h2 className="text-xl font-literata font-bold flex items-center space-x-2">
               <span className="material-symbols-outlined text-black font-semibold text-2xl">lock_reset</span>
-              <span>비밀번호 안전 찾기</span>
+              <span>비밀번호 재설정</span>
             </h2>
-            <div className="flex items-center space-x-1.5 text-[10px] font-mono tracking-widest text-neutral-400 font-bold uppercase">
+            <div className="flex items-center space-x-1.5 text-[12px] font-mono tracking-widest text-neutral-400 font-bold uppercase">
               <span className={stage === 'request' || stage === 'sent_success' ? 'text-black' : ''}>STEP 01</span>
               <span>•</span>
               <span className={stage === 'new_password' ? 'text-black' : ''}>STEP 02</span>
@@ -44,7 +44,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
           {stage === 'request' && (
             <div className="space-y-4">
               <p className="text-xs text-neutral-500 leading-relaxed font-gowun">
-                가입하신 이메일 주소를 입력해 주시면, 본인 소유 계정임을 확인할 수 있는 안전한 비밀번호 설정용 주소 메일을 발송해 드립니다.
+                가입하신 이메일 주소를 입력하시면 비밀번호 재설정 메일을 보내드립니다.
               </p>
 
               <form onSubmit={handleRequestLink} className="space-y-4">
@@ -74,7 +74,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                     disabled={isSubmitting}
                     className="w-full flex justify-center py-3.5 px-4 font-gowun font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all active:scale-98 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? '발송 중...' : '비밀번호 재설정 인증 메일 발송'}
+                    {isSubmitting ? '발송 중...' : '인증 메일 발송'}
                   </button>
                 </div>
               </form>
@@ -104,7 +104,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                 <div className="space-y-1 text-xs">
                   <p className="font-bold text-neutral-900">비밀번호 재설정 메일이 전송되었습니다</p>
                   <p className="text-neutral-500 leading-normal">
-                    입력하신 <strong className="text-neutral-800 font-semibold">{email}</strong> 메일함을 확인해 주세요. 메일에 안내된 인증 토큰을 아래에 입력하면 다음 단계로 진행할 수 있습니다.
+                    <strong className="text-neutral-800 font-semibold">{email}</strong> 메일함에서 인증 토큰을 확인해 아래에 입력해 주세요.
                   </p>
                 </div>
               </div>
@@ -133,9 +133,10 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full flex justify-center py-3.5 px-4 font-gowun font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all"
+                    disabled={isSubmitting}
+                    className="w-full flex justify-center py-3.5 px-4 font-gowun font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    다음 단계로
+                    {isSubmitting ? '확인 중...' : '다음 단계로'}
                   </button>
                 </div>
               </form>
@@ -220,8 +221,8 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                 </div>
 
                 <div className="p-3 bg-neutral-50 rounded-xl space-y-2 border border-neutral-200 text-xs">
-                  <p className="font-bold text-[10px] text-neutral-500 uppercase tracking-widest font-gowun">비밀번호 안전도 등급 요건 검사</p>
-                  <div className="grid grid-cols-2 gap-2 text-[11px] font-gowun">
+                  <p className="font-bold text-[12px] text-neutral-500 uppercase tracking-widest font-gowun">비밀번호 요건</p>
+                  <div className="grid grid-cols-2 gap-2 text-[13px] font-gowun">
                     <span className={`flex items-center ${hasLetter ? 'text-emerald-700 font-bold' : 'text-neutral-400'}`}>
                       <span className="material-symbols-outlined text-[15px] mr-1">
                         {hasLetter ? 'check_circle' : 'pending'}
@@ -261,7 +262,7 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
                     disabled={isSubmitting}
                     className="w-full flex justify-center py-3.5 px-4 font-gowun font-bold text-white bg-black hover:bg-neutral-800 rounded-2xl text-xs uppercase tracking-wide cursor-pointer shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? '변경 중...' : '🔒 안전하게 비밀번호 변경 적용하기'}
+                    {isSubmitting ? '변경 중...' : '비밀번호 변경하기'}
                   </button>
                 </div>
               </form>
@@ -277,15 +278,8 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
               <div className="space-y-2">
                 <h3 className="text-xl font-bold text-neutral-900 font-literata">비밀번호 변경 완료</h3>
                 <p className="text-xs text-neutral-500 leading-relaxed max-w-sm mx-auto">
-                  회원님의 암호 변경 요청이 안전하게 반영되었습니다. 안전을 위해 변경된 새로운 비밀번호로 다시 로그인해 주세요.
+                  새로운 비밀번호로 다시 로그인해 주세요.
                 </p>
-              </div>
-
-              <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-200/80 text-left text-xs space-y-1.5 text-neutral-600 max-w-sm mx-auto font-gowun shadow-xs">
-                <p className="text-center font-bold border-b border-neutral-100 pb-1 text-black font-literata mb-1">인증 처리 상태 정보</p>
-                <p>🔒 <strong>비밀번호 암호화 강도:</strong> 안전 등급 기준 만족 (정상 설정됨)</p>
-                <p>🎫 <strong>인증 메일 전송 링크:</strong> 승인 완료 / 재사용 방지 만료 처리됨</p>
-                <p>⚙️ <strong>기존 자동로그인 상태:</strong> 전부 정상 로그아웃 처리 완료</p>
               </div>
 
               <div className="pt-2">
@@ -301,9 +295,8 @@ export const PasswordResetView = ({ onNavigateToLogin }) => {
 
         </div>
 
-        <div className="text-center text-[10px] text-neutral-400 font-gowun space-y-1">
-          <p>상상서가 계정 및 개인정보 관리 통합 보증 센터</p>
-          <p>© 2026 상상서가. All rights reserved. 본 서비스는 안전한 개인정보 인큐이팅 및 암호보안 절차를 수행합니다.</p>
+        <div className="text-center text-[12px] text-neutral-400 font-gowun">
+          <p>© 2026 상상서가. All rights reserved.</p>
         </div>
 
       </div>
