@@ -5,14 +5,19 @@ import {
   User,
   CreditCard,
   LogOut,
+  Bell,
 } from 'lucide-react';
 import { CURRENT_USER_PROFILE } from '../data';
 import { useAuth } from '../context/AuthContext';
+import { NotificationPanel } from './NotificationPanel';
 import logoUrl from '../../assets/images/sangsangseoga_official_logo_1782313504336.jpg';
 
 
 export const Header = () => {
-  const { isAuthenticated, currentUser, usage, handleLogout } = useAuth();
+  const {
+    isAuthenticated, currentUser, usage, isPremium, handleLogout,
+    notifications, markNotificationRead, markAllNotificationsRead, clearAllNotifications,
+  } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -20,6 +25,7 @@ export const Header = () => {
   const [showSangsangMenu, setShowSangsangMenu] = useState(false);
   const [showFriendsMenu, setShowFriendsMenu] = useState(false);
   const [nickname, setNickname] = useState('상상의작가');
+  const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
 
 
 
@@ -35,6 +41,7 @@ export const Header = () => {
     setShowProfileMenu(false);
     setShowSangsangMenu(false);
     setShowFriendsMenu(false);
+    setShowNotificationsDropdown(false);
   }, [location.pathname]);
 
   const isLoggedIn = isAuthenticated;
@@ -213,26 +220,59 @@ export const Header = () => {
               ) : (
 
                 // 3-B. Logged-in state: [프로필 이미지 + 메뉴]
-                <div className="relative flex items-center space-x-1.5 sm:space-x-2.5"> 
-                  {/* 바로 소모량을 파악할 수 있는 헤더 실시간 지표 버튼 (클릭 시 구독/아틀리에 관리 이동) */}
-                  <button
-                    onClick={() => navigate("/subscription")}
-                    className="hidden md:flex items-center gap-2 px-2.5 py-1 bg-neutral-50 hover:bg-neutral-100 active:scale-97 border border-neutral-200 rounded-xl cursor-pointer transition-all shrink-0 font-sans group text-left"
-                    title="클릭 시 실시간 구독 지표 및 사용량 대시보드로 이동"
-                  >
-                    <span className="relative flex h-1.5 w-1.5 shrink-0 select-none">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-duration-1000"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                    </span>
-                    <div className="font-sans">
-                      <span className="text-[7.5px] text-neutral-400 font-extrabold uppercase tracking-tight hidden lg:block leading-none select-none mt-0.5">
-                        오늘 사용량
+                <div className="relative flex items-center space-x-1.5 sm:space-x-2.5">
+                  {/* 알림 벨 아이콘 + 드롭다운 패널 */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowNotificationsDropdown(!showNotificationsDropdown)}
+                      className="p-1.5 text-neutral-500 hover:text-[#6B54E7] hover:bg-[#F3F0FF] rounded-full transition-colors cursor-pointer relative flex items-center justify-center"
+                      title="알림 확인"
+                    >
+                      <Bell className="w-4 h-4" />
+                      {notifications.some(n => !n.read) && (
+                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 ring-1 ring-white animate-pulse"></span>
+                      )}
+                    </button>
+
+                    <NotificationPanel
+                      isOpen={showNotificationsDropdown}
+                      onClose={() => setShowNotificationsDropdown(false)}
+                      notifications={notifications}
+                      onMarkAsRead={markNotificationRead}
+                      onMarkAllAsRead={markAllNotificationsRead}
+                      onClearAll={clearAllNotifications}
+                      onViewAll={() => {
+                        navigate('/notifications');
+                        setShowNotificationsDropdown(false);
+                      }}
+                    />
+                  </div>
+
+                  {/* 바로 소모량을 파악할 수 있는 헤더 실시간 지표 버튼 (클릭 시 구독/아틀리에 관리 이동) — 관리자는 AI 생성 한도와 무관하므로 숨김 */}
+                  {currentUser?.role !== "ADMIN" && (
+                    <button
+                      onClick={() => navigate("/subscription")}
+                      className={`hidden md:flex items-center gap-2 px-2.5 py-1 active:scale-97 border rounded-xl cursor-pointer transition-all shrink-0 font-sans group text-left ${
+                        isPremium
+                          ? 'bg-[#F3F0FF] hover:bg-[#E6E2FC]/60 border-[#E6E2FC]'
+                          : 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200'
+                      }`}
+                      title="클릭 시 실시간 구독 지표 및 사용량 대시보드로 이동"
+                    >
+                      <span className="relative flex h-1.5 w-1.5 shrink-0 select-none">
+                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 animate-duration-1000 ${isPremium ? 'bg-[#6B54E7]' : 'bg-emerald-400'}`}></span>
+                        <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${isPremium ? 'bg-[#6B54E7]' : 'bg-emerald-500'}`}></span>
                       </span>
-                      <span className="text-[10px] font-bold text-neutral-800 font-mono block mt-0.5 leading-none">
-                        {usage ? `텍스트 ${usage.text.remaining}/${usage.text.limit} · 이미지 ${usage.image.remaining}/${usage.image.limit}` : '-'}
-                      </span>
-                    </div>
-                  </button>
+                      <div className="font-sans">
+                        <span className={`text-[7.5px] font-extrabold uppercase tracking-tight hidden lg:block leading-none select-none mt-0.5 ${isPremium ? 'text-[#6B54E7]/70' : 'text-neutral-400'}`}>
+                          오늘 사용량
+                        </span>
+                        <span className={`text-[10px] font-bold font-mono block mt-0.5 leading-none ${isPremium ? 'text-[#2F2D59]' : 'text-neutral-800'}`}>
+                          {usage ? `텍스트 ${usage.text.remaining}/${usage.text.limit} · 이미지 ${usage.image.remaining}/${usage.image.limit}` : '-'}
+                        </span>
+                      </div>
+                    </button>
+                  )}
 
                   <div className="relative">
                     <button

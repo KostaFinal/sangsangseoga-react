@@ -22,7 +22,7 @@ export const SocialAuthGateway = ({ selectedProvider, onNavigateToLogin, onSucce
   const providerLabel = PROVIDER_LABEL[selectedProvider] || selectedProvider;
 
   return (
-    <div id="social-auth-container" className="min-h-screen bg-neutral-100 flex items-start justify-center pt-10 pb-24 px-4 sm:px-6 relative font-sans text-neutral-900 overflow-x-hidden">
+    <div id="social-auth-container" className="min-h-screen bg-neutral-100 flex items-start justify-center pt-10 pb-24 px-4 sm:px-6 relative font-gowun text-neutral-900 overflow-x-hidden">
       <div className="absolute top-10 left-10 w-80 h-80 bg-neutral-950 rounded-full blur-[120px] opacity-[0.04]"></div>
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-neutral-300 rounded-full blur-[140px] opacity-[0.08]"></div>
 

@@ -30,7 +30,7 @@ export const LoginView = ({
   } = useLoginState({ onSuccess });
 
   return (
-    <div id="login-container" className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative bg-neutral-50 overflow-hidden font-sans">
+    <div id="login-container" className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative bg-neutral-50 overflow-hidden font-gowun">
       <div className="absolute top-0 left-0 w-full h-full bg-[linear-gradient(to_right,#e5e5e5_1px,transparent_1px),linear-gradient(to_bottom,#e5e5e5_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30"></div>
 
       {isAdminMode ? (
@@ -42,13 +42,13 @@ export const LoginView = ({
             <h2 className="text-3xl font-literata font-bold text-neutral-900 tracking-tight">
               상상서가 관리자
             </h2>
-            <p className="mt-2 text-sm text-neutral-500 font-sans leading-relaxed">
+            <p className="mt-2 text-sm text-neutral-500 font-gowun leading-relaxed">
               사전에 승인된 관리 계정만 로그인할 수 있습니다.
             </p>
           </div>
 
           {error && (
-            <div className="flex items-start gap-1.5 bg-rose-50 text-rose-800 border border-rose-200 p-3 rounded-xl text-xs leading-relaxed text-left font-sans">
+            <div className="flex items-start gap-1.5 bg-rose-50 text-rose-800 border border-rose-200 p-3 rounded-xl text-xs leading-relaxed text-left font-gowun">
               <span className="material-symbols-outlined text-rose-500 text-sm mt-0.5">error_outline</span>
               <span>{error}</span>
             </div>
@@ -57,7 +57,7 @@ export const LoginView = ({
           <form className="mt-6 space-y-4" onSubmit={handleAdminSubmit} noValidate>
             <div className="space-y-4 rounded-md text-left">
               <div>
-                <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-sans">
+                <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-gowun">
                   관리자 이메일 주소
                 </label>
                 <div className="relative">
@@ -76,7 +76,7 @@ export const LoginView = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-sans">
+                <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-gowun">
                   비밀번호
                 </label>
                 <div className="relative">
@@ -99,7 +99,7 @@ export const LoginView = ({
               <button
                 id="admin-login-submit-btn"
                 type="submit"
-                className="group relative w-full flex justify-center py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-900 rounded-2xl text-sm shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
+                className="group relative w-full flex justify-center py-3.5 px-4 font-gowun font-bold text-white bg-black hover:bg-neutral-900 rounded-2xl text-sm shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
               >
                 <span className="absolute inset-y-0 left-0 flex items-center pl-4">
                   <span className="material-symbols-outlined text-white text-lg group-hover:translate-x-0.5 transition-transform">
@@ -126,7 +126,7 @@ export const LoginView = ({
               <div className="text-right">
                 <button
                   onClick={enterAdminMode}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-black hover:text-white text-neutral-600 text-[10px] font-sans font-bold transition-all border border-neutral-200"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-black hover:text-white text-neutral-600 text-[10px] font-gowun font-bold transition-all border border-neutral-200"
                 >
                   <ShieldAlert className="w-3 h-3" /> 관리자 로그인
                 </button>
@@ -136,13 +136,13 @@ export const LoginView = ({
                 <h2 id="login-title" className="text-3xl font-literata font-bold text-neutral-900 tracking-tight">
                   상상서가
                 </h2>
-                <p id="login-subtitle" className="mt-2 text-sm text-neutral-500 font-sans leading-relaxed">
+                <p id="login-subtitle" className="mt-2 text-sm text-neutral-500 font-gowun leading-relaxed">
                   아이들을 위한 따뜻하고 창의적인 AI 그림책 창작방
                 </p>
               </div>
 
               {error && (
-                <div className="flex items-start gap-1.5 bg-rose-50 text-rose-800 border border-rose-200 p-3 rounded-xl text-xs leading-relaxed text-left font-sans">
+                <div className="flex items-start gap-1.5 bg-rose-50 text-rose-800 border border-rose-200 p-3 rounded-xl text-xs leading-relaxed text-left font-gowun">
                   <span className="material-symbols-outlined text-rose-500 text-sm mt-0.5">error_outline</span>
                   <span>{error}</span>
                 </div>
@@ -151,7 +151,7 @@ export const LoginView = ({
               <form className="mt-6 space-y-4" onSubmit={handleUserSubmit} noValidate>
                 <div className="space-y-4 rounded-md text-left">
                   <div>
-                    <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-sans">
+                    <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-gowun">
                       이메일 주소
                     </label>
                     <div className="relative">
@@ -171,7 +171,7 @@ export const LoginView = ({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-sans">
+                    <label className="block text-xs font-bold text-neutral-600 mb-1.5 uppercase tracking-wider font-gowun">
                       비밀번호
                     </label>
                     <div className="relative">
@@ -200,7 +200,7 @@ export const LoginView = ({
                       onChange={() => setRememberMe(!rememberMe)}
                       className="w-4 h-4 rounded text-neutral-900 border-neutral-300 focus:ring-black accent-black"
                     />
-                    <span className="font-sans text-xs text-neutral-600">로그인 유지</span>
+                    <span className="font-gowun text-xs text-neutral-600">로그인 유지</span>
                   </label>
 
                   <button
@@ -216,7 +216,7 @@ export const LoginView = ({
                   <button
                     id="login-submit-btn"
                     type="submit"
-                    className="group relative w-full flex justify-center py-3.5 px-4 font-sans font-bold text-white bg-black hover:bg-neutral-900 rounded-2xl text-sm shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
+                    className="group relative w-full flex justify-center py-3.5 px-4 font-gowun font-bold text-white bg-black hover:bg-neutral-900 rounded-2xl text-sm shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
                   >
                     <span className="absolute inset-y-0 left-0 flex items-center pl-4">
                       <span className="material-symbols-outlined text-white text-lg group-hover:translate-x-0.5 transition-transform">
@@ -231,7 +231,7 @@ export const LoginView = ({
               <div className="mt-6">
                 <div className="relative flex py-2 items-center">
                   <div className="flex-grow border-t border-neutral-200"></div>
-                  <span className="flex-shrink mx-4 text-xs font-sans text-neutral-400 text-center">
+                  <span className="flex-shrink mx-4 text-xs font-gowun text-neutral-400 text-center">
                     소셜 간편 로그인
                   </span>
                   <div className="flex-grow border-t border-neutral-200"></div>
@@ -241,7 +241,7 @@ export const LoginView = ({
                   <button
                     type="button"
                     onClick={() => handleSocialLogin('kakao')}
-                    className="flex items-center justify-center gap-1.5 py-2.5 px-1 rounded-xl border border-neutral-200/80 bg-[#FEE500] hover:bg-[#ECD300] text-[#191919] font-sans font-semibold cursor-pointer transition-all shadow-xs"
+                    className="flex items-center justify-center gap-1.5 py-2.5 px-1 rounded-xl border border-neutral-200/80 bg-[#FEE500] hover:bg-[#ECD300] text-[#191919] font-gowun font-semibold cursor-pointer transition-all shadow-xs"
                   >
                     <MessageCircle className="w-4 h-4 fill-[#191919]" strokeWidth={0} />
                     <span>카카오</span>
@@ -249,7 +249,7 @@ export const LoginView = ({
                   <button
                     type="button"
                     onClick={() => handleSocialLogin('naver')}
-                    className="flex items-center justify-center gap-1.5 py-2.5 px-1 rounded-xl border border-[#03C75A]/20 bg-[#03C75A] hover:bg-[#02A64B] text-white font-sans font-semibold cursor-pointer transition-all shadow-xs"
+                    className="flex items-center justify-center gap-1.5 py-2.5 px-1 rounded-xl border border-[#03C75A]/20 bg-[#03C75A] hover:bg-[#02A64B] text-white font-gowun font-semibold cursor-pointer transition-all shadow-xs"
                   >
                     <span className="flex items-center justify-center w-4 h-4 rounded-[3px] bg-white text-[#03C75A] text-[10px] font-black leading-none">N</span>
                     <span>네이버</span>
@@ -265,7 +265,7 @@ export const LoginView = ({
               </div>
 
               <div className="text-center pt-2">
-                <p className="text-xs text-neutral-500 font-sans">
+                <p className="text-xs text-neutral-500 font-gowun">
                   처음 방문하셨나요? {' '}
                   <button
                     id="login-to-signup"

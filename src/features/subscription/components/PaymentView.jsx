@@ -29,7 +29,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
   // 1단계: 결제 실패 전용 화면 렌더링 분기
   if (paymentPhase === 'FAILURE_SCREEN') {
     return (
-      <div className="py-12 bg-[#FAF9FF] min-h-screen px-4 sm:px-6 lg:px-8 flex items-center justify-center font-sans text-[#2F2D59] animate-in fade-in duration-150">
+      <div className="py-12 bg-[#FAF9FF] min-h-screen px-4 sm:px-6 lg:px-8 flex items-center justify-center font-gowun text-[#2F2D59] animate-in fade-in duration-150">
         <div className="max-w-xl w-full bg-white rounded-3xl p-8 shadow-2xl border border-[#E6E2FC] text-center space-y-6">
           <div className="mx-auto w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center">
             <AlertTriangle className="w-8 h-8" />
@@ -78,7 +78,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
   // 2단계: PG 모의 진행 로딩 기동 중
   if (paymentPhase === 'PROCESSING' && isProcessing) {
     return (
-      <div className="py-12 bg-[#FAF9FF] min-h-screen px-4 sm:px-6 lg:px-8 flex items-center justify-center font-sans text-[#2F2D59] animate-in fade-in duration-200">
+      <div className="py-12 bg-[#FAF9FF] min-h-screen px-4 sm:px-6 lg:px-8 flex items-center justify-center font-gowun text-[#2F2D59] animate-in fade-in duration-200">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-4 border-[#6B54E7] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="text-sm font-bold text-[#2F2D59]">결제 승인 처리 중...</p>
@@ -88,7 +88,7 @@ export const PaymentView = ({ paymentParams, onPaymentSuccess, onNavigateBack })
   }
 
   return (
-    <div className="py-12 bg-[#FAF9FF] min-h-screen px-4 sm:px-6 lg:px-8 flex items-center justify-center font-sans text-[#2F2D59]">
+    <div className="py-12 bg-[#FAF9FF] min-h-screen px-4 sm:px-6 lg:px-8 flex items-center justify-center font-gowun text-[#2F2D59]">
       <div className="w-full max-w-5xl grid md:grid-cols-12 gap-6 items-start">
         
         {/* Left Credit Card Form */}
