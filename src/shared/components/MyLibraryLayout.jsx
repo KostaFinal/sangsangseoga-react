@@ -160,19 +160,22 @@ export function MyLibraryLayout() {
         ...readingBooks,
       ];
 
-      const dedupedBooks = Object.values(
-        mergedBooks.reduce((acc, book) => {
-          const key = String(book.bookId || book.id);
+      const dedupedBookMap = mergedBooks.reduce((map, book) => {
+        const key = String(book.bookId || book.id);
+        const existingBook = map.get(key);
 
-          acc[key] = {
-            ...acc[key],
-            ...book,
-            isFavorite: acc[key]?.isFavorite || book.isFavorite,
-          };
+        map.set(key, {
+          ...existingBook,
+          ...book,
+          isFavorite:
+            Boolean(existingBook?.isFavorite) ||
+            Boolean(book.isFavorite),
+        });
 
-          return acc;
-        }, {})
-      );
+        return map;
+      }, new Map());
+
+      const dedupedBooks = Array.from(dedupedBookMap.values());
 
       setBooks(dedupedBooks);
       return dedupedBooks;

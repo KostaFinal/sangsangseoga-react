@@ -15,6 +15,12 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
   const [reports, setReports] = useState([]);
   const [reviewBooks, setReviewBooks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const BOOK_TYPE_LABEL = {
+    NOVEL: "소설",
+    POEM: "시",
+    ESSAY: "에세이",
+    FAIRY_TALE: "동화",
+  };
 
   const getCoverUrl = (review) => {
     return review.coverImageUrl || review.bookCover || "";
@@ -454,7 +460,14 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
                   <h4 className="text-xs font-black text-navy-purple tracking-tight">
                     {selectedBook?.title}
                   </h4>
-                  <p className="text-[10px] text-purple-gray-text mt-0.5 font-bold">
+
+                  <div className="flex justify-center mt-2">
+                    <span className="px-3 py-1 rounded-full bg-lavender-bg border border-lavender-border text-brand-purple text-[10px] font-bold">
+                      {BOOK_TYPE_LABEL[selectedBook?.bookType] || "기타"}
+                    </span>
+                  </div>
+
+                  <p className="text-[10px] text-purple-gray-text mt-2 font-bold">
                     독후감 작성 도서
                   </p>
                 </div>
