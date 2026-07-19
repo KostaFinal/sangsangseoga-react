@@ -5,6 +5,21 @@
 // book_page로 넘어간다.
 const SAFETY_FONT_SCALE = 1.2;
 
+// 영어 본문은 --font-serif(Literata, 웹폰트)로 렌더링되는데, 이 폰트가 아직 다운로드되기
+// 전에 측정하면 브라우저가 대체 폰트(Georgia 등) 기준으로 폭을 재서 실제보다 짧게
+// 나온다 - 그 상태로 "박스에 맞다"고 판단해 버리면, 정작 Literata가 로드된 뒤 다시
+// 그려질 때는 넘칠 수 있다(한국어는 Literata에 한글 글리프가 없어 처음부터 대체
+// 폰트를 쓰므로 이 문제가 없다). 측정 전에 폰트 로딩을 기다려서 이 어긋남을 없앤다.
+export async function ensureFontsReady() {
+  if (typeof document !== "undefined" && document.fonts?.ready) {
+    try {
+      await document.fonts.ready;
+    } catch {
+      // 폰트 로딩 상태를 못 가져와도 측정 자체는 계속 진행한다.
+    }
+  }
+}
+
 let measurerEl = null;
 
 function getMeasurer() {

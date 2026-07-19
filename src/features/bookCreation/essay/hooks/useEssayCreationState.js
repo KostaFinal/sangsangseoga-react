@@ -14,6 +14,11 @@ import {
 } from '../utils/essayTextUtils.js';
 import { generateEssay, rewriteEssaySelection, toReaderAge, translateEssayContent, translateEssayTitle } from '../services/essayCreationService.js';
 import { publishBook } from '../../../../api/bookApi.js';
+import { mapWithConcurrency } from '../../utils/concurrency.js';
+
+// 페이지 번역 동시 요청 개수 - 너무 많이 한꺼번에 보내면 Gemini가 일시 과부하(503)를
+// 낼 수 있어(실측: 11개 동시 요청 중 3개 실패) 3~4개 선에서 안전하게 맞춘다.
+const TRANSLATE_CONCURRENCY = 3;
 
 const createInitialSettings = () => ({
   mode: '',
@@ -247,15 +252,13 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     const readerAge = toReaderAge(settings.authorAge);
     const titleEn = await translateEssayTitle(title);
 
-    // 페이지별 영어 번역(content_text_en)을 채운다. 예전에는 Promise.all로 페이지를 한꺼번에
-    // 병렬 요청했는데, 에세이가 최소 10페이지 분량으로 길어지면서 한 번에 10개 넘는 번역
-    // 요청이 Gemini에 동시에 몰려 503(과부하)이 뜨고 재시도까지 겹쳐 실패하는 일이 생겼다.
-    // 순서대로 하나씩 번역해서 동시 요청 수를 늘 1개로 유지한다.
-    const translatedPages = [];
-    for (let index = 0; index < pages.length; index += 1) {
-      const text = pages[index];
+    // 페이지별 영어 번역(content_text_en)을 채운다. 한꺼번에 다 병렬로 보내면(Promise.all)
+    // 에세이가 길 때(최소 10페이지) Gemini에 요청이 몰려 503(과부하)이 났었고, 완전히
+    // 하나씩만(순차) 하면 안전하지만 페이지가 많을수록 너무 느리다. 동시에 최대
+    // TRANSLATE_CONCURRENCY개까지만 보내 속도와 안정성을 같이 맞춘다.
+    const translatedPages = await mapWithConcurrency(pages, TRANSLATE_CONCURRENCY, async (text, index) => {
       const translated = await translateEssayContent(text);
-      translatedPages.push({
+      return {
         pageNo: index + 1,
         title: index === 0 ? title : '',
         titleEn: index === 0 ? titleEn : '',
@@ -263,8 +266,8 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
         contentTextEn: translated.text,
         contentFontSizeEn: translated.fontSize,
         imageUrl: null,
-      });
-    }
+      };
+    });
 
     return {
       bookType: 'ESSAY',

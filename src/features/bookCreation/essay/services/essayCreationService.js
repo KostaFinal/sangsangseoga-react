@@ -2,7 +2,7 @@ import { requestAiGenerate } from "../../services/aiGenerateService";
 import { getTaskResult, isSuccessResponse } from "../../utils/aiResponseEnvelope";
 import { clean } from "../utils/essayTextUtils";
 import { TEXT_ONLY_BODY_BOX, TEXT_ONLY_TEXT_STYLE } from "../../../library/utils/mapBookPages.js";
-import { splitTextToFitBox } from "../../../library/utils/textFitting.js";
+import { splitTextToFitBox, ensureFontsReady } from "../../../library/utils/textFitting.js";
 
 const AGE_TO_READER_AGE = {
   미취학아동: "PRESCHOOL",
@@ -106,6 +106,8 @@ function fitEssayFontSize(textEn) {
 export async function translateEssayContent(textKo) {
   const text = String(textKo || "").trim();
   if (!text) return { text: "", fontSize: TEXT_ONLY_TEXT_STYLE.fontSize };
+
+  await ensureFontsReady();
 
   const MAX_ATTEMPTS = 3;
   let lastMessage = "";
