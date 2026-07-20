@@ -1268,6 +1268,29 @@ min-height: 78px;
   text-align: left;
 }
 
+/* 다음 단계로 넘어가서 AI 선택지를 기다리는 동안 seed-option 자리를 채우는 스켈레톤. */
+.fairy-setup-page .seed-option-skeleton {
+min-height: 78px;
+  border-radius: 16px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.55) 25%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0.55) 75%
+  );
+  background-size: 200% 100%;
+  animation: seed-option-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes seed-option-skeleton-shimmer {
+0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 .fairy-setup-page .seed-option.wide {
 grid-column: 1 / -1;
 }

@@ -18,6 +18,14 @@ import {
   normalizeChoiceOptions,
 } from "../utils/aiSettingOptions";
 
+// 실제 진행률을 알 수 없는 단일 요청-응답이라, 가만히 멈춰 있는 것보다 "뭔가 되고 있다"는
+// 느낌을 주기 위해 몇 초 간격으로 문구만 돌려 보여준다(loadingHint).
+const LOADING_HINT_MESSAGES = [
+  "당신에게 어울리는 선택지를 고르고 있어요...",
+  "잘 맞는 선택지를 찾고 있어요...",
+  "거의 다 됐어요...",
+];
+
 const makeFallbackStep = (step, index) => ({
   ...step,
   question:
@@ -46,9 +54,30 @@ export function useFairyTaleSettingWizard() {
   );
   const [previousAnswers, setPreviousAnswers] = useState([]);
   const [isLoadingChoiceStep, setIsLoadingChoiceStep] = useState(false);
+  // "다음 질문"으로 다음 단계에 처음 들어와서 그 단계의 AI 선택지를 처음 기다리는 중인지.
+  // "다시 추천"(같은 단계 재요청)일 때는 true가 되지 않는다 - 그땐 기존 선택지를 그대로 보여주다가
+  // 갱신하는 게 자연스럽지만, 다음 단계로 넘어갈 땐 아직 아무 선택지도 없으니 스켈레톤을 보여준다.
+  const [isAdvancingToNextStep, setIsAdvancingToNextStep] = useState(false);
   const [fallbackNoticeByStep, setFallbackNoticeByStep] = useState({});
   const [loadingHint, setLoadingHint] = useState("");
   const [recommendationVersion, setRecommendationVersion] = useState({});
+
+  useEffect(() => {
+    if (!isLoadingChoiceStep) {
+      setLoadingHint("");
+      return;
+    }
+
+    let index = 0;
+    setLoadingHint(LOADING_HINT_MESSAGES[0]);
+
+    const timer = setInterval(() => {
+      index = (index + 1) % LOADING_HINT_MESSAGES.length;
+      setLoadingHint(LOADING_HINT_MESSAGES[index]);
+    }, 2200);
+
+    return () => clearInterval(timer);
+  }, [isLoadingChoiceStep]);
 
   const currentStepInfo =
     aiSteps[currentStep] || makeFallbackStep(steps[currentStep], currentStep);
@@ -191,7 +220,6 @@ export function useFairyTaleSettingWizard() {
 
     (async () => {
       setIsLoadingChoiceStep(true);
-      setLoadingHint("");
 
       const { step: firstStep, usedFallback } = await requestChoiceStep(0, [], 0);
 
@@ -209,7 +237,6 @@ export function useFairyTaleSettingWizard() {
 
     requestGuardRef.current = true;
     setIsLoadingChoiceStep(true);
-    setLoadingHint("");
 
     const nextVersion = (recommendationVersion[currentStepInfo.key] || 0) + 1;
     const { step: newStep, usedFallback } = await requestChoiceStep(
@@ -248,10 +275,17 @@ export function useFairyTaleSettingWizard() {
 
     if (currentStep < steps.length - 1) {
       requestGuardRef.current = true;
-      setIsLoadingChoiceStep(true);
-      setLoadingHint("");
 
       const nextIndex = currentStep + 1;
+
+      // 응답을 기다렸다가 한 번에 다음 단계로 넘기지 않는다 - 버튼을 누른 즉시 단계 번호/질문을
+      // 먼저 넘겨서 "눌렀는데 멈춰있다"는 느낌을 없앤다. 선택지는 아직 없으니 isAdvancingToNextStep을
+      // 보고 화면에서 스켈레톤으로 채워 보여준다(FairyTaleSettingWizardPage 참고).
+      setPreviousAnswers(nextPreviousAnswers);
+      setCurrentStep(nextIndex);
+      setIsAdvancingToNextStep(true);
+      setIsLoadingChoiceStep(true);
+
       const { step: nextStep, usedFallback } = await requestChoiceStep(
         nextIndex,
         nextPreviousAnswers
@@ -261,8 +295,7 @@ export function useFairyTaleSettingWizard() {
         prev.map((step, index) => (index === nextIndex ? nextStep : step))
       );
       setFallbackNoticeByStep((prev) => ({ ...prev, [nextStep.key]: usedFallback }));
-      setPreviousAnswers(nextPreviousAnswers);
-      setCurrentStep(nextIndex);
+      setIsAdvancingToNextStep(false);
       setIsLoadingChoiceStep(false);
       requestGuardRef.current = false;
       return;
@@ -312,6 +345,7 @@ export function useFairyTaleSettingWizard() {
     isSeedStep,
     isChoiceStep,
     isLoadingChoiceStep,
+    isAdvancingToNextStep,
     showFallbackNotice,
     loadingHint,
   };

@@ -21,6 +21,7 @@ function FairyTaleSettingWizardPage() {
         isSeedStep,
         isChoiceStep,
         isLoadingChoiceStep,
+        isAdvancingToNextStep,
         showFallbackNotice,
         loadingHint,
     } = useFairyTaleSettingWizard();
@@ -103,7 +104,11 @@ function FairyTaleSettingWizardPage() {
                     {isChoiceStep ? (
                         <>
                             <div className="seed-grid">
-                                {currentStepOptions.map((option) => {
+                                {isAdvancingToNextStep ? (
+                                    Array.from({ length: 4 }).map((_, index) => (
+                                        <div key={index} className="seed-option-skeleton" aria-hidden="true" />
+                                    ))
+                                ) : currentStepOptions.map((option) => {
                                     const isPageCountStep = currentStepInfo.key === "pageCount";
 
                                     return (
