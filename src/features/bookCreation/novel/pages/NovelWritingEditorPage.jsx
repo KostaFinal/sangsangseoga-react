@@ -2,20 +2,14 @@ import { useState } from "react";
 
 import scenarioBg from "../../assets/scenario-bg.png";
 import { useNovelWritingEditor } from "../hooks/useNovelWritingEditor";
-import {
-  independentBasicActions,
-  independentMoreActions,
-  independentPrimaryAction,
-} from "../data/novelWritingEditorOptions";
+import { sceneAssistActions } from "../data/novelWritingEditorOptions";
 
-const ALL_ASSIST_ACTIONS = [...independentBasicActions, ...independentMoreActions];
 const findAssistAction = (actionType) =>
-  ALL_ASSIST_ACTIONS.find((action) => action.actionType === actionType);
+  sceneAssistActions.find((action) => action.actionType === actionType);
 
 function NovelWritingEditorPage() {
   const {
     setting,
-    isGuidedWritingLevel,
     isLoadingScenes,
     isTranslatingScene,
     isProcessingAiAction,
@@ -30,6 +24,7 @@ function NovelWritingEditorPage() {
     handlePrevScene,
     handleAddScene,
     handleDeleteScene,
+    handleReorderScene,
     handleAiAction,
     handleComplete,
     assistSuggestion,
@@ -40,14 +35,18 @@ function NovelWritingEditorPage() {
     handleCancelSuggestion,
     handleApplySuggestion,
   } = useNovelWritingEditor();
-  const [showMoreActions, setShowMoreActions] = useState(false);
-  const [showFullSetting, setShowFullSetting] = useState(false);
   const isLastScene = scenes.length > 0 && currentSceneIndex === scenes.length - 1;
   const hasSelection = Boolean(selectedSentence.trim());
+  const [draggedSceneIndex, setDraggedSceneIndex] = useState(null);
+  const [dragOverSceneIndex, setDragOverSceneIndex] = useState(null);
 
-  const primaryAction = currentScene?.content?.trim()
-    ? independentPrimaryAction.filled
-    : independentPrimaryAction.empty;
+  const handleSceneDrop = (dropIndex) => {
+    if (draggedSceneIndex !== null) {
+      handleReorderScene(draggedSceneIndex, dropIndex);
+    }
+    setDraggedSceneIndex(null);
+    setDragOverSceneIndex(null);
+  };
 
   const resolveApplyMode = (insertionMode) => {
     if (insertionMode !== "replaceParagraphOrSelection") return insertionMode;
@@ -129,16 +128,33 @@ function NovelWritingEditorPage() {
           </div>
 
           <div className="scene-list">
-            {scenes.map((scene) => (
+            {scenes.map((scene, index) => (
               <div
                 key={scene.id}
+                draggable
+                onDragStart={() => setDraggedSceneIndex(index)}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (dragOverSceneIndex !== index) setDragOverSceneIndex(index);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  handleSceneDrop(index);
+                }}
+                onDragEnd={() => {
+                  setDraggedSceneIndex(null);
+                  setDragOverSceneIndex(null);
+                }}
                 className={`scene-item ${
                   scene.id === currentSceneId ? "active" : ""
+                } ${draggedSceneIndex === index ? "dragging" : ""} ${
+                  dragOverSceneIndex === index && draggedSceneIndex !== index ? "drag-over" : ""
                 }`}
               >
                 <div className="scene-item-head">
                   <strong>
-                    {scene.id}. {scene.title}
+                    <span className="scene-drag-handle" title="드래그해서 순서 변경">⠿</span>
+                    {index + 1}. {scene.title}
                   </strong>
                   <span>{scene.phase}</span>
                 </div>
@@ -179,7 +195,7 @@ function NovelWritingEditorPage() {
             <div>
               <span>현재 장면</span>
               <h1>
-                {currentScene.id}. {currentScene.title}
+                {currentSceneIndex + 1}. {currentScene.title}
               </h1>
               <p>{currentScene.goal}</p>
             </div>
@@ -213,23 +229,13 @@ function NovelWritingEditorPage() {
           <div className="editor-field manuscript-editor-field">
             <div className="editor-label-row">
               <label>본문</label>
-              {isGuidedWritingLevel ? (
-                <button
-                  type="button"
-                  onClick={() => handleAiAction("continue")}
-                  disabled={isProcessingAiAction}
-                >
-                  {isProcessingAiAction ? "✦ 생성 중..." : "✦ AI 초안"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => handleAssistAction(primaryAction.actionType)}
-                  disabled={isAssisting}
-                >
-                  ✦ {primaryAction.label}
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => handleAiAction("continue")}
+                disabled={isProcessingAiAction}
+              >
+                {isProcessingAiAction ? "✦ 생성 중..." : "✦ AI 초안"}
+              </button>
             </div>
 
             <textarea
@@ -274,29 +280,72 @@ function NovelWritingEditorPage() {
         <aside className="ai-writing-panel">
           <h2>✦ AI 집필 보조</h2>
 
-          <section className="setting-summary-card">
-            <h3>현재 설정 요약</h3>
+          <section className="ai-request-card">
+            <h3>무엇을 도와드릴까요?</h3>
 
-            <SummaryItem label="분위기" value={setting.directing?.mood} />
-            <SummaryItem label="문체" value={setting.directing?.style} />
-            <SummaryItem label="시점" value={setting.directing?.pointOfView} />
-            <SummaryItem label="전개 속도" value={setting.directing?.pace} />
-            <SummaryItem label="금지 요소" value={setting.directing?.avoid} />
+            <div className="ai-request-grid">
+              <button type="button" onClick={() => handleAiAction("continue")} disabled={isProcessingAiAction}>
+                ✒ 이어쓰기
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAssistAction("STYLE_SELECTED_TEXT")}
+                disabled={
+                  isAssisting ||
+                  isProcessingAiAction ||
+                  (findAssistAction("STYLE_SELECTED_TEXT").requiresSelection && !hasSelection)
+                }
+                title={!hasSelection ? "수정할 문장을 먼저 선택해 주세요." : undefined}
+              >
+                🪶 문체 수정
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAssistAction("INCREASE_PARAGRAPH_TENSION")}
+                disabled={isAssisting || isProcessingAiAction}
+              >
+                ⚡ 긴장감 높이기
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAssistAction("ENHANCE_PARAGRAPH_DESCRIPTION")}
+                disabled={isAssisting || isProcessingAiAction}
+              >
+                🌙 묘사 추가
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAssistAction("ADD_DIALOGUE_TO_PARAGRAPH")}
+                disabled={isAssisting || isProcessingAiAction}
+              >
+                💬 대사 추가
+              </button>
+              <button type="button" onClick={() => handleAiAction("rewrite")} disabled={isProcessingAiAction}>
+                📄 장면 다시쓰기
+              </button>
+            </div>
 
-            {showFullSetting && (
-              <>
-                <SummaryItem label="이야기 씨앗" value={setting.storySeed} />
-                <SummaryItem label="장르" value={setting.genre} />
-                <SummaryItem label="주인공" value={setting.protagonist} />
-                <SummaryItem label="배경" value={setting.background} />
-                <SummaryItem label="갈등" value={setting.conflict} />
-                <SummaryItem label="결말 방향" value={setting.ending} />
-              </>
-            )}
-
-            <button type="button" onClick={() => setShowFullSetting((prev) => !prev)}>
-              {showFullSetting ? "기본 설정 접기" : "전체 설정 보기"}
+            <button
+              type="button"
+              className="wide-ai-btn"
+              onClick={() => handleAssistAction("CHECK_SCENE_COHERENCE")}
+              disabled={isAssisting || isProcessingAiAction}
+            >
+              🔍 개연성 검사
             </button>
+
+            <button
+              type="button"
+              className="wide-ai-btn"
+              onClick={() => handleAssistAction("CHECK_SCENE_COHERENCE")}
+              disabled={isAssisting || isProcessingAiAction}
+            >
+              ✅ 설정과 비교
+            </button>
+
+            {isProcessingAiAction && (
+              <p className="assist-loading-note">AI가 작성 중입니다...</p>
+            )}
           </section>
 
           <section className="selected-text-card">
@@ -313,139 +362,21 @@ function NovelWritingEditorPage() {
             </p>
           </section>
 
-          {isGuidedWritingLevel ? (
-            <section className="ai-request-card">
-              <h3>무엇을 도와드릴까요?</h3>
+          <section className="setting-summary-card">
+            <h3>현재 설정 요약</h3>
 
-              <div className="ai-request-grid">
-                <button type="button" onClick={() => handleAiAction("continue")} disabled={isProcessingAiAction}>
-                  ✒ 이어쓰기
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleAssistAction("STYLE_SELECTED_TEXT")}
-                  disabled={
-                    isAssisting ||
-                    isProcessingAiAction ||
-                    (findAssistAction("STYLE_SELECTED_TEXT").requiresSelection && !hasSelection)
-                  }
-                  title={!hasSelection ? "수정할 문장을 먼저 선택해 주세요." : undefined}
-                >
-                  🪶 문체 수정
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleAssistAction("INCREASE_PARAGRAPH_TENSION")}
-                  disabled={isAssisting || isProcessingAiAction}
-                >
-                  ⚡ 긴장감 높이기
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleAssistAction("ENHANCE_PARAGRAPH_DESCRIPTION")}
-                  disabled={isAssisting || isProcessingAiAction}
-                >
-                  🌙 묘사 추가
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleAssistAction("ADD_DIALOGUE_TO_PARAGRAPH")}
-                  disabled={isAssisting || isProcessingAiAction}
-                >
-                  💬 대사 추가
-                </button>
-                <button type="button" onClick={() => handleAiAction("rewrite")} disabled={isProcessingAiAction}>
-                  📄 장면 다시쓰기
-                </button>
-              </div>
-
-              <button
-                type="button"
-                className="wide-ai-btn"
-                onClick={() => handleAssistAction("CHECK_SCENE_COHERENCE")}
-                disabled={isAssisting || isProcessingAiAction}
-              >
-                🔍 개연성 검사
-              </button>
-
-              <button
-                type="button"
-                className="wide-ai-btn"
-                onClick={() => handleAssistAction("CHECK_SCENE_COHERENCE")}
-                disabled={isAssisting || isProcessingAiAction}
-              >
-                ✅ 설정과 비교
-              </button>
-
-              {isProcessingAiAction && (
-                <p className="assist-loading-note">AI가 작성 중입니다...</p>
-              )}
-            </section>
-          ) : (
-            <section className="ai-request-card">
-              <h3>무엇을 도와드릴까요?</h3>
-
-              <div className="ai-request-grid">
-                {independentBasicActions.map((action) => (
-                  <button
-                    key={action.actionType}
-                    type="button"
-                    disabled={
-                      isAssisting || (action.requiresSelection && !hasSelection)
-                    }
-                    title={
-                      action.requiresSelection && !hasSelection
-                        ? "수정할 문장을 먼저 선택해 주세요."
-                        : undefined
-                    }
-                    onClick={() => handleAssistAction(action.actionType)}
-                  >
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-
-              {!hasSelection && (
-                <p className="assist-selection-hint">
-                  수정할 문장을 먼저 선택해 주세요.
-                </p>
-              )}
-
-              <button
-                type="button"
-                className="wide-ai-btn"
-                onClick={() => setShowMoreActions((prev) => !prev)}
-              >
-                {showMoreActions ? "더보기 닫기 ▲" : "더보기 ▼"}
-              </button>
-
-              {showMoreActions && (
-                <div className="ai-request-grid ai-request-more-grid">
-                  {independentMoreActions.map((action) => (
-                    <button
-                      key={action.actionType}
-                      type="button"
-                      disabled={
-                        isAssisting || (action.requiresSelection && !hasSelection)
-                      }
-                      title={
-                        action.requiresSelection && !hasSelection
-                          ? "수정할 문장을 먼저 선택해 주세요."
-                          : undefined
-                      }
-                      onClick={() => handleAssistAction(action.actionType)}
-                    >
-                      {action.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {isAssisting && (
-                <p className="assist-loading-note">AI가 작성 중입니다...</p>
-              )}
-            </section>
-          )}
+            <SummaryItem label="이야기 씨앗" value={setting.storySeed} />
+            <SummaryItem label="장르" value={setting.genre} />
+            <SummaryItem label="주인공" value={setting.protagonist} />
+            <SummaryItem label="배경" value={setting.background} />
+            <SummaryItem label="갈등" value={setting.conflict} />
+            <SummaryItem label="결말 방향" value={setting.ending} />
+            <SummaryItem label="분위기" value={setting.directing?.mood} />
+            <SummaryItem label="문체" value={setting.directing?.style} />
+            <SummaryItem label="시점" value={setting.directing?.pointOfView} />
+            <SummaryItem label="전개 속도" value={setting.directing?.pace} />
+            <SummaryItem label="금지 요소" value={setting.directing?.avoid} />
+          </section>
 
           {assistError && !isAssisting && (
             <p className="assist-error-note">

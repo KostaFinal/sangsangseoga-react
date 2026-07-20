@@ -246,9 +246,8 @@ export function useNovelAuthorMeeting() {
       const payload = {
         ...setupData,
         ...minutes,
-        // writerLevel이 이전 단계에서 안 채워진 채로 오면 에디터가 이걸 "가이드 모드"로
-        // 잘못 판단해버리므로(INDEPENDENT_WRITER_LEVELS.includes(undefined) === false),
-        // 여기서도 명시적으로 기본값을 채워준다.
+        // writerLevel이 이전 단계에서 안 채워진 채로 오면 authorAgeGroup/readerAgeGroup 기본값이
+        // 없어져 AI 요청이 실패하므로, 여기서도 명시적으로 기본값을 채워준다.
         writerLevel: setupData.writerLevel || "TEEN",
         minutes,
         directing,

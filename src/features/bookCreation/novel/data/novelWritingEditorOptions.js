@@ -1,45 +1,7 @@
-// 미취학/초등 저학년/초등 고학년: AI가 장면 전체를 적극적으로 써주는 기존 방식 유지.
-export const GUIDED_WRITER_LEVELS = [
-  "PRESCHOOL",
-  "LOWER_ELEMENTARY",
-  "UPPER_ELEMENTARY",
-];
-
-// 청소년/성인: 사용자가 직접 쓰고, AI는 문장/문단/선택 영역 단위로만 보조.
-export const INDEPENDENT_WRITER_LEVELS = ["TEEN", "ADULT"];
-
-// 본문이 비어 있을 때와 이미 있을 때 같은 버튼 자리에 다른 라벨/actionType을 쓴다.
-export const independentPrimaryAction = {
-  empty: {
-    actionType: "SUGGEST_OPENING_SENTENCE",
-    label: "시작 문장 제안",
-    insertionMode: "insertEmpty",
-  },
-  filled: {
-    actionType: "SUGGEST_NEXT_PARAGRAPH",
-    label: "다음 문단 제안",
-    insertionMode: "append",
-  },
-};
-
-// 창작 보조 모드 기본 노출 버튼 (더보기 아님).
-export const independentBasicActions = [
-  {
-    actionType: "SUGGEST_NEXT_SENTENCE",
-    label: "다음 문장 제안",
-    requiresSelection: false,
-    insertionMode: "append",
-  },
-  {
-    actionType: "REFINE_SELECTED_TEXT",
-    label: "선택 문장 다듬기",
-    requiresSelection: true,
-    insertionMode: "replaceSelection",
-  },
-];
-
-// 창작 보조 모드 "더보기" 영역 버튼.
-export const independentMoreActions = [
+// 장면 집필 보조(문장/문단/선택 영역 단위) 버튼들의 메타데이터. actionType별로 selectedText가
+// 반드시 있어야 하는지(requiresSelection)를 여기서 관리한다 - 지금은 "문체 수정" 버튼만
+// requiresSelection:true라 선택 영역이 없으면 비활성화된다(NovelWritingEditorPage의 findAssistAction 참고).
+export const sceneAssistActions = [
   {
     actionType: "STYLE_SELECTED_TEXT",
     label: "선택 문장 문체 수정",

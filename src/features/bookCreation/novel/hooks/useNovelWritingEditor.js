@@ -16,18 +16,8 @@ import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import {
   createInitialScenes,
   fallbackSetting,
-  INDEPENDENT_WRITER_LEVELS,
-  independentBasicActions,
-  independentMoreActions,
-  independentPrimaryAction,
+  sceneAssistActions,
 } from "../data/novelWritingEditorOptions";
-
-const ALL_INDEPENDENT_ACTIONS = [
-  independentPrimaryAction.empty,
-  independentPrimaryAction.filled,
-  ...independentBasicActions,
-  ...independentMoreActions,
-];
 
 // 빈 줄(\n\n) 기준으로 문단을 나누고, 없으면 한 줄 단위로 대체한다.
 const splitParagraphs = (body) => {
@@ -67,10 +57,6 @@ export function useNovelWritingEditor() {
   const location = useLocation();
 
   const setting = location.state || fallbackSetting;
-  const isIndependentWritingLevel = INDEPENDENT_WRITER_LEVELS.includes(
-    setting.writerLevel
-  );
-  const isGuidedWritingLevel = !isIndependentWritingLevel;
 
   // 표지 선택 화면에서 "이전으로"로 되돌아온 경우, setting에 이미 작성해둔 scenes가 같이
   // 실려온다. 이때는 처음 진입처럼 AI 장면 계획을 새로 만들지 않고 그대로 복원해서 이어 쓴다.
@@ -293,6 +279,27 @@ export function useNovelWritingEditor() {
     resetSelectionAndSuggestion();
   };
 
+  // 장면 목록에서 드래그로 순서를 바꾼다. id는 그대로 두고(선택 상태·삭제 등이 id 기준이라
+  // 안 흔들리게) 배열 순서만 옮긴다 - 화면에 보이는 번호는 id가 아니라 배열 위치(index+1)를 쓴다.
+  const handleReorderScene = (fromIndex, toIndex) => {
+    if (
+      fromIndex === toIndex ||
+      fromIndex < 0 ||
+      toIndex < 0 ||
+      fromIndex >= scenes.length ||
+      toIndex >= scenes.length
+    ) {
+      return;
+    }
+
+    setScenes((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+  };
+
   // 장면을 삭제한다. 최소 1개는 남아야 하므로 마지막 남은 장면은 삭제하지 않는다.
   // 지금 보고 있던 장면을 지운 경우, 그 자리(또는 그 앞) 장면으로 자동 이동한다.
   const handleDeleteScene = (sceneId) => {
@@ -455,7 +462,7 @@ export function useNovelWritingEditor() {
   const handleAssistAction = async (actionType) => {
     if (!currentScene) return;
 
-    const config = ALL_INDEPENDENT_ACTIONS.find(
+    const config = sceneAssistActions.find(
       (action) => action.actionType === actionType
     );
     if (!config) return;
@@ -587,8 +594,6 @@ export function useNovelWritingEditor() {
 
   return {
     setting,
-    isGuidedWritingLevel,
-    isIndependentWritingLevel,
     isLoadingScenes,
     isTranslatingScene,
     isProcessingAiAction,
@@ -604,6 +609,7 @@ export function useNovelWritingEditor() {
     handlePrevScene,
     handleAddScene,
     handleDeleteScene,
+    handleReorderScene,
     handleAiAction,
     handleComplete,
     assistSuggestion,

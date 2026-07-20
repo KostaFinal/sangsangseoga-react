@@ -1057,6 +1057,7 @@ min-height: 92px;
   text-align: left;
   box-shadow: 0 8px 20px rgba(72, 52, 130, 0.06);
   transition: 0.18s ease;
+  cursor: grab;
 }
 
 .novel-editor-page .scene-item:hover {
@@ -1073,6 +1074,15 @@ border-color: rgba(108, 78, 246, 0.52);
     0 12px 26px rgba(108, 78, 246, 0.12);
 }
 
+.novel-editor-page .scene-item.dragging {
+opacity: 0.45;
+}
+
+.novel-editor-page .scene-item.drag-over {
+border-color: rgba(108, 78, 246, 0.7);
+  box-shadow: 0 0 0 2px rgba(108, 78, 246, 0.35);
+}
+
 .novel-editor-page .scene-item-head {
 display: flex;
   justify-content: space-between;
@@ -1083,6 +1093,15 @@ display: flex;
 color: var(--editor-text-strong);
   font-size: 16px;
   font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.novel-editor-page .scene-drag-handle {
+color: rgba(108, 78, 246, 0.4);
+  font-size: 14px;
+  cursor: grab;
 }
 
 .novel-editor-page .scene-item-head span {
