@@ -93,6 +93,24 @@ export function useFairyTaleFreeSetting() {
     setMessages((prev) => [...prev, { sender: "USER", text }]);
   };
 
+  // AI 응답을 그대로 채팅에 띄우되, AI 기준 필수 필드(pageCount 제외)가 이번 응답으로 다
+  // 채워졌는데 pageCount만 아직 비어있으면 AI의 "완성했어요" 메시지 대신 곧바로 페이지 수
+  // 질문을 띄운다. 그렇지 않으면 "완성했어요, 다음으로 넘어갈까요?"라고 해놓고 화면은 바로
+  // 다음 단계로 안 넘어가고 뜬금없이 페이지 수를 또 물어보는 것처럼 보인다.
+  const addAiTurnMessage = (responseData, mergedSettings, nextMissingFields) => {
+    const pageCountDone = String(mergedSettings.pageCount || "").trim() !== "";
+
+    if (!pageCountDone && nextMissingFields.length === 0) {
+      const pageCountStep = STEPS.find((step) => step.key === "pageCount");
+      if (pageCountStep) {
+        addAiMessage(pageCountStep.question);
+        return;
+      }
+    }
+
+    addAiMessage(getChoiceQuestion(responseData));
+  };
+
   // settings에 아직 값이 없는 첫 STEPS 항목을 순서대로 찾는다 — 기존 STEPS 순서를 그대로 fallback 순서로 쓴다.
   const pickFallbackStep = (fromSettings) =>
     STEPS.find((step) => !String(fromSettings[step.key] || "").trim()) || STEPS[STEPS.length - 1];
@@ -173,10 +191,11 @@ export function useFairyTaleFreeSetting() {
       const response = await collectSetting(draftInput, extra);
 
       if (response.ok && isValidChatResponse(response.data)) {
-        mergeAiSetting(getResultSetting(response.data));
-        setMissingFields(getMissingFields(response.data));
+        const merged = mergeAiSetting(getResultSetting(response.data));
+        const nextMissingFields = getMissingFields(response.data);
+        setMissingFields(nextMissingFields);
         setAiExamples(getResultExamples(response.data));
-        addAiMessage(getChoiceQuestion(response.data));
+        addAiTurnMessage(response.data, merged, nextMissingFields);
         setUsedFallbackNotice(false);
       } else {
         console.warn("AI 첫 질문 생성 실패. 기본 질문으로 이어갑니다.", response.message);
@@ -193,11 +212,25 @@ export function useFairyTaleFreeSetting() {
     const trimmed = String(rawValue ?? answer).trim();
     if (!trimmed || requestGuardRef.current) return;
 
+    // "보내기"를 누른 순간 지금 필드의 추천 예시를 바로 지운다 - AI 응답을 기다리는 동안이나
+    // 다음 필드로 넘어간 뒤에도 이전 예시가 화면에 남아있지 않게 한다.
+    setShowExamples(false);
+
     // pageCount는 정책상 고정 선택 항목 — AI에 묻지 않고 로컬에만 반영한다(CHOICE/MIXED와 동일 정책).
     if (activeField.key === "pageCount") {
-      setSettings((prev) => ({ ...prev, pageCount: trimmed }));
+      const nextSettings = { ...settings, pageCount: trimmed };
+      setSettings(nextSettings);
       addUserMessage(`${trimmed}페이지로 만들게요.`);
       addAiMessage("좋아요! 페이지 수를 정했어요.");
+
+      // 확인 메시지만 띄우고 끝내면 화면 상단 질문 헤더가 계속 이 메시지에 머물러서, 이미
+      // activeField가 다음(보통 "분위기") 단계로 넘어갔는데도 더 물어볼 게 없는 것처럼 보인다.
+      // 다음 단계 질문을 바로 이어 붙여서 자연스럽게 이어지게 한다.
+      const nextStep = pickFallbackStep(nextSettings);
+      if (nextStep.key !== "pageCount") {
+        addAiMessage(nextStep.question);
+      }
+
       setAnswer("");
       return;
     }
@@ -224,7 +257,7 @@ export function useFairyTaleFreeSetting() {
     const response = await collectSetting(draftInput, extra);
 
     if (response.ok && isValidChatResponse(response.data)) {
-      mergeAiSetting(getResultSetting(response.data));
+      const merged = mergeAiSetting(getResultSetting(response.data));
 
       const nextMissingFields = getMissingFields(response.data).filter(
         (key) => !AI_SKIPPED_FIELD_KEYS.has(key)
@@ -233,7 +266,7 @@ export function useFairyTaleFreeSetting() {
       setMissingFields(nextMissingFields);
       setAiExamples(getResultExamples(response.data));
       setUsedFallbackNotice(false);
-      addAiMessage(getChoiceQuestion(response.data));
+      addAiTurnMessage(response.data, merged, nextMissingFields);
       setIsLoadingQuestion(false);
       requestGuardRef.current = false;
       return;
