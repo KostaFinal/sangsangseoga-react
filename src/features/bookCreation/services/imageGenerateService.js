@@ -33,6 +33,9 @@ export const requestGenerateImage = async ({
   style = null,
   aspectRatio = "3:4",
   bookType = null,
+  // 캐릭터 일관성용 레퍼런스 이미지(보통 이미 생성된 표지)의 로컬 URL. Spring이 이 URL로 파일을
+  // 읽어 Python에 base64로 전달한다.
+  referenceImageUrl = null,
   signal,
 } = {}) => {
   if (!promptText) {
@@ -51,7 +54,7 @@ export const requestGenerateImage = async ({
         "Content-Type": "application/json",
         ...authHeaders(),
       },
-      body: JSON.stringify({ promptText, imageType, pageNo, style, aspectRatio, bookType }),
+      body: JSON.stringify({ promptText, imageType, pageNo, style, aspectRatio, bookType, referenceImageUrl }),
       signal,
     });
     const data = await parseResponseBody(response);

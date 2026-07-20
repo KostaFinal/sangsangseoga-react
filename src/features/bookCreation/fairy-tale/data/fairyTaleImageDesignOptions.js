@@ -117,6 +117,25 @@ export const createPagePlans = (pageCount) => {
   return [cover, ...pages];
 };
 
+// 실제 이야기 설정(주인공/배경/중요한 물건)으로 표지 장면 설명 문장을 만든다. 최소 하나라도
+// 있어야 의미 있는 문장이 되므로, 아무것도 없으면 null을 반환해 기존 placeholder를 유지한다.
+const buildCoverEditText = (setting) => {
+  if (!setting) return null;
+
+  const protagonistName =
+    setting.protagonist?.split(",")[0]?.trim() || setting.protagonistName || "";
+  const place = setting.backgroundPlace || "";
+  const object = setting.importantObject || "";
+
+  if (!protagonistName && !place && !object) return null;
+
+  const placePart = place ? `${place}에서 ` : "";
+  const objectPart = object ? `${object}와 함께 ` : "";
+  const subject = protagonistName || "주인공";
+
+  return `${subject}이(가) ${placePart}${objectPart}있는 표지 장면이에요.`.replace(/\s+/g, " ").trim();
+};
+
 // 이전 화면(공동창작실/채팅형 글쓰기)에서 만든 실제 pagePlan(sceneTitle/imagePromptBase)이 있으면
 // 하드코딩 placeholder 대신 그 값으로 장면 수정 칸(sceneTitle/editText)을 채운다.
 // 실제 데이터가 없는 페이지는 기존 placeholder를 그대로 fallback으로 유지한다.
@@ -134,7 +153,15 @@ export const buildRealPageRows = (previousData, pageCount) => {
 
   return createPagePlans(pageCount).map((row) => {
     if (row.page === "표지") {
-      return bookTitle ? { ...row, sceneTitle: bookTitle } : row;
+      // 표지는 다른 페이지처럼 매칭할 pagePlan이 없으니(표지는 outline.pages에 안 들어있음),
+      // 이야기 설정(주인공/배경/중요한 물건)으로 대신 채운다 - 예전엔 이 자리만 하드코딩된
+      // 예시 문구("루미가 마법 성 앞에서...")가 그대로 남아있었다.
+      const coverEditText = buildCoverEditText(previousData?.fairyTaleSetting);
+      return {
+        ...row,
+        sceneTitle: bookTitle || row.sceneTitle,
+        editText: coverEditText || row.editText,
+      };
     }
 
     const pageNo = Number(String(row.page).replace("p", ""));

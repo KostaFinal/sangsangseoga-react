@@ -19,6 +19,11 @@ import {
   extractPagePrompts,
 } from "../../services/imageGenerateService";
 
+// 표지 생성 후 페이지들은 모두 표지 하나만 레퍼런스로 참고하고 서로 의존하지 않으므로 병렬로
+// 처리해도 안전하다. 한 번에 너무 많이 보내면 Gemini rate limit(429)에 걸리기 쉬워서, 이 개수만큼
+// 씩 묶어서(batch) 처리한다.
+const PAGE_GENERATION_CONCURRENCY = 4;
+
 export function useFairyTaleImageDesign() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -159,6 +164,21 @@ export function useFairyTaleImageDesign() {
     });
   };
 
+  // 화면에서 "장면 수정"으로 고친(또는 buildRealPageRows가 실제 데이터로 채운) editText를
+  // pageNo/표지 여부 기준으로 정리한다. 이게 없으면 이 화면에서 뭘 고치든 실제 이미지 생성
+  // 프롬프트(Python CREATE_IMAGE_PROMPT)에는 전혀 반영되지 않는다.
+  const buildUserSceneEdits = () =>
+    pageRows
+      .filter((row) => String(row.editText || "").trim())
+      .map((row) => {
+        const isCover = row.page === "표지" || row.page === "cover";
+        return {
+          isCover,
+          pageNo: isCover ? null : Number(String(row.page).replace("p", "")),
+          editText: row.editText.trim(),
+        };
+      });
+
   // createImagePrompt로 coverPrompt/pagePrompts를 받아오는 공통 단계.
   // 실패 시 generationError를 설정하고 null을 반환한다.
   const fetchImagePrompts = async () => {
@@ -167,7 +187,9 @@ export function useFairyTaleImageDesign() {
       images: { ...(previousData.images || {}), style: selectedStyle },
     };
 
-    const promptResponse = await createImagePrompt(promptState, {});
+    const promptResponse = await createImagePrompt(promptState, {
+      userSceneEdits: buildUserSceneEdits(),
+    });
 
     if (cancelledRef.current) return null;
 
@@ -191,31 +213,9 @@ export function useFairyTaleImageDesign() {
     return { coverPrompt, pagePrompts };
   };
 
-  // 실제 API 응답을 기다리는 동안 AI 선생님 멘트를 계속 바꿔주고, 진행률도 다음 체크포인트
-  // 직전까지 아주 조금씩 슬금슬금 올려준다(실제 응답이 오면 정확한 값으로 스냅한다).
-  // 한 장이 오래 걸려도 화면이 멈춘 것처럼 보이지 않게 하기 위한 장치일 뿐, 실제 진행 여부와는
-  // 무관하다 — 그래서 다음 체크포인트를 절대 넘지 않도록 상한을 둔다.
-  const startTrickle = (baseProgress, nextProgress, messageOffset) => {
-    let progress = baseProgress;
-    let messageIndex = messageOffset;
-
-    trickleIntervalRef.current = setInterval(() => {
-      messageIndex += 1;
-      setCurrentTeacherMessage(LOADING_MESSAGES[messageIndex % LOADING_MESSAGES.length]);
-
-      progress = Math.min(nextProgress - 1, progress + 1);
-      setGenerationProgress(progress);
-    }, 2500);
-  };
-
-  const stopTrickle = () => {
-    if (trickleIntervalRef.current) {
-      clearInterval(trickleIntervalRef.current);
-      trickleIntervalRef.current = null;
-    }
-  };
-
-  // 대상 목록(표지 + 전체 페이지)을 1장씩 순차(await) 호출한다(병렬 호출 금지).
+  // 대상 목록(표지 + 전체 페이지)을 처리한다. 표지는 이후 모든 페이지의 레퍼런스가 되므로 반드시
+  // 먼저 단독으로 생성하고, 그 뒤 페이지들은 서로 독립적(모두 표지만 참고)이라
+  // PAGE_GENERATION_CONCURRENCY개씩 묶어 병렬로 처리한다.
   // 호출 결과는 setGeneratedImages(화면 표시용)뿐 아니라 반환값(collectedImages)으로도
   // 넘겨서, 호출 직후 최신 상태를 곧바로 쓸 수 있게 한다(setState는 비동기라 같은 함수
   // 실행 안에서는 바로 최신값을 못 읽기 때문).
@@ -225,15 +225,20 @@ export function useFairyTaleImageDesign() {
     setGeneratedImages({});
 
     const collectedImages = {};
+    let completedCount = 0;
+    let messageIndex = 0;
 
-    for (let index = 0; index < targets.length; index += 1) {
-      if (cancelledRef.current) return collectedImages;
+    // 실제 진행률과 별개로, 여러 장이 동시에 진행되는 동안 "뭔가 되고 있다"는 느낌을 주기 위해
+    // 문구만 주기적으로 돌려 보여준다(개별 요청 완료 시점과는 무관하게 도는 별도 타이머).
+    trickleIntervalRef.current = setInterval(() => {
+      messageIndex += 1;
+      setCurrentTeacherMessage(LOADING_MESSAGES[messageIndex % LOADING_MESSAGES.length]);
+    }, 2500);
 
-      const target = targets[index];
-      setCurrentGenerationLabel(target.id);
+    const generateOne = async (target) => {
+      if (cancelledRef.current) return;
 
       if (!target.prompt) {
-        setCurrentTeacherMessage(`${target.id}의 이미지 프롬프트를 찾지 못해 건너뛰었어요.`);
         setGenerationCards((prev) =>
           prev.map((item) => (item.id === target.id ? { ...item, status: "SKIPPED_NO_PROMPT" } : item))
         );
@@ -242,23 +247,19 @@ export function useFairyTaleImageDesign() {
           prev.map((item) => (item.id === target.id ? { ...item, status: "GENERATING" } : item))
         );
 
-        const baseProgress = Math.round((index / targets.length) * 100);
-        const nextProgress = Math.round(((index + 1) / targets.length) * 100);
-        setCurrentTeacherMessage(LOADING_MESSAGES[index % LOADING_MESSAGES.length]);
-        startTrickle(baseProgress, nextProgress, index);
-
         // style은 CREATE_IMAGE_PROMPT 단계에서 이미 prompt 문구에 반영되어 있으므로 여기서 다시 넘기지 않는다.
+        // 표지는 항상 targets[0]이라 페이지 생성 시점엔 이미 collectedImages["표지"]가 채워져 있다.
+        // 캐릭터 통일성을 위해 표지 이미지를 레퍼런스로 함께 보낸다(표지 자신은 레퍼런스 없이 생성).
         const imageResponse = await requestGenerateImage({
           promptText: target.prompt,
           imageType: target.imageType,
           pageNo: target.pageNo,
           aspectRatio: "3:4",
           bookType: "FAIRY_TALE",
+          referenceImageUrl: target.imageType === "COVER" ? null : collectedImages["표지"] || null,
         });
 
-        stopTrickle();
-
-        if (cancelledRef.current) return collectedImages;
+        if (cancelledRef.current) return;
 
         const imageUrl = imageResponse.ok ? extractImageUrl(imageResponse.data) : null;
 
@@ -278,7 +279,28 @@ export function useFairyTaleImageDesign() {
         }
       }
 
-      setGenerationProgress(Math.round(((index + 1) / targets.length) * 100));
+      completedCount += 1;
+      setGenerationProgress(Math.round((completedCount / targets.length) * 100));
+    };
+
+    try {
+      const [coverTarget, ...pageTargets] = targets;
+
+      if (coverTarget) {
+        setCurrentGenerationLabel(coverTarget.id);
+        await generateOne(coverTarget);
+      }
+
+      for (let i = 0; i < pageTargets.length && !cancelledRef.current; i += PAGE_GENERATION_CONCURRENCY) {
+        const batch = pageTargets.slice(i, i + PAGE_GENERATION_CONCURRENCY);
+        setCurrentGenerationLabel(batch.map((item) => item.id).join(", "));
+        await Promise.all(batch.map((target) => generateOne(target)));
+      }
+    } finally {
+      if (trickleIntervalRef.current) {
+        clearInterval(trickleIntervalRef.current);
+        trickleIntervalRef.current = null;
+      }
     }
 
     return collectedImages;
