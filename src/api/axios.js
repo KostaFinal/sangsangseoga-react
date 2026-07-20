@@ -1,7 +1,7 @@
 import axios from "axios";
 import { getAccessToken, getRefreshToken, setTokens, clearTokens } from "./tokenStorage";
 
-export const API_BASE_URL = "http://localhost:8080";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 const instance = axios.create({
   baseURL: API_BASE_URL,
@@ -47,6 +47,7 @@ instance.interceptors.response.use(
 
     const refreshToken = getRefreshToken();
     if (!refreshToken) {
+      clearTokens();
       return Promise.reject(error);
     }
 

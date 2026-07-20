@@ -1,6 +1,8 @@
 import { toAiGenerateRequest, toBookDraft } from "../utils/bookDraftMapper";
 import { getTaskResult } from "../fairy-tale/utils/aiSettingOptions";
 import { getAccessToken } from "../../../api/tokenStorage";
+import { API_BASE_URL } from "../../../api/axios";
+import { reportAiErrorResponse } from "./quotaErrorBus";
 
 // fetch()는 axiosInstance와 달리 인터셉터가 없어 Authorization 헤더를 직접 붙여야 한다.
 // 이게 빠져있으면 로그인 여부와 무관하게 서버가 항상 401(UNAUTHORIZED)을 반환한다.
@@ -9,8 +11,8 @@ const authHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-const AI_GENERATE_URL = "http://localhost:8080/api/ai/generate";
-const AI_GENERATE_STREAM_URL = "http://localhost:8080/api/ai/generate/stream";
+const AI_GENERATE_URL = `${API_BASE_URL}/api/ai/generate`;
+const AI_GENERATE_STREAM_URL = `${API_BASE_URL}/api/ai/generate/stream`;
 
 const LOG_TASK_TYPES = new Set(["WRITE_PAGE", "WRITE_SCENE"]);
 
@@ -153,6 +155,8 @@ export const requestAiGenerate = async ({
     const data = await parseResponseBody(response);
 
     if (!response.ok) {
+      reportAiErrorResponse(response.status, data);
+
       const result = {
         ok: false,
         status: response.status,
@@ -227,7 +231,9 @@ export const requestAiGenerateStream = async ({
     });
 
     if (!response.ok || !response.body) {
-      onError?.(`AI 스트리밍 요청 실패 (status ${response.status})`);
+      const data = await parseResponseBody(response);
+      reportAiErrorResponse(response.status, data);
+      onError?.(extractMessage(data, `AI 스트리밍 요청 실패 (status ${response.status})`));
       return;
     }
 

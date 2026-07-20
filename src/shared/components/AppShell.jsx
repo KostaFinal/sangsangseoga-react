@@ -1,16 +1,37 @@
 import { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { Header } from './Header';
+import { ConfirmModal } from './ConfirmModal';
 import { getBooks, likeBook, unlikeBook, addBookmark, removeBookmark } from '../../api/bookApi';
 import { useRequireAuth } from '../hooks/useRequireAuth';
+import { useAuth } from '../context/AuthContext';
 
 const bookTypeToGenre = {
   "NOVEL": "소설", "POEM": "시", "ESSAY": "에세이", "FAIRY_TALE": "동화",
 };
 
+// AI 생성 429 응답의 code별 안내 문구 — BE가 내려주는 두 가지 쿼터 초과 사유를 구분해서 보여준다.
+const QUOTA_MODAL_CONTENT = {
+  DAILY_QUOTA_EXCEEDED: {
+    title: '오늘의 생성 한도 소진',
+    message: '오늘의 AI 생성 한도를 모두 사용했어요. 한도는 매일 자정에 초기화돼요.',
+    confirmText: '확인',
+    showUpsell: false,
+  },
+  FREE_TRIAL_CALL_LIMIT_EXCEEDED: {
+    title: '무료 체험 횟수 소진',
+    message: '무료 체험 AI 생성 횟수를 모두 사용했어요. 프리미엄으로 구독하면 계속 이용할 수 있어요.',
+    confirmText: '구독하러 가기',
+    showUpsell: true,
+  },
+};
+
 export function AppShell() {
   const [books, setBooks] = useState([]);
   const requireAuth = useRequireAuth();
+  const navigate = useNavigate();
+  const { quotaExceededCode, setQuotaExceededCode } = useAuth();
+  const quotaModal = quotaExceededCode ? QUOTA_MODAL_CONTENT[quotaExceededCode] : null;
 
   useEffect(() => {
     (async () => {
@@ -77,6 +98,18 @@ export function AppShell() {
     <div className="relative min-h-screen selection:bg-black selection:text-white">
       <Header />
       <Outlet context={{ books, handleToggleLike, handleToggleBookmark }} />
+      <ConfirmModal
+        isOpen={!!quotaModal}
+        onClose={() => setQuotaExceededCode(null)}
+        onConfirm={() => {
+          if (quotaModal?.showUpsell) navigate('/subscription');
+        }}
+        title={quotaModal?.title}
+        message={quotaModal?.message}
+        confirmText={quotaModal?.confirmText}
+        cancelText="닫기"
+        type="brand"
+      />
     </div>
   );
 }

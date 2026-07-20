@@ -1,0 +1,53 @@
+name: Deploy React App to S3 & CloudFront
+
+on:
+  push:
+    branches:
+      - main  # 또는 master (github의 기본 브랜치명 확인)
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 소스코드 체크아웃
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Node.js 환경 세팅
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './package-lock.json'
+
+      # 3. 의존성 패키지 설치
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. React 프로젝트 빌드 (Vite 기준 -> dist 폴더 생성)
+      # VITE_ 접두사 env는 빌드 시점에 코드에 그대로 박히므로(import.meta.env), 배포 대상
+      # 백엔드 주소를 여기서 주입해야 한다. 저장소 Settings > Secrets에 등록 필요.
+      - name: Build React App
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+        run: npm run build
+
+      # 5. AWS 권한 인증 (Secrets 키 사용)
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      # 6. 빌드된 결과물(dist 폴더)을 S3 버킷으로 업로드
+      - name: Deploy to S3
+        run: |
+          aws s3 sync ./dist s3://sangsangseoga-frontend-s3 --delete
+
+      # 7. CloudFront 캐시 무효화 (최신 화면 즉시 반영)
+      - name: CloudFront Invalidation
+        run: |
+          aws cloudfront create-invalidation --distribution-id E1WZ4AYJL8YO5P --paths "/*"

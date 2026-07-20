@@ -1,6 +1,8 @@
 import { getAccessToken } from "../../../api/tokenStorage";
+import { API_BASE_URL } from "../../../api/axios";
+import { reportAiErrorResponse } from "./quotaErrorBus";
 
-const AI_GENERATE_IMAGE_URL = "http://localhost:8080/api/ai/generate-image";
+const AI_GENERATE_IMAGE_URL = `${API_BASE_URL}/api/ai/generate-image`;
 
 // fetch()는 axiosInstance와 달리 인터셉터가 없어 Authorization 헤더를 직접 붙여야 한다.
 // 이게 빠져있으면 로그인 여부와 무관하게 서버가 항상 401(UNAUTHORIZED)을 반환한다.
@@ -60,6 +62,8 @@ export const requestGenerateImage = async ({
     const data = await parseResponseBody(response);
 
     if (!response.ok) {
+      reportAiErrorResponse(response.status, data);
+
       return {
         ok: false,
         status: response.status,
