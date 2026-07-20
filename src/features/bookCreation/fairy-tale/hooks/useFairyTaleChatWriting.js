@@ -67,7 +67,12 @@ export function useFairyTaleChatWriting() {
       text: "기본설정을 바탕으로 한 페이지씩 동화를 완성해볼게요. 먼저 1페이지를 써볼까요?",
     },
   ]);
-  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+  // 장면 계획(sceneSummary 등)이 이미 있는 채로 들어온 경우(이전 화면에서 복귀 등)엔 계획을 다시 만들
+  // 필요가 없다 - 최초 렌더 시점에 바로 계산해서 isGeneratingPlan 초기값에 반영해야, 아래 자동 글쓰기
+  // useEffect가 "아직 계획 생성 중"인 걸 놓치고 계획이 오기도 전에 페이지를 써버리는 경합을 막을 수 있다.
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(
+    () => !pages.some((page) => String(page.sceneSummary || "").trim())
+  );
   const [isWorking, setIsWorking] = useState(false);
   const [usedFallbackNotice, setUsedFallbackNotice] = useState(false);
 
@@ -91,8 +96,6 @@ export function useFairyTaleChatWriting() {
     if (alreadyEnriched) return;
 
     (async () => {
-      setIsGeneratingPlan(true);
-
       const response = await createPagePlan(
         { ...setupData, fairyTaleSetting: setting, fairyTalePages: pages },
         { pageCount }
@@ -229,6 +232,16 @@ export function useFairyTaleChatWriting() {
     });
   };
 
+  // 현재 페이지에 아직 글이 없으면(처음 진입, 또는 "다음 페이지"로 넘어온 직후) "이 페이지 글쓰기"를
+  // 누르지 않아도 자동으로 써준다. isGeneratingPlan이 끝나기 전에는 기다린다 - 장면 계획(제목/요약)이
+  // 준비되기 전에 먼저 써버리면 내용이 부실해질 수 있어서다(isGeneratingPlan 초기값 계산 참고).
+  useEffect(() => {
+    if (isGeneratingPlan || isWorking || currentPage.body) return;
+
+    handleWritePage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPageNo, isGeneratingPlan]);
+
   const handleQuickAction = async (action) => {
     if (!currentPage.body) {
       addAiMessage("먼저 현재 페이지 글을 작성한 뒤에 문장을 다듬을 수 있어요.");
@@ -299,17 +312,6 @@ export function useFairyTaleChatWriting() {
     }
   };
 
-  const handleCompletePage = () => {
-    if (!currentPage.body) {
-      addAiMessage("아직 작성된 글이 없어요. 먼저 이 페이지 글을 작성해볼게요.");
-      handleWritePage();
-      return;
-    }
-
-    updateCurrentPage({ status: "DONE" });
-    addAiMessage(`${currentPageNo}페이지를 완성했어요. 다음 페이지도 이어서 써볼 수 있어요.`);
-  };
-
   const handleNextPage = () => {
     const nextPageNo = currentPageNo + 1;
 
@@ -317,6 +319,11 @@ export function useFairyTaleChatWriting() {
       addAiMessage("모든 페이지를 다 썼어요. 이제 이미지 만들기로 이동할 수 있어요.");
       return;
     }
+
+    // "이 페이지 완성" 버튼이 없어졌으니, 글이 있는 페이지를 두고 다음으로 넘어가는 게
+    // 곧 그 페이지를 완성 처리하는 것이다 - 완성 여부를 채팅에도 남겨서 예전 버튼이
+    // 주던 피드백("~페이지를 완성했어요")이 사라지지 않게 한다.
+    const justCompleted = currentPage.status !== "DONE" && Boolean(currentPage.body);
 
     setPages((prev) =>
       prev.map((page) => {
@@ -341,11 +348,14 @@ export function useFairyTaleChatWriting() {
     setCurrentPageNo(nextPageNo);
     setChatNotes([]);
 
-    addAiMessage(`${nextPageNo}페이지로 이동했어요. 앞 장면과 자연스럽게 이어서 써볼게요.`);
+    addAiMessage(
+      `${justCompleted ? `${currentPageNo}페이지를 완성했어요. ` : ""}${nextPageNo}페이지로 이동했어요. 앞 장면과 자연스럽게 이어서 써볼게요.`
+    );
   };
 
   // 채팅은 그 자체로 AI를 부르지 않는다 — 메모만 쌓아두고, "이 페이지 글쓰기"/"다시 도움받기"를
-  // 누를 때 한꺼번에 반영한다.
+  // 누를 때 한꺼번에 반영한다. 다만 물음표로 끝나는 "질문"이면, 매번 똑같은 "메모했어요!"만
+  // 반복하는 대신 무엇을 물어봤는지 되짚어줘서 대화가 뚝 끊긴 것처럼 느껴지지 않게 한다.
   const handleSendRequest = (event) => {
     event.preventDefault();
 
@@ -354,8 +364,12 @@ export function useFairyTaleChatWriting() {
 
     addUserMessage(trimmed);
     setChatNotes((prev) => [...prev, trimmed]);
+
+    const looksLikeQuestion = trimmed.endsWith("?");
     addAiMessage(
-      "메모했어요! \"이 페이지 글쓰기\" 또는 \"다시 도움받기\"를 누르면 지금까지 나눈 이야기를 반영해서 정리해드릴게요."
+      looksLikeQuestion
+        ? `"${trimmed}"에 대한 생각도 페이지 쓸 때 반영할게요!`
+        : "메모했어요! \"이 페이지 글쓰기\" 또는 \"다시 도움받기\"를 누르면 지금까지 나눈 이야기를 반영해서 정리해드릴게요."
     );
     setRequestText("");
   };
@@ -415,7 +429,6 @@ export function useFairyTaleChatWriting() {
     handleWritePage,
     handleQuickAction,
     handleChatHelp,
-    handleCompletePage,
     handleNextPage,
     handleSendRequest,
     handleShowSetting,

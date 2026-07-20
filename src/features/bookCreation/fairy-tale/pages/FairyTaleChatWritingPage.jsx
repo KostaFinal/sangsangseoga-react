@@ -1,5 +1,15 @@
+import { useEffect, useState } from "react";
+
 import fairyback from "../../assets/fairyback.png";
 import { useFairyTaleChatWriting } from "../hooks/useFairyTaleChatWriting";
+
+// AI가 실제로 어느 단계인지는 알 수 없지만(단일 요청-응답이라 진행률이 없음), 가만히 멈춰
+// 있는 것보다 "뭔가 진행되고 있다"는 느낌을 주기 위해 몇 초 간격으로 문구만 돌려 보여준다.
+const LOADING_STATUS_MESSAGES = [
+  "장면을 구상하고 있어요...",
+  "문장을 다듬고 있어요...",
+  "마무리하고 있어요...",
+];
 
 const FairyTaleChatWritingPage = () => {
   const {
@@ -21,12 +31,27 @@ const FairyTaleChatWritingPage = () => {
     handleWritePage,
     handleQuickAction,
     handleChatHelp,
-    handleCompletePage,
     handleNextPage,
     handleSendRequest,
     handleShowSetting,
     handleGoImageDesign,
   } = useFairyTaleChatWriting();
+
+  const [loadingStatusIndex, setLoadingStatusIndex] = useState(0);
+
+  useEffect(() => {
+    if (!isWorking) {
+      setLoadingStatusIndex(0);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setLoadingStatusIndex((prev) => (prev + 1) % LOADING_STATUS_MESSAGES.length);
+    }, 2200);
+
+    return () => clearInterval(timer);
+  }, [isWorking]);
+
   return (
     <div
       className="fairy-writing-page"
@@ -101,8 +126,22 @@ const FairyTaleChatWritingPage = () => {
               ) : (
                 <div className="empty-page-guide">
                   <span>✨</span>
-                  <strong>아직 이 페이지의 글이 작성되지 않았어요.</strong>
-                  <p>AI 선생님과 함께 이 페이지를 써볼까요?</p>
+                  {isWorking ? (
+                    <>
+                      <strong>AI 선생님이 이 페이지를 쓰고 있어요</strong>
+                      <p>{LOADING_STATUS_MESSAGES[loadingStatusIndex]}</p>
+                      {currentPage.mainEmotion && (
+                        <p className="loading-scene-hint">
+                          이번 페이지의 감정선: {currentPage.mainEmotion}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <strong>아직 이 페이지의 글이 작성되지 않았어요.</strong>
+                      <p>AI 선생님과 함께 이 페이지를 써볼까요?</p>
+                    </>
+                  )}
                   <button type="button" onClick={handleWritePage} disabled={isWorking}>
                     {isWorking ? "AI가 쓰는 중..." : "이 페이지 글쓰기"}
                   </button>
@@ -118,7 +157,7 @@ const FairyTaleChatWritingPage = () => {
 
             {isWorking && currentPage.body && (
               <p style={{ fontWeight: 800, color: "var(--primary)" }}>
-                🤖 AI가 실시간으로 쓰고 있어요...
+                🤖 {LOADING_STATUS_MESSAGES[loadingStatusIndex]}
               </p>
             )}
 
@@ -150,36 +189,40 @@ const FairyTaleChatWritingPage = () => {
 
             <div className="page-main-actions">
               {currentPage.body && (
-                <>
-                  <button
-                    type="button"
-                    className="outline-btn"
-                    onClick={handleWritePage}
-                    disabled={isWorking}
-                  >
-                    AI 선생님에게 다시 도움받기
-                  </button>
-                  <button
-                    type="button"
-                    className="complete-btn"
-                    onClick={handleCompletePage}
-                    disabled={isWorking}
-                  >
-                    이 페이지 완성
-                  </button>
-                </>
+                <button
+                  type="button"
+                  className="outline-btn"
+                  onClick={handleWritePage}
+                  disabled={isWorking}
+                >
+                  AI 선생님에게 다시 도움받기
+                </button>
               )}
-              <button
-                type="button"
-                className="page-side-next-btn"
-                onClick={handleNextPage}
-                disabled={isWorking}
-              >
-                <span>다음</span>
-                <span>페이지</span>
-                <strong>쓰기</strong>
-                <em>→</em>
-              </button>
+              {currentPageNo >= pageCount ? (
+                <button
+                  type="button"
+                  className="page-side-next-btn"
+                  onClick={handleGoImageDesign}
+                  disabled={isWorking}
+                >
+                  <span>이미지</span>
+                  <span>만들기로</span>
+                  <strong>이동</strong>
+                  <em>→</em>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="page-side-next-btn"
+                  onClick={handleNextPage}
+                  disabled={isWorking}
+                >
+                  <span>다음</span>
+                  <span>페이지</span>
+                  <strong>쓰기</strong>
+                  <em>→</em>
+                </button>
+              )}
             </div>
           </article>
 
