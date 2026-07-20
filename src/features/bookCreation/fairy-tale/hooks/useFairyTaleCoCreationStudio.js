@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { createPagePlan, translateText } from "../../services/aiGenerateService";
+import { createPagePlan, normalizeSpeechStyle, translateText } from "../../services/aiGenerateService";
 import { toBookDraft } from "../../utils/bookDraftMapper";
 import { BOOK_CREATION_ROUTES } from "../../routes/bookCreationRoutePaths";
 import { fallbackStudioSetup } from "../data/fairyTaleCoCreationStudioOptions";
 import {
+  getNormalizedSpeechText,
   getPagePlan,
   getTranslatedText,
   isValidPagePlan,
@@ -125,6 +126,16 @@ const toAiPageShape = (plan) => ({
 
 const makeFallbackTitle = (answer) => (answer ? `${answer} 선택` : "새 장면");
 
+// 최초 마운트 시 CREATE_PAGE_PLAN 하나로 전체 페이지(8~20p) 계획을 한 번에 받아오는 큰 요청이라
+// 다른 화면보다 오래 걸린다. 진행률을 알 수 없는 단일 요청-응답이라, 가만히 멈춰 있는 것보다
+// "AI가 여러 단계를 순서대로 하고 있다"는 느낌을 주기 위해 몇 초 간격으로 문구만 돌려 보여준다.
+const PLAN_LOADING_HINT_MESSAGES = [
+  "주인공의 성격과 배경을 정리하고 있어요.",
+  "이야기의 기승전결 흐름을 짜고 있어요.",
+  "페이지마다 어떤 장면이 들어갈지 나누고 있어요.",
+  "각 장면에 어울리는 선택지를 만들고 있어요.",
+];
+
 export function useFairyTaleCoCreationStudio() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -158,9 +169,27 @@ export function useFairyTaleCoCreationStudio() {
   const [planFallbackNotice, setPlanFallbackNotice] = useState(false);
   const [pageFallbackNotice, setPageFallbackNotice] = useState({});
   const [pageRecommendationVersion, setPageRecommendationVersion] = useState({});
+  const [planLoadingHint, setPlanLoadingHint] = useState("");
 
   const planRequestRef = useRef(false);
   const recommendGuardRef = useRef(false);
+
+  useEffect(() => {
+    if (!isGeneratingPlan) {
+      setPlanLoadingHint("");
+      return;
+    }
+
+    let index = 0;
+    setPlanLoadingHint(PLAN_LOADING_HINT_MESSAGES[0]);
+
+    const timer = setInterval(() => {
+      index = (index + 1) % PLAN_LOADING_HINT_MESSAGES.length;
+      setPlanLoadingHint(PLAN_LOADING_HINT_MESSAGES[index]);
+    }, 2200);
+
+    return () => clearInterval(timer);
+  }, [isGeneratingPlan]);
 
   // pageNo가 숫자/문자열로 섞여 들어와도 안전하게 매칭되도록 Number로 비교한다.
   const currentPageData = pagePlans.find((plan) => Number(plan.pageNo) === Number(currentPage));
@@ -328,9 +357,10 @@ export function useFairyTaleCoCreationStudio() {
 
   // AI 재호출 없이, 이미 캐시된 pagePlan 안에서 선택/입력값만 반영하고 다음 페이지로 진행한다.
   // 직접 입력이 있으면(customAnswer) 선택한 옵션(chosenValue)보다 우선한다.
-  // 직접 입력은 AI가 만든 문장이 아니라 번역해 둔 영어가 없으므로, 여기서 TRANSLATE_TEXT를
-  // 한 번 호출해 content_text_en을 채운다(AI 옵션을 골랐을 때는 이미 CREATE_PAGE_PLAN이
-  // 내려준 value.summaryEn을 그대로 쓴다).
+  // 직접 입력은 (1) 번역해 둔 영어가 없고 (2) 사용자가 쓴 그대로라 말투가 해요체가 아닐 수 있어서,
+  // 여기서 TRANSLATE_TEXT와 NORMALIZE_SPEECH_STYLE을 함께(병렬로) 호출해 content_text_en과
+  // 해요체로 다듬은 본문을 채운다(AI 옵션을 골랐을 때는 CREATE_PAGE_PLAN이 이미 해요체로
+  // 내려준 value.summary/value.summaryEn을 그대로 쓴다).
   const handleNextScene = async () => {
     if (!selectedAnswer) return;
 
@@ -338,6 +368,7 @@ export function useFairyTaleCoCreationStudio() {
     const hasCustomAnswer = Boolean(customAnswer.trim());
 
     let summaryEn = hasCustomAnswer ? "" : chosenValue?.summaryEn || "";
+    let normalizedSummary = customAnswer.trim();
 
     if (hasCustomAnswer) {
       setIsTranslatingAnswer(true);
@@ -345,14 +376,24 @@ export function useFairyTaleCoCreationStudio() {
         // 주인공 이름과 철자가 같은 일반 명사(예: "나비")를 실수로 번역하지 않도록,
         // 이름을 번역 프롬프트에 같이 넘긴다.
         const protagonistName = toBookDraft(setupData).setting?.protagonistName || "";
-        const translateResponse = await translateText(customAnswer.trim(), { protagonistName });
+        const [translateResponse, normalizeResponse] = await Promise.all([
+          translateText(customAnswer.trim(), { protagonistName }),
+          normalizeSpeechStyle(customAnswer.trim()),
+        ]);
+
         if (translateResponse.ok) {
           summaryEn = getTranslatedText(translateResponse.data);
         } else {
           console.warn("직접 입력 영어 번역 실패. content_text_en 없이 진행합니다.", translateResponse.message);
         }
+
+        if (normalizeResponse.ok) {
+          normalizedSummary = getNormalizedSpeechText(normalizeResponse.data) || normalizedSummary;
+        } else {
+          console.warn("직접 입력 말투 교정 실패. 원문 그대로 진행합니다.", normalizeResponse.message);
+        }
       } catch (error) {
-        console.warn("직접 입력 영어 번역 중 예외 발생. content_text_en 없이 진행합니다.", error);
+        console.warn("직접 입력 번역/말투 교정 중 예외 발생. 원문 그대로 진행합니다.", error);
       } finally {
         setIsTranslatingAnswer(false);
       }
@@ -366,7 +407,7 @@ export function useFairyTaleCoCreationStudio() {
         title: hasCustomAnswer
           ? makeFallbackTitle(selectedAnswer)
           : chosenValue?.sceneTitle || plan.title,
-        summary: hasCustomAnswer ? customAnswer.trim() : chosenValue?.summary || plan.summary,
+        summary: hasCustomAnswer ? normalizedSummary : chosenValue?.summary || plan.summary,
         summaryEn: summaryEn || plan.summaryEn,
         selectedAnswer,
       };
@@ -446,6 +487,7 @@ export function useFairyTaleCoCreationStudio() {
     pageButtons,
     isLoadingChoiceStep,
     isGeneratingPlan,
+    planLoadingHint,
     isRecommendingAgain,
     isTranslatingAnswer,
     canCreateNextScene,

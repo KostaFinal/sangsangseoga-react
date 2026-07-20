@@ -18,6 +18,7 @@ function FairyTaleCoCreationStudioPage() {
         pageButtons,
         isLoadingChoiceStep,
         isGeneratingPlan,
+        planLoadingHint,
         isRecommendingAgain,
         isTranslatingAnswer,
         canCreateNextScene,
@@ -124,7 +125,7 @@ function FairyTaleCoCreationStudioPage() {
 
                         {isGeneratingPlan && (
                             <p style={{ fontWeight: 800, color: "#6d4dfc" }}>
-                                🤖 AI가 이야기 설계를 만드는 중...
+                                🤖 {planLoadingHint || "AI가 이야기 설계를 만드는 중..."}
                             </p>
                         )}
 

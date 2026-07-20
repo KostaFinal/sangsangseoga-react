@@ -347,6 +347,16 @@ export const translateText = (textKo, context = {}, options) =>
     ...options,
   });
 
+// 동화 공동창작(선택형/선택+입력형)에서 사용자가 직접 입력한 장면 문장의 말투(어미)만
+// 해요체로 다듬는다. translateText와 마찬가지로 draft가 필요 없는 단발성 호출이다.
+export const normalizeSpeechStyle = (textKo, context = {}, options) =>
+  requestAiGenerate({
+    taskType: "NORMALIZE_SPEECH_STYLE",
+    draft: {},
+    extra: { textKo, ...context },
+    ...options,
+  });
+
 export const makeAiGenerateRequest = toAiGenerateRequest;
 
 export const aiGenerateService = {
@@ -373,5 +383,6 @@ export const aiGenerateService = {
   createImagePrompt,
   createCoverPrompt,
   translateText,
+  normalizeSpeechStyle,
   makeAiGenerateRequest,
 };

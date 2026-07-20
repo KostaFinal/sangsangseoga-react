@@ -157,6 +157,9 @@ export const getPageBodyEn = (data) => {
 // TRANSLATE_TEXT 응답에서 번역된 영어 문장을 꺼낸다(직접 입력 답변 번역용).
 export const getTranslatedText = (data) => getTaskResult(data)?.textEn || "";
 
+// NORMALIZE_SPEECH_STYLE 응답에서 해요체로 다듬어진 문장을 꺼낸다(직접 입력 답변 말투 교정용).
+export const getNormalizedSpeechText = (data) => getTaskResult(data)?.normalizedText || "";
+
 export const getNextQuestion = (data) => getTaskResult(data)?.nextQuestion || "";
 
 export const getEditSummary = (data) => getTaskResult(data)?.editSummary || "";
