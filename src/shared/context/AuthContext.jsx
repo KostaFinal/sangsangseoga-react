@@ -4,6 +4,7 @@ import { subscriptionService } from '../../features/subscription/services/subscr
 import { notificationService } from '../services/notificationService';
 import { profileService } from '../../features/profile/services/profileService';
 import { getAccessToken, subscribeAccessToken } from '../../api/tokenStorage';
+import { subscribeQuotaExceeded } from '../../features/bookCreation/services/quotaErrorBus';
 import { API_BASE_URL } from '../../api/axios';
 import { CURRENT_USER_PROFILE } from '../data';
 
@@ -37,6 +38,16 @@ export function AuthProvider({ children }) {
   const [currentPlanType, setCurrentPlanType] = useState(null);
   const [usage, setUsage] = useState(null);
   const [notifications, setNotifications] = useState([]);
+  // AI 생성 429(쿼터 초과) 응답 코드 — 값이 있으면 AppShell이 구독 유도 모달을 띄운다.
+  const [quotaExceededCode, setQuotaExceededCode] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = subscribeQuotaExceeded((code) => {
+      setQuotaExceededCode(code);
+      refreshUsage(); // 남은 횟수 배지를 0으로 즉시 갱신
+    });
+    return unsubscribe;
+  }, []);
 
   // 내 구독 상태 조회 (GET /api/subscriptions/me) — 로그인 상태일 때만 호출
   const refreshSubscriptionStatus = async () => {
@@ -197,17 +208,29 @@ export function AuthProvider({ children }) {
     refreshProfile();
   }, []);
 
-  // 로그아웃: 백엔드 세션 종료(POST /api/auth/logout) 및 토큰 폐기 후 로컬 상태 초기화
+  // 토큰이 사라지는 모든 경로(명시적 로그아웃, refresh 실패로 인한 자동 폐기 등)를 한 곳에서 감지해
+  // 로그인 관련 상태를 초기화한다 — 401을 받고도 화면은 로그인 상태로 남는 문제를 막기 위함.
+  useEffect(() => {
+    const unsubscribe = subscribeAccessToken((token) => {
+      if (token) return;
+      setIsAuthenticated(false);
+      setCurrentUser(DEFAULT_USER);
+      setIsPremium(false);
+      setIsSubscriptionCanceled(false);
+      setCurrentPlanType(null);
+      setUsage(null);
+      setNotifications([]);
+    });
+    return unsubscribe;
+  }, []);
+
+  // 로그아웃: 백엔드 세션 종료(POST /api/auth/logout) 및 토큰 폐기 — 상태 초기화는 위 구독에서 처리
   const handleLogout = async () => {
     try {
       await authService.logout();
     } catch (err) {
       console.error("로그아웃 처리 실패", err);
     }
-    setIsPremium(false);
-    setIsAuthenticated(false);
-    setCurrentUser(DEFAULT_USER);
-    setNotifications([]);
   };
 
   return (
@@ -219,6 +242,7 @@ export function AuthProvider({ children }) {
       benefitEndDate, setBenefitEndDate,
       currentPlanType,
       usage, setUsage,
+      quotaExceededCode, setQuotaExceededCode,
       notifications,
       refreshNotifications, markNotificationRead, markAllNotificationsRead, clearAllNotifications,
       refreshSubscriptionStatus, refreshUsage, refreshProfile,

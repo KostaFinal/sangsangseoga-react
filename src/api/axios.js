@@ -47,6 +47,7 @@ instance.interceptors.response.use(
 
     const refreshToken = getRefreshToken();
     if (!refreshToken) {
+      clearTokens();
       return Promise.reject(error);
     }
 

@@ -1,4 +1,5 @@
 import { getAccessToken } from "../../../api/tokenStorage";
+import { reportAiErrorResponse } from "./quotaErrorBus";
 
 const AI_GENERATE_IMAGE_URL = "http://localhost:8080/api/ai/generate-image";
 
@@ -57,6 +58,8 @@ export const requestGenerateImage = async ({
     const data = await parseResponseBody(response);
 
     if (!response.ok) {
+      reportAiErrorResponse(response.status, data);
+
       return {
         ok: false,
         status: response.status,
