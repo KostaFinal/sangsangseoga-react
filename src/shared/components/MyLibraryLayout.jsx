@@ -807,16 +807,18 @@ export function MyLibraryReaderRoute() {
 
 
   return (
-    <BookReaderView
-      key={`${readerBook.id}-${readerBook.startPageIndex}`}
-      book={readerBook}
-      onBack={() => navigate(-1)}
-      onProgressSave={handleProgressSave}
-      onReadingBookmarkSave={handleReadingBookmarkSave}
-      onReadingTimeSave={handleReadingTimeSave}
-      onCompleteReading={handleCompleteReading}
-      onSelectRecommended={(book) => navigate(`/library/read/${book.id}`)}
-      onExploreLibrary={() => navigate('/friends')}
-    />
+    <div className="fixed inset-0 z-50 bg-[#f3f0ff] overflow-y-auto animate-in fade-in duration-200">
+      <BookReaderView
+        key={`${readerBook.id}-${readerBook.startPageIndex}`}
+        book={readerBook}
+        onBack={() => navigate(-1)}
+        onProgressSave={handleProgressSave}
+        onReadingBookmarkSave={handleReadingBookmarkSave}
+        onReadingTimeSave={handleReadingTimeSave}
+        onCompleteReading={handleCompleteReading}
+        onSelectRecommended={(book) => navigate(`/library/read/${book.id}`)}
+        onExploreLibrary={() => navigate('/friends')}
+      />
+    </div>
   );
 }

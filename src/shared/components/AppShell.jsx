@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Header } from './Header';
 import { ConfirmModal } from './ConfirmModal';
 import { getBooks, likeBook, unlikeBook, addBookmark, removeBookmark } from '../../api/bookApi';
@@ -30,8 +30,11 @@ export function AppShell() {
   const [books, setBooks] = useState([]);
   const requireAuth = useRequireAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { quotaExceededCode, setQuotaExceededCode } = useAuth();
   const quotaModal = quotaExceededCode ? QUOTA_MODAL_CONTENT[quotaExceededCode] : null;
+  const isReaderRoute = /^\/books\/[^/]+\/read$/.test(location.pathname)
+    || /^\/library\/read\/[^/]+$/.test(location.pathname);
 
   useEffect(() => {
     (async () => {
@@ -96,7 +99,7 @@ export function AppShell() {
 
   return (
     <div className="relative min-h-screen selection:bg-black selection:text-white">
-      <Header />
+      {!isReaderRoute && <Header />}
       <Outlet context={{ books, handleToggleLike, handleToggleBookmark }} />
       <ConfirmModal
         isOpen={!!quotaModal}
