@@ -13,7 +13,7 @@ export default function ExitBookmarkModal({
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#110F24]/60 px-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-2">

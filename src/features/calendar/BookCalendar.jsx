@@ -323,7 +323,7 @@ export default function BookCalendar({ books = [] }) {
       </div>
 
       {isPlanModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#110F24]/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-3xl border border-lavender-border shadow-2xl p-6">
             <div className="flex justify-between items-center mb-5">
               <h4 className="font-plus font-black text-lg text-navy-purple">

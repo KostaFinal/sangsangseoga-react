@@ -6,6 +6,8 @@ import {
 } from '../../../shared/data';
 import { dashboardService } from '../services/dashboardService';
 import { getWeeklyRanking, getWeeklyNewReleases, triggerWeeklyRankingAggregate } from '../../../api/bookApi';
+import { getReadingList } from '../../../api/myLibraryApi';
+import { useAuth } from '../../../shared/context/AuthContext';
 
 const mapRankItem = (item) => ({
   rank: item.rankNum,
@@ -13,8 +15,22 @@ const mapRankItem = (item) => ({
   title: item.title,
   author: item.authorNickname,
   cover: item.coverImageUrl,
+  bookType: item.bookType,
   viewCount: item.viewCount,
   likeCount: item.likeCount,
+});
+
+const BOOK_TYPE_TO_GENRE = {
+  NOVEL: '소설', POEM: '시', ESSAY: '에세이', FAIRY_TALE: '동화',
+};
+
+const mapRecentReadItem = (item) => ({
+  id: item.bookId,
+  title: item.title,
+  category: BOOK_TYPE_TO_GENRE[item.bookType] || item.bookType,
+  author: item.authorNickname,
+  progress: item.progress ?? 0,
+  cover: item.coverImageUrl,
 });
 
 /**
@@ -27,6 +43,8 @@ export const useDashboardState = ({
   usage,
   setUsage,
 }) => {
+  const { isAuthenticated } = useAuth();
+
   // 내 서재 (필터/검색/정렬)
   const [libraryGenreFilter, setLibraryGenreFilter] = useState('전체');
   const [librarySearchQuery, setLibrarySearchQuery] = useState('');
@@ -107,6 +125,19 @@ export const useDashboardState = ({
     dashboardService.getFriendBooks().then(setFriendBooks);
   }, []);
 
+  // 홈 화면 - 최근 읽은 작품(읽는 중, 최신순 3권)
+  const [recentlyReadBooks, setRecentlyReadBooks] = useState([]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setRecentlyReadBooks([]);
+      return;
+    }
+    getReadingList(1, 3)
+      .then(res => setRecentlyReadBooks((res.data?.data?.content || []).map(mapRecentReadItem)))
+      .catch(() => setRecentlyReadBooks([]));
+  }, [isAuthenticated]);
+
   // 이번 주 인기 랭킹 TOP5 / 이번 주 신작 TOP5
   const [weeklyRanking, setWeeklyRanking] = useState([]);
   const [weeklyNewReleases, setWeeklyNewReleases] = useState([]);
@@ -168,6 +199,7 @@ export const useDashboardState = ({
     myCabinetBooks,
     friendBooks,
     filteredCabinetBooks,
+    recentlyReadBooks,
 
     weeklyRanking,
     weeklyNewReleases,

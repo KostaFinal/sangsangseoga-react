@@ -61,7 +61,7 @@ export default function BookMemoListModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#110F24]/60 px-4"
       onClick={onClose}
     >
       <div
