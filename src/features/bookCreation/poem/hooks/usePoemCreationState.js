@@ -3,7 +3,6 @@ import {
   createPreviewPages,
   ensureLineBreaks,
   getContentBase,
-  getGeneratedPoemText,
   getTitleIdeas,
   joinPoemText,
 } from '../utils/poemTextUtils.js';
@@ -129,15 +128,6 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
     setPoems((prev) => prev.map((item) => (item.id === poemId ? { ...item, ...patch } : item)));
   };
 
-  // 로컬 규칙 기반 폴백 — AI 호출이 실패했을 때만 사용한다.
-  const fallbackToLocalPoem = (nextPoem, source) => {
-    const text = getGeneratedPoemText(settings, nextPoem, settings.mode || 'answer', variant);
-    const title = poem.title === '아직 제목이 없어요' ? getTitleIdeas(settings, nextPoem)[0] : poem.title;
-    updatePoem({ title, content: ensureLineBreaks(text), generationSource: source });
-    setVariant((v) => v + 1);
-    setGenerationNotice('AI 응답을 불러오지 못해 기본 문장으로 채웠어요.');
-  };
-
   // 답변형 "시 만들기"/"AI 전체 재생성" — draft.setting.mode를 ANSWER로 보내 answers 기반 시 전체를 생성한다.
   const makePoem = async (nextPatch = {}, options = {}) => {
     const nextPoem = { ...poem, ...nextPatch };
@@ -147,7 +137,9 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
     const response = await generatePoem({ settings, poem: nextPoem, isContinuation: false });
 
     if (!response.ok) {
-      fallbackToLocalPoem(nextPoem, options.generationSource || settings.mode || 'answer');
+      // 가짜 문장으로 대충 채우면 사용자가 이걸 진짜 결과로 착각하기 쉽다.
+      // 실패했을 땐 본문을 건드리지 않고 실패했다는 것만 명확히 알린다.
+      setGenerationNotice('시 생성에 실패했어요. 다시 시도해 주세요.');
       setIsGenerating(false);
       return;
     }
