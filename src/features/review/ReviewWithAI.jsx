@@ -649,7 +649,7 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
 
       {/* Edit Book Report Detail / Edit Modal */}
       {selectedReportForEdit && (
-        <div className="fixed inset-0 bg-black/45 backdrop-blur-sm flex items-center justify-center z-50 p-4 select-none">
+        <div className="fixed inset-0 bg-[#110F24]/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 select-none">
           <div className="bg-white rounded-[2.5rem] border border-lavender-border shadow-2xl p-6 md:p-8 max-w-xl w-full animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-center pb-4 border-b border-lavender-border mb-5">
