@@ -235,15 +235,6 @@ export const MainDashboard = (props) => {
             </div>
             )}
 
-            {/* [테스트용] 확인 끝나면 제거 - 매주 월요일 크론과 동일한 주간 랭킹 집계를 즉시 실행 */}
-            <button
-              onClick={handleTriggerWeeklyRankingAggregate}
-              disabled={isAggregating}
-              className="text-xs font-bold text-orange-600 bg-orange-50 border border-dashed border-orange-300 rounded-lg px-3 py-1.5 hover:bg-orange-100 transition-colors disabled:opacity-50"
-            >
-              {isAggregating ? '집계 실행 중...' : '[테스트] 주간 랭킹 즉시 집계'}
-            </button>
-
             <div className="space-y-4 pt-4 z-10 relative">
               <div className="flex justify-between items-center">
                 <h2 className="text-base sm:text-lg font-extrabold text-[#2F2D59]">이번 주 인기 TOP5</h2>
