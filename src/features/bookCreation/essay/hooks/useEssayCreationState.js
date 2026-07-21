@@ -4,11 +4,7 @@ import {
   hasText,
   clean,
   joinText,
-  makeOpeningEssay,
   getGuidedSuggestion,
-  makeFreeEssay,
-  makeContinuation,
-  reviseSelection,
   splitPages,
   getDisplayTitle,
 } from '../utils/essayTextUtils.js';
@@ -149,16 +145,16 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
 
     const response = await generateEssay({ settings, answers, content: '', workInput: '', isContinuation: false });
 
-    let next;
-    if (response.ok) {
-      next = response.content;
-      setAiTitle(response.title || '');
-    } else {
-      next = makeOpeningEssay(settings, answers, variant);
-      setGenerationNotice('AI 응답을 불러오지 못해 기본 문장으로 채웠어요.');
+    if (!response.ok) {
+      // 가짜 문장으로 대충 채우면 사용자가 이걸 진짜 결과로 착각하기 쉽다.
+      // 실패했을 땐 본문을 건드리지 않고 실패했다는 것만 명확히 알린다.
+      setGenerationNotice('에세이 생성에 실패했어요. 다시 시도해 주세요.');
+      setIsGenerating(false);
+      return;
     }
 
-    updateContent(next);
+    updateContent(response.content);
+    setAiTitle(response.title || '');
     setGuidedComplete(true);
     setQuestionIndex(QUESTIONS.length - 1);
     setSelectedText('');
@@ -188,22 +184,19 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
 
     const response = await generateEssay({ settings, answers, content, workInput, isContinuation });
 
-    if (response.ok) {
-      if (isContinuation) {
-        updateContent(joinText(content, response.content));
-      } else {
-        updateContent(response.content);
-        setAiTitle(response.title || '');
-      }
+    if (!response.ok) {
+      // 가짜 문장으로 대충 채우면 사용자가 이걸 진짜 결과로 착각하기 쉽다.
+      // 실패했을 땐 본문을 건드리지 않고 실패했다는 것만 명확히 알린다.
+      setGenerationNotice('생성에 실패했어요. 다시 시도해 주세요.');
+      setIsGenerating(false);
+      return;
+    }
+
+    if (isContinuation) {
+      updateContent(joinText(content, response.content));
     } else {
-      setGenerationNotice('AI 응답을 불러오지 못해 기본 문장으로 채웠어요.');
-      if (isContinuation) {
-        const next = makeContinuation(content, workInput, settings, variant);
-        updateContent(joinText(content, next));
-      } else {
-        const next = makeFreeEssay(settings, workInput, variant);
-        updateContent(next);
-      }
+      updateContent(response.content);
+      setAiTitle(response.title || '');
     }
 
     setWorkInput('');
@@ -219,19 +212,19 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     setGenerationNotice('');
 
     const response = await rewriteEssaySelection({ settings, selectedText, editRequest: revisionRequest });
+    const replacement = response.ok ? response.revisedText : '';
 
-    let replacement = response.ok ? response.revisedText : '';
     if (!replacement) {
-      replacement = reviseSelection(selectedText, revisionRequest);
-      if (!response.ok) setGenerationNotice('AI 응답을 불러오지 못해 기본 문장으로 다듬었어요.');
+      // 가짜 문장으로 대충 채우면 사용자가 이걸 진짜 결과로 착각하기 쉽다.
+      // 실패했을 땐 본문을 건드리지 않고 실패했다는 것만 명확히 알린다.
+      setGenerationNotice('수정에 실패했어요. 다시 시도해 주세요.');
+      setIsGenerating(false);
+      return;
     }
 
-    if (replacement) {
-      updateContent(content.replace(selectedText, replacement));
-      setSelectedText('');
-      setRevisionRequest('');
-    }
-
+    updateContent(content.replace(selectedText, replacement));
+    setSelectedText('');
+    setRevisionRequest('');
     setIsGenerating(false);
   };
 
