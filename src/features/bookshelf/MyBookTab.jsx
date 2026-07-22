@@ -37,12 +37,12 @@ export default function MyBookTab({
   return (
     <div className="space-y-4 bg-transparent text-navy-purple">
       <div className="flex flex-col gap-3 select-none header-wrap">
-        <div className="flex justify-between items-center">
+        <div className="flex items-center gap-3">
           <h3 className="text-xl font-black text-navy-purple">
             내가 쓴 책
           </h3>
 
-          <span className="text-xs font-bold text-purple-gray-text">
+          <span className="px-2.5 py-1 rounded-full bg-brand-purple/10 text-brand-purple text-xs font-bold">
             {myBooks.length}권
           </span>
         </div>

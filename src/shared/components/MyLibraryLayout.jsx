@@ -37,6 +37,9 @@ const BOOK_TYPE_TO_CATEGORY = {
   FAIRY_TALE: '동화',
 };
 
+const resolveBookCategory = (book = {}) =>
+  book.category || BOOK_TYPE_TO_CATEGORY[book.bookType] || book.bookType || '';
+
 
 export function MyLibraryLayout() {
   const navigate = useNavigate();
@@ -67,7 +70,7 @@ export function MyLibraryLayout() {
           bookId: book.bookId,
           title: book.title,
           coverUrl: book.coverImageUrl || "/default-book-cover.png",
-          category: book.category,
+          category: resolveBookCategory(book),
           bookType: book.bookType,
           genre: book.bookType,
           description: book.description,
@@ -90,7 +93,7 @@ export function MyLibraryLayout() {
           bookId: book.bookId,
           title: book.title,
           coverUrl: book.coverImageUrl || "/default-book-cover.png",
-          category: book.category,
+          category: resolveBookCategory(book),
           bookType: book.bookType,
           genre: book.bookType,
           description: book.description,
@@ -114,7 +117,7 @@ export function MyLibraryLayout() {
           bookId: book.bookId,
           title: book.title,
           coverUrl: book.coverImageUrl || "/default-book-cover.png",
-          category: book.category,
+          category: resolveBookCategory(book),
           bookType: book.bookType,
           genre: book.bookType,
           description: book.description,
@@ -142,7 +145,7 @@ export function MyLibraryLayout() {
           bookId: book.bookId,
           title: book.title,
           coverUrl: book.coverImageUrl || "/default-book-cover.png",
-          category: book.category || BOOK_TYPE_TO_CATEGORY[book.bookType] || book.bookType,
+          category: resolveBookCategory(book),
           bookType: book.bookType,
           genre: book.bookType,
           description: book.description,
@@ -175,6 +178,9 @@ export function MyLibraryLayout() {
         map.set(key, {
           ...existingBook,
           ...book,
+          category:
+            resolveBookCategory(book) ||
+            resolveBookCategory(existingBook),
           progress: Math.max(
             Number(existingBook?.progress) || 0,
             Number(book.progress) || 0
