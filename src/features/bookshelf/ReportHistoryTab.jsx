@@ -231,11 +231,6 @@ export default function ReportHistoryTab() {
                                             {report.targetTitle || "삭제되었거나 확인할 수 없는 대상"}
                                         </h3>
 
-                                        {report.targetContent && (
-                                            <p className="mt-2 line-clamp-2 text-sm leading-6 text-gray-600">
-                                                {report.targetContent}
-                                            </p>
-                                        )}
                                     </div>
                                 </div>
 
