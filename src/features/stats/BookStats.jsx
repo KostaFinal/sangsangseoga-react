@@ -4,7 +4,23 @@ import {
 } from 'recharts';
 import { getBookGenreLabel } from '../../shared/utils/bookGenre';
 
-export default function BookStats({ getReadingStats }) {
+const buildCategoryData = (books = []) => {
+  const counts = books.reduce((result, book) => {
+    const genre = getBookGenreLabel(book);
+    result[genre] = (result[genre] || 0) + 1;
+    return result;
+  }, {});
+
+  const total = books.length;
+
+  return Object.entries(counts).map(([name, value]) => ({
+    name,
+    value,
+    percent: total > 0 ? Math.round((value / total) * 100) : 0,
+  }));
+};
+
+export default function BookStats({ getReadingStats, books = [] }) {
   const COLORS = ['#FF8042', '#0088FE', '#00C49F', '#FFBB28', '#8884d8', '#82ca9d'];
 
   const [stats, setStats] = useState(null);
@@ -27,6 +43,16 @@ export default function BookStats({ getReadingStats }) {
 
   const readCategoryData = useMemo(() => {
     const categoryStats = stats?.categoryStats || [];
+    const hasGenreData = categoryStats.some(
+      (item) => getBookGenreLabel(item) !== '기타'
+    );
+
+    if (!hasGenreData) {
+      return buildCategoryData(
+        books.filter((book) => book.progress === 100 || book.rereadCount > 0)
+      );
+    }
+
     const total = categoryStats.reduce((sum, item) => sum + item.count, 0);
 
     return categoryStats.map(item => ({
@@ -34,10 +60,19 @@ export default function BookStats({ getReadingStats }) {
       value: item.count,
       percent: total > 0 ? Math.round((item.count / total) * 100) : 0
     }));
-  }, [stats]);
+  }, [stats, books]);
 
   const writtenCategoryData = useMemo(() => {
     const categoryStats = stats?.writtenCategoryStats || [];
+    const hasGenreData = categoryStats.some(
+      (item) => getBookGenreLabel(item) !== '기타'
+    );
+
+    if (!hasGenreData) {
+      return buildCategoryData(
+        books.filter((book) => book.isMyWrittenBook)
+      );
+    }
 
     const total = categoryStats.reduce(
       (sum, item) => sum + item.count,
@@ -51,7 +86,7 @@ export default function BookStats({ getReadingStats }) {
         ? Math.round((item.count / total) * 100)
         : 0
     }));
-  }, [stats]);
+  }, [stats, books]);
 
   const CustomTooltip = ({ active, payload }) => {
     if (!active || !payload || payload.length === 0) return null;

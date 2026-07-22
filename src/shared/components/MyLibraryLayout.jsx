@@ -650,7 +650,8 @@ export function MyLibraryFinishedRoute() {
 }
 
 export function MyLibraryStatsRoute() {
-  return <BookStats getReadingStats={getReadingStats} />;
+  const { books } = useOutletContext();
+  return <BookStats getReadingStats={getReadingStats} books={books} />;
 }
 
 export function MyLibraryCalendarRoute() {
