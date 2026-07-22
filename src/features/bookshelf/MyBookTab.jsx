@@ -81,23 +81,15 @@ export default function MyBookTab({
                 referrerPolicy="no-referrer"
               />
 
-              <span className="absolute top-2 left-2 bg-white text-navy-purple font-bold text-[9px] px-2.5 py-0.5 rounded-full border border-lavender-border shadow-sm">
-                내가 쓴 책
-              </span>
+              
             </div>
 
             <div className="p-4 flex-grow flex flex-col justify-between">
               <div>
-                <div className="flex justify-between items-start gap-2">
+                <div className="flex items-start">
                   <span className={BOOK_GENRE_BADGE_CLASS}>
                     {book.category}
                   </span>
-
-                  {book.author && (
-                    <span className="text-[9px] text-purple-gray-text font-semibold">
-                      {book.author}
-                    </span>
-                  )}
                 </div>
 
                 <h4 className="font-bold text-sm text-navy-purple tracking-tight truncate mt-1.5">
