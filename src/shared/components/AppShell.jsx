@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { ConfirmModal } from './ConfirmModal';
+import { SubscriptionModal } from './SubscriptionModal';
 import { getBooks, likeBook, unlikeBook, addBookmark, removeBookmark } from '../../api/bookApi';
 import { useRequireAuth } from '../hooks/useRequireAuth';
 import { useAuth } from '../context/AuthContext';
@@ -28,8 +29,8 @@ const QUOTA_MODAL_CONTENT = {
 
 export function AppShell() {
   const [books, setBooks] = useState([]);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const requireAuth = useRequireAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const { quotaExceededCode, setQuotaExceededCode } = useAuth();
   const quotaModal = quotaExceededCode ? QUOTA_MODAL_CONTENT[quotaExceededCode] : null;
@@ -105,13 +106,17 @@ export function AppShell() {
         isOpen={!!quotaModal}
         onClose={() => setQuotaExceededCode(null)}
         onConfirm={() => {
-          if (quotaModal?.showUpsell) navigate('/subscription');
+          if (quotaModal?.showUpsell) setShowSubscriptionModal(true);
         }}
         title={quotaModal?.title}
         message={quotaModal?.message}
         confirmText={quotaModal?.confirmText}
         cancelText="닫기"
         type="brand"
+      />
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
       />
     </div>
   );

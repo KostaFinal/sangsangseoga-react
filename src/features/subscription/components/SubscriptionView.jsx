@@ -18,6 +18,7 @@ import {
 export const SubscriptionView = ({
   onNavigateHome,
   onNavigate,
+  closeLabel = '홈으로',
   onCancelSubscription,
   onResumeSubscription,
   onPlanChanged,
@@ -74,7 +75,7 @@ export const SubscriptionView = ({
             className="group inline-flex items-center gap-1.5 text-sm font-black text-[#514c73] hover:text-[#5139d6] transition cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-            <span>홈으로</span>
+            <span>{closeLabel}</span>
           </button>
 
           <span className={`inline-flex items-center gap-1.5 text-xs font-black whitespace-nowrap px-3 py-1.5 rounded-full border ${
