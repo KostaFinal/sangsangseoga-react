@@ -52,7 +52,7 @@ const genreBadge = (bookType) => {
 
 export const MainDashboard = (props) => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, currentUser } = useAuth();
 
   const {
     isPremium,
@@ -243,6 +243,16 @@ export const MainDashboard = (props) => {
                 </div>
               )}
             </div>
+            )}
+
+            {currentUser?.role === 'ADMIN' && (
+              <button
+                onClick={handleTriggerWeeklyRankingAggregate}
+                disabled={isAggregating}
+                className="text-xs font-bold text-orange-600 bg-orange-50 border border-dashed border-orange-300 rounded-lg px-3 py-1.5 hover:bg-orange-100 transition-colors disabled:opacity-50"
+              >
+                {isAggregating ? '집계 실행 중...' : '주간 랭킹 즉시 집계'}
+              </button>
             )}
 
             <div className="space-y-4 pt-4 z-10 relative">
