@@ -9,6 +9,7 @@ import { ReviewWithAI } from '../../features/review';
 import { BookCalendar } from '../../features/calendar';
 import { BookStats } from '../../features/stats';
 import BookMemoListModal from "../../features/library/components/BookMemoListModal";
+import { mapBookPagesByGenre } from '../../features/library/utils/mapBookPages';
 import {
   getBookContents,
   getBookmark,
@@ -721,27 +722,7 @@ export function MyLibraryReaderRoute() {
     (async () => {
       const res = await getBookContents(bookId);
       const pageItems = res.data.data.items || [];
-      const viewerPages = pageItems.map(page => ({
-        id: `page-${page.pageNo}`,
-        backgroundColor: "#ffffff",
-        elements: [
-          {
-            id: `text-${page.pageNo}`,
-            type: "text",
-            x: 60, y: 80, w: 360, h: 260,
-            fontSize: 18,
-            lineHeight: 1.8,
-            html: page.contentTextKo || page.contentTextEn || "",
-          },
-          ...(page.imageUrl ? [{
-            id: `image-${page.pageNo}`,
-            type: "image",
-            x: 60, y: 370, w: 360, h: 180,
-            src: page.imageUrl,
-            radius: 12,
-          }] : []),
-        ],
-      }));
+      const viewerPages = mapBookPagesByGenre(book.bookType, pageItems);
 
       const finalPages =
         viewerPages.length > 0
