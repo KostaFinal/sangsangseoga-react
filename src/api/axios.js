@@ -41,7 +41,17 @@ instance.interceptors.response.use(
       error.message = response.data.message;
     }
 
-    if (!response || response.status !== 401 || config._retry || config.url === "/api/auth/token-refresh") {
+    // /api/auth/login 자체가 401(예: 정지 계정 SUSPENDED_MEMBER)인 경우까지 "토큰 만료"로
+    // 오인해 조용히 리프레시를 시도하면 안 된다 — 로그인 전이라 애초에 액세스 토큰도 안 붙어있고,
+    // 만약 이전 세션의 refreshToken이 로컬에 남아있으면 그걸로 리프레시를 시도하다 실패하면서
+    // 정작 보여줘야 할 로그인 실패 메시지(위에서 세팅한 것)가 리프레시 실패 에러로 덮어써진다.
+    if (
+      !response ||
+      response.status !== 401 ||
+      config._retry ||
+      config.url === "/api/auth/token-refresh" ||
+      config.url === "/api/auth/login"
+    ) {
       return Promise.reject(error);
     }
 
