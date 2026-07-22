@@ -4,7 +4,7 @@ import { subscriptionService } from '../../features/subscription/services/subscr
 import { notificationService } from '../services/notificationService';
 import { profileService } from '../../features/profile/services/profileService';
 import { getAccessToken, subscribeAccessToken } from '../../api/tokenStorage';
-import { subscribeQuotaExceeded } from '../../features/bookCreation/services/quotaErrorBus';
+import { subscribeQuotaExceeded, subscribeUsageChanged } from '../../features/bookCreation/services/quotaErrorBus';
 import { API_BASE_URL } from '../../api/axios';
 import { CURRENT_USER_PROFILE } from '../data';
 
@@ -45,6 +45,15 @@ export function AuthProvider({ children }) {
     const unsubscribe = subscribeQuotaExceeded((code) => {
       setQuotaExceededCode(code);
       refreshUsage(); // 남은 횟수 배지를 0으로 즉시 갱신
+    });
+    return unsubscribe;
+  }, []);
+
+  // AI 텍스트/이미지 생성이 성공할 때마다(quotaErrorBus.notifyUsageChanged) 호출돼
+  // 헤더 배지/구독 페이지의 잔여 횟수를 새로고침 없이 바로 갱신한다.
+  useEffect(() => {
+    const unsubscribe = subscribeUsageChanged(() => {
+      refreshUsage();
     });
     return unsubscribe;
   }, []);
@@ -136,12 +145,28 @@ export function AuthProvider({ children }) {
     let es = null;
     let reconnectTimer = null;
     let generation = 0; // 이 값이 바뀌면 이전 연결 시도의 재연결 예약은 전부 무효
+    let retryCount = 0; // 연속 실패 횟수 — 백오프 지연 계산에 사용, 연결 성공 시 0으로 리셋
+
+    // 인프라(CloudFront 등)가 SSE 스트리밍을 일시적으로 막고 있는 동안 3초 고정 간격으로
+    // 재연결을 계속 시도하면 티켓 발급 요청(POST)이 폭주해 백엔드에 부담을 줄 수 있다.
+    // 실패가 이어질수록 최대 1분까지 지연을 늘려 부담을 줄이고, 복구되면 자동으로 다시 붙는다.
+    const nextRetryDelay = () => {
+      const delay = Math.min(3000 * 2 ** retryCount, 60000);
+      retryCount += 1;
+      return delay;
+    };
 
     const clearReconnectTimer = () => {
       if (reconnectTimer) {
         clearTimeout(reconnectTimer);
         reconnectTimer = null;
       }
+    };
+
+    const scheduleReconnect = (myGeneration) => {
+      if (myGeneration !== generation) return;
+      clearReconnectTimer();
+      reconnectTimer = setTimeout(() => connect(getAccessToken()), nextRetryDelay());
     };
 
     const connect = async (token) => {
@@ -158,11 +183,15 @@ export function AuthProvider({ children }) {
         ticket = await notificationService.getStreamTicket();
       } catch (err) {
         console.error("알림 SSE 티켓 발급 실패", err);
+        scheduleReconnect(myGeneration);
         return;
       }
       if (myGeneration !== generation) return; // 그 사이 로그아웃/토큰변경 등으로 무효화됨
 
       es = new EventSource(`${API_BASE_URL}/api/notifications/stream?ticket=${encodeURIComponent(ticket)}`);
+      es.onopen = () => {
+        retryCount = 0;
+      };
       es.addEventListener('notification', (event) => {
         try {
           const incoming = JSON.parse(event.data);
@@ -179,9 +208,7 @@ export function AuthProvider({ children }) {
           es.close();
           es = null;
         }
-        if (myGeneration !== generation) return;
-        clearReconnectTimer();
-        reconnectTimer = setTimeout(() => connect(getAccessToken()), 3000);
+        scheduleReconnect(myGeneration);
       };
     };
 

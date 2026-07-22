@@ -1,6 +1,6 @@
 import { getAccessToken } from "../../../api/tokenStorage";
 import { API_BASE_URL } from "../../../api/axios";
-import { reportAiErrorResponse } from "./quotaErrorBus";
+import { reportAiErrorResponse, notifyUsageChanged } from "./quotaErrorBus";
 
 const AI_GENERATE_IMAGE_URL = `${API_BASE_URL}/api/ai/generate-image`;
 
@@ -71,6 +71,8 @@ export const requestGenerateImage = async ({
         data,
       };
     }
+
+    notifyUsageChanged();
 
     return {
       ok: true,

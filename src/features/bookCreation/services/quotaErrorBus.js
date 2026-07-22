@@ -19,3 +19,16 @@ export const reportAiErrorResponse = (status, data) => {
   if (!QUOTA_ERROR_CODES.has(code)) return;
   listeners.forEach((listener) => listener(code));
 };
+
+// AI 생성이 성공(횟수 차감)할 때마다 호출한다. 헤더/구독 페이지의 잔여 횟수가
+// 새로고침 없이도 즉시 반영되도록 AuthContext가 이 이벤트를 구독해 refreshUsage()를 다시 부른다.
+const usageChangedListeners = new Set();
+
+export const subscribeUsageChanged = (listener) => {
+  usageChangedListeners.add(listener);
+  return () => usageChangedListeners.delete(listener);
+};
+
+export const notifyUsageChanged = () => {
+  usageChangedListeners.forEach((listener) => listener());
+};
