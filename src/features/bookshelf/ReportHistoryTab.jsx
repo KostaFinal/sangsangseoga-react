@@ -39,7 +39,10 @@ const REASON_LABELS = {
 const formatDate = value => {
     if (!value) return "-";
 
-    const date = new Date(value);
+    const dateTime = String(value).trim();
+    const hasTimezone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(dateTime);
+    const normalizedDateTime = hasTimezone ? dateTime : `${dateTime}Z`;
+    const date = new Date(normalizedDateTime);
 
     if (Number.isNaN(date.getTime())) {
         return "-";
