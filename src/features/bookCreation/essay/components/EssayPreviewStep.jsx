@@ -24,6 +24,7 @@ export default function EssayPreviewStep({
   activePreviewPage,
   setActivePreviewPage,
   goStep,
+  requestViewChange,
   setShowCompleteModal,
   coverImage,
   setCoverImage,
@@ -203,7 +204,7 @@ export default function EssayPreviewStep({
         <button
           type="button"
           className="essay-ghost"
-          onClick={() => goStep("step2")}
+          onClick={() => requestViewChange("step2")}
         >
           이전
         </button>

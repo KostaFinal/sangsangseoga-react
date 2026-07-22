@@ -44,6 +44,10 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
     applyRevision,
     selectFromTextarea,
     goStep,
+    showExitModal,
+    requestViewChange,
+    confirmLeave,
+    cancelLeave,
     resetEssay,
     selectEssayMode,
     moveToMyBooks,
@@ -99,6 +103,7 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
             applyRevision={applyRevision}
             selectFromTextarea={selectFromTextarea}
             goStep={goStep}
+            requestViewChange={requestViewChange}
             resetEssay={resetEssay}
             isGenerating={isGenerating}
             generationNotice={generationNotice}
@@ -111,6 +116,7 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
             activePreviewPage={activePreviewPage}
             setActivePreviewPage={setActivePreviewPage}
             goStep={goStep}
+            requestViewChange={requestViewChange}
             setShowCompleteModal={setShowCompleteModal}
             coverImage={coverImage}
             setCoverImage={setCoverImage}
@@ -129,6 +135,17 @@ export default function EssayApp({ onSwitchGenre, initialView = 'step1', onGoToM
         type="brand"
         onClose={() => setShowCompleteModal(false)}
         onConfirm={moveToMyBooks}
+      />
+
+      <ConfirmModal
+        isOpen={showExitModal}
+        title="이전 단계로 이동할까요?"
+        message="현재 작성 중인 내용이 초기화될 수 있어요. 확인을 누르면 내용을 지우고 이전 단계로 이동해요."
+        cancelText="취소"
+        confirmText="확인"
+        type="danger"
+        onClose={cancelLeave}
+        onConfirm={confirmLeave}
       />
     </div>
   );

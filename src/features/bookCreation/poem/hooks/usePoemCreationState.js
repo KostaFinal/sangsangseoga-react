@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   createPreviewPages,
   ensureLineBreaks,
@@ -9,6 +9,7 @@ import {
 import { generatePoem, rewritePoemSelection, toReaderAge, translatePoemContent, translatePoemTitle } from '../services/poemCreationService.js';
 import { publishBook } from '../../../../api/bookApi.js';
 import { mapWithConcurrency } from '../../utils/concurrency.js';
+import useCreationExitGuard from '../../hooks/useCreationExitGuard.js';
 
 // 페이지 번역 동시 요청 개수 - 너무 많이 한꺼번에 보내면 Gemini가 일시 과부하(503)를
 // 낼 수 있어(실측: 11개 동시 요청 중 3개 실패) 3~4개 선에서 안전하게 맞춘다.
@@ -54,8 +55,6 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
   const [poems, setPoems] = useState([createPoem(1)]);
   const [activePoem, setActivePoem] = useState(0);
   const [activePreviewPage, setActivePreviewPage] = useState(0);
-  const [showBackModal, setShowBackModal] = useState(false);
-  const [pendingView, setPendingView] = useState(null);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationNotice, setGenerationNotice] = useState('');
@@ -63,8 +62,6 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
   const [coverImage, setCoverImage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
-  const historyReadyRef = useRef(false);
-  const isPopNavigationRef = useRef(false);
 
   const poem = poems[activePoem] || poems[0];
   const answers = poem?.answers || defaultAnswers;
@@ -72,44 +69,24 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
   const localTitleIdeas = useMemo(() => getTitleIdeas(settings, poem), [settings, poem]);
   const titleIdeas = aiTitleIdeas.length ? aiTitleIdeas : localTitleIdeas;
   const guardedSteps = ['step2', 'step3'];
-  const shouldGuardNavigation = guardedSteps.includes(currentView);
 
-  useEffect(() => {
-    window.history.replaceState({ view: currentView }, '', window.location.href);
-    historyReadyRef.current = true;
-
-    const handlePopState = (event) => {
-      isPopNavigationRef.current = true;
-      setShowBackModal(false);
-      setPendingView(null);
-      setCurrentView(event.state?.view || 'step1');
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  useEffect(() => {
-    if (!historyReadyRef.current) return;
-    if (isPopNavigationRef.current) {
-      isPopNavigationRef.current = false;
-      return;
-    }
-
-    window.history.pushState({ view: currentView }, '', window.location.href);
-  }, [currentView]);
-
-  useEffect(() => {
-    if (!shouldGuardNavigation) return undefined;
-
-    const handleBeforeUnload = (event) => {
-      event.preventDefault();
-      event.returnValue = '';
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [shouldGuardNavigation]);
+  // step3(미리보기) → step2(작업)로 되돌아가는 것은 내용을 잃지 않으므로 확인 없이 허용한다.
+  const {
+    showExitModal: showBackModal,
+    pendingView,
+    requestViewChange,
+    confirmLeave: confirmBack,
+    cancelLeave: cancelBack,
+  } = useCreationExitGuard({
+    currentView,
+    setCurrentView,
+    isGuardedView: (view) => guardedSteps.includes(view),
+    shouldGuard: (from, to) => {
+      if (from === 'step3' && to === 'step2') return false;
+      return guardedSteps.includes(from);
+    },
+    onConfirmLeave: () => resetStep3(),
+  });
 
   useEffect(() => {
     setActivePreviewPage((prev) => Math.min(prev, Math.max(0, previewPages.length - 1)));
@@ -224,35 +201,6 @@ export default function usePoemCreationState({ initialView = 'step1', onGoToMyBo
     setPoems([createPoem(1)]);
     setActivePoem(0);
     setActivePreviewPage(0);
-  };
-
-  const requestViewChange = (nextView) => {
-    if (nextView === currentView) return;
-
-    if (currentView === 'step3' && nextView === 'step2') {
-      setCurrentView(nextView);
-      return;
-    }
-
-    if (shouldGuardNavigation) {
-      setPendingView(nextView);
-      setShowBackModal(true);
-      return;
-    }
-
-    setCurrentView(nextView);
-  };
-
-  const confirmBack = () => {
-    resetStep3();
-    setShowBackModal(false);
-    setCurrentView(pendingView || 'step2');
-    setPendingView(null);
-  };
-
-  const cancelBack = () => {
-    setShowBackModal(false);
-    setPendingView(null);
   };
 
   const addPoem = () => {

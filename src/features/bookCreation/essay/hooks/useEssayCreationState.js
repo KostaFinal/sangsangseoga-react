@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import useCreationExitGuard from '../../hooks/useCreationExitGuard.js';
 import { QUESTIONS } from '../data/essayQuestions.js';
 import {
   hasText,
@@ -239,6 +240,26 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const guardedSteps = ['step2', 'step3'];
+
+  // step3(미리보기) → step2(작업)로 되돌아가는 것은 내용을 잃지 않으므로 확인 없이 허용한다.
+  const {
+    showExitModal,
+    pendingView,
+    requestViewChange,
+    confirmLeave,
+    cancelLeave,
+  } = useCreationExitGuard({
+    currentView: view,
+    setCurrentView: goStep,
+    isGuardedView: (v) => guardedSteps.includes(v),
+    shouldGuard: (from, to) => {
+      if (from === 'step3' && to === 'step2') return false;
+      return guardedSteps.includes(from);
+    },
+    onConfirmLeave: () => resetEssay(),
+  });
+
   const buildPublishPayload = async () => {
     // description은 본문 발췌가 아니라 작품 소개문이다. 실제 에세이 내용을 그대로 잘라 넣지 않는다.
     const description = `주제: ${settings.theme || '자유 주제'} / 톤: ${settings.tone || '담백하게'}`;
@@ -352,6 +373,11 @@ export default function useEssayCreationState({ initialView = 'step1', onGoToMyB
     applyRevision,
     selectFromTextarea,
     goStep,
+    showExitModal,
+    pendingView,
+    requestViewChange,
+    confirmLeave,
+    cancelLeave,
     resetEssay,
     selectEssayMode,
     moveToMyBooks,
