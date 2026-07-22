@@ -287,9 +287,15 @@ export default function BookDetailView({
     setEditDescription(localBook.description || "");
   }, [localBook.description]);
 
-  const topLevelComments = comments.filter(c => !c.replyToCommentId);
+  // 답글의 원댓글이 삭제(관리자 신고 처리 등)되면 백엔드 목록 응답에서 원댓글만 사라지고
+  // 답글은 그대로 남는다(소프트 삭제, cascade 없음) — replyToCommentId가 지금 로드된 댓글
+  // 목록 어디에도 없는 "고아 답글"이 생길 수 있다. 이런 답글은 원댓글 밑에 그려질 자리가
+  // 없어 조용히 사라지는 대신, 최상위처럼 보여주되 어떤 상태인지 안내 문구를 붙여준다.
+  const commentIds = new Set(comments.map(c => c.id));
+  const isOrphanedReply = (c) => !!c.replyToCommentId && !commentIds.has(c.replyToCommentId);
+  const topLevelComments = comments.filter(c => !c.replyToCommentId || isOrphanedReply(c));
   const repliesByParent = comments.reduce((acc, c) => {
-    if (c.replyToCommentId) {
+    if (c.replyToCommentId && !isOrphanedReply(c)) {
       (acc[c.replyToCommentId] ||= []).push(c);
     }
     return acc;
@@ -1043,6 +1049,9 @@ export default function BookDetailView({
                           {comment.date || formatCommentDate(comment.createdAt)}
                         </span>
                       </div>
+                      {isOrphanedReply(comment) && (
+                        <p className="text-[11px] text-neutral-400 italic font-normal">삭제된 댓글에 달린 답글입니다.</p>
+                      )}
                       {reportedCommentIds.includes(comment.id) ? (
                         <p className="text-[13px] text-neutral-400 italic font-normal">신고가 접수된 댓글입니다.</p>
                       ) : editingCommentId === comment.id ? (
