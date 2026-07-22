@@ -131,6 +131,12 @@
   gap: 6px;
   max-width: 220px;
   overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.reader-page-dots::-webkit-scrollbar {
+  display: none;
 }
 
 .reader-page-dots button {

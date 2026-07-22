@@ -85,6 +85,12 @@
   gap: 6px;
   max-width: 220px;
   overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.fade-page-dots::-webkit-scrollbar {
+  display: none;
 }
 
 .fade-page-dots button {
