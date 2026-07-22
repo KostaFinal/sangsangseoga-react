@@ -30,6 +30,13 @@ import {
   deleteMyWrittenBook,
 } from '../../api/myLibraryApi';
 
+const BOOK_TYPE_TO_CATEGORY = {
+  NOVEL: '소설',
+  POEM: '시',
+  ESSAY: '에세이',
+  FAIRY_TALE: '동화',
+};
+
 
 export function MyLibraryLayout() {
   const navigate = useNavigate();
@@ -135,11 +142,11 @@ export function MyLibraryLayout() {
           bookId: book.bookId,
           title: book.title,
           coverUrl: book.coverImageUrl || "/default-book-cover.png",
-          category: book.category,
+          category: book.category || BOOK_TYPE_TO_CATEGORY[book.bookType] || book.bookType,
           bookType: book.bookType,
           genre: book.bookType,
           description: book.description,
-          author: book.author || "나",
+          author: book.author || book.authorNickname || '',
           progress: 0,
           currentPage: 1,
           pageCount: book.pageCount || 1,
@@ -168,6 +175,10 @@ export function MyLibraryLayout() {
         map.set(key, {
           ...existingBook,
           ...book,
+          progress: Math.max(
+            Number(existingBook?.progress) || 0,
+            Number(book.progress) || 0
+          ),
           isFavorite:
             Boolean(existingBook?.isFavorite) ||
             Boolean(book.isFavorite),

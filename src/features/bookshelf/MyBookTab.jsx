@@ -92,9 +92,11 @@ export default function MyBookTab({
                     {book.category}
                   </span>
 
-                  <span className="text-[9px] text-purple-gray-text font-semibold">
-                    {book.author}
-                  </span>
+                  {book.author && (
+                    <span className="text-[9px] text-purple-gray-text font-semibold">
+                      {book.author}
+                    </span>
+                  )}
                 </div>
 
                 <h4 className="font-bold text-sm text-navy-purple tracking-tight truncate mt-1.5">
