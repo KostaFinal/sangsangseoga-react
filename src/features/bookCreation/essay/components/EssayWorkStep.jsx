@@ -36,6 +36,7 @@ export default function EssayWorkStep(props) {
     applyRevision,
     selectFromTextarea,
     goStep,
+    requestViewChange,
     resetEssay,
     isGenerating,
     generationNotice,
@@ -512,7 +513,7 @@ export default function EssayWorkStep(props) {
         <button
           type="button"
           className="essay-ghost"
-          onClick={() => goStep("step1")}
+          onClick={() => requestViewChange("step1")}
         >
           이전
         </button>
