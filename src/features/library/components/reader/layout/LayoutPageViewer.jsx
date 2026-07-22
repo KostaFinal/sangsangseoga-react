@@ -53,6 +53,13 @@ export default function LayoutPageViewer({
 
   const bookRef = useRef(null);
   const initializedRef = useRef(false);
+  const activeDotRef = useRef(null);
+
+  // 페이지가 많아 점(dot) 목록이 컨테이너 폭을 넘기면(overflow-x: auto), 현재 페이지가
+  // 넘어갈 때마다 활성 점을 보이는 영역 안으로 스크롤해 화면 밖으로 밀려나지 않게 한다.
+  useEffect(() => {
+    activeDotRef.current?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [currentIndex]);
   const lastReachableIndex = rawPages.length % 2 === 0
     ? Math.max(0, rawPages.length - 2)
     : rawPages.length - 1;
@@ -170,6 +177,7 @@ export default function LayoutPageViewer({
           {rawPages.map((p, idx) => (
             <button
               key={p.id}
+              ref={idx === currentIndex ? activeDotRef : null}
               type="button"
               className={idx === currentIndex ? "active" : ""}
               onClick={() => goToIndex(idx)}

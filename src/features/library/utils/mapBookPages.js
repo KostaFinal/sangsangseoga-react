@@ -159,6 +159,7 @@ function fairyTalePage(page) {
       type: "text",
       x: 50, y: 120, w: 380, h: 380,
       fontSize: 19, lineHeight: 1.9, align: "center", fontWeight: 600,
+      verticalCenter: "safe",
       htmlKo: koText(page),
       htmlEn: enText(page),
     }],

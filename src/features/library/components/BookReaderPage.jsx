@@ -132,7 +132,7 @@ export default function BookReaderPage() {
         books={books}
         onBack={() => { navigate(-1); document.body.style.overflow = "unset"; }}
         onToggleLike={e => handleToggleLike(e, readerBook.id)}
-        onSelectRecommended={b => navigate(`/books/${b.id}/read`)}
+        onSelectRecommended={b => navigate(`/friends/${b.id}`)}
         onExploreLibrary={() => navigate('/friends')}
         onProgressSave={handleProgressSave}
         onReadingBookmarkSave={handleReadingBookmarkSave}

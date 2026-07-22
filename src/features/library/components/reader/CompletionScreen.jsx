@@ -79,7 +79,7 @@ export default function CompletionScreen({ book, onBack, onSelectRecommended, on
               <div key={rec.id} onClick={() => setSelectedRecommend(rec)} className="group flex flex-col items-center cursor-pointer">
                 <div className="relative w-full aspect-[3/4] bg-neutral-100 rounded-xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] group-hover:shadow-[0_15px_40px_rgba(0,0,0,0.22)] transition-all duration-300 transform group-hover:-translate-y-1">
                   <img src={rec.coverImage} alt={rec.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/75 via-transparent to-transparent" />
                   <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold border backdrop-blur-sm ${badge.cls}`}>
                     {badge.label}
                   </div>
@@ -126,7 +126,7 @@ export default function CompletionScreen({ book, onBack, onSelectRecommended, on
             >
               <div className="relative aspect-[4/3] bg-neutral-900 overflow-hidden">
                 <img src={selectedRecommend.coverImage} alt={selectedRecommend.title} className="w-full h-full object-cover opacity-90" referrerPolicy="no-referrer" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/80 via-[#000000]/20 to-transparent" />
                 <div className="absolute bottom-4 left-5 text-white">
                   <span className="text-[10px] uppercase font-gowun tracking-widest text-[#fb923c] font-bold">RECOMMENDED</span>
                   <h4 className="text-xl font-gowun font-bold mt-1">{selectedRecommend.title}</h4>

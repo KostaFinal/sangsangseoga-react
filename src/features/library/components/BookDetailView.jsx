@@ -558,9 +558,9 @@ export default function BookDetailView({
                 {genreTagText}
               </div>
               <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" src={localBook.coverImage} alt={localBook.title} referrerPolicy="no-referrer" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-[#000000]/20 via-transparent to-transparent pointer-events-none" />
               {/* Cover realistic binder edge shadow */}
-              <div className="absolute left-0 top-0 bottom-0 w-2.5 bg-gradient-to-r from-black/25 via-black/10 to-transparent pointer-events-none" />
+              <div className="absolute left-0 top-0 bottom-0 w-2.5 bg-gradient-to-r from-[#000000]/25 via-[#000000]/10 to-transparent pointer-events-none" />
             </div>
           </div>
 
@@ -976,11 +976,16 @@ export default function BookDetailView({
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {recommendations.map(rec => (
+              {recommendations.map(rec => {
+                const recBadge = genreBadge(rec.bookType);
+                return (
                 <div key={rec.id} onClick={() => onSelectRecommended(rec)} className="group flex flex-col items-center text-center cursor-pointer">
                   <div className="relative aspect-[3/4.5] bg-[#f3f0ff] overflow-hidden border border-[#b3a6eb] shadow-sm group-hover:shadow-md group-hover:border-[#5139d6] transition duration-300 rounded-lg w-full">
                     <img className="w-full h-full object-cover group-hover:scale-105 duration-500 transition-all" src={rec.coverImage} alt={rec.title} referrerPolicy="no-referrer" />
-                    <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition duration-350" />
+                    <div className="absolute inset-0 bg-[#000000]/5 group-hover:bg-transparent transition duration-350" />
+                    <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold border backdrop-blur-sm ${recBadge.cls}`}>
+                      {recBadge.label}
+                    </div>
                   </div>
                   {/* 추천 도서명 선명화 */}
                   <h4 className="text-sm font-black text-black mt-2.5 truncate group-hover:text-[#5139d6] w-full px-1">
@@ -991,7 +996,8 @@ export default function BookDetailView({
                     {rec.author}
                   </p>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -1142,8 +1148,8 @@ export default function BookDetailView({
                                     </div>
                                   ) : (
                                     <>
-                                      {/* 답글 내용도 명확하게 선명화 */}
-                                      <p className="text-[13px] leading-relaxed text-neutral-800 font-medium">{reply.content || reply.text}</p>
+                                      {/* 답글 내용도 원댓글과 동일한 톤으로 통일 */}
+                                      <p className="text-[13px] leading-relaxed text-neutral-900 font-semibold">{reply.content || reply.text}</p>
                                       {(isOwnComment(reply) || mode !== "owner") && (
                                         <div className="flex items-center gap-2.5 pt-0.5">
                                           {isOwnComment(reply) && (
