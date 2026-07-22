@@ -13,6 +13,7 @@
 | [domain-admin-ai-usage-and-reports.md](domain-admin-ai-usage-and-reports.md) | 관리자 — 신고 상태 필터/처리이력(action-logs) 신설, AI 사용량 관리 실 연동, 승인 대기 회원 UI 되돌림 | `a9377fa`, `52e5614`, `701606b`, `0f1f91a`, `897c4f1`, `ee46b2f`, `6de75c6`(미push) |
 | [domain-profile.md](domain-profile.md) | 내 정보 수정 — 실 API 연동, 프로필 사진 업로드, 자기소개, 저장 버튼 분리, 탈퇴(소프트 삭제) | `e0b8d68`, `054caec`(미push) |
 | [domain-notifications-sse.md](domain-notifications-sse.md) | 알림 — 기능 복구/실 API 연동 + 실시간 푸시(SSE) | `9383c5b`, SSE 부분은 미커밋 |
+| [infra-cloudfront-api-error-masking.md](infra-cloudfront-api-error-masking.md) | 인프라 — CloudFront SPA 폴백이 `/api/*` 에러 응답을 index.html로 가로채는 문제 (미해결, AWS 콘솔 조치 필요) | 없음(코드 수정 아님) |
 
 문서 사이 `[[이름]]` 링크는 관련 도메인끼리 서로 참조하는 용도입니다 (같은 폴더 내 파일명 기준).
 

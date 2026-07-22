@@ -130,6 +130,13 @@ const handleApproveGuardianRequest = async (consent) => {
 
 로그인 화면을 건너뛰고 바로 다른 화면을 보게 해두면 access token이 없어 API 연동 기능이 다 깨졌다. "테스트 계정으로 실제 로그인 API를 호출해 진짜 토큰을 받아오는" 버튼을 개발 환경에서만 노출(`import.meta.env.DEV` 가드, 프로덕션 빌드 미포함).
 
+## 5. 로그인 401이 토큰 재발급 시도로 오인되던 문제 (`b6e82d4`)
+
+정지 계정(`SUSPENDED_MEMBER`) 등으로 로그인 자체가 401을 받으면, `axios.js` 인터셉터가 이를 액세스 토큰 만료로 오인해 조용히 `/api/auth/token-refresh`를 시도했다. 로컬에 예전 세션의 refreshToken이 남아있으면 그 재발급 실패로 원래 로그인 에러 메시지가 덮어써졌다. `/api/auth/login`을 `/api/auth/token-refresh`와 마찬가지로 리프레시 재시도 예외 목록에 추가해, 로그인 자체의 401은 항상 곧바로 원래 에러 메시지로 거부되도록 수정.
+
+다만 이 수정 이후에도 실제 배포 환경에서는 같은 증상(정지 계정 메시지 미노출)이 재현됐는데, 이건 이 버그와 무관한 **CloudFront 인프라 문제**였다 — 자세한 내용은 [[infra-cloudfront-api-error-masking]] 참고.
+
 ## 관련 문서
 - [[guest-browsing-and-auth-gate]] — `isAuthenticated`를 기준으로 라우트/액션을 여닫는 후속 작업
 - [[admin-cleanup-and-member-api-integration]] — axios 에러 메시지 노출 개선, 관리자 로그인 페이지 디자인 통일
+- [[infra-cloudfront-api-error-masking]] — CloudFront SPA 폴백이 API 에러 응답을 index.html로 가로채는 별개 문제(미해결)
