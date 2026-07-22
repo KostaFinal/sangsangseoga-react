@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Sparkles, ChevronRight } from "lucide-react";
+import { BOOK_GENRE_BADGE_CLASS } from '../../shared/utils/bookGenre';
 
 const GENRES = ["전체", "소설", "시", "에세이", "동화"];
 
@@ -88,7 +89,7 @@ export default function MyBookTab({
             <div className="p-4 flex-grow flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-start gap-2">
-                  <span className="text-[9px] font-extrabold px-2 py-0.5 bg-lavender-bg text-brand-purple rounded-full">
+                  <span className={BOOK_GENRE_BADGE_CLASS}>
                     {book.category}
                   </span>
 

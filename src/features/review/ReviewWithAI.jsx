@@ -9,19 +9,13 @@ import {
   requestAiFeedback,
   getFinishedList,
 } from "../../api/myLibraryApi";
+import { BOOK_GENRE_BADGE_CLASS, getBookGenreLabel } from '../../shared/utils/bookGenre';
 
 export default function ReviewWithAI({ onFairyTaleCreated }) {
   // Book Reports list state (Initialized with beautiful real reports matching default books)
   const [reports, setReports] = useState([]);
   const [reviewBooks, setReviewBooks] = useState([]);
   const [loading, setLoading] = useState(false);
-  const BOOK_TYPE_LABEL = {
-    NOVEL: "소설",
-    POEM: "시",
-    ESSAY: "에세이",
-    FAIRY_TALE: "동화",
-  };
-
   const getCoverUrl = (review) => {
     return review.coverImageUrl || review.bookCover || "";
   };
@@ -31,6 +25,7 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
     reviewId: review.reviewId,
     bookId: review.bookId,
     bookTitle: review.bookTitle,
+    genre: getBookGenreLabel(review, ''),
     bookCover: getCoverUrl(review),
     date: review.createdAt
       ? new Date(review.createdAt).toLocaleDateString("ko-KR")
@@ -84,6 +79,16 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
     loadReviews();
     loadReviewBooks();
   }, []);
+
+  const getReportGenre = (report) => {
+    if (report.genre) return report.genre;
+
+    const matchingBook = reviewBooks.find(
+      (book) => String(book.bookId) === String(report.bookId)
+    );
+
+    return getBookGenreLabel(matchingBook);
+  };
 
 
 
@@ -240,6 +245,7 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
       reviewId: editingReportId,
       bookId: selectedBook.bookId,
       bookTitle: selectedBook.title,
+      genre: getBookGenreLabel(selectedBook),
       bookCover: selectedBook.coverImageUrl,
       content: newReportContent,
       feedback: newReportFeedback,
@@ -463,7 +469,7 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
 
                   <div className="flex justify-center mt-2">
                     <span className="px-3 py-1 rounded-full bg-lavender-bg border border-lavender-border text-brand-purple text-[10px] font-bold">
-                      {BOOK_TYPE_LABEL[selectedBook?.bookType] || "기타"}
+                      {getBookGenreLabel(selectedBook)}
                     </span>
                   </div>
 
@@ -607,6 +613,9 @@ export default function ReviewWithAI({ onFairyTaleCreated }) {
                 <div className="w-14 h-20 bg-cover bg-center rounded-lg shadow-md border border-lavender-border flex-shrink-0" style={{ backgroundImage: `url('${report.bookCover}')` }} />
 
                 <div className="min-w-0 pr-6 flex flex-col justify-center">
+                  <span className={`${BOOK_GENRE_BADGE_CLASS} self-start`}>
+                    {getReportGenre(report)}
+                  </span>
                   {report.status === '작성 중' && (
                     <span className="ml-1 text-[9px] text-white bg-orange-400 border border-orange-500 font-bold px-2 py-0.5 rounded-full">
                       작성 중

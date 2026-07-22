@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   PieChart, Pie, Tooltip, ResponsiveContainer, Cell
 } from 'recharts';
+import { getBookGenreLabel } from '../../shared/utils/bookGenre';
 
 export default function BookStats({ getReadingStats }) {
   const COLORS = ['#FF8042', '#0088FE', '#00C49F', '#FFBB28', '#8884d8', '#82ca9d'];
@@ -29,7 +30,7 @@ export default function BookStats({ getReadingStats }) {
     const total = categoryStats.reduce((sum, item) => sum + item.count, 0);
 
     return categoryStats.map(item => ({
-      name: item.category || '기타',
+      name: getBookGenreLabel(item),
       value: item.count,
       percent: total > 0 ? Math.round((item.count / total) * 100) : 0
     }));
@@ -44,7 +45,7 @@ export default function BookStats({ getReadingStats }) {
     );
 
     return categoryStats.map(item => ({
-      name: item.category || '기타',
+      name: getBookGenreLabel(item),
       value: item.count,
       percent: total > 0
         ? Math.round((item.count / total) * 100)

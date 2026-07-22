@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, BookOpen } from 'lucide-react';
+import { BOOK_GENRE_BADGE_CLASS } from '../../shared/utils/bookGenre';
 
 export default function WishlistTab({ filteredBooks, onOpenDetail, onToggleFavorite, onStartReading }) {
   const [wishlistCategory, setWishlistCategory] = useState('all');
@@ -52,7 +53,7 @@ export default function WishlistTab({ filteredBooks, onOpenDetail, onToggleFavor
             >
               <div className="relative aspect-[16/9] overflow-hidden">
                 <img src={book.coverUrl} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" alt="Book Cover" referrerPolicy="no-referrer" />
-                <span className="absolute top-2 left-2 bg-white text-navy-purple font-bold text-[9px] px-2.5 py-0.5 rounded-full border border-lavender-border">
+                <span className={`absolute top-2 left-2 ${BOOK_GENRE_BADGE_CLASS}`}>
                   {book.category}
                 </span>
               </div>

@@ -10,6 +10,7 @@ import { BookCalendar } from '../../features/calendar';
 import { BookStats } from '../../features/stats';
 import BookMemoListModal from "../../features/library/components/BookMemoListModal";
 import { mapBookPagesByGenre } from '../../features/library/utils/mapBookPages';
+import { getBookGenreLabel } from '../utils/bookGenre';
 import {
   getBookContents,
   getBookmark,
@@ -30,15 +31,7 @@ import {
   deleteMyWrittenBook,
 } from '../../api/myLibraryApi';
 
-const BOOK_TYPE_TO_CATEGORY = {
-  NOVEL: '소설',
-  POEM: '시',
-  ESSAY: '에세이',
-  FAIRY_TALE: '동화',
-};
-
-const resolveBookCategory = (book = {}) =>
-  book.category || BOOK_TYPE_TO_CATEGORY[book.bookType] || book.bookType || '';
+const resolveBookCategory = (book = {}) => getBookGenreLabel(book, '');
 
 
 export function MyLibraryLayout() {

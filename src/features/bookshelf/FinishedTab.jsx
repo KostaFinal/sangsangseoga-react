@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ThumbsUp, Eye, StickyNote } from 'lucide-react';
+import { BOOK_GENRE_BADGE_CLASS } from '../../shared/utils/bookGenre';
 
 const GENRES = ["전체", "소설", "시", "에세이", "동화"];
 
@@ -89,7 +90,7 @@ export default function FinishedTab({ filteredBooks, onOpenViewer, onReread, set
                   <img src={book.coverUrl} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" alt="Cover" referrerPolicy="no-referrer" />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[9px] font-bold text-navy-purple bg-white border border-lavender-border px-2 py-0.5 rounded-full">{book.category}</span>
+                  <span className={BOOK_GENRE_BADGE_CLASS}>{book.category}</span>
                   <h4 className="font-bold text-sm text-navy-purple mt-1 truncate tracking-tight">{book.title}</h4>
                   <p className="text-[10px] text-purple-gray-text mt-0.5">
                     독서 시작일: {formatDate(book.startedDate)}

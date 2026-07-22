@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ChevronRight, StickyNote } from "lucide-react";
+import { BOOK_GENRE_BADGE_CLASS } from '../../shared/utils/bookGenre';
 
 const GENRES = ["전체", "소설", "시", "에세이", "동화"];
 
@@ -91,7 +92,7 @@ export default function ReadingTab({
                 </div>
 
                 <div className="flex-grow min-w-0">
-                  <span className="text-[9px] font-bold text-navy-purple bg-white border border-lavender-border px-2 py-0.5 rounded-full">
+                  <span className={BOOK_GENRE_BADGE_CLASS}>
                     {book.category}
                   </span>
 
