@@ -39,7 +39,10 @@ const REASON_LABELS = {
 const formatDate = value => {
     if (!value) return "-";
 
-    const date = new Date(value);
+    const dateTime = String(value).trim();
+    const hasTimezone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(dateTime);
+    const normalizedDateTime = hasTimezone ? dateTime : `${dateTime}Z`;
+    const date = new Date(normalizedDateTime);
 
     if (Number.isNaN(date.getTime())) {
         return "-";
@@ -228,11 +231,6 @@ export default function ReportHistoryTab() {
                                             {report.targetTitle || "삭제되었거나 확인할 수 없는 대상"}
                                         </h3>
 
-                                        {report.targetContent && (
-                                            <p className="mt-2 line-clamp-2 text-sm leading-6 text-gray-600">
-                                                {report.targetContent}
-                                            </p>
-                                        )}
                                     </div>
                                 </div>
 
