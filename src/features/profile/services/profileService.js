@@ -88,7 +88,11 @@ export const profileService = {
     return true;
   },
 
-  /** 로그인한 보호자 기준 동의 완료된 자녀 계정 목록 조회 (GET /api/members/me/guardian/minors) */
+  /**
+   * 로그인한 보호자 기준 동의 완료된 자녀 계정 목록 조회 (GET /api/members/me/guardian/minors)
+   * 이 목록엔 현재 동의가 유효한(=이용 승인된) 자녀만 나온다 — 철회/잠금된 자녀는 아예 빠지고
+   * 나오는 별도의 상태값(status)이나 동의 일자 필드는 없다.
+   */
   getConnectedMinors: async () => {
     const data = await request(getConnectedMinors());
     return data.map((minor) => ({
@@ -98,8 +102,6 @@ export const profileService = {
       birthdate: minor.birthDate,
       booksCount: minor.bookCount,
       subscription: minor.subscriptionPlanLabel,
-      status: minor.status,
-      joinedDate: minor.consentedAt,
     }));
   },
 

@@ -57,7 +57,7 @@ export const GuardianManageView = ({ currentUser, onNavigateHome, onUpdateProfil
                 </div>
 
                 <span className="bg-[#FAF9FF] text-[#6B54E7] text-xs font-black px-3 py-1.5 rounded-full border border-[#E6E2FC] shrink-0 font-gowun">
-                  총 {connectedMinors.filter(m => m.status === 'ACTIVE').length}명 승인 완료
+                  총 {connectedMinors.length}명 승인 완료
                 </span>
               </div>
 
@@ -75,11 +75,7 @@ export const GuardianManageView = ({ currentUser, onNavigateHome, onUpdateProfil
                 {connectedMinors.map((minor) => (
                   <div
                     key={minor.id}
-                    className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
-                      minor.status === 'ACTIVE'
-                        ? 'bg-white border-[#E6E2FC] hover:border-[#6B54E7]/40 shadow-xs'
-                        : 'bg-[#FAF9FF] border-dashed border-[#E6E2FC] text-[#7C769D]'
-                    }`}
+                    className="p-4 rounded-2xl border transition-all flex flex-col justify-between bg-white border-[#E6E2FC] hover:border-[#6B54E7]/40 shadow-xs"
                   >
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
@@ -88,19 +84,15 @@ export const GuardianManageView = ({ currentUser, onNavigateHome, onUpdateProfil
                             👦
                           </div>
                           <div className="text-left">
-                            <span className={`text-xs font-black block ${minor.status === 'ACTIVE' ? 'text-[#2F2D59]' : 'text-[#7C769D]'}`}>
+                            <span className="text-xs font-black block text-[#2F2D59]">
                               {minor.name}
                             </span>
                             <span className="text-[11px] text-[#7C769D] font-medium font-mono">ID: {minor.id}</span>
                           </div>
                         </div>
 
-                        <span className={`text-[11px] font-black px-2.5 py-1 rounded-lg border uppercase ${
-                          minor.status === 'ACTIVE'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                            : 'bg-rose-50 text-rose-800 border-rose-200'
-                        }`}>
-                          {minor.status === 'ACTIVE' ? '이용 승인됨' : '동의 철회 / 잠금'}
+                        <span className="text-[11px] font-black px-2.5 py-1 rounded-lg border uppercase bg-emerald-50 text-emerald-800 border-emerald-200">
+                          이용 승인됨
                         </span>
                       </div>
 
@@ -124,25 +116,19 @@ export const GuardianManageView = ({ currentUser, onNavigateHome, onUpdateProfil
                           <span className="text-[#7C769D] font-semibold">이용 중인 멤버십 요금</span>
                           <span className="text-[#6B54E7] font-extrabold">{minor.subscription}</span>
                         </div>
-
-                        <p className="text-[12px] text-[#7C769D] text-left pt-1 border-t border-dashed border-[#E6E2FC]/40">
-                          동의 일자: {minor.joinedDate}
-                        </p>
                       </div>
                     </div>
 
-                    {minor.status === 'ACTIVE' && (
-                      <div className="pt-3 border-t border-[#E6E2FC]/30 mt-3 flex justify-end font-gowun">
-                        <button
-                          type="button"
-                          onClick={() => openWithdrawConsentModal(minor)}
-                          className="px-3.5 py-2 bg-neutral-900 hover:bg-black text-white text-[12px] font-black rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-                          <span>동의 철회</span>
-                        </button>
-                      </div>
-                    )}
+                    <div className="pt-3 border-t border-[#E6E2FC]/30 mt-3 flex justify-end font-gowun">
+                      <button
+                        type="button"
+                        onClick={() => openWithdrawConsentModal(minor)}
+                        className="px-3.5 py-2 bg-neutral-900 hover:bg-black text-white text-[12px] font-black rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                        <span>동의 철회</span>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
