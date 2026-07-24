@@ -7,7 +7,11 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const unwrap = (res) => {
   const body = res.data;
   if (!body?.success) {
-    throw new Error(body?.message || '요청 처리 중 문제가 발생했습니다.');
+    // code(SUSPENDED_MEMBER, EXPIRED_RESET_TOKEN 등)를 에러 객체에 실어둬서, 호출부가 코드별로
+    // 다른 안내 문구를 분기하고 싶을 때 err.message 대신 err.code로 판단할 수 있게 한다.
+    const err = new Error(body?.message || '요청 처리 중 문제가 발생했습니다.');
+    err.code = body?.code;
+    throw err;
   }
   return body.data;
 };

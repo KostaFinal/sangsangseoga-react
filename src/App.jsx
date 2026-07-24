@@ -16,6 +16,7 @@ import { ProfileEditView } from './features/profile/components/ProfileEditView';
 import { GuardianManageView } from './features/profile/components/GuardianManageView';
 import { NotificationsView } from './features/dashboard/components/NotificationsView';
 import { PasswordResetView } from './features/auth/components/PasswordResetView';
+import { ResetPasswordView } from './features/auth/components/ResetPasswordView';
 import { BookCreationRouter } from './features/bookCreation';
 import { LEGACY_BOOK_CREATION_REDIRECTS } from './features/bookCreation/routes/MemberCreationRoutes';
 
@@ -236,6 +237,16 @@ function PasswordResetRoute() {
   return <PasswordResetView onNavigateToLogin={() => navigate('/login')} />;
 }
 
+function ResetPasswordRoute() {
+  const navigate = useNavigate();
+  return (
+    <ResetPasswordView
+      onNavigateToLogin={() => navigate('/login')}
+      onNavigateToRequestReset={() => navigate('/password-reset')}
+    />
+  );
+}
+
 function ErrorPage404Route() {
   const navigate = useNavigate();
   return <ErrorPage404 onNavigateToHome={() => navigate('/')} />;
@@ -263,7 +274,8 @@ function AppInner() {
         </Route>
 
         {/* 이메일 링크로 접근 — 로그인 여부와 무관하게 토큰 자체가 자격증명 */}
-        <Route path="/guardian-consent/:consentId" element={<GuardianConsentView />} />
+        <Route path="/guardian-consent" element={<GuardianConsentView />} />
+        <Route path="/reset-password" element={<ResetPasswordRoute />} />
 
         {/* 둘러보기는 비로그인도 가능 — 로그인이 필요한 액션은 클릭 시점에 /login으로 유도 */}
         <Route index element={<MainDashboard />} />

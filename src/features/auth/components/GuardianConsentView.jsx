@@ -1,15 +1,23 @@
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { authService } from '../services/authService';
 
+const CONSENT_ERROR_MESSAGES = {
+  GUARDIAN_CONSENT_NOT_FOUND: '유효하지 않은 동의 요청입니다. 이메일로 받은 링크를 다시 확인해 주세요.',
+  GUARDIAN_CONSENT_ALREADY_PROCESSED: '이미 처리된 동의 요청입니다.',
+  GUARDIAN_CONSENT_EXPIRED: '동의 요청이 만료되었습니다(7일 경과). 회원가입을 다시 진행해 주세요.',
+  INVALID_CONSENT_TOKEN: '유효하지 않은 링크입니다. 이메일로 받은 링크를 다시 확인해 주세요.',
+  BAD_REQUEST: '요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.',
+};
+
 /**
- * 보호자가 이메일로 받은 동의 링크(/guardian-consent/:consentId?token=...)로 진입하는 화면.
+ * 보호자가 이메일로 받은 동의 링크(/guardian-consent?consentId=...&token=...)로 진입하는 화면.
  * 로그인 여부와 무관하게 접근 가능 — 토큰 자체가 자격증명 역할을 함.
  */
 export function GuardianConsentView() {
-  const { consentId } = useParams();
   const [searchParams] = useSearchParams();
+  const consentId = searchParams.get('consentId');
   const token = searchParams.get('token');
   const navigate = useNavigate();
 
@@ -18,11 +26,11 @@ export function GuardianConsentView() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!token) {
+    if (!token || !consentId) {
       setStatus('error');
       setMessage('유효하지 않은 링크입니다. 이메일로 받은 링크를 다시 확인해 주세요.');
     }
-  }, [token]);
+  }, [token, consentId]);
 
   const handleDecision = async (decision) => {
     setIsSubmitting(true);
@@ -32,7 +40,7 @@ export function GuardianConsentView() {
       setMessage(decision === 'APPROVED' ? '동의가 정상적으로 처리되었습니다.' : '동의를 거절 처리했습니다.');
     } catch (err) {
       setStatus('error');
-      setMessage(err.response?.data?.message || err.message || '처리 중 문제가 발생했습니다.');
+      setMessage(CONSENT_ERROR_MESSAGES[err.code] || err.message || '처리 중 문제가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
     }

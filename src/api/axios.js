@@ -40,6 +40,11 @@ instance.interceptors.response.use(
     if (response?.data?.message) {
       error.message = response.data.message;
     }
+    // code(EXPIRED_RESET_TOKEN 등)도 같이 실어서, unwrap()을 안 거치는 axios 에러 경로에서도
+    // 호출부가 err.code로 코드별 안내 문구를 분기할 수 있게 한다.
+    if (response?.data?.code) {
+      error.code = response.data.code;
+    }
 
     // /api/auth/login 자체가 401(예: 정지 계정 SUSPENDED_MEMBER)인 경우까지 "토큰 만료"로
     // 오인해 조용히 리프레시를 시도하면 안 된다 — 로그인 전이라 애초에 액세스 토큰도 안 붙어있고,
